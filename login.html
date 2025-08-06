@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ✅ SECURITY HEADERS -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.roo7.site; object-src 'none'; frame-ancestors 'none'; base-uri 'self';" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta name="referrer" content="no-referrer" />
+
+  <title>Secure Auth - roo7.site</title>
+
+  <!-- ✅ Styles -->
+  <link rel="stylesheet" href="styles.css" type="text/css">
+</head>
+<body>
+  <div class="container" id="auth-container">
+    <h1 id="form-title">Login</h1>
+    <div id="error-msg" class="error"></div>
+
+    <input type="text" id="username" placeholder="Username" required autocomplete="username"/>
+    <input type="email" id="email" placeholder="Email (register only)" style="display: none;" autocomplete="email"/>
+    <input type="text" id="full_name" placeholder="Full Name (optional)" style="display: none;" />
+    <input type="password" id="password" placeholder="Password" required autocomplete="current-password" />
+
+    <button id="submit-btn">Login</button>
+    <div class="toggle" id="toggle-mode">Don't have an account? Register</div>
+  </div>
+
+  <!-- ✅ JavaScript -->
+  <script type="text/javascript" src="auth.js"></script>
+</body>
+</html>
