@@ -1,147 +1,100 @@
-// dashboard.js
+// === dashboard.js ===
 
-const API_BASE = 'https://api.roo7.site';
-let token = localStorage.getItem('access_token');
+let token = localStorage.getItem("token");
 
-// === Auth Check ===
-async function fetchUserProfile() {
-  try {
-    const res = await fetch(`${API_BASE}/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+async function fetchMe() {
+    const res = await fetch("https://api.roo7.site/me", {
+        headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error('Unauthorized');
-    const user = await res.json();
-    document.getElementById('username-display').textContent = user.username;
-    loadAccounts();
-  } catch (err) {
-    console.warn('Auth failed, redirecting to auth.html');
-    localStorage.removeItem('access_token');
-    window.location.href = '/auth.html';
-  }
+    if (res.ok) {
+        const user = await res.json();
+        document.getElementById("username").innerText = user.username;
+    } else {
+        localStorage.removeItem("token");
+        window.location.href = "/auth.html";
+    }
 }
 
-// === Logout ===
-document.getElementById('logout-btn').onclick = () => {
-  localStorage.removeItem('access_token');
-  location.href = '/auth.html';
-};
-
-// === Load Accounts ===
-async function loadAccounts() {
-  const tableBody = document.querySelector('#account-table tbody');
-  tableBody.innerHTML = '';
-  const res = await fetch(`${API_BASE}/accounts`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const accounts = await res.json();
-
-  let totalValue = 0;
-  accounts.forEach(acc => {
-    const row = document.createElement('tr');
-    totalValue += acc.current_value || 0;
-
-    row.innerHTML = `
-      <td>${acc.account_name}</td>
-      <td>${acc.strategy}</td>
-      <td>$${acc.current_value.toFixed(2)}</td>
-    `;
-    tableBody.appendChild(row);
-  });
-
-  document.getElementById('total-value').textContent = `$${totalValue.toFixed(2)}`;
-  renderAccountSettings(accounts);
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/auth.html";
 }
 
-// === Render Account Settings Table ===
-function renderAccountSettings(accounts) {
-  const settingsBody = document.querySelector('#account-settings-table tbody');
-  settingsBody.innerHTML = '';
+document.getElementById("logoutBtn").addEventListener("click", logout);
 
-  accounts.forEach(acc => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${acc.account_name}</td>
-      <td>
-        <button class="edit-btn" data-id="${acc.id}">✏️</button>
-        <button class="delete-btn" data-id="${acc.id}">🗑️</button>
-      </td>
-    `;
-    settingsBody.appendChild(row);
-  });
-}
-
-// === Modal ===
-const modal = document.getElementById('account-modal');
-const form = document.getElementById('account-form');
-
-// Open Modal
-window.openAddModal = () => {
-  form.reset();
-  modal.style.display = 'block';
-};
-
-// Close Modal
-window.closeModal = () => {
-  modal.style.display = 'none';
-};
-
-// === Submit New Account ===
-form.onsubmit = async (e) => {
-  e.preventDefault();
-  const formData = new FormData(form);
-
-  const data = {
-    account_name: formData.get('account_name'),
-    api_key: formData.get('api_key'),
-    api_secret: formData.get('api_secret'),
-    strategy: formData.get('strategy'),
-    hedge_percent: parseFloat(formData.get('hedge_percent')) || 0.0,
-    custom_portfolio: []
-  };
-
-  if (data.strategy === 'Custom Portfolio Rebalancing') {
-    document.querySelectorAll('.custom-asset-row').forEach(row => {
-      const symbol = row.querySelector('.symbol').value;
-      const weight = parseFloat(row.querySelector('.weight').value);
-      if (symbol && weight) data.custom_portfolio.push({ symbol, weight });
+async function fetchAccounts() {
+    const res = await fetch("https://api.roo7.site/accounts", {
+        headers: { Authorization: `Bearer ${token}` }
     });
-  }
+    if (!res.ok) return;
+    const accounts = await res.json();
+    const table = document.getElementById("accountsTable");
+    table.innerHTML = "";
 
-  const res = await fetch(`${API_BASE}/accounts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
-  });
+    accounts.forEach((acc) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${acc.account_name}</td>
+          <td>${acc.strategy}</td>
+          <td>$${acc.current_value.toFixed(2)}</td>
+        `;
+        table.appendChild(row);
+    });
+}
 
-  if (res.ok) {
-    closeModal();
-    loadAccounts();
-  } else {
-    alert('Failed to add account');
-  }
-};
+document.getElementById("addAccountBtn").addEventListener("click", () => {
+    document.getElementById("addAccountModal").style.display = "block";
+});
 
-// === Toggle Custom Portfolio ===
-document.getElementById('strategy').onchange = (e) => {
-  const portfolioDiv = document.getElementById('custom-portfolio');
-  portfolioDiv.style.display = (e.target.value === 'Custom Portfolio Rebalancing') ? 'block' : 'none';
-};
+document.getElementById("closeModal").addEventListener("click", () => {
+    document.getElementById("addAccountModal").style.display = "none";
+});
 
-// === Add Instrument Row ===
-window.addPortfolioRow = () => {
-  const container = document.getElementById('portfolio-list');
-  const row = document.createElement('div');
-  row.className = 'custom-asset-row';
-  row.innerHTML = `
-    <input class="symbol" placeholder="Symbol (e.g. BTCUSDT)" />
-    <input class="weight" placeholder="Weight %" type="number" />
-    <button onclick="this.parentNode.remove()">❌</button>
-  `;
-  container.appendChild(row);
-};
+document.getElementById("accountForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-// === Init ===
-window.onload = fetchUserProfile;
+    const accountName = document.getElementById("accountName").value;
+    const strategy = document.getElementById("strategy").value;
+    const hedge = parseFloat(document.getElementById("hedge_percent").value || 0);
+    const apiKey = document.getElementById("apiKey").value;
+    const apiSecret = document.getElementById("apiSecret").value;
+
+    let customPortfolio = [];
+    if (strategy === "Custom Portfolio Rebalancing") {
+        const rows = document.querySelectorAll(".instrument-row");
+        for (const row of rows) {
+            const symbol = row.querySelector(".symbol").value;
+            const weight = parseFloat(row.querySelector(".weight").value);
+            customPortfolio.push({ symbol, weight });
+        }
+    }
+
+    const payload = {
+        account_name: accountName,
+        strategy,
+        hedge_percent: hedge,
+        api_key: apiKey,
+        api_secret: apiSecret,
+        custom_portfolio: customPortfolio
+    };
+
+    const res = await fetch("https://api.roo7.site/accounts", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        document.getElementById("addAccountModal").style.display = "none";
+        await fetchAccounts();
+    } else {
+        alert("Failed to add account.");
+    }
+});
+
+// Initial load
+fetchMe();
+fetchAccounts();
