@@ -5,10 +5,10 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ✅ Security Headers (only the one allowed in <meta>) -->
+  <!-- ✅ Safe Security Header -->
   <meta name="referrer" content="no-referrer" />
 
-  <!-- ✅ Favicon fix to avoid 404 error -->
+  <!-- ✅ Avoid favicon 404 -->
   <link rel="icon" href="data:;base64,=" />
 
   <title>User Dashboard</title>
@@ -22,43 +22,6 @@
     <button id="logout-btn">Logout</button>
   </div>
 
-  <script>
-    async function loadUserProfile() {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        window.location.href = '/auth.html';
-        return;
-      }
-
-      try {
-        const res = await fetch('https://api.roo7.site/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!res.ok) {
-          throw new Error("Unauthorized");
-        }
-
-        const user = await res.json();
-        document.getElementById('username').textContent = user.username || '';
-        document.getElementById('email').textContent = user.email || '';
-        document.getElementById('full_name').textContent = user.full_name || '';
-      } catch (err) {
-        console.error('Auth failed or expired:', err);
-        localStorage.removeItem('access_token');
-        window.location.href = '/auth.html';
-      }
-    }
-
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      localStorage.removeItem('access_token');
-      window.location.href = '/auth.html';
-    });
-
-    window.addEventListener('DOMContentLoaded', loadUserProfile);
-  </script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
