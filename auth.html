@@ -21,6 +21,11 @@
         <input type="email" id="email" name="email" />
       </div>
 
+      <div class="input-group" id="full-name-group" style="display: none;">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" />
+      </div>
+
       <div class="input-group">
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required />
@@ -49,6 +54,7 @@
     const formTitle = document.getElementById('form-title');
     const submitBtn = document.getElementById('submit-btn');
     const emailGroup = document.getElementById('email-group');
+    const fullNameGroup = document.getElementById('full-name-group');
     const toggleText = document.getElementById('toggle-text');
     const toggleThemeBtn = document.getElementById('toggle-theme');
 
@@ -58,6 +64,7 @@
       formTitle.textContent = isRegister ? 'Register' : 'Login';
       submitBtn.textContent = isRegister ? 'Register' : 'Login';
       emailGroup.style.display = isRegister ? 'block' : 'none';
+      fullNameGroup.style.display = isRegister ? 'block' : 'none';
 
       toggleText.innerHTML = isRegister
         ? `Already have an account? <a href="#" id="toggle-link" data-mode="login">Login here</a>`
@@ -80,6 +87,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(form);
+
       const body = new URLSearchParams(formData);
       const endpoint = isRegister ? 'register' : 'login';
 
