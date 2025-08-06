@@ -13,7 +13,6 @@
       <button id="toggle-theme">Toggle Theme</button>
       <button id="logout-btn">Logout</button>
     </div>
-
     <div class="dashboard-grid">
       <div class="dashboard-card" id="summary-section">
         <h2>Summary</h2>
@@ -27,150 +26,49 @@
           </tfoot>
         </table>
       </div>
-
       <div class="dashboard-card" id="settings-section">
         <h2>Accounts Settings</h2>
-        <table>
-          <thead><tr><th>Account</th><th>Actions</th></tr></thead>
-          <tbody id="settings-table-body"></tbody>
-        </table>
+        <table><thead><tr><th>Account</th><th>Actions</th></tr></thead><tbody id="settings-table-body"></tbody></table>
         <button id="add-account-btn">Add New Account</button>
       </div>
-
       <div class="dashboard-card"><h2>Section 3</h2><p>Coming soon...</p></div>
       <div class="dashboard-card"><h2>Section 4</h2><p>Coming soon...</p></div>
     </div>
   </div>
 
-  <!-- Account Modal -->
-  <div id="account-modal" class="modal" style="display:none">
+  <!-- Modal -->
+  <div id="account-modal" class="modal hidden">
     <div class="modal-content">
       <span class="close-btn" id="close-modal">&times;</span>
       <h3>Add New Account</h3>
       <form id="account-form">
-        <label>Account Name: <input type="text" name="account_name" required></label><br>
-        <label>Binance Key: <input type="text" name="api_key" required></label><br>
-        <label>Binance Secret: <input type="password" name="api_secret" required></label><br>
-        <label>Strategy:
-          <select name="strategy" id="strategy-select">
-            <option value="Standard Vapaus">Standard Vapaus</option>
-            <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
-            <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
-          </select>
-        </label>
-        <div id="custom-portfolio" style="display:none">
+        <label for="account-name">Account Name:</label>
+        <input type="text" id="account-name" required />
+
+        <label for="binance-key">Binance API Key:</label>
+        <input type="text" id="binance-key" required />
+
+        <label for="binance-secret">Binance API Secret:</label>
+        <input type="password" id="binance-secret" required />
+
+        <label for="strategy">Strategy:</label>
+        <select id="strategy">
+          <option value="Standard Vapaus">Standard Vapaus</option>
+          <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
+          <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
+        </select>
+
+        <div id="custom-portfolio-section" class="hidden">
           <h4>Custom Portfolio</h4>
           <div id="instrument-list"></div>
           <button type="button" id="add-instrument">+ Add Instrument</button>
         </div>
+
         <button type="submit">Submit</button>
       </form>
     </div>
   </div>
 
-  <script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/auth.html";
-    }
-
-    const strategies = [
-      "Standard Vapaus",
-      "Top X Instruments of Vapaus",
-      "Custom Portfolio Rebalancing"
-    ];
-
-    const instrumentCache = [];
-    let instrumentCount = 3;
-
-    async function loadBinanceSymbols() {
-      const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
-      const data = await res.json();
-      instrumentCache.push(...data.symbols.map(s => s.symbol));
-    }
-
-    function renderCustomInstruments(count = 3) {
-      const list = document.getElementById("instrument-list");
-      list.innerHTML = '';
-      for (let i = 0; i < count; i++) {
-        const div = document.createElement("div");
-        div.className = "instrument-row";
-        div.innerHTML = `
-          <input type="text" name="instrument" placeholder="Symbol (e.g. BTCUSDT)" required>
-          <input type="number" name="weight" placeholder="Weight %" required min="0" max="100">
-          <button type="button" class="delete-instrument">x</button>
-        `;
-        list.appendChild(div);
-      }
-    }
-
-    function appendInstrument() {
-      instrumentCount++;
-      renderCustomInstruments(instrumentCount);
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      await loadBinanceSymbols();
-      renderCustomInstruments();
-
-      document.getElementById("add-instrument").addEventListener("click", appendInstrument);
-
-      document.getElementById("strategy-select").addEventListener("change", (e) => {
-        document.getElementById("custom-portfolio").style.display =
-          e.target.value === "Custom Portfolio Rebalancing" ? 'block' : 'none';
-      });
-
-      document.getElementById("add-account-btn").addEventListener("click", () => {
-        document.getElementById("account-modal").style.display = "block";
-      });
-
-      document.getElementById("close-modal").addEventListener("click", () => {
-        document.getElementById("account-modal").style.display = "none";
-      });
-
-      document.getElementById("account-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const strategy = formData.get("strategy");
-        const instruments = [];
-
-        if (strategy === "Custom Portfolio Rebalancing") {
-          const rows = document.querySelectorAll(".instrument-row");
-          rows.forEach(row => {
-            const symbol = row.querySelector("input[name='instrument']").value;
-            const weight = parseFloat(row.querySelector("input[name='weight']").value);
-            if (!instrumentCache.includes(symbol)) {
-              alert(`Invalid symbol: ${symbol}`);
-              return;
-            }
-            instruments.push({ symbol, weight });
-          });
-        }
-
-        const payload = {
-          account_name: formData.get("account_name"),
-          api_key: formData.get("api_key"),
-          api_secret: formData.get("api_secret"),
-          strategy,
-          custom_portfolio: instruments
-        };
-
-        const res = await fetch("https://api.roo7.site/accounts", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          location.reload();
-        } else {
-          alert("Error creating account.");
-        }
-      });
-    });
-  </script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
