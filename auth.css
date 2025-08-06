@@ -1,0 +1,128 @@
+/* auth.css */
+
+:root {
+  --light-bg: #f5f5f5;
+  --light-text: #1a1a1a;
+  --dark-bg: #1a1a1a;
+  --dark-text: #f5f5f5;
+  --primary-color: #4a90e2;
+  --error-color: #e74c3c;
+  --border-radius: 8px;
+  --transition-speed: 0.3s;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+.container {
+  max-width: 400px;
+  margin: 6vh auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark .container {
+  background-color: #2a2a2a;
+  color: var(--dark-text);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  transition: border-color var(--transition-speed);
+}
+
+input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+button {
+  width: 100%;
+  padding: 0.7rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+button:hover {
+  background-color: #357bd8;
+}
+
+.toggle-link {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--primary-color);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.error-message {
+  color: var(--error-color);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Dark Mode Toggle */
+#dark-mode-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+#dark-mode-toggle:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* CAPTCHA styling */
+#cf-turnstile {
+  margin: 1rem 0;
+}
