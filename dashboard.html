@@ -61,6 +61,8 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       const token = localStorage.getItem("token");
+      console.log("token object:", token);
+
       if (!token) {
         window.location.href = "/auth.html";
         return;
@@ -71,6 +73,7 @@
           headers: { Authorization: `Bearer ${token}` },
         });
         const user = await response.json();
+        console.log("user object:", user);
 
         if (!response.ok || !user.email_verified) {
           localStorage.removeItem("token");
