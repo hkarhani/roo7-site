@@ -218,3 +218,28 @@ button.delete-account {
 #add-instrument:hover {
   background: #666;
 }
+
+.dashboard-header {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+}
+
+.dark-theme .dashboard-header {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+}
+
+.dark-theme .dashboard-header button {
+  background-color: #444;
+  color: #fff;
+}
+
+.dark-theme .dashboard-header button:hover {
+  background-color: #666;
+}
