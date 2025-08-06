@@ -13,6 +13,7 @@
       <button id="toggle-theme">Toggle Theme</button>
       <button id="logout-btn">Logout</button>
     </div>
+
     <div class="dashboard-grid">
       <div class="dashboard-card" id="summary-section">
         <h2>Summary</h2>
@@ -26,45 +27,44 @@
           </tfoot>
         </table>
       </div>
+
       <div class="dashboard-card" id="settings-section">
         <h2>Accounts Settings</h2>
-        <table><thead><tr><th>Account</th><th>Actions</th></tr></thead><tbody id="settings-table-body"></tbody></table>
+        <table>
+          <thead><tr><th>Account</th><th>Actions</th></tr></thead>
+          <tbody id="settings-table-body"></tbody>
+        </table>
         <button id="add-account-btn">Add New Account</button>
       </div>
+
       <div class="dashboard-card"><h2>Section 3</h2><p>Coming soon...</p></div>
       <div class="dashboard-card"><h2>Section 4</h2><p>Coming soon...</p></div>
     </div>
   </div>
 
   <!-- Modal -->
-  <div id="account-modal" class="modal hidden">
+  <div id="account-modal" class="modal">
     <div class="modal-content">
-      <span class="close-btn" id="close-modal">&times;</span>
+      <span class="close" id="close-modal">&times;</span>
       <h3>Add New Account</h3>
       <form id="account-form">
-        <label for="account-name">Account Name:</label>
-        <input type="text" id="account-name" required />
+        <label>Account Name:</label>
+        <input type="text" name="account_name" required>
 
-        <label for="binance-key">Binance API Key:</label>
-        <input type="text" id="binance-key" required />
+        <label>Binance API Key:</label>
+        <input type="text" name="api_key" required>
 
-        <label for="binance-secret">Binance API Secret:</label>
-        <input type="password" id="binance-secret" required />
+        <label>Binance Secret Key:</label>
+        <input type="password" name="api_secret" required>
 
-        <label for="strategy">Strategy:</label>
-        <select id="strategy">
+        <label>Strategy:</label>
+        <select name="strategy">
           <option value="Standard Vapaus">Standard Vapaus</option>
           <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
           <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
         </select>
 
-        <div id="custom-portfolio-section" class="hidden">
-          <h4>Custom Portfolio</h4>
-          <div id="instrument-list"></div>
-          <button type="button" id="add-instrument">+ Add Instrument</button>
-        </div>
-
-        <button type="submit">Submit</button>
+        <button type="submit">Save Account</button>
       </form>
     </div>
   </div>
