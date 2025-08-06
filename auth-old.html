@@ -8,9 +8,8 @@
 </head>
 <body>
   <div class="auth-container">
-    <div id="note" class="notification" style="display: none;"></div>
-
     <h1 id="form-title">Login</h1>
+
     <form id="auth-form">
       <div class="input-group">
         <label for="username">Username</label>
@@ -58,24 +57,8 @@
     const fullNameGroup = document.getElementById('full-name-group');
     const toggleText = document.getElementById('toggle-text');
     const toggleThemeBtn = document.getElementById('toggle-theme');
-    const note = document.getElementById('note');
 
     let isRegister = false;
-
-    function showNote(message, success = true) {
-      note.textContent = message;
-      note.className = success ? 'notification success' : 'notification error';
-      note.style.display = 'block';
-      setTimeout(() => {
-        note.style.opacity = '1';
-        setTimeout(() => {
-          note.style.opacity = '0';
-          setTimeout(() => {
-            note.style.display = 'none';
-          }, 500);
-        }, 3000);
-      }, 100);
-    }
 
     function updateFormMode() {
       formTitle.textContent = isRegister ? 'Register' : 'Login';
@@ -94,6 +77,7 @@
       });
     }
 
+    // Initialize
     updateFormMode();
 
     toggleThemeBtn.addEventListener('click', () => {
@@ -103,6 +87,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(form);
+
       const body = new URLSearchParams(formData);
       const endpoint = isRegister ? 'register' : 'login';
 
@@ -119,20 +104,17 @@
         const result = await response.json();
 
         if (!response.ok) {
-          showNote(result.detail || 'Authentication failed', false);
+          alert(result.detail || 'Authentication failed');
         } else {
-          if (isRegister) {
-            showNote('Registered! Please verify via email.');
-            isRegister = false;
-            updateFormMode();
-          } else {
+          alert(isRegister ? 'Registered successfully! Check your Email for verification!' : 'Logged in!');
+          if (!isRegister) {
             localStorage.setItem('token', result.access_token);
             window.location.href = "/dashboard.html";
           }
         }
       } catch (err) {
         console.error(err);
-        showNote('Network error. Please try again.', false);
+        alert('Network error. Please try again.');
       }
     });
   </script>

@@ -92,3 +92,43 @@ body.dark-mode #toggle-theme {
   color: #f0f0f0;
   border-color: #555;
 }
+
+/* Notification Banner */
+.notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #27ae60;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+/* Error Notification Variant */
+.notification.error {
+  background-color: #c0392b;
+}
+
+/* Dark Mode Notification */
+body.dark-mode .notification {
+  background-color: #2ecc71;
+  color: #000;
+}
+
+body.dark-mode .notification.error {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
