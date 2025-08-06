@@ -106,7 +106,7 @@
         if (!response.ok) {
           alert(result.detail || 'Authentication failed');
         } else {
-          alert(isRegister ? 'Registered successfully!' : 'Logged in!');
+          alert(isRegister ? 'Registered successfully! Check your Email for verification!' : 'Logged in!');
           if (!isRegister) {
             localStorage.setItem('token', result.access_token);
             window.location.href = "/dashboard.html";
