@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ✅ Security Headers -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; connect-src https://api.roo7.site; object-src 'none'; frame-ancestors 'none'; base-uri 'self';" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta name="referrer" content="no-referrer" />
+
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" type="text/css">
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome, <span id="username">User</span></h1>
+    <p>Email: <span id="email"></span></p>
+    <p>Full Name: <span id="full_name"></span></p>
+    <button id="logout-btn">Logout</button>
+  </div>
+
+  <script type="text/javascript" src="dashboard.js"></script>
+</body>
+</html>
