@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (!token) {
     alert("You are not logged in. Redirecting to login.");
-    window.location.href = "/auth.html";  // or "/index.html"
+    window.location.href = "/auth.html";
     return;
   }
 
@@ -21,18 +21,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const user = await response.json();
 
-    document.getElementById("username").textContent = user.username;
+    document.getElementById("username").textContent = user.username || "-";
     document.getElementById("email").textContent = user.email || "-";
     document.getElementById("full_name").textContent = user.full_name || "-";
   } catch (err) {
     console.error("Token invalid or expired:", err);
     alert("Session expired. Please log in again.");
     localStorage.removeItem("token");
-    window.location.href = "/auth.html"; // or "/index.html"
+    window.location.href = "/auth.html";
   }
 });
 
 document.getElementById("logout-btn").addEventListener("click", () => {
   localStorage.removeItem("token");
-  window.location.href = "/auth.html"; // or "/index.html"
+  window.location.href = "/auth.html";
 });
