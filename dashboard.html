@@ -8,14 +8,11 @@
 </head>
 <body>
   <div class="dashboard-container">
-    <div id="notification" class="notification" style="display: none;"></div>
-
     <div class="dashboard-header">
       <span id="welcome-name">Welcome</span>
       <button id="toggle-theme">Toggle Theme</button>
       <button id="logout-btn">Logout</button>
     </div>
-
     <div class="dashboard-grid">
       <div class="dashboard-card" id="summary-section">
         <h2>Summary</h2>
@@ -25,45 +22,26 @@
           </thead>
           <tbody id="summary-table-body"></tbody>
           <tfoot>
-            <tr><td colspan="2"></td><td id="summary-total" style="font-weight: bold;"></td><td></td></tr>
+            <tr><td colspan="2"></td><td id="summary-total" style="font-weight: bold;">$0</td><td></td></tr>
           </tfoot>
         </table>
       </div>
-
       <div class="dashboard-card" id="settings-section">
         <h2>Accounts Settings</h2>
         <table><thead><tr><th>Account</th><th>Actions</th></tr></thead><tbody id="settings-table-body"></tbody></table>
         <button id="add-account-btn">Add New Account</button>
       </div>
-
       <div class="dashboard-card"><h2>Section 3</h2><p>Coming soon...</p></div>
       <div class="dashboard-card"><h2>Section 4</h2><p>Coming soon...</p></div>
     </div>
   </div>
 
+  <div id="notification" class="notification"></div>
   <script>
-    function showNotification(message, success = true) {
-      const note = document.getElementById('notification');
-      note.textContent = message;
-      note.className = success ? 'notification success show' : 'notification error show';
-      note.style.display = 'block';
-      setTimeout(() => {
-        note.style.opacity = '1';
-        setTimeout(() => {
-          note.style.opacity = '0';
-          setTimeout(() => {
-            note.style.display = 'none';
-            note.classList.remove('show');
-          }, 500);
-        }, 3000);
-      }, 100);
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
+    async function fetchUserAndAccounts() {
       const token = localStorage.getItem("token");
-      console.log("token object:", token);
-
       if (!token) {
+        showNotification("Session expired. Please log in again.", false);
         window.location.href = "/auth.html";
         return;
       }
@@ -73,47 +51,68 @@
           headers: { Authorization: `Bearer ${token}` },
         });
         const user = await response.json();
-        console.log("user object:", user);
 
         if (!response.ok || !user.email_verified) {
           localStorage.removeItem("token");
+          showNotification("Token invalid or email not verified. Please log in again.", false);
           window.location.href = "/auth.html";
           return;
         }
 
         document.getElementById("welcome-name").textContent = `Welcome ${user.full_name || user.username}`;
 
-        const summaryData = [
-          { account: "Alpha", strategy: "Standard Vapaus", value: 1200, hedge: "25%" },
-          { account: "Beta", strategy: "Custom Rebalancing", value: 850, hedge: "30%" }
-        ];
-
-        let total = 0;
-        const summaryBody = document.getElementById("summary-table-body");
-        summaryData.forEach(item => {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${item.account}</td><td>${item.strategy}</td><td>${item.value}</td><td>${item.hedge}</td>`;
-          summaryBody.appendChild(row);
-          total += item.value;
+        const accountsRes = await fetch("https://api.roo7.site/accounts", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        document.getElementById("summary-total").textContent = total;
-
-        const settingsBody = document.getElementById("settings-table-body");
-        summaryData.forEach(item => {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${item.account}</td><td><button>Edit</button><button>Delete</button></td>`;
-          settingsBody.appendChild(row);
-        });
+        const accounts = await accountsRes.json();
+        populateSummary(accounts);
+        populateSettings(accounts);
 
       } catch (err) {
-        console.error("Token check failed:", err);
+        console.error(err);
+        localStorage.removeItem("token");
         showNotification("Session expired. Please log in again.", false);
-        setTimeout(() => {
-          localStorage.removeItem("token");
-          window.location.href = "/auth.html";
-        }, 1500);
-        return;
+        window.location.href = "/auth.html";
       }
+    }
+
+    function populateSummary(accounts) {
+      const body = document.getElementById("summary-table-body");
+      body.innerHTML = "";
+      let total = 0;
+      accounts.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${item.account_name}</td><td>${item.strategy}</td><td>$${item.current_value}</td><td>${item.hedge_percent}</td>`;
+        body.appendChild(row);
+        total += item.current_value;
+      });
+      document.getElementById("summary-total").textContent = `$${total.toFixed(2)}`;
+    }
+
+    function populateSettings(accounts) {
+      const body = document.getElementById("settings-table-body");
+      body.innerHTML = "";
+      accounts.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${item.account_name}</td><td><button>Edit</button> <button>Delete</button></td>`;
+        body.appendChild(row);
+      });
+    }
+
+    function showNotification(message, success = true) {
+      const notification = document.getElementById("notification");
+      notification.textContent = message;
+      notification.className = `notification ${success ? "success" : "error"}`;
+      notification.style.display = "block";
+      setTimeout(() => notification.style.opacity = '1', 100);
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.style.display = 'none', 400);
+      }, 3000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchUserAndAccounts();
 
       document.getElementById("logout-btn").addEventListener("click", () => {
         localStorage.removeItem("token");
