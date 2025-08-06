@@ -1,69 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Trader Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="dashboard.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-  <div class="dashboard-container">
-    <div class="dashboard-header">
-      <span id="welcome-name">Welcome</span>
-      <button id="toggle-theme">Toggle Theme</button>
-      <button id="logout-btn">Logout</button>
-    </div>
+  <header>
+    <h1>Welcome to Your Dashboard</h1>
+    <button id="toggle-theme">Toggle Theme</button>
+    <button id="logout-btn">Logout</button>
+  </header>
 
-    <div class="dashboard-grid">
-      <div class="dashboard-card" id="summary-section">
-        <h2>Summary</h2>
-        <table>
-          <thead>
-            <tr><th>Account Name</th><th>Strategy</th><th>Current Value</th><th>Hedge %</th></tr>
-          </thead>
-          <tbody id="summary-table-body"></tbody>
-          <tfoot>
-            <tr><td colspan="2"></td><td id="summary-total" style="font-weight: bold;"></td><td></td></tr>
-          </tfoot>
-        </table>
-      </div>
+  <main>
+    <!-- Section 1: Live Accounts Table -->
+    <section id="section-accounts">
+      <h2>Live Accounts</h2>
+      <table id="accounts-table">
+        <thead>
+          <tr>
+            <th>Account Name</th>
+            <th>Strategy</th>
+            <th>Value ($)</th>
+            <th>Hedge %</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
 
-      <div class="dashboard-card" id="settings-section">
-        <h2>Accounts Settings</h2>
-        <table>
-          <thead><tr><th>Account</th><th>Actions</th></tr></thead>
-          <tbody id="settings-table-body"></tbody>
-        </table>
-        <button id="add-account-btn">Add New Account</button>
-      </div>
+    <!-- Section 2: Account Settings -->
+    <section id="section-settings">
+      <h2>Accounts Settings</h2>
+      <table id="settings-table">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="open-modal">Add New Account</button>
+    </section>
+  </main>
 
-      <div class="dashboard-card"><h2>Section 3</h2><p>Coming soon...</p></div>
-      <div class="dashboard-card"><h2>Section 4</h2><p>Coming soon...</p></div>
-    </div>
-  </div>
-
-  <!-- Modal -->
+  <!-- Modal Form -->
   <div id="account-modal" class="modal">
     <div class="modal-content">
-      <span class="close" id="close-modal">&times;</span>
+      <span class="close">&times;</span>
       <h3>Add New Account</h3>
       <form id="account-form">
-        <label>Account Name:</label>
-        <input type="text" name="account_name" required>
-
-        <label>Binance API Key:</label>
-        <input type="text" name="api_key" required>
-
-        <label>Binance Secret Key:</label>
-        <input type="password" name="api_secret" required>
-
-        <label>Strategy:</label>
-        <select name="strategy">
+        <input type="text" id="account-name" placeholder="Account Name" required>
+        <input type="text" id="api-key" placeholder="Binance API Key" required>
+        <input type="password" id="api-secret" placeholder="Binance API Secret" required>
+        <select id="strategy">
           <option value="Standard Vapaus">Standard Vapaus</option>
           <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
           <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
         </select>
-
+        <div id="instruments-wrapper" style="display:none;"></div>
+        <button type="button" id="add-instrument" style="display:none;">+ Add Instrument</button>
         <button type="submit">Save Account</button>
       </form>
     </div>

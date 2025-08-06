@@ -1,81 +1,220 @@
+/* Base Theme */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   margin: 0;
-  padding: 0;
+  background: #f4f4f4;
+  color: #333;
+}
+
+.dark-theme {
+  background: #121212;
+  color: #e0e0e0;
 }
 
 .dashboard-container {
-  padding: 20px;
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px;
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #eee;
-  padding: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+}
+
+.dashboard-header button {
+  margin-left: 10px;
+  padding: 8px 14px;
+  background: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dashboard-header button:hover {
+  background: #005fa3;
 }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
 }
 
 .dashboard-card {
-  background-color: #f8f8f8;
-  padding: 15px;
-  border-radius: 8px;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-button {
-  padding: 6px 12px;
-  margin: 5px;
+.dark-theme .dashboard-card {
+  background: #1e1e1e;
+  box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background-color: #f0f0f0;
+}
+
+.dark-theme th {
+  background-color: #2a2a2a;
+}
+
+tfoot td {
+  font-weight: bold;
+}
+
+button.edit-account,
+button.delete-account {
+  padding: 5px 10px;
+  margin-right: 5px;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-/* Modal styling */
+.edit-account {
+  background-color: #3c9;
+  color: white;
+}
+
+.delete-account {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.edit-account:hover {
+  background-color: #37b087;
+}
+
+.delete-account:hover {
+  background-color: #c0392b;
+}
+
+/* Modal Styles */
 .modal {
   display: none;
   position: fixed;
-  z-index: 100;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
   overflow: auto;
   background-color: rgba(0,0,0,0.5);
 }
 
 .modal-content {
-  background-color: #fff;
-  margin: 10% auto;
-  padding: 20px;
+  background: white;
+  margin: 60px auto;
+  padding: 25px;
   border-radius: 8px;
-  width: 400px;
+  width: 90%;
+  max-width: 600px;
   position: relative;
 }
 
-.close {
+.dark-theme .modal-content {
+  background: #2c2c2c;
+  color: white;
+}
+
+.modal .close {
   position: absolute;
-  right: 10px;
-  top: 8px;
-  font-size: 20px;
+  top: 15px; right: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #888;
+}
+
+.modal .close:hover {
+  color: #000;
+}
+
+.modal form input,
+.modal form select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.modal form input[type="password"] {
+  font-family: monospace;
+}
+
+.modal form button[type="submit"] {
+  background: #0077cc;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.modal form button[type="submit"]:hover {
+  background: #005fa3;
+}
+
+/* Instrument fields */
+.instrument-field {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.instrument-field input[type="text"],
+.instrument-field input[type="number"] {
+  flex: 1;
+}
+
+.instrument-field .remove-instrument {
+  padding: 6px 10px;
+  font-size: 18px;
+  color: #fff;
+  background-color: #ff5555;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-input, select {
-  display: block;
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
+.instrument-field .remove-instrument:hover {
+  background-color: #cc0000;
 }
 
-.dark-mode {
-  background-color: #111;
-  color: #eee;
+#add-instrument {
+  background: #888;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  margin-top: 8px;
+  cursor: pointer;
 }
-.dark-mode .dashboard-card {
-  background-color: #222;
+
+#add-instrument:hover {
+  background: #666;
 }
