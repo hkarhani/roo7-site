@@ -29,10 +29,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     alert("Session expired. Please log in again.");
     localStorage.removeItem("token");
     window.location.href = "/auth.html";
+    return;
   }
-});
 
-document.getElementById("logout-btn").addEventListener("click", () => {
-  localStorage.removeItem("token");
-  window.location.href = "/auth.html";
+  // ✅ Bind logout button after DOM is confirmed and user is authenticated
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    window.location.href = "/auth.html";
+  });
 });
