@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login / Register - Roo7</title>
+
+  <!-- ✅ Security Headers -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; connect-src https://api.roo7.site; frame-src https://challenges.cloudflare.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self';" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta name="referrer" content="no-referrer" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="auth.css" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+  <div class="theme-toggle">
+    <label>
+      <input type="checkbox" id="dark-toggle"> Dark Mode
+    </label>
+  </div>
+
+  <div class="auth-box">
+    <h2 id="form-title">Login</h2>
+
+    <form id="auth-form">
+      <input type="text" id="username" name="username" placeholder="Username" required />
+      <input type="password" id="password" name="password" placeholder="Password" required />
+
+      <div id="register-fields">
+        <input type="email" id="email" name="email" placeholder="Email" />
+        <input type="text" id="full_name" name="full_name" placeholder="Full Name" />
+      </div>
+
+      <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY"></div>
+
+      <button type="submit" id="submit-btn">Login</button>
+    </form>
+
+    <div class="toggle-section">
+      <span id="toggle-text">Don't have an account?</span>
+      <button id="toggle-btn" type="button">Register</button>
+    </div>
+  </div>
+
+  <script>
+    const formTitle = document.getElementById("form-title");
+    const submitBtn = document.getElementById("submit-btn");
+    const toggleBtn = document.getElementById("toggle-btn");
+    const toggleText = document.getElementById("toggle-text");
+    const registerFields = document.getElementById("register-fields");
+    const form = document.getElementById("auth-form");
+    let isLogin = true;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setMode(true);
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+        document.getElementById("dark-toggle").checked = true;
+      }
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      isLogin = !isLogin;
+      setMode(isLogin);
+    });
+
+    function setMode(loginMode) {
+      formTitle.textContent = loginMode ? "Login" : "Register";
+      submitBtn.textContent = loginMode ? "Login" : "Register";
+      toggleText.textContent = loginMode ? "Don't have an account?" : "Already have an account?";
+      toggleBtn.textContent = loginMode ? "Register" : "Login";
+      registerFields.style.display = loginMode ? "none" : "flex";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const token = document.querySelector(".cf-turnstile iframe")?.contentWindow;
+      if (!token) return alert("Please complete the CAPTCHA challenge.");
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (!isLogin) {
+        const email = document.getElementById("email").value;
+        const fullName = document.getElementById("full_name").value;
+
+        const res = await fetch("https://api.roo7.site/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password, email, full_name: fullName })
+        });
+        const data = await res.json();
+        if (res.ok) alert("Registered successfully. Please login.");
+        else alert(data.detail || "Registration failed.");
+      } else {
+        const res = await fetch("https://api.roo7.site/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("token", data.access_token);
+          location.href = "dashboard.html";
+        } else {
+          alert(data.detail || "Login failed.");
+        }
+      }
+    });
+
+    document.getElementById("dark-toggle").addEventListener("change", (e) => {
+      document.body.classList.toggle("dark", e.target.checked);
+      localStorage.setItem("theme", e.target.checked ? "dark" : "light");
+    });
+  </script>
+</body>
+</html>
