@@ -8,6 +8,7 @@
 </head>
 <body>
   <div class="dashboard-container">
+    <div id="notification" class="notification" style="display: none;"></div>
     <div class="dashboard-header">
       <span id="welcome-name">Welcome</span>
       <button id="toggle-theme">Toggle Theme</button>
@@ -36,12 +37,26 @@
     </div>
   </div>
   <script>
+    function showNotification(message, isError = false) {
+      const note = document.getElementById('notification');
+      note.textContent = message;
+      note.className = isError ? 'notification error' : 'notification success';
+      note.style.display = 'block';
+      note.style.opacity = '1';
+      setTimeout(() => {
+        note.style.opacity = '0';
+        setTimeout(() => {
+          note.style.display = 'none';
+        }, 500);
+      }, 3000);
+    }
+
     document.addEventListener("DOMContentLoaded", async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        alert("Session expired. Please log in again.");
-        window.location.href = "/auth.html";
+        showNotification("Session expired. Please log in again.", true);
+        setTimeout(() => window.location.href = "/auth.html", 1500);
         return;
       }
 
@@ -52,9 +67,9 @@
         const user = await response.json();
 
         if (!response.ok || !user.email_verified) {
-          alert("Token invalid or email not verified. Please log in again.");
           localStorage.removeItem("token");
-          window.location.href = "/auth.html";
+          showNotification("Token invalid or email not verified. Please log in again.", true);
+          setTimeout(() => window.location.href = "/auth.html", 1500);
           return;
         }
 
@@ -85,8 +100,8 @@
       } catch (err) {
         console.error("Token invalid or expired:", err);
         localStorage.removeItem("token");
-        alert("Session expired. Please log in again.");
-        window.location.href = "/auth.html";
+        showNotification("Session expired. Please log in again.", true);
+        setTimeout(() => window.location.href = "/auth.html", 1500);
       }
 
       const logoutBtn = document.getElementById("logout-btn");
