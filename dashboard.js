@@ -1,67 +1,69 @@
+
 document.addEventListener("DOMContentLoaded", async () => {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    showError("You are not logged in.");
-    redirectToLogin();
+    alert("Session expired. Please log in again.");
+    window.location.href = "/auth.html";
     return;
   }
 
   try {
     const response = await fetch("https://api.roo7.site/me", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json"
-      }
+      headers: { Authorization: `Bearer ${token}` },
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to authenticate");
-    }
-
     const user = await response.json();
 
-    // Check email_verified
-    if (!user.email_verified) {
-      showError("Email not verified. Please check your inbox.");
+    if (!response.ok || !user.email_verified) {
+      alert("Token invalid or email not verified. Please log in again.");
       localStorage.removeItem("token");
-      redirectToLogin();
+      window.location.href = "/auth.html";
       return;
     }
 
-    document.getElementById("username").textContent = user.username || "-";
-    document.getElementById("email").textContent = user.email || "-";
-    document.getElementById("full_name").textContent = user.full_name || "-";
-    document.getElementById("welcome-name").textContent = user.full_name || user.username;
+    const welcomeEl = document.getElementById("welcome-name");
+    if (welcomeEl) welcomeEl.textContent = "Welcome " + (user.full_name || user.username);
+
+    const summaryBody = document.getElementById("summary-table-body");
+    const summaryData = [
+      { account: "Alpha", strategy: "Standard Vapaus", value: 1200, hedge: "25%" },
+      { account: "Beta", strategy: "Custom Rebalancing", value: 850, hedge: "30%" }
+    ];
+    let total = 0;
+    summaryData.forEach(item => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${item.account}</td><td>${item.strategy}</td><td>${item.value}</td><td>${item.hedge}</td>`;
+      summaryBody.appendChild(row);
+      total += item.value;
+    });
+    document.getElementById("summary-total").textContent = total;
+
+    const settingsBody = document.getElementById("settings-table-body");
+    summaryData.forEach(item => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${item.account}</td><td><button>Edit</button><button>Delete</button></td>`;
+      settingsBody.appendChild(row);
+    });
 
   } catch (err) {
     console.error("Token invalid or expired:", err);
-    showError("Session expired. Please log in again.");
     localStorage.removeItem("token");
-    redirectToLogin();
-  }
-});
-
-function redirectToLogin() {
-  setTimeout(() => {
+    alert("Session expired. Please log in again.");
     window.location.href = "/auth.html";
-  }, 2000);
-}
+  }
 
-function showError(message) {
-  const note = document.createElement("div");
-  note.className = "notification error show";
-  note.textContent = message;
-  document.body.appendChild(note);
-  setTimeout(() => note.classList.remove("show"), 3500);
-}
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "/auth.html";
+    });
+  }
 
-document.getElementById("logout-btn").addEventListener("click", () => {
-  localStorage.removeItem("token");
-  window.location.href = "/auth.html";
-});
-
-document.getElementById("toggle-theme").addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
+  const toggleThemeBtn = document.getElementById("toggle-theme");
+  if (toggleThemeBtn) {
+    toggleThemeBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+    });
+  }
 });

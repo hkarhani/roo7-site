@@ -1,52 +1,41 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trader Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
-  <div class="dashboard-header">
-    <h1>Welcome, <span id="full-name">Trader</span></h1>
-    <button id="toggle-theme">Toggle Theme</button>
-  </div>
-
-  <div class="dashboard-grid">
-    <div class="dashboard-section">
-      <h2>Summary</h2>
-      <div class="section-scroll">
-        <table class="styled-table">
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <span id="welcome-name">Welcome</span>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="logout-btn">Logout</button>
+    </div>
+    <div class="dashboard-grid">
+      <div class="dashboard-card" id="summary-section">
+        <h2>Summary</h2>
+        <table>
           <thead>
-            <tr><th>Account Name</th><th>Strategy Name</th><th>Current Value</th><th>Hedge %</th></tr>
+            <tr><th>Account Name</th><th>Strategy</th><th>Current Value</th><th>Hedge %</th></tr>
           </thead>
-          <tbody id="summary-table">
-            <tr><td>Alpha</td><td>Standard Vapaus</td><td>$12,400</td><td>15%</td></tr>
-            <tr><td>Beta</td><td>Top X Instruments</td><td>$8,200</td><td>10%</td></tr>
-            <tr class="summary-total"><td colspan="2"></td><td><strong>$20,600</strong></td><td></td></tr>
-          </tbody>
+          <tbody id="summary-table-body"></tbody>
+          <tfoot>
+            <tr><td colspan="2"></td><td id="summary-total" style="font-weight: bold;"></td><td></td></tr>
+          </tfoot>
         </table>
       </div>
-    </div>
-
-    <div class="dashboard-section">
-      <h2>Account Settings</h2>
-      <div class="section-scroll">
-        <table class="styled-table">
-          <thead><tr><th>Account</th><th>Actions</th></tr></thead>
-          <tbody id="accounts-table">
-            <tr><td>Alpha</td><td><button>Edit</button> <button>Delete</button></td></tr>
-            <tr><td>Beta</td><td><button>Edit</button> <button>Delete</button></td></tr>
-          </tbody>
-        </table>
+      <div class="dashboard-card" id="settings-section">
+        <h2>Accounts Settings</h2>
+        <table><thead><tr><th>Account</th><th>Actions</th></tr></thead><tbody id="settings-table-body"></tbody></table>
         <button id="add-account-btn">Add New Account</button>
       </div>
+      <div class="dashboard-card"><h2>Section 3</h2><p>Coming soon...</p></div>
+      <div class="dashboard-card"><h2>Section 4</h2><p>Coming soon...</p></div>
     </div>
-
-    <div class="dashboard-section"><h2>Section 3</h2><div class="section-scroll">Coming soon...</div></div>
-    <div class="dashboard-section"><h2>Section 4</h2><div class="section-scroll">Coming soon...</div></div>
   </div>
-
   <script src="dashboard.js"></script>
 </body>
 </html>
