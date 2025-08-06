@@ -1,35 +1,38 @@
-(async () => {
-  const token = localStorage.getItem('access_token');
-  const logoutBtn = document.getElementById('logout-btn');
+document.addEventListener("DOMContentLoaded", async () => {
+  const token = localStorage.getItem("token");
 
   if (!token) {
-    window.location.href = 'index.html';
+    alert("You are not logged in. Redirecting to login.");
+    window.location.href = "/auth.html";  // or "/index.html"
     return;
   }
 
   try {
-    const res = await fetch('https://api.roo7.site/me', {
-      method: 'GET',
+    const response = await fetch("https://api.roo7.site/me", {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json"
       }
     });
 
-    if (!res.ok) {
-      throw new Error('Invalid or expired token');
+    if (!response.ok) {
+      throw new Error("Failed to authenticate");
     }
 
-    const data = await res.json();
-    document.getElementById('username').innerText = data.username;
-    document.getElementById('email').innerText = data.email;
-    document.getElementById('full_name').innerText = data.full_name || 'N/A';
-  } catch (err) {
-    localStorage.removeItem('access_token');
-    window.location.href = 'index.html';
-  }
+    const user = await response.json();
 
-  logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('access_token');
-    window.location.href = 'index.html';
-  });
-})();
+    document.getElementById("username").textContent = user.username;
+    document.getElementById("email").textContent = user.email || "-";
+    document.getElementById("full_name").textContent = user.full_name || "-";
+  } catch (err) {
+    console.error("Token invalid or expired:", err);
+    alert("Session expired. Please log in again.");
+    localStorage.removeItem("token");
+    window.location.href = "/auth.html"; // or "/index.html"
+  }
+});
+
+document.getElementById("logout-btn").addEventListener("click", () => {
+  localStorage.removeItem("token");
+  window.location.href = "/auth.html"; // or "/index.html"
+});
