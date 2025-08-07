@@ -15,7 +15,7 @@
     </div>
   </div>
 
-  <main class="dashboard-grid">
+  <main class="dashboard-grid troubleshoot-grid">
     <!-- Account Details Section -->
     <section class="dashboard-card">
       <h2>Account Details</h2>
@@ -43,12 +43,30 @@
       </div>
     </section>
 
-    <!-- Troubleshooting Section -->
+    <!-- Connectivity Test Section -->
     <section class="dashboard-card">
       <h2>Connectivity Test</h2>
       <div class="troubleshoot-actions">
         <button id="test-connection" class="test-btn">Test Binance Connection</button>
         <div id="test-results" class="test-results"></div>
+      </div>
+    </section>
+
+    <!-- Portfolio Assets Section -->
+    <section id="portfolio-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>💰 Portfolio Assets</h2>
+      <div id="portfolio-content" class="portfolio-content">
+        <div class="portfolio-table-container">
+          <table id="portfolio-table" class="portfolio-table">
+            <thead>
+              <tr><th>Asset</th><th>Amount</th><th>Value (USDT)</th><th>%</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="portfolio-chart-container">
+          <div id="portfolio-pie-chart" class="portfolio-pie-chart"></div>
+        </div>
       </div>
     </section>
 
@@ -63,7 +81,7 @@
 
   <!-- Load theme manager first, then pie chart, then troubleshoot logic -->
   <script src="theme-manager.js?v=1"></script>
-  <script src="pie-chart.js?v=1"></script>
-  <script src="troubleshoot.js?v=2"></script>
+  <script src="pie-chart.js?v=1.1"></script>
+  <script src="troubleshoot.js?v=3"></script>
 </body>
 </html>

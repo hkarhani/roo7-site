@@ -64,6 +64,35 @@ function initializeTroubleshootPage() {
     });
   }
 
+  // Update API connection status
+  function updateAPIConnectionStatus(status, message) {
+    const testResults = document.getElementById('test-results');
+    if (!testResults) return;
+
+    let statusClass, statusText;
+    
+    switch(status) {
+      case 'connected':
+        statusClass = 'status-connected';
+        statusText = '✅ API Connected';
+        break;
+      case 'failed':
+        statusClass = 'status-failed';
+        statusText = '❌ API Connection Failed';
+        break;
+      case 'testing':
+        statusClass = 'status-testing';
+        statusText = '🔄 Testing Connection...';
+        break;
+      default:
+        statusClass = 'status-testing';
+        statusText = '⏳ Ready to Test';
+    }
+
+    const statusDiv = `<div class="api-connection-status ${statusClass}">${statusText}</div>`;
+    testResults.innerHTML = statusDiv + (message ? `<div class="test-details">${message}</div>` : '');
+  }
+
   // Load account details with enhanced error handling
   async function loadAccountDetails() {
     console.log("📋 Starting to load account details...");
@@ -196,10 +225,10 @@ function initializeTroubleshootPage() {
     }
   }
 
-  // Enhanced Binance connection test with comprehensive result display
+  // Enhanced Binance connection test with reorganized display
   async function testBinanceConnection() {
     const testBtn = document.getElementById('test-connection');
-    const testResults = document.getElementById('test-results');
+    const portfolioSection = document.getElementById('portfolio-section');
     const diagnosticInfo = document.getElementById('diagnostic-info');
 
     if (!window.currentAccount) {
@@ -211,8 +240,11 @@ function initializeTroubleshootPage() {
     testBtn.disabled = true;
     testBtn.textContent = 'Testing...';
     
-    // Clear previous results
-    testResults.innerHTML = '<div class="testing">🔄 Running connectivity tests...</div>';
+    // Update connection status
+    updateAPIConnectionStatus('testing');
+    
+    // Hide portfolio section and clear diagnostics
+    portfolioSection.style.display = 'none';
     diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
     
     // Show loading toast
@@ -220,7 +252,7 @@ function initializeTroubleshootPage() {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for comprehensive test
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
       console.log(`🚀 Starting troubleshoot test for account ID: ${window.currentAccount.id}`);
       
@@ -243,10 +275,17 @@ function initializeTroubleshootPage() {
       const results = await res.json();
       console.log("✅ Troubleshoot results received:", results);
 
-      // Display summary results
-      displayTestSummary(results, testResults);
+      // Update API connection status based on results
+      if (results.success && results.api_key_valid && results.ip_whitelisted) {
+        updateAPIConnectionStatus('connected', `Total Value: ${parseFloat(results.total_usdt_value || 0).toFixed(2)} USDT`);
+      } else {
+        const issues = [];
+        if (!results.api_key_valid) issues.push('Invalid API Key');
+        if (!results.ip_whitelisted) issues.push('IP Not Whitelisted');
+        updateAPIConnectionStatus('failed', issues.join(', '));
+      }
       
-      // Display portfolio section with pie chart
+      // Display portfolio section if balances are available
       displayPortfolioSection(results);
       
       // Display detailed diagnostics
@@ -264,11 +303,11 @@ function initializeTroubleshootPage() {
       
       if (error.name === 'AbortError') {
         showToast('Test timed out. This may indicate network connectivity issues.', 'error');
-        testResults.innerHTML = `<div class="test-failure">❌ Test Timed Out</div>`;
+        updateAPIConnectionStatus('failed', 'Connection Timeout');
         diagnosticInfo.innerHTML = getTimeoutDiagnostics();
       } else {
         showToast(`Test failed: ${error.message}`, 'error');
-        testResults.innerHTML = `<div class="test-failure">❌ Test Failed: ${error.message}</div>`;
+        updateAPIConnectionStatus('failed', error.message);
         diagnosticInfo.innerHTML = getErrorDiagnostics(error);
       }
     } finally {
@@ -277,103 +316,41 @@ function initializeTroubleshootPage() {
     }
   }
 
-  function displayTestSummary(results, container) {
-    let summaryHtml = '<div class="test-summary">';
-    
-    // Overall status
-    if (results.success) {
-      summaryHtml += '<div class="test-success">✅ Connection Successful</div>';
-    } else {
-      summaryHtml += '<div class="test-failure">❌ Connection Issues Detected</div>';
-    }
-    
-    // Key metrics
-    summaryHtml += '<div class="summary-metrics">';
-    
-    if (results.total_usdt_value !== null && results.total_usdt_value !== undefined) {
-      summaryHtml += `<div class="metric"><strong>Portfolio Value:</strong> ${parseFloat(results.total_usdt_value).toFixed(2)} USDT</div>`;
-    }
-    
-    if (results.execution_time_ms) {
-      summaryHtml += `<div class="metric"><strong>Test Duration:</strong> ${results.execution_time_ms.toFixed(0)}ms</div>`;
-    }
-    
-    summaryHtml += `<div class="metric"><strong>API Key Valid:</strong> ${results.api_key_valid ? '✅ Yes' : '❌ No'}</div>`;
-    summaryHtml += `<div class="metric"><strong>IP Whitelisted:</strong> ${results.ip_whitelisted ? '✅ Yes' : '❌ No'}</div>`;
-    
-    // Asset count
-    if (results.balances && results.balances.length > 0) {
-      const nonZeroAssets = results.balances.filter(b => b.total > 0).length;
-      summaryHtml += `<div class="metric"><strong>Active Assets:</strong> ${nonZeroAssets}</div>`;
-    }
-    
-    summaryHtml += '</div></div>';
-    
-    container.innerHTML = summaryHtml;
-  }
-
   function displayPortfolioSection(results) {
-    // Find or create portfolio section after summary
-    const testResults = document.getElementById('test-results');
-    let portfolioSection = document.getElementById('portfolio-section');
+    const portfolioSection = document.getElementById('portfolio-section');
+    const portfolioTable = document.querySelector('#portfolio-table tbody');
     
-    if (!portfolioSection && results.balances && results.balances.length > 0) {
-      portfolioSection = document.createElement('div');
-      portfolioSection.id = 'portfolio-section';
-      portfolioSection.className = 'portfolio-section';
-      
-      // Insert after test results
-      testResults.parentNode.insertBefore(portfolioSection, testResults.nextSibling);
-    }
-    
-    if (!portfolioSection || !results.balances || results.balances.length === 0) {
+    if (!results.balances || results.balances.length === 0) {
+      portfolioSection.style.display = 'none';
       return;
     }
 
     const nonZeroBalances = results.balances.filter(b => b.total > 0 && b.percentage > 0);
     
     if (nonZeroBalances.length === 0) {
-      portfolioSection.innerHTML = '<div class="portfolio-empty">No assets with value found</div>';
+      portfolioSection.style.display = 'none';
       return;
     }
 
-    let portfolioHtml = '<div class="portfolio-header">';
-    portfolioHtml += '<h3>💰 Portfolio Assets</h3>';
-    portfolioHtml += `<p>Total Value: <strong>${parseFloat(results.total_usdt_value).toFixed(2)} USDT</strong></p>`;
-    portfolioHtml += '</div>';
+    // Show the portfolio section
+    portfolioSection.style.display = 'block';
     
-    // Create container for chart and table
-    portfolioHtml += '<div class="portfolio-content">';
-    
-    // Pie chart container
-    portfolioHtml += '<div class="portfolio-chart-container">';
-    portfolioHtml += '<div id="portfolio-pie-chart" class="portfolio-pie-chart"></div>';
-    portfolioHtml += '</div>';
-    
-    // Asset table
-    portfolioHtml += '<div class="portfolio-table-container">';
-    portfolioHtml += '<table class="portfolio-table">';
-    portfolioHtml += '<thead><tr><th>Asset</th><th>Amount</th><th>Value (USDT)</th><th>%</th></tr></thead>';
-    portfolioHtml += '<tbody>';
+    // Clear and populate the table
+    portfolioTable.innerHTML = '';
     
     nonZeroBalances.forEach(balance => {
       const usdtValue = balance.usdt_value ? parseFloat(balance.usdt_value).toFixed(2) : 'N/A';
       const total = parseFloat(balance.total);
       const displayTotal = total < 0.001 ? total.toExponential(3) : total.toFixed(6);
       
-      portfolioHtml += '<tr>';
-      portfolioHtml += `<td><strong>${balance.asset}</strong></td>`;
-      portfolioHtml += `<td>${displayTotal}</td>`;
-      portfolioHtml += `<td>${usdtValue}</td>`;
-      portfolioHtml += `<td><span class="percentage-badge">${balance.percentage}%</span></td>`;
-      portfolioHtml += '</tr>';
+      const row = portfolioTable.insertRow();
+      row.innerHTML = `
+        <td><strong>${balance.asset}</strong></td>
+        <td>${displayTotal}</td>
+        <td>${usdtValue}</td>
+        <td><span class="percentage-badge">${balance.percentage}%</span></td>
+      `;
     });
-    
-    portfolioHtml += '</tbody></table>';
-    portfolioHtml += '</div>';
-    portfolioHtml += '</div>';
-    
-    portfolioSection.innerHTML = portfolioHtml;
     
     // Initialize pie chart
     setTimeout(() => {
@@ -388,8 +365,14 @@ function initializeTroubleshootPage() {
       return;
     }
     
+    // Clear existing chart
+    chartContainer.innerHTML = '';
+    
+    // Only show top 10 assets in pie chart
+    const topAssets = balances.slice(0, 10);
+    
     // Prepare data for pie chart
-    const chartData = balances.map(balance => ({
+    const chartData = topAssets.map(balance => ({
       label: balance.asset,
       value: balance.usdt_value || 0,
       percentage: balance.percentage
@@ -397,14 +380,14 @@ function initializeTroubleshootPage() {
     
     // Create pie chart
     const pieChart = new PieChart('portfolio-pie-chart', {
-      width: 300,
-      height: 300,
-      radius: 100,
-      showLegend: true,
-      legendPosition: 'right',
-      title: 'Asset Allocation',
-      minSlicePercentage: 2, // Group assets smaller than 2%
-      showTooltip: true
+      width: 250,
+      height: 250,
+      radius: 80,
+      showLegend: false, // We'll show the table instead
+      showTooltip: true,
+      title: null,
+      minSlicePercentage: 1, // Group assets smaller than 1%
+      showPercentages: true
     });
     
     pieChart.setData(chartData);
@@ -441,42 +424,6 @@ function initializeTroubleshootPage() {
       });
       
       diagnosticHtml += '</div>';
-    }
-
-    // Asset balances
-    if (results.balances && results.balances.length > 0) {
-      const nonZeroBalances = results.balances.filter(b => b.total > 0);
-      
-      if (nonZeroBalances.length > 0) {
-        diagnosticHtml += '<div class="diagnostic-section">';
-        diagnosticHtml += `<h4>💰 Portfolio Assets (${nonZeroBalances.length})</h4>`;
-        
-        // Sort by USDT value descending
-        nonZeroBalances.sort((a, b) => (b.usdt_value || 0) - (a.usdt_value || 0));
-        
-        diagnosticHtml += '<div class="balance-list">';
-        nonZeroBalances.slice(0, 10).forEach(balance => { // Show top 10
-          const usdtValue = balance.usdt_value ? parseFloat(balance.usdt_value).toFixed(2) : 'N/A';
-          const total = parseFloat(balance.total).toFixed(8);
-          
-          diagnosticHtml += '<div class="diagnostic-item">';
-          diagnosticHtml += `<strong>${balance.asset}</strong>`;
-          diagnosticHtml += `<div class="balance-details">`;
-          diagnosticHtml += `<span class="balance-amount">${total} ${balance.asset}</span>`;
-          if (balance.usdt_value) {
-            diagnosticHtml += `<span class="balance-value">≈ $${usdtValue} USDT</span>`;
-          }
-          diagnosticHtml += `</div>`;
-          diagnosticHtml += '</div>';
-        });
-        
-        if (nonZeroBalances.length > 10) {
-          diagnosticHtml += `<div class="diagnostic-item">... and ${nonZeroBalances.length - 10} more assets</div>`;
-        }
-        
-        diagnosticHtml += '</div>';
-        diagnosticHtml += '</div>';
-      }
     }
 
     // Recommendations
@@ -554,6 +501,9 @@ function initializeTroubleshootPage() {
   } else {
     console.error("❌ Test connection button not found");
   }
+
+  // Initialize connection status
+  updateAPIConnectionStatus('ready', 'Ready to test connection');
 
   // Start loading account details
   console.log("🚀 Starting account details load...");
