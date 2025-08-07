@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Auth Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="auth.css" />
+  <link rel="stylesheet" href="auth.css?v=1" />
 </head>
 <body class="auth-page">
   <div class="auth-container">
@@ -65,9 +65,8 @@
     let isRegister = false;
     let isSubmitting = false; // Prevent multiple submissions
 
-    // Enhanced toast notification system
-    function showToast(message, type = 'success', duration = 3000) {
-      // Remove existing toasts
+    // Use the same toast system as dashboard
+    function showToast(message, type = 'info', duration = 4000) {
       const existingToasts = document.querySelectorAll('.toast');
       existingToasts.forEach(toast => toast.remove());
 
@@ -81,17 +80,13 @@
       `;
 
       document.body.appendChild(toast);
-      
-      // Show toast with animation
       setTimeout(() => toast.classList.add('toast-show'), 100);
 
-      // Auto hide after duration
       const autoHide = setTimeout(() => {
         toast.classList.remove('toast-show');
         setTimeout(() => toast.remove(), 300);
       }, duration);
 
-      // Manual close button
       toast.querySelector('.toast-close').addEventListener('click', () => {
         clearTimeout(autoHide);
         toast.classList.remove('toast-show');
@@ -152,8 +147,8 @@
       submitBtn.textContent = isRegister ? 'Registering...' : 'Logging in...';
       
       // Show toast notification
-      const loadingMessage = isRegister ? 'Creating your account...' : 'Logging you in...';
-      showToast(loadingMessage, 'info', 5000); // Longer duration for loading message
+      const loadingMessage = isRegister ? 'Creating your account...' : 'Trying to login...';
+      showToast(loadingMessage, 'info');
       
       const formData = new FormData(form);
       const body = new URLSearchParams(formData);
@@ -187,13 +182,13 @@
             updateFormMode();
           } else {
             console.log('✅ Login successful');
-            showToast('Login successful! Redirecting to dashboard...', 'success');
+            showToast('Login successful! Redirecting...', 'success');
             localStorage.setItem('token', result.access_token);
             
             // Small delay to show success message before redirect
             setTimeout(() => {
               window.location.href = "/dashboard.html";
-            }, 1000);
+            }, 1500);
           }
         }
       } catch (err) {

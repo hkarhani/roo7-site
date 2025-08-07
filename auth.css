@@ -138,7 +138,7 @@ body.dark-mode .notification.error {
   color: #fff;
 }
 
-/* TOAST NOTIFICATION STYLES */
+/* TOAST NOTIFICATION STYLES - Same as Dashboard */
 .toast {
   position: fixed;
   top: 20px;
