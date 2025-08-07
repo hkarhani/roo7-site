@@ -229,6 +229,16 @@ button.delete-account:hover {
   margin-top: 10px;
 }
 
+/* TOP X INPUT WRAPPER */
+#top-x-wrapper {
+  display: none;
+  margin-top: 10px;
+}
+
+#top-x-count {
+  width: 100%;
+}
+
 .instrument-field {
   display: flex;
   gap: 10px;
