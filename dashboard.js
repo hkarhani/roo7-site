@@ -90,9 +90,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openModal() {
-    console.log("🚀 Opening modal in ADD mode");
-    // Ensure we're in add mode when opening modal normally
+    console.log("🚀 Opening modal - ensuring ADD mode");
+    
+    // FORCE reset to add mode first
     resetModalToAddMode();
+    
+    // Clear all form fields
+    document.getElementById("trading-account-name").value = "";
+    document.getElementById("binance-api-key").value = "";
+    document.getElementById("binance-api-secret").value = "";
+    
+    // Ensure button is absolutely hidden in add mode
+    const button = document.getElementById("use-same-credentials");
+    if (button) {
+      button.classList.remove("visible");
+      button.classList.add("hidden");
+      console.log("🚫 Button forcefully hidden for Add New Account");
+    }
+    
     modal.style.display = "block";
   }
 
@@ -114,14 +129,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function resetModalToAddMode() {
-    console.log("🔄 Resetting modal to Add mode");
+    console.log("🔄 FORCING modal to Add mode");
     
     // Reset modal title and button
     document.querySelector("#account-modal h3").textContent = "Add New Account";
     document.querySelector("button[type='submit']").textContent = "Save Account";
     
-    // Hide edit-specific buttons
-    hideUseSameCredentialsButton();
+    // ABSOLUTELY HIDE the "Use Same Credentials" button
+    const useSameBtn = document.getElementById("use-same-credentials");
+    if (useSameBtn) {
+      useSameBtn.classList.remove("visible");
+      useSameBtn.classList.add("hidden");
+      useSameBtn.style.display = "none"; // Double ensure it's hidden
+      console.log("🚫 Use Same Credentials button HIDDEN for Add mode");
+    }
+    
+    // Hide cancel button
     if (cancelEditBtn) {
       cancelEditBtn.classList.remove("visible");
       cancelEditBtn.classList.add("hidden");
@@ -131,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentEditingId = null;
     useSameCredentials = false;
     
-    console.log("✅ Modal reset to Add mode");
+    console.log("✅ Modal FORCED to Add mode - button should be invisible");
   }
 
   function closeModal() {
