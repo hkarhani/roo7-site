@@ -604,19 +604,10 @@ function initializeTroubleshootPage() {
     const grid = document.querySelector('.troubleshoot-grid');
     if (grid) {
       grid.style.display = 'grid';
-      grid.style.gridTemplateRows = 'minmax(200px, auto) 1fr';
-      grid.style.height = 'calc(100vh - 120px)';
-      grid.style.alignItems = 'stretch';
+      grid.style.gridTemplateRows = 'auto auto';
+      grid.style.minHeight = 'calc(100vh - 120px)';
+      grid.style.alignItems = 'start';
     }
-    
-    // Ensure all sections have proper heights
-    const sections = grid.querySelectorAll('.dashboard-card, #portfolio-section, #section-diagnostics');
-    sections.forEach(section => {
-      section.style.height = '100%';
-      section.style.display = 'flex';
-      section.style.flexDirection = 'column';
-      section.style.boxSizing = 'border-box';
-    });
     
     // Force table to full width
     const table = document.querySelector('#portfolio-section .portfolio-table');

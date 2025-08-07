@@ -1,17 +1,17 @@
 /* troubleshoot.css - Dedicated styles for troubleshoot page */
 
-/* TROUBLESHOOT PAGE GRID LAYOUT - FIXED */
+/* TROUBLESHOOT PAGE GRID LAYOUT - FLEXIBLE HEIGHT */
 .troubleshoot-grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  grid-template-rows: minmax(200px, auto) 1fr;
+  grid-template-rows: auto auto;
   gap: 20px;
   padding: 0 20px 40px;
-  height: calc(100vh - 120px);
-  align-items: stretch;
+  min-height: calc(100vh - 120px);
+  align-items: start;
 }
 
-/* Force equal heights with grid positioning */
+/* Allow sections to grow naturally */
 .troubleshoot-grid > .dashboard-card:nth-child(1) {
   /* Account Details - Top Left */
   grid-column: 1;
@@ -19,7 +19,6 @@
   display: flex;
   flex-direction: column;
   padding: 25px;
-  height: 100%;
   box-sizing: border-box;
 }
 
@@ -29,7 +28,6 @@
   grid-row: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
   box-sizing: border-box;
 }
 
@@ -39,7 +37,7 @@
   grid-row: 2;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 500px;
   box-sizing: border-box;
 }
 
@@ -49,7 +47,7 @@
   grid-row: 2;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 500px;
   box-sizing: border-box;
 }
 
@@ -159,24 +157,20 @@
   color: #ccc;
 }
 
-/* ENHANCED ACCOUNT DETAILS SECTION - COMPACT */
+/* ENHANCED ACCOUNT DETAILS SECTION - NATURAL HEIGHT */
 .troubleshoot-grid > .dashboard-card:nth-child(1) .account-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
-  height: 100%;
-  gap: 0;
+  gap: 15px;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 15px 0;
   border-bottom: 1px solid #eee;
   font-size: 17px;
-  flex: 1;
-  min-height: 50px;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row:last-child {
