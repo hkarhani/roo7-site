@@ -290,14 +290,16 @@ class ModalManager {
       }
     } else if (strategy === "Custom Portfolio Rebalancing") {
       this.showPortfolioFields();
+      
+      // ✅ FIX: Only load existing custom portfolio instruments, don't add defaults
       if (account.custom_portfolio && account.custom_portfolio.length > 0) {
+        console.log("📋 Loading existing custom portfolio:", account.custom_portfolio);
         account.custom_portfolio.forEach(instrument => {
           this.addInstrumentField(instrument.symbol, instrument.weight);
         });
       } else {
-        this.addInstrumentField("BTCUSDT", 50);
-        this.addInstrumentField("ETHUSDT", 30);
-        this.addInstrumentField("BNBUSDT", 20);
+        console.log("📋 No existing custom portfolio found - starting with empty portfolio");
+        // Don't add default instruments for edit mode - leave empty
       }
     }
   }
@@ -318,7 +320,10 @@ class ModalManager {
   showPortfolioFields() {
     this.instrumentsWrap.style.display = "flex";
     this.addInstrumentBtn.style.display = "inline-block";
-    if (!this.instrumentsWrap.children.length) {
+    
+    // Only add default instruments for NEW accounts (when not editing)
+    if (!this.instrumentsWrap.children.length && !this.currentEditingId) {
+      console.log("🆕 Adding default instruments for NEW account");
       this.addInstrumentField("BTCUSDT", 50);
       this.addInstrumentField("ETHUSDT", 30);
       this.addInstrumentField("BNBUSDT", 20);
@@ -359,16 +364,33 @@ class ModalManager {
       return;
     }
 
+    const accountName = document.getElementById("trading-account-name").value.trim();
+    
+    // ✅ Enhanced validation: Check for empty account name
+    if (!accountName) {
+      window.showToast("Account name is required.", 'warning');
+      document.getElementById("trading-account-name").focus();
+      return;
+    }
+
     const data = {
-      account_name: document.getElementById("trading-account-name").value,
+      account_name: accountName,
       strategy: this.strategySelect.value,
       custom_portfolio: []
     };
 
     // Only include API credentials if not using same credentials
     if (!this.useSameCredentials) {
-      data.api_key = document.getElementById("binance-api-key").value;
-      data.api_secret = document.getElementById("binance-api-secret").value;
+      const apiKey = document.getElementById("binance-api-key").value.trim();
+      const apiSecret = document.getElementById("binance-api-secret").value.trim();
+      
+      if (!apiKey || !apiSecret) {
+        window.showToast("API Key and Secret are required.", 'warning');
+        return;
+      }
+      
+      data.api_key = apiKey;
+      data.api_secret = apiSecret;
     }
 
     // Handle strategy-specific data
@@ -395,22 +417,40 @@ class ModalManager {
 
       // Validate and build portfolio
       let totalWeight = 0;
+      const symbolSet = new Set(); // Check for duplicate symbols
+      
       for (let i = 0; i < symbols.length; i++) {
         const symbol = symbols[i].value.trim().toUpperCase();
         const weight = parseFloat(weights[i].value);
 
+        if (!symbol) {
+          window.showToast("All symbols must be filled in.", 'warning');
+          symbols[i].focus();
+          return;
+        }
+
+        if (symbolSet.has(symbol)) {
+          window.showToast(`Duplicate symbol found: ${symbol}. Each symbol can only be used once.`, 'warning');
+          symbols[i].focus();
+          return;
+        }
+        symbolSet.add(symbol);
+
         if (!symbol.endsWith('USDT')) {
           window.showToast(`Symbol ${symbol} must end with USDT.`, 'warning');
+          symbols[i].focus();
           return;
         }
 
         if (this.binanceSymbols.length && !this.binanceSymbols.includes(symbol)) {
           window.showToast(`Symbol ${symbol} does not exist on Binance SPOT.`, 'error');
+          symbols[i].focus();
           return;
         }
 
         if (isNaN(weight) || weight <= 0 || weight > 100) {
           window.showToast(`Weight for ${symbol} must be between 0 and 100.`, 'warning');
+          weights[i].focus();
           return;
         }
 
@@ -423,6 +463,8 @@ class ModalManager {
         return;
       }
     }
+
+    console.log("📤 Submitting account data:", data);
 
     try {
       const method = this.currentEditingId ? "PUT" : "POST";
@@ -441,7 +483,9 @@ class ModalManager {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+        const errorMessage = errorData.detail || `HTTP ${res.status}: ${res.statusText}`;
+        console.error("❌ API Error:", errorMessage);
+        throw new Error(errorMessage);
       }
 
       const action = this.currentEditingId ? "updated" : "created";
@@ -450,6 +494,7 @@ class ModalManager {
       if (window.loadAccounts) window.loadAccounts();
 
     } catch (err) {
+      console.error("❌ Submit error:", err);
       window.showToast(`Error ${this.currentEditingId ? 'updating' : 'creating'} account: ${err.message}`, 'error');
     }
   }
