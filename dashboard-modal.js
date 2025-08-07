@@ -92,10 +92,28 @@ class ModalManager {
     document.getElementById("binance-api-secret").value = "";
     this.strategySelect.value = "Standard Vapaus";
     
+    // FORCE HIDE the Use Same Credentials button for Add New Account
+    const useSameCredButton = document.getElementById("use-same-credentials");
+    if (useSameCredButton) {
+      useSameCredButton.style.display = "none";
+      console.log("🚫 FORCED HIDE Use Same Credentials button for ADD mode");
+    }
+    
     // Hide edit-specific elements
-    this.hideUseSameCredentialsButton();
     this.hideCancelButton();
     this.hideStrategyFields();
+    
+    // Ensure API credential fields are enabled and visible
+    const apiKeyField = document.getElementById("binance-api-key");
+    const apiSecretField = document.getElementById("binance-api-secret");
+    if (apiKeyField && apiSecretField) {
+      apiKeyField.disabled = false;
+      apiSecretField.disabled = false;
+      apiKeyField.style.opacity = "1";
+      apiSecretField.style.opacity = "1";
+      apiKeyField.required = true;
+      apiSecretField.required = true;
+    }
     
     // Show modal
     this.modal.style.display = "block";
@@ -119,8 +137,16 @@ class ModalManager {
     document.getElementById("binance-api-secret").value = account.api_secret || "";
     this.strategySelect.value = account.strategy;
     
+    // FORCE SHOW the Use Same Credentials button for Edit mode
+    const useSameCredButton = document.getElementById("use-same-credentials");
+    if (useSameCredButton) {
+      useSameCredButton.style.display = "block";
+      useSameCredButton.textContent = "🔒 Use Same API Credentials";
+      useSameCredButton.classList.remove("active");
+      console.log("✅ FORCED SHOW Use Same Credentials button for EDIT mode");
+    }
+    
     // Show edit-specific elements
-    this.showUseSameCredentialsButton();
     this.showCancelButton();
     
     // Handle strategy-specific fields
@@ -154,6 +180,13 @@ class ModalManager {
       apiSecretField.style.opacity = "1";
     }
     
+    // Reset Use Same Credentials button
+    const useSameCredButton = document.getElementById("use-same-credentials");
+    if (useSameCredButton) {
+      useSameCredButton.style.display = "none";
+      useSameCredButton.classList.remove("active");
+    }
+    
     console.log("✅ Account modal closed");
   }
 
@@ -174,13 +207,11 @@ class ModalManager {
     this.currentHedgeAccountId = null;
   }
 
-  // UI HELPER FUNCTIONS
+  // UI HELPER FUNCTIONS (keeping these for backward compatibility but using direct style.display now)
   showUseSameCredentialsButton() {
     const button = document.getElementById("use-same-credentials");
     if (button) {
-      button.classList.remove("hidden");
-      button.classList.add("visible");
-      button.textContent = "🔒 Use Same API Credentials";
+      button.style.display = "block";
       console.log("👁️ Use Same Credentials button shown");
     }
   }
@@ -188,8 +219,7 @@ class ModalManager {
   hideUseSameCredentialsButton() {
     const button = document.getElementById("use-same-credentials");
     if (button) {
-      button.classList.remove("visible");
-      button.classList.add("hidden");
+      button.style.display = "none";
       console.log("👁️ Use Same Credentials button hidden");
     }
   }
