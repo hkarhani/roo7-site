@@ -3,35 +3,41 @@
 /* TROUBLESHOOT PAGE GRID LAYOUT */
 .troubleshoot-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.5fr 1fr;
   grid-template-rows: auto 1fr;
   gap: 20px;
   padding: 0 20px 40px;
   min-height: calc(100vh - 120px);
-  align-items: start; /* Align grid items to start */
+  align-items: stretch;
 }
 
-/* Grid positioning with equal heights */
+/* Grid positioning - Account Details spans wider */
 .troubleshoot-grid > .dashboard-card:nth-child(1) {
+  /* Account Details - Top Left - Wider */
   grid-column: 1;
   grid-row: 1;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(2) {
+  /* Connectivity Test - Top Right */
   grid-column: 2;
   grid-row: 1;
 }
 
 .troubleshoot-grid > #portfolio-section {
+  /* Portfolio Assets - Bottom Left */
   grid-column: 1;
   grid-row: 2;
-  height: 600px; /* Fixed height to match diagnostics */
+  display: flex;
+  flex-direction: column;
 }
 
 .troubleshoot-grid > #section-diagnostics {
+  /* Diagnostics - Bottom Right */
   grid-column: 2;
   grid-row: 2;
-  height: 600px; /* Fixed height to match portfolio */
+  display: flex;
+  flex-direction: column;
 }
 
 /* TEST SUMMARY STYLES */
@@ -145,8 +151,8 @@
   padding: 25px;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Prevent content from extending beyond bounds */
-  height: 100%; /* Use full allocated height */
+  overflow: hidden;
+  height: 100%;
 }
 
 #portfolio-section h2 {
@@ -157,7 +163,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0; /* Don't shrink the header */
+  flex-shrink: 0;
 }
 
 .dark-theme #portfolio-section h2 {
@@ -166,20 +172,19 @@
 
 #portfolio-section .portfolio-content {
   display: flex;
-  gap: 25px;
+  flex-direction: column;
+  gap: 20px;
   flex: 1;
-  align-items: stretch;
-  min-height: 0; /* Allow proper flex shrinking */
-  height: 100%; /* Use remaining height */
+  min-height: 0;
 }
 
-/* Portfolio Table Section - Scrollable */
+/* Portfolio Table Section - Full Width & Taller */
 #portfolio-section .portfolio-table-container {
-  flex: 2;
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  height: 100%; /* Use full height */
+  min-height: 300px; /* Ensure space for at least 5 rows */
 }
 
 #portfolio-section .portfolio-table {
@@ -187,14 +192,17 @@
   border-collapse: collapse;
   font-size: 16px;
   margin-bottom: 0;
-  display: block; /* Make table scrollable */
   height: 100%;
-  overflow-y: auto; /* Enable vertical scrolling */
-  max-height: 480px; /* Maximum height for scrolling */
+  overflow-y: auto;
+  display: block;
+  min-height: 280px; /* Height for 5+ rows */
 }
 
 #portfolio-section .portfolio-table thead {
   display: table-header-group;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 #portfolio-section .portfolio-table tbody {
@@ -203,11 +211,24 @@
 
 #portfolio-section .portfolio-table tr {
   display: table-row;
+  height: 50px; /* Larger row height */
 }
 
 #portfolio-section .portfolio-table th,
 #portfolio-section .portfolio-table td {
   display: table-cell;
+  padding: 15px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+}
+
+#portfolio-section .portfolio-table th {
+  background-color: #f8f9fa;
+  font-weight: 700;
+  color: #333;
+  font-size: 14px;
+  border-bottom: 2px solid #dee2e6;
+  height: 50px;
 }
 
 #portfolio-section .portfolio-table th {
@@ -267,20 +288,20 @@
   color: #60a5fa;
 }
 
-/* Portfolio Chart Section - Centered */
+/* Portfolio Chart Section - Compact & Side by Side */
 #portfolio-section .portfolio-chart-container {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center vertically */
-  align-items: center; /* Center horizontally */
-  height: 100%; /* Use full height */
-  padding: 20px;
+  justify-content: center;
+  align-items: center;
+  height: 320px; /* Fixed compact height */
+  padding: 15px;
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border-radius: 12px;
   border: 1px solid #dee2e6;
   box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-  overflow: hidden; /* Prevent chart from extending beyond container */
+  overflow: hidden;
 }
 
 .dark-theme #portfolio-section .portfolio-chart-container {
@@ -290,10 +311,10 @@
 
 #portfolio-section .portfolio-pie-chart {
   width: 100%;
-  max-width: 280px;
-  max-height: 280px;
+  max-width: 260px;
+  max-height: 260px;
   height: auto;
-  flex-shrink: 0; /* Don't shrink the chart */
+  flex-shrink: 0;
 }
 
 /* Chart title */
@@ -349,7 +370,7 @@
   .troubleshoot-grid > #section-diagnostics {
     grid-column: 1;
     grid-row: auto;
-    height: auto !important; /* Reset fixed heights on mobile */
+    height: auto !important;
   }
   
   #portfolio-section {
@@ -357,24 +378,27 @@
   }
   
   #portfolio-section .portfolio-content {
-    flex-direction: column;
-    gap: 20px;
-    height: auto;
+    gap: 15px;
   }
   
   #portfolio-section .portfolio-table {
     font-size: 14px;
-    max-height: 300px; /* Smaller max height on mobile */
+    min-height: 200px;
+  }
+  
+  #portfolio-section .portfolio-table tr {
+    height: 40px;
   }
   
   #portfolio-section .portfolio-table th,
   #portfolio-section .portfolio-table td {
     padding: 10px 8px;
+    font-size: 14px;
   }
   
   #portfolio-section .portfolio-chart-container {
-    height: 320px; /* Fixed height for mobile */
-    padding: 15px;
+    height: 280px;
+    padding: 10px;
   }
   
   .summary-metrics {
