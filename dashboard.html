@@ -57,7 +57,7 @@
     </section>
   </main>
 
-  <!-- Modal Form -->
+  <!-- Account Add/Edit Modal Form -->
   <div id="account-modal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
@@ -74,6 +74,20 @@
         <div id="instruments-wrapper" style="display:none;"></div>
         <button type="button" id="add-instrument" style="display:none;">+ Add Instrument</button>
         <button type="submit">Save Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hedge Edit Modal -->
+  <div id="hedge-modal" class="hedge-modal">
+    <div class="hedge-modal-content">
+      <span class="close" id="hedge-close">&times;</span>
+      <h3>Edit Hedge Percentage</h3>
+      <form id="hedge-form" class="hedge-form" autocomplete="off">
+        <input type="text" id="hedge-account-name" placeholder="Account Name" readonly />
+        <input type="text" id="hedge-current-value" placeholder="Current Value" readonly />
+        <input type="number" id="hedge-percent-input" placeholder="Hedge %" step="0.01" min="0" max="100" required />
+        <button type="submit">Update Hedge</button>
       </form>
     </div>
   </div>

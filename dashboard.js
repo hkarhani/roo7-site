@@ -86,48 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function updateHedge(e) {
-    e.preventDefault();
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      showToast("You must be logged in to update hedge percentage.", 'error');
-      window.location.href = "/auth.html";
-      return;
-    }
-
-    const hedgePercent = parseFloat(document.getElementById("hedge-percent-input").value);
-    
-    if (isNaN(hedgePercent) || hedgePercent < 0 || hedgePercent > 100) {
-      showToast("Hedge percentage must be a number between 0 and 100.", 'warning');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/accounts/${currentHedgeAccountId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          hedge_percent: hedgePercent
-        })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      showToast("Hedge percentage updated successfully!", 'success');
-      closeHedgeModal();
-      loadAccounts();
-
-    } catch (err) {
-      showToast(`Error updating hedge percentage: ${err.message}`, 'error');
-    }
-
   function toggleTheme() {
     document.body.classList.toggle("dark-theme");
   }
@@ -161,19 +119,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("button[type='submit']").textContent = "Save Account";
   }
 
-  // Close modal when clicking outside of it
-  window.onclick = function(event) {
-    if (event.target === modal) {
-      closeModal();
-    }
-    if (event.target === hedgeModal) {
-      closeHedgeModal();
-    }
-  }
-
   function openHedgeModal(account) {
     document.getElementById("hedge-account-name").value = account.account_name;
-    document.getElementById("hedge-current-value").value = `${account.current_value || 0}`;
+    document.getElementById("hedge-current-value").value = `$${account.current_value || 0}`;
     document.getElementById("hedge-percent-input").value = account.hedge_percent || 0;
     currentHedgeAccountId = account.id;
     hedgeModal.style.display = "block";
@@ -183,6 +131,16 @@ document.addEventListener("DOMContentLoaded", () => {
     hedgeModal.style.display = "none";
     hedgeForm.reset();
     currentHedgeAccountId = null;
+  }
+
+  // Close modal when clicking outside of it
+  window.onclick = function(event) {
+    if (event.target === modal) {
+      closeModal();
+    }
+    if (event.target === hedgeModal) {
+      closeHedgeModal();
+    }
   }
 
   function validateSymbol(symbol) {
@@ -388,6 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const topXInput = document.getElementById("top-x-count");
         if (topXInput) {
           topXInput.value = account.top_x_count || "";
+          topXInput.setAttribute('required', 'required');
         }
       } else if (account.strategy === "Custom Portfolio Rebalancing") {
         instrumentsWrap.style.display = "flex";
@@ -405,6 +364,10 @@ document.addEventListener("DOMContentLoaded", () => {
           addInstrumentField("ETHUSDT", 30);
           addInstrumentField("BNBUSDT", 20);
         }
+        // Add required attributes to instrument inputs
+        instrumentsWrap.querySelectorAll('input').forEach(input => {
+          input.setAttribute('required', 'required');
+        });
       }
 
       // Open the modal
@@ -558,6 +521,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
       showToast(`Error ${currentEditingId ? 'updating' : 'creating'} account: ${err.message}`, 'error');
+    }
+  }
+
+  async function updateHedge(e) {
+    e.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showToast("You must be logged in to update hedge percentage.", 'error');
+      window.location.href = "/auth.html";
+      return;
+    }
+
+    const hedgePercent = parseFloat(document.getElementById("hedge-percent-input").value);
+    
+    if (isNaN(hedgePercent) || hedgePercent < 0 || hedgePercent > 100) {
+      showToast("Hedge percentage must be a number between 0 and 100.", 'warning');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/accounts/${currentHedgeAccountId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          hedge_percent: hedgePercent
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      showToast("Hedge percentage updated successfully!", 'success');
+      closeHedgeModal();
+      loadAccounts();
+
+    } catch (err) {
+      showToast(`Error updating hedge percentage: ${err.message}`, 'error');
     }
   }
 
