@@ -178,20 +178,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch("/me", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+    console.log("▶️ fetchUser() token:", token);
+    
+    if (!token) {
+      console.error("No token found in localStorage for fetchUser");
+      window.location.href = "/auth.html";
+      return;
+    }
 
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById("user-fullname").textContent = data.full_name;
-        } else {
-          // Optionally handle token expiry / invalid token
-          window.location.href = "/auth.html";
+    try {
+      const res = await fetch(`${API_BASE}/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      };
+      });
+
+      console.log("⏳ /me status:", res.status);
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log("✅ User data:", data);
+        document.getElementById("user-fullname").textContent = data.full_name;
+      } else {
+        console.warn("Failed to fetch user data, redirecting to auth");
+        localStorage.removeItem("token");
+        window.location.href = "/auth.html";
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      localStorage.removeItem("token");
+      window.location.href = "/auth.html";
+    }
+  };
 
   // fetch the user 
   fetchUser();
