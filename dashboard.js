@@ -140,28 +140,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showUseSameCredentialsButton() {
+    console.log("🔍 Attempting to show Use Same Credentials button...");
     const button = document.getElementById("use-same-credentials");
     const apiKeyField = document.getElementById("binance-api-key");
     const apiSecretField = document.getElementById("binance-api-secret");
     
     if (!button) {
-      console.error("❌ Use same credentials button not found!");
+      console.error("❌ Use same credentials button not found in DOM!");
       return;
     }
     
+    console.log("✅ Button found, making it visible");
     button.style.display = "block";
-    console.log("👁️ Use same credentials button shown");
+    button.style.visibility = "visible";
     
     // Reset the button state
     useSameCredentials = false;
     button.textContent = "Use Same API Credentials";
     button.classList.remove("active");
+    console.log("🔄 Button text set to:", button.textContent);
     
     // Reset field states
-    apiKeyField.disabled = false;
-    apiSecretField.disabled = false;
-    apiKeyField.style.opacity = "1";
-    apiSecretField.style.opacity = "1";
+    if (apiKeyField && apiSecretField) {
+      apiKeyField.disabled = false;
+      apiSecretField.disabled = false;
+      apiKeyField.style.opacity = "1";
+      apiSecretField.style.opacity = "1";
+      console.log("✅ API fields reset to enabled state");
+    }
   }
 
   function hideUseSameCredentialsButton() {

@@ -65,11 +65,15 @@
       <form id="account-form" autocomplete="off">
         <input type="text" id="trading-account-name" name="trading_account_name" placeholder="Account Name" autocomplete="off" required />
         
-        <!-- Use Same Credentials Button (hidden by default) -->
-        <button type="button" id="use-same-credentials" class="use-same-credentials" style="display:none;">Use Same API Credentials</button>
+        <!-- Credentials Section -->
+        <div class="credentials-section">
+          <!-- Use Same Credentials Button (hidden by default) -->
+          <button type="button" id="use-same-credentials" class="use-same-credentials" style="display:none;">Use Same API Credentials</button>
+          
+          <input type="text" id="binance-api-key" name="binance_api_key" placeholder="Binance API Key" autocomplete="new-password" required />
+          <input type="password" id="binance-api-secret" name="binance_api_secret" placeholder="Binance API Secret" autocomplete="new-password" required />
+        </div>
         
-        <input type="text" id="binance-api-key" name="binance_api_key" placeholder="Binance API Key" autocomplete="new-password" required />
-        <input type="password" id="binance-api-secret" name="binance_api_secret" placeholder="Binance API Secret" autocomplete="new-password" required />
         <select id="trading-strategy" name="trading_strategy" autocomplete="off" required>
           <option value="Standard Vapaus">Standard Vapaus</option>
           <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
@@ -115,7 +119,7 @@
     </div>
   </div>
 
- <script src="dashboard.js?v=3.9"></script> 
+ <script src="dashboard.js?v=4.1"></script> 
 
 </body>
 </html>
