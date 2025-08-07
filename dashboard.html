@@ -56,16 +56,16 @@
     </section>
   </main>
 
-  <!-- Modal Form (unchanged) -->
+  <!-- Modal Form -->
   <div id="account-modal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
       <h3>Add New Account</h3>
-      <form id="account-form">
-        <input type="text" id="account-name" placeholder="Account Name" required />
-        <input type="text" id="api-key" placeholder="Binance API Key" required />
-        <input type="password" id="api-secret" placeholder="Binance API Secret" required />
-        <select id="strategy">
+      <form id="account-form" autocomplete="off">
+        <input type="text" id="trading-account-name" name="trading_account_name" placeholder="Account Name" autocomplete="off" required />
+        <input type="text" id="binance-api-key" name="binance_api_key" placeholder="Binance API Key" autocomplete="new-password" required />
+        <input type="password" id="binance-api-secret" name="binance_api_secret" placeholder="Binance API Secret" autocomplete="new-password" required />
+        <select id="trading-strategy" name="trading_strategy" autocomplete="off">
           <option value="Standard Vapaus">Standard Vapaus</option>
           <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
           <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
@@ -77,7 +77,7 @@
     </div>
   </div>
 
- <script src="dashboard.js?v=3.2>"></script> 
+ <script src="dashboard.js?v=<%= Date.now() %>"></script> 
 
 </body>
 </html>

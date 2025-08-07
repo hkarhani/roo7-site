@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal           = document.getElementById("account-modal");
   const closeModalBtn   = document.querySelector(".modal .close");
   const accountForm     = document.getElementById("account-form");
-  const strategySelect  = document.getElementById("strategy");
+  const strategySelect  = document.getElementById("trading-strategy");
   const instrumentsWrap = document.getElementById("instruments-wrapper");
   const addInstrumentBtn= document.getElementById("add-instrument");
 
@@ -224,9 +224,9 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelector("button[type='submit']").textContent = "Update Account";
 
       // Fill form with existing data
-      document.getElementById("account-name").value = account.account_name;
-      document.getElementById("api-key").value = account.api_key || "";
-      document.getElementById("api-secret").value = account.api_secret || "";
+      document.getElementById("trading-account-name").value = account.account_name;
+      document.getElementById("binance-api-key").value = account.api_key || "";
+      document.getElementById("binance-api-secret").value = account.api_secret || "";
       strategySelect.value = account.strategy;
 
       // Handle strategy-specific fields
@@ -301,9 +301,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const data = {
-      account_name: document.getElementById("account-name").value,
-      api_key:       document.getElementById("api-key").value,
-      api_secret:    document.getElementById("api-secret").value,
+      account_name: document.getElementById("trading-account-name").value,
+      api_key:       document.getElementById("binance-api-key").value,
+      api_secret:    document.getElementById("binance-api-secret").value,
       strategy:      strategySelect.value,
       custom_portfolio: []
     };
