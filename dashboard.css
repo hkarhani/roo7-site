@@ -624,6 +624,22 @@ button.delete-account:hover {
   display: block !important;
 }
 
+/* Override any hidden styles */
+#use-same-credentials:not([style*="none"]) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* HIDDEN/VISIBLE UTILITY CLASSES */
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
 /* FORM ACTIONS */
 .form-actions {
   display: flex;

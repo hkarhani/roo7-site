@@ -93,26 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.style.display = "block";
   }
 
-  function resetModalToAddMode() {
-    console.log("🔄 Resetting modal to Add mode");
-    
-    // Reset modal title and button
-    document.querySelector("#account-modal h3").textContent = "Add New Account";
-    document.querySelector("button[type='submit']").textContent = "Save Account";
-    
-    // Hide edit-specific buttons
-    hideUseSameCredentialsButton();
-    if (cancelEditBtn) {
-      cancelEditBtn.style.display = "none";
-    }
-    
-    // Reset state
-    currentEditingId = null;
-    useSameCredentials = false;
-    
-    console.log("✅ Modal reset to Add mode");
-  }
-
   function setModalToEditMode(accountName) {
     console.log("✏️ Setting modal to Edit mode for:", accountName);
     
@@ -123,10 +103,32 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show edit-specific buttons
     showUseSameCredentialsButton();
     if (cancelEditBtn) {
-      cancelEditBtn.style.display = "block";
+      cancelEditBtn.classList.remove("hidden");
+      cancelEditBtn.classList.add("visible");
     }
     
     console.log("✅ Modal set to Edit mode");
+  }
+
+  function resetModalToAddMode() {
+    console.log("🔄 Resetting modal to Add mode");
+    
+    // Reset modal title and button
+    document.querySelector("#account-modal h3").textContent = "Add New Account";
+    document.querySelector("button[type='submit']").textContent = "Save Account";
+    
+    // Hide edit-specific buttons
+    hideUseSameCredentialsButton();
+    if (cancelEditBtn) {
+      cancelEditBtn.classList.remove("visible");
+      cancelEditBtn.classList.add("hidden");
+    }
+    
+    // Reset state
+    currentEditingId = null;
+    useSameCredentials = false;
+    
+    console.log("✅ Modal reset to Add mode");
   }
 
   function closeModal() {
@@ -183,32 +185,19 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (!button) {
       console.error("❌ CRITICAL: use-same-credentials button not found in DOM!");
-      // Let's check if it exists at all
-      const allButtons = document.querySelectorAll('button');
-      console.log("🔍 All buttons in DOM:", Array.from(allButtons).map(b => b.id || b.className));
       return;
     }
     
-    console.log("✅ Button found in DOM:", button);
-    console.log("📍 Button current display style:", button.style.display);
-    console.log("📍 Button computed display:", window.getComputedStyle(button).display);
-    
-    // Force show with multiple methods
-    button.style.display = "block !important";
-    button.style.visibility = "visible !important";
-    button.style.opacity = "1 !important";
-    button.removeAttribute('hidden');
-    button.classList.remove('hidden');
+    console.log("✅ Button found, removing hidden class and adding visible class");
+    button.classList.remove("hidden");
+    button.classList.add("visible");
     
     // Reset the button state
     useSameCredentials = false;
     button.textContent = "🔒 Use Same API Credentials";
     button.classList.remove("active");
     
-    console.log("🔄 After forcing display:");
-    console.log("📍 Button style.display:", button.style.display);
-    console.log("📍 Button textContent:", button.textContent);
-    console.log("📍 Button classList:", Array.from(button.classList));
+    console.log("🔄 Button should now be visible with text:", button.textContent);
     
     // Reset field states
     const apiKeyField = document.getElementById("binance-api-key");
@@ -221,16 +210,15 @@ document.addEventListener("DOMContentLoaded", () => {
       apiKeyField.removeAttribute('readonly');
       apiSecretField.removeAttribute('readonly');
       console.log("✅ API fields reset to enabled state");
-    } else {
-      console.error("❌ API fields not found!");
     }
   }
 
   function hideUseSameCredentialsButton() {
     const button = document.getElementById("use-same-credentials");
     if (button) {
-      button.style.display = "none";
-      console.log("👁️ Use same credentials button hidden");
+      console.log("👁️ Hiding use same credentials button");
+      button.classList.remove("visible");
+      button.classList.add("hidden");
     }
   }
 
