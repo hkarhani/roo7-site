@@ -442,35 +442,35 @@ function initializeTroubleshootPage() {
     // Clear existing chart completely
     chartContainer.innerHTML = '';
     
-    // Only show top 10 assets in pie chart
-    const topAssets = balances.slice(0, 10);
+    // Show all assets, even very small ones
+    const allAssets = balances.slice(0, 10);
     
-    if (topAssets.length === 0) {
+    if (allAssets.length === 0) {
       console.warn('No assets to display in pie chart');
       return;
     }
     
-    console.log('Initializing pie chart with', topAssets.length, 'assets');
+    console.log('Initializing pie chart with', allAssets.length, 'assets');
     
-    // Prepare data for pie chart
-    const chartData = topAssets.map(balance => ({
+    // Prepare data for pie chart - ensure all assets are visible
+    const chartData = allAssets.map(balance => ({
       label: balance.asset,
-      value: parseFloat(balance.usdt_value) || 0,
-      percentage: parseFloat(balance.percentage) || 0
+      value: parseFloat(balance.usdt_value) || 0.01, // Minimum value to ensure visibility
+      percentage: parseFloat(balance.percentage) || 0.01 // Minimum percentage
     }));
     
     console.log('Chart data prepared:', chartData);
     
     try {
-      // Create pie chart
+      // Create pie chart with settings optimized for showing small slices
       const pieChart = new PieChart('portfolio-pie-chart', {
         width: 280,
         height: 280,
         radius: 100,
-        showLegend: false, // We'll show the table instead
+        showLegend: false,
         showTooltip: true,
         title: null,
-        minSlicePercentage: 0.5, // Group assets smaller than 0.5%
+        minSlicePercentage: 0.1, // Show slices as small as 0.1%
         showPercentages: true,
         colors: [
           '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
