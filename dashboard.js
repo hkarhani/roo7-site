@@ -31,6 +31,40 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentEditingId = null; // Track which account is being edited
   let binanceSymbols = []; // Cache Binance symbols
 
+  // Toast notification system
+  function showToast(message, type = 'info', duration = 4000) {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.toast');
+    existingToasts.forEach(toast => toast.remove());
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+      <div class="toast-content">
+        <span class="toast-message">${message}</span>
+        <button class="toast-close">&times;</button>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Show toast
+    setTimeout(() => toast.classList.add('toast-show'), 100);
+
+    // Auto-hide after duration
+    const autoHide = setTimeout(() => {
+      toast.classList.remove('toast-show');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+
+    // Manual close
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+      clearTimeout(autoHide);
+      toast.classList.remove('toast-show');
+      setTimeout(() => toast.remove(), 300);
+    });
+  }
+
   // Load Binance symbols on startup
   async function loadBinanceSymbols() {
     try {
@@ -42,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log(`✅ Loaded ${binanceSymbols.length} Binance USDT symbols`);
     } catch (error) {
       console.error('❌ Failed to load Binance symbols:', error);
-      alert('Warning: Could not load Binance symbols. Symbol validation will be skipped.');
+      showToast('Warning: Could not load Binance symbols. Symbol validation will be skipped.', 'warning');
     }
   }
 
@@ -124,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
       topXWrapper.id = "top-x-wrapper";
       topXWrapper.style.display = "none";
       topXWrapper.innerHTML = `
-        <input type="number" id="top-x-count" placeholder="Number of top instruments" min="1" max="50" required>
+        <input type="number" id="top-x-count" placeholder="Number of top instruments" min="1" max="50">
       `;
       // Insert after strategy select
       strategySelect.parentNode.insertBefore(topXWrapper, strategySelect.nextSibling);
@@ -137,64 +171,81 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("▶️ loadAccounts() token:", token);
     if (!token) {
       console.error("No token found in localStorage, redirecting to login.");
-      return (window.location.href = "/auth.html");
+      window.location.href = "/auth.html";
+      return;
     }
 
-    const res = await fetch(`${API_BASE}/accounts`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
+    try {
+      const res = await fetch(`${API_BASE}/accounts`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      console.log("⏳ /accounts status:", res.status);
+      
+      if (res.status === 401) {
+        console.warn("Unauthorized — clearing token & bouncing back.");
+        localStorage.removeItem("token");
+        showToast("Session expired. Please log in again.", 'error');
+        setTimeout(() => {
+          window.location.href = "/auth.html";
+        }, 2000);
+        return;
       }
-    });
 
-    console.log("⏳ /accounts status:", res.status);
-    if (res.status === 401) {
-      console.warn("Unauthorized — clearing token & bouncing back.");
-      localStorage.removeItem("token");
-      return alert("Session expired. Please log in again.");
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const accounts = await res.json();
+      const liveTbody     = document.querySelector("#accounts-table tbody");
+      const settingsTbody = document.querySelector("#settings-table tbody");
+
+      liveTbody.innerHTML = "";
+      settingsTbody.innerHTML = "";
+
+      accounts.forEach(acc => {
+        liveTbody.innerHTML += `
+          <tr>
+            <td>${acc.account_name}</td>
+            <td>${acc.strategy}</td>
+            <td>${acc.current_value !== undefined && acc.current_value !== null ? acc.current_value : 'N/A'}</td>
+            <td>${acc.hedge_percent !== undefined && acc.hedge_percent !== null ? acc.hedge_percent + '%' : 'N/A'}</td>
+          </tr>`;
+    
+        settingsTbody.innerHTML += `
+          <tr>
+            <td>${acc.account_name}</td>
+            <td>
+              <button class="edit-account" data-id="${acc.id}">Edit</button>
+              <button class="delete-account" data-id="${acc.id}">Delete</button>
+            </td>
+          </tr>`;
+      });
+
+      // Add event listeners to edit and delete buttons
+      document.querySelectorAll('.edit-account').forEach(btn => {
+        btn.addEventListener('click', () => editAccount(btn.dataset.id));
+      });
+
+      document.querySelectorAll('.delete-account').forEach(btn => {
+        btn.addEventListener('click', () => deleteAccount(btn.dataset.id));
+      });
+
+    } catch (error) {
+      console.error("Error loading accounts:", error);
+      showToast(`Failed to load accounts: ${error.message}`, 'error');
     }
-
-    const accounts = await res.json();
-    const liveTbody     = document.querySelector("#accounts-table tbody");
-    const settingsTbody = document.querySelector("#settings-table tbody");
-
-    liveTbody.innerHTML = "";
-    settingsTbody.innerHTML = "";
-
-    accounts.forEach(acc => {
-      liveTbody.innerHTML += `
-        <tr>
-          <td>${acc.account_name}</td>
-          <td>${acc.strategy}</td>
-          <td>${acc.current_value !== undefined && acc.current_value !== null ? acc.current_value : 'N/A'}</td>
-          <td>${acc.hedge_percent !== undefined && acc.hedge_percent !== null ? acc.hedge_percent + '%' : 'N/A'}</td>
-        </tr>`;
-  
-      settingsTbody.innerHTML += `
-        <tr>
-          <td>${acc.account_name}</td>
-          <td>
-            <button class="edit-account" data-id="${acc.id}">Edit</button>
-            <button class="delete-account" data-id="${acc.id}">Delete</button>
-          </td>
-        </tr>`;
-    });
-
-    // Add event listeners to edit and delete buttons
-    document.querySelectorAll('.edit-account').forEach(btn => {
-      btn.addEventListener('click', () => editAccount(btn.dataset.id));
-    });
-
-    document.querySelectorAll('.delete-account').forEach(btn => {
-      btn.addEventListener('click', () => deleteAccount(btn.dataset.id));
-    });
   }
 
   async function editAccount(accountId) {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("You must be logged in to edit an account.");
-      return window.location.href = "/auth.html";
+      showToast("You must be logged in to edit an account.", 'error');
+      window.location.href = "/auth.html";
+      return;
     }
 
     try {
@@ -212,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const account = accounts.find(acc => acc.id === accountId);
 
       if (!account) {
-        alert("Account not found.");
+        showToast("Account not found.", 'error');
         return;
       }
 
@@ -233,7 +284,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (account.strategy === "Top X Instruments of Vapaus") {
         const topXWrapper = addTopXInput();
         topXWrapper.style.display = "block";
-        document.getElementById("top-x-count").value = account.top_x_count || "";
+        const topXInput = document.getElementById("top-x-count");
+        if (topXInput) {
+          topXInput.value = account.top_x_count || "";
+        }
       } else if (account.strategy === "Custom Portfolio Rebalancing") {
         instrumentsWrap.style.display = "flex";
         addInstrumentBtn.style.display = "inline-block";
@@ -256,7 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
       openModal();
 
     } catch (err) {
-      alert("Error loading account: " + err.message);
+      showToast(`Error loading account: ${err.message}`, 'error');
     }
   }
 
@@ -267,8 +321,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("You must be logged in to delete an account.");
-      return window.location.href = "/auth.html";
+      showToast("You must be logged in to delete an account.", 'error');
+      window.location.href = "/auth.html";
+      return;
     }
 
     try {
@@ -281,11 +336,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!res.ok) throw new Error(`Status ${res.status}`);
 
-      alert("Account deleted successfully!");
+      showToast("Account deleted successfully!", 'success');
       loadAccounts();
 
     } catch (err) {
-      alert("Error deleting account: " + err.message);
+      showToast(`Error deleting account: ${err.message}`, 'error');
     }
   }
 
@@ -296,8 +351,9 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("▶️ submitAccount() token:", token);
 
     if (!token) {
-      alert("You must be logged in to save an account.");
-      return window.location.href = "/auth.html";
+      showToast("You must be logged in to save an account.", 'error');
+      window.location.href = "/auth.html";
+      return;
     }
 
     const data = {
@@ -312,12 +368,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.strategy === "Top X Instruments of Vapaus") {
       const topXCount = document.getElementById("top-x-count");
       if (!topXCount || !topXCount.value) {
-        alert("Please specify the number of top instruments.");
+        showToast("Please specify the number of top instruments.", 'warning');
+        topXCount?.focus();
         return;
       }
       data.top_x_count = parseInt(topXCount.value);
       if (data.top_x_count < 1 || data.top_x_count > 50) {
-        alert("Number of top instruments must be between 1 and 50.");
+        showToast("Number of top instruments must be between 1 and 50.", 'warning');
+        topXCount.focus();
         return;
       }
     }
@@ -328,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const weights = instrumentsWrap.querySelectorAll("input[name='weight']");
       
       if (syms.length === 0) {
-        alert("Please add at least one instrument for custom portfolio.");
+        showToast("Please add at least one instrument for custom portfolio.", 'warning');
         return;
       }
 
@@ -339,19 +397,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Check if symbol ends with USDT
         if (!symbol.endsWith('USDT')) {
-          alert(`Symbol ${symbol} must end with USDT.`);
+          showToast(`Symbol ${symbol} must end with USDT.`, 'warning');
+          syms[i].focus();
           return;
         }
 
         // Check if symbol exists on Binance
         if (!validateSymbol(symbol)) {
-          alert(`Symbol ${symbol} does not exist on Binance SPOT or is not trading.`);
+          showToast(`Symbol ${symbol} does not exist on Binance SPOT or is not trading.`, 'error');
+          syms[i].focus();
           return;
         }
 
         // Check weight
         if (isNaN(weight) || weight <= 0 || weight > 100) {
-          alert(`Weight for ${symbol} must be a positive number between 0 and 100.`);
+          showToast(`Weight for ${symbol} must be a positive number between 0 and 100.`, 'warning');
+          weights[i].focus();
           return;
         }
 
@@ -364,7 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Validate total weights sum to 100%
       if (!validatePortfolioWeights()) {
         const totalWeight = data.custom_portfolio.reduce((sum, item) => sum + item.weight, 0);
-        alert(`Portfolio weights must sum to 100%. Current total: ${totalWeight.toFixed(2)}%`);
+        showToast(`Portfolio weights must sum to 100%. Current total: ${totalWeight.toFixed(2)}%`, 'warning');
         return;
       }
     }
@@ -385,17 +446,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || `Status ${res.status}`);
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
       }
 
       const action = currentEditingId ? "updated" : "created";
-      alert(`Account ${action} successfully!`);
+      showToast(`Account ${action} successfully!`, 'success');
       closeModal();
       loadAccounts();
 
     } catch (err) {
-      alert(`Error ${currentEditingId ? 'updating' : 'creating'} account: ` + err.message);
+      showToast(`Error ${currentEditingId ? 'updating' : 'creating'} account: ${err.message}`, 'error');
     }
   }
 
@@ -423,7 +484,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       console.log("⏳ /me status:", res.status);
-      console.log("⏳ /me response headers:", res.headers);
 
       if (res.ok) {
         const data = await res.json();
@@ -434,21 +494,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("user-fullname").textContent = "User";
       } else {
         console.warn("Failed to fetch user data, status:", res.status);
-        const errorText = await res.text();
-        console.warn("Error response:", errorText);
-        console.log("Will redirect in 5 seconds...");
         localStorage.removeItem("token");
+        showToast("Session expired. Redirecting to login...", 'error');
         setTimeout(() => {
           window.location.href = "/auth.html";
-        }, 5000);
+        }, 2000);
       }
     } catch (error) {
       console.error("Error fetching user:", error);
-      console.log("Network error - will redirect in 5 seconds...");
-      localStorage.removeItem("token");
-      setTimeout(() => {
-        window.location.href = "/auth.html";
-      }, 5000);
+      showToast("Network error. Please check your connection.", 'error');
     }
   };
 
