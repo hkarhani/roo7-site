@@ -395,6 +395,15 @@ function initializeTroubleshootPage() {
     // Show the portfolio section
     portfolioSection.style.display = 'block';
     
+    // Add chart title if it doesn't exist
+    let chartContainer = document.querySelector('#portfolio-section .portfolio-chart-container');
+    if (chartContainer && !chartContainer.querySelector('.portfolio-chart-title')) {
+      const chartTitle = document.createElement('div');
+      chartTitle.className = 'portfolio-chart-title';
+      chartTitle.textContent = 'Asset Distribution';
+      chartContainer.insertBefore(chartTitle, chartContainer.firstChild);
+    }
+    
     // Clear and populate the table
     portfolioTable.innerHTML = '';
     
