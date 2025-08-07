@@ -1,23 +1,24 @@
+<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
- <div class="dashboard-header">
-  <h1>Welcome, <span id="username"></span></h1>
-  <div class="actions">
-    <button id="toggle-theme">Toggle Theme</button>
-    <button id="logout-btn">Logout</button>
+  <div class="dashboard-header">
+    <h1>Welcome, <span id="username"></span></h1>
+    <div class="actions">
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="logout-btn">Logout</button>
+    </div>
   </div>
-</div>
 
-  <main>
+  <main class="dashboard-grid">
     <!-- Section 1: Live Accounts Table -->
-    <section id="section-accounts">
+    <section id="section-accounts" class="dashboard-card">
       <h2>Live Accounts</h2>
       <table id="accounts-table">
         <thead>
@@ -33,8 +34,8 @@
     </section>
 
     <!-- Section 2: Account Settings -->
-    <section id="section-settings">
-      <h2>Accounts Settings</h2>
+    <section id="section-settings" class="dashboard-card">
+      <h2>Account Settings</h2>
       <table id="settings-table">
         <thead>
           <tr>
@@ -46,17 +47,23 @@
       </table>
       <button id="open-modal">Add New Account</button>
     </section>
+
+    <!-- Section 3: Full-width Bottom -->
+    <section id="section-third" class="dashboard-card">
+      <h2>Third Section</h2>
+      <p>Put your bottom-row content here.</p>
+    </section>
   </main>
 
-  <!-- Modal Form -->
+  <!-- Modal Form (unchanged) -->
   <div id="account-modal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
       <h3>Add New Account</h3>
       <form id="account-form">
-        <input type="text" id="account-name" placeholder="Account Name" required>
-        <input type="text" id="api-key" placeholder="Binance API Key" required>
-        <input type="password" id="api-secret" placeholder="Binance API Secret" required>
+        <input type="text" id="account-name" placeholder="Account Name" required />
+        <input type="text" id="api-key" placeholder="Binance API Key" required />
+        <input type="password" id="api-secret" placeholder="Binance API Secret" required />
         <select id="strategy">
           <option value="Standard Vapaus">Standard Vapaus</option>
           <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>

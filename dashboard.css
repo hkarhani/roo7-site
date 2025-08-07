@@ -1,3 +1,5 @@
+/* dashboard.css */
+
 /* Base Theme */
 body {
   font-family: 'Segoe UI', sans-serif;
@@ -11,16 +13,20 @@ body {
   color: #e0e0e0;
 }
 
-.dashboard-container {
+/* Center container if used */
+/* .dashboard-container {
   max-width: 1200px;
   margin: auto;
-  padding: 30px;
-}
+} */
 
+/* Header */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   margin-bottom: 25px;
 }
 
@@ -28,34 +34,55 @@ body {
   margin-left: 10px;
   padding: 8px 14px;
   background: #0077cc;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
 }
-
 .dashboard-header button:hover {
   background: #005fa3;
 }
 
+/* GRID LAYOUT */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-auto-rows: auto;
   gap: 30px;
+  padding: 0 20px 40px;
 }
 
+/* Make the third section span both columns */
+#section-third {
+  grid-column: 1 / -1;
+}
+
+/* CARD STYLING FOR SECTIONS */
 .dashboard-card {
-  background: white;
+  background: #fff;
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
+/* Dark-theme overrides */
+.dark-theme .dashboard-header {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+}
+.dark-theme .dashboard-header button {
+  background-color: #444;
+  color: #fff;
+}
+.dark-theme .dashboard-header button:hover {
+  background-color: #666;
+}
 .dark-theme .dashboard-card {
   background: #1e1e1e;
   box-shadow: 0 2px 8px rgba(255,255,255,0.05);
 }
 
+/* Typography & Tables */
 h2 {
   margin-top: 0;
   margin-bottom: 15px;
@@ -65,181 +92,33 @@ table {
   width: 100%;
   border-collapse: collapse;
 }
-
 th, td {
   padding: 10px 12px;
   border-bottom: 1px solid #ddd;
   text-align: left;
 }
-
 th {
   background-color: #f0f0f0;
 }
-
 .dark-theme th {
   background-color: #2a2a2a;
 }
 
-tfoot td {
-  font-weight: bold;
-}
-
+/* Buttons inside cards */
+button#open-modal,
+button#add-instrument,
+button[type="submit"],
 button.edit-account,
 button.delete-account {
-  padding: 5px 10px;
-  margin-right: 5px;
-  font-size: 13px;
+  padding: 8px 14px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.edit-account {
-  background-color: #3c9;
-  color: white;
-}
-
-.delete-account {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.edit-account:hover {
-  background-color: #37b087;
-}
-
-.delete-account:hover {
-  background-color: #c0392b;
-}
-
-/* Modal Styles */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.5);
-}
-
-.modal-content {
-  background: white;
-  margin: 60px auto;
-  padding: 25px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  position: relative;
-}
-
-.dark-theme .modal-content {
-  background: #2c2c2c;
-  color: white;
-}
-
-.modal .close {
-  position: absolute;
-  top: 15px; right: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  color: #888;
-}
-
-.modal .close:hover {
-  color: #000;
-}
-
-.modal form input,
-.modal form select {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-.modal form input[type="password"] {
-  font-family: monospace;
-}
-
-.modal form button[type="submit"] {
   background: #0077cc;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 10px;
+  color: #fff;
 }
-
-.modal form button[type="submit"]:hover {
+button#open-modal:hover,
+button#add-instrument:hover,
+button[type="submit"]:hover {
   background: #005fa3;
-}
-
-/* Instrument fields */
-.instrument-field {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  align-items: center;
-}
-
-.instrument-field input[type="text"],
-.instrument-field input[type="number"] {
-  flex: 1;
-}
-
-.instrument-field .remove-instrument {
-  padding: 6px 10px;
-  font-size: 18px;
-  color: #fff;
-  background-color: #ff5555;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.instrument-field .remove-instrument:hover {
-  background-color: #cc0000;
-}
-
-#add-instrument {
-  background: #888;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  margin-top: 8px;
-  cursor: pointer;
-}
-
-#add-instrument:hover {
-  background: #666;
-}
-
-.dashboard-header {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #333;
-}
-
-.dark-theme .dashboard-header {
-  background-color: #1e1e1e;
-  color: #f5f5f5;
-}
-
-.dark-theme .dashboard-header button {
-  background-color: #444;
-  color: #fff;
-}
-
-.dark-theme .dashboard-header button:hover {
-  background-color: #666;
 }
