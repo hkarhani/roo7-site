@@ -28,7 +28,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const instrumentsWrap = document.getElementById("instruments-wrapper");
   const addInstrumentBtn= document.getElementById("add-instrument");
 
+  // Hedge modal elements
+  const hedgeModal = document.getElementById("hedge-modal");
+  const hedgeCloseBtn = document.getElementById("hedge-close");
+  const hedgeForm = document.getElementById("hedge-form");
+
   let currentEditingId = null; // Track which account is being edited
+  let currentHedgeAccountId = null; // Track which account hedge is being edited
   let binanceSymbols = []; // Cache Binance symbols
 
   // Toast notification system
@@ -80,6 +86,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function updateHedge(e) {
+    e.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showToast("You must be logged in to update hedge percentage.", 'error');
+      window.location.href = "/auth.html";
+      return;
+    }
+
+    const hedgePercent = parseFloat(document.getElementById("hedge-percent-input").value);
+    
+    if (isNaN(hedgePercent) || hedgePercent < 0 || hedgePercent > 100) {
+      showToast("Hedge percentage must be a number between 0 and 100.", 'warning');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/accounts/${currentHedgeAccountId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          hedge_percent: hedgePercent
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      showToast("Hedge percentage updated successfully!", 'success');
+      closeHedgeModal();
+      loadAccounts();
+
+    } catch (err) {
+      showToast(`Error updating hedge percentage: ${err.message}`, 'error');
+    }
+
   function toggleTheme() {
     document.body.classList.toggle("dark-theme");
   }
@@ -118,6 +166,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.target === modal) {
       closeModal();
     }
+    if (event.target === hedgeModal) {
+      closeHedgeModal();
+    }
+  }
+
+  function openHedgeModal(account) {
+    document.getElementById("hedge-account-name").value = account.account_name;
+    document.getElementById("hedge-current-value").value = `${account.current_value || 0}`;
+    document.getElementById("hedge-percent-input").value = account.hedge_percent || 0;
+    currentHedgeAccountId = account.id;
+    hedgeModal.style.display = "block";
+  }
+
+  function closeHedgeModal() {
+    hedgeModal.style.display = "none";
+    hedgeForm.reset();
+    currentHedgeAccountId = null;
   }
 
   function validateSymbol(symbol) {
@@ -221,6 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
             <td>${acc.strategy}</td>
             <td>${acc.current_value !== undefined && acc.current_value !== null ? acc.current_value : 'N/A'}</td>
             <td>${acc.hedge_percent !== undefined && acc.hedge_percent !== null ? acc.hedge_percent + '%' : 'N/A'}</td>
+            <td class="account-actions">
+              <button class="action-icon troubleshoot-icon" data-account="${acc.account_name}" title="Troubleshoot">🔧</button>
+              <button class="action-icon hedge-edit-icon" data-id="${acc.id}" title="Edit Hedge %">%</button>
+            </td>
           </tr>`;
     
         settingsTbody.innerHTML += `
@@ -240,6 +309,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
       document.querySelectorAll('.delete-account').forEach(btn => {
         btn.addEventListener('click', () => deleteAccount(btn.dataset.id));
+      });
+
+      // Add event listeners for troubleshoot and hedge edit buttons
+      document.querySelectorAll('.troubleshoot-icon').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const accountName = btn.dataset.account;
+          const token = localStorage.getItem("token");
+          if (token) {
+            window.open(`troubleshoot.html?account=${encodeURIComponent(accountName)}`, '_blank');
+          } else {
+            showToast("You must be logged in to access troubleshooting.", 'error');
+            window.location.href = "/auth.html";
+          }
+        });
+      });
+
+      document.querySelectorAll('.hedge-edit-icon').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const accountId = btn.dataset.id;
+          const account = accounts.find(acc => acc.id === accountId);
+          if (account) {
+            openHedgeModal(account);
+          }
+        });
       });
 
     } catch (error) {
@@ -519,7 +612,9 @@ document.addEventListener("DOMContentLoaded", () => {
   logoutBtn.onclick         = logout;
   openModalBtn.onclick      = openModal;
   closeModalBtn.onclick     = closeModal;
+  hedgeCloseBtn.onclick     = closeHedgeModal;
   accountForm.onsubmit      = submitAccount;
+  hedgeForm.onsubmit        = updateHedge;
   
   strategySelect.onchange   = () => {
     const topXWrapper = document.getElementById("top-x-wrapper") || addTopXInput();

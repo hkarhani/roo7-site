@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Account Troubleshoot</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>Troubleshoot: <strong id="account-name-display"></strong></h1>
+    <div class="actions">
+      <button id="toggle-theme">Toggle Theme</button>
+      <button onclick="window.close()" id="close-btn">Close</button>
+    </div>
+  </div>
+
+  <main class="dashboard-grid">
+    <!-- Account Details Section -->
+    <section class="dashboard-card">
+      <h2>Account Details</h2>
+      <div class="account-info">
+        <div class="info-row">
+          <label>Account Name:</label>
+          <span id="account-name"></span>
+        </div>
+        <div class="info-row">
+          <label>Strategy:</label>
+          <span id="strategy"></span>
+        </div>
+        <div class="info-row">
+          <label>Current Value:</label>
+          <span id="current-value"></span>
+        </div>
+        <div class="info-row">
+          <label>Hedge Percentage:</label>
+          <span id="hedge-percent"></span>
+        </div>
+        <div class="info-row">
+          <label>API Key Status:</label>
+          <span id="api-key-status"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Troubleshooting Section -->
+    <section class="dashboard-card">
+      <h2>Connectivity Test</h2>
+      <div class="troubleshoot-actions">
+        <button id="test-connection" class="test-btn">Test Binance Connection</button>
+        <div id="test-results" class="test-results"></div>
+      </div>
+    </section>
+
+    <!-- Diagnostics Section -->
+    <section id="section-diagnostics" class="dashboard-card">
+      <h2>Diagnostic Information</h2>
+      <div id="diagnostic-info" class="diagnostic-content">
+        <p>Click "Test Binance Connection" to run diagnostics...</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="troubleshoot.js"></script>
+</body>
+</html>
