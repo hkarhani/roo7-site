@@ -218,11 +218,11 @@ function initializeTroubleshootPage() {
 
       console.log("🎯 Account found:", account.account_name);
 
-      // Populate UI elements
+      // Populate UI elements with proper formatting
       const updates = {
         'account-name': account.account_name || 'N/A',
         'strategy': account.strategy || 'N/A', 
-        'current-value': account.current_value !== undefined && account.current_value !== null ? `$${account.current_value}` : 'N/A',
+        'current-value': account.current_value !== undefined && account.current_value !== null ? `${parseFloat(account.current_value).toFixed(2)}` : 'N/A',
         'hedge-percent': account.hedge_percent !== undefined && account.hedge_percent !== null ? `${account.hedge_percent}%` : 'N/A',
         'api-key-status': account.api_key ? '✅ Configured' : '❌ Not Configured'
       };
@@ -329,7 +329,7 @@ function initializeTroubleshootPage() {
 
       // Update API connection status and Account Details based on results
       if (results.success && results.api_key_valid && results.ip_whitelisted) {
-        updateAPIConnectionStatus('connected', `Total Value: ${parseFloat(results.total_usdt_value || 0).toFixed(2)} USDT`);
+        updateAPIConnectionStatus('connected'); // Remove total value from here
         updateAPIKeyStatus(true, true); // Update Account Details API Key Status
       } else {
         const issues = [];
