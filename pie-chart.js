@@ -77,7 +77,7 @@ class PieChart {
     this.svgElement.setAttribute('width', this.options.width);
     this.svgElement.setAttribute('height', this.options.height);
     this.svgElement.setAttribute('viewBox', `0 0 ${this.options.width} ${this.options.height}`);
-    this.svgElement.className = this.options.className;
+    this.svgElement.setAttribute('class', this.options.className);
     svgContainer.appendChild(this.svgElement);
     
     // Create legend container if enabled
@@ -385,7 +385,7 @@ class PieChart {
       
       // Create slice path
       const slice = this.createSlice(centerX, centerY, radius, startAngle, endAngle, item.color);
-      slice.className.baseVal = `${this.options.className}-slice`;
+      slice.setAttribute('class', `${this.options.className}-slice`);
       slice.dataset.index = index;
       
       // Add event listeners
@@ -460,21 +460,21 @@ class PieChart {
     centerCircle.setAttribute('cx', centerX);
     centerCircle.setAttribute('cy', centerY);
     centerCircle.setAttribute('r', 40);
-    centerCircle.className.baseVal = `${this.options.className}-center-circle`;
+    centerCircle.setAttribute('class', `${this.options.className}-center-circle`);
     this.svgElement.appendChild(centerCircle);
     
     // Center text
     const centerText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     centerText.setAttribute('x', centerX);
     centerText.setAttribute('y', centerY - 5);
-    centerText.className.baseVal = `${this.options.className}-center-text`;
+    centerText.setAttribute('class', `${this.options.className}-center-text`);
     centerText.textContent = 'Portfolio';
     this.svgElement.appendChild(centerText);
     
     const centerSubText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     centerSubText.setAttribute('x', centerX);
     centerSubText.setAttribute('y', centerY + 10);
-    centerSubText.className.baseVal = `${this.options.className}-center-text`;
+    centerSubText.setAttribute('class', `${this.options.className}-center-text`);
     centerSubText.setAttribute('font-size', '11');
     centerSubText.textContent = `${this.data.length} assets`;
     this.svgElement.appendChild(centerSubText);
