@@ -76,7 +76,13 @@
     </div>
   </div>
 
- <script src="dashboard.js?v=<%= Date.now() %>"></script> 
+ <script>
+  const script = document.createElement('script');
+  script.src = 'dashboard.js?v=' + Date.now(); // Avoid cache
+  script.defer = true;  // Ensure DOM is loaded before running
+  document.body.appendChild(script);
+</script>
+
 
 </body>
 </html>
