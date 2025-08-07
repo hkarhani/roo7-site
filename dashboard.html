@@ -79,9 +79,13 @@
 
  <script>
    // Dynamically load dashboard.js with cache-busting parameter
-   const script = document.createElement('script');
-   script.src = `dashboard.js?v=${Date.now()}`;
-   document.head.appendChild(script);
+   (function() {
+     const script = document.createElement('script');
+     script.src = 'dashboard.js?v=' + Date.now();
+     script.type = 'text/javascript';
+     script.async = false;
+     document.head.appendChild(script);
+   })();
  </script> 
 
 </body>
