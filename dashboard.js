@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const hedgeModal = document.getElementById("hedge-modal");
   const hedgeCloseBtn = document.getElementById("hedge-close");
   const hedgeForm = document.getElementById("hedge-form");
+  const cancelEditBtn = document.getElementById("cancel-edit");
 
   // State variables
   let currentEditingId = null;
@@ -92,7 +93,45 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.style.display = "block";
   }
 
+  function resetModalToAddMode() {
+    console.log("🔄 Resetting modal to Add mode");
+    
+    // Reset modal title and button
+    document.querySelector("#account-modal h3").textContent = "Add New Account";
+    document.querySelector("button[type='submit']").textContent = "Save Account";
+    
+    // Hide edit-specific buttons
+    hideUseSameCredentialsButton();
+    if (cancelEditBtn) {
+      cancelEditBtn.style.display = "none";
+    }
+    
+    // Reset state
+    currentEditingId = null;
+    useSameCredentials = false;
+    
+    console.log("✅ Modal reset to Add mode");
+  }
+
+  function setModalToEditMode(accountName) {
+    console.log("✏️ Setting modal to Edit mode for:", accountName);
+    
+    // Update modal title and button
+    document.querySelector("#account-modal h3").textContent = "Edit Account";
+    document.querySelector("button[type='submit']").textContent = "Update Account";
+    
+    // Show edit-specific buttons
+    showUseSameCredentialsButton();
+    if (cancelEditBtn) {
+      cancelEditBtn.style.display = "block";
+    }
+    
+    console.log("✅ Modal set to Edit mode");
+  }
+
   function closeModal() {
+    console.log("🚪 Closing modal and cleaning up state");
+    
     modal.style.display = "none";
     accountForm.reset();
     instrumentsWrap.innerHTML = "";
@@ -104,11 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
       topXWrapper.style.display = "none";
     }
 
-    // Hide the "Use Same Credentials" button
-    hideUseSameCredentialsButton();
-
-    // Reset credentials state
-    useSameCredentials = false;
+    // Reset all fields to enabled state
     const apiKeyField = document.getElementById("binance-api-key");
     const apiSecretField = document.getElementById("binance-api-secret");
     if (apiKeyField && apiSecretField) {
@@ -116,11 +151,14 @@ document.addEventListener("DOMContentLoaded", () => {
       apiSecretField.disabled = false;
       apiKeyField.style.opacity = "1";
       apiSecretField.style.opacity = "1";
+      apiKeyField.removeAttribute('readonly');
+      apiSecretField.removeAttribute('readonly');
     }
     
-    currentEditingId = null;
-    document.querySelector("#account-modal h3").textContent = "Add New Account";
-    document.querySelector("button[type='submit']").textContent = "Save Account";
+    // Reset modal to add mode
+    resetModalToAddMode();
+    
+    console.log("✅ Modal closed and state cleaned");
   }
 
   function openHedgeModal(account) {
@@ -142,8 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function showUseSameCredentialsButton() {
     console.log("🔍 Attempting to show Use Same Credentials button...");
     const button = document.getElementById("use-same-credentials");
-    const apiKeyField = document.getElementById("binance-api-key");
-    const apiSecretField = document.getElementById("binance-api-secret");
     
     if (!button) {
       console.error("❌ Use same credentials button not found in DOM!");
@@ -156,16 +192,20 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Reset the button state
     useSameCredentials = false;
-    button.textContent = "Use Same API Credentials";
+    button.textContent = "🔒 Use Same API Credentials";
     button.classList.remove("active");
     console.log("🔄 Button text set to:", button.textContent);
     
     // Reset field states
+    const apiKeyField = document.getElementById("binance-api-key");
+    const apiSecretField = document.getElementById("binance-api-secret");
     if (apiKeyField && apiSecretField) {
       apiKeyField.disabled = false;
       apiSecretField.disabled = false;
       apiKeyField.style.opacity = "1";
       apiSecretField.style.opacity = "1";
+      apiKeyField.removeAttribute('readonly');
+      apiSecretField.removeAttribute('readonly');
       console.log("✅ API fields reset to enabled state");
     }
   }

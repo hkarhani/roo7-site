@@ -68,7 +68,9 @@
         <!-- Credentials Section -->
         <div class="credentials-section">
           <!-- Use Same Credentials Button (hidden by default) -->
-          <button type="button" id="use-same-credentials" class="use-same-credentials" style="display:none;">Use Same API Credentials</button>
+          <button type="button" id="use-same-credentials" class="use-same-credentials" style="display:none;">
+            🔒 Use Same API Credentials
+          </button>
           
           <input type="text" id="binance-api-key" name="binance_api_key" placeholder="Binance API Key" autocomplete="new-password" required />
           <input type="password" id="binance-api-secret" name="binance_api_secret" placeholder="Binance API Secret" autocomplete="new-password" required />
@@ -81,7 +83,12 @@
         </select>
         <div id="instruments-wrapper" style="display:none;"></div>
         <button type="button" id="add-instrument" style="display:none;">+ Add Instrument</button>
-        <button type="submit">Save Account</button>
+        
+        <!-- Action buttons -->
+        <div class="form-actions">
+          <button type="button" id="cancel-edit" class="cancel-button" style="display:none;">Cancel</button>
+          <button type="submit">Save Account</button>
+        </div>
       </form>
     </div>
   </div>
@@ -119,7 +126,7 @@
     </div>
   </div>
 
- <script src="dashboard.js?v=4.1"></script> 
+ <script src="dashboard.js?v=4.2"></script> 
 
 </body>
 </html>
