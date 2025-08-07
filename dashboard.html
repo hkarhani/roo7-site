@@ -58,10 +58,11 @@
         <input id="account-name" type="text" placeholder="Account Name" required />
         <input id="api-key" type="text" placeholder="API Key" required />
         <input id="api-secret" type="text" placeholder="API Secret" required />
+        <input id="hedge" type="text" placeholder="Hedge" valu='0' required />
         <select id="strategy" required>
           <option value="">Select Strategy</option>
-          <option value="Long Only">Long Only</option>
-          <option value="Hedged Portfolio">Hedged Portfolio</option>
+          <option value="Original Vapaus">Original Vapaus</option>
+          <option value="Top N Coins of Vapaus">Top N Coins of Vapaus</option>
           <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
         </select>
         <div id="instruments-wrapper" style="display:none;"></div>
