@@ -111,6 +111,12 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.style.display = "block";
   }
 
+  function openModalForEdit() {
+    console.log("✏️ Opening modal for EDIT mode");
+    // Don't reset to add mode - keep the edit mode that was already set
+    modal.style.display = "block";
+  }
+
   function setModalToEditMode(accountName) {
     console.log("✏️ Setting modal to Edit mode for:", accountName);
     
