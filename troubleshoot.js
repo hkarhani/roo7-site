@@ -35,7 +35,7 @@ function initializeTroubleshootPage() {
     console.error("❌ Header element not found");
   }
 
-  // Toast notification system (reuse from dashboard)
+  // Toast notification system (same as dashboard)
   function showToast(message, type = 'info', duration = 4000) {
     const existingToasts = document.querySelectorAll('.toast');
     existingToasts.forEach(toast => toast.remove());
@@ -196,7 +196,7 @@ function initializeTroubleshootPage() {
     }
   }
 
-  // Test Binance connection
+  // Enhanced Binance connection test with comprehensive result display
   async function testBinanceConnection() {
     const testBtn = document.getElementById('test-connection');
     const testResults = document.getElementById('test-results');
@@ -207,103 +207,239 @@ function initializeTroubleshootPage() {
       return;
     }
 
+    // Show loading state
     testBtn.disabled = true;
     testBtn.textContent = 'Testing...';
-    testResults.innerHTML = '<div class="testing">Running connectivity tests...</div>';
-    diagnosticInfo.innerHTML = '<div class="diagnostic-content">Running diagnostics...</div>';
+    
+    // Clear previous results
+    testResults.innerHTML = '<div class="testing">🔄 Running connectivity tests...</div>';
+    diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
+    
+    // Show loading toast
+    showToast('Testing Binance connection...', 'info', 3000);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for comprehensive test
+
+      console.log(`🚀 Starting troubleshoot test for account ID: ${window.currentAccount.id}`);
+      
       const res = await fetch(`${API_BASE}/troubleshoot/${window.currentAccount.id}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
-        }
+        },
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+      
       if (!res.ok) {
-        throw new Error(`API Error: ${res.status} ${res.statusText}`);
+        const errorData = await res.json().catch(() => ({ error: `HTTP ${res.status}: ${res.statusText}` }));
+        throw new Error(errorData.error || errorData.detail || `API Error: ${res.status} ${res.statusText}`);
       }
 
       const results = await res.json();
+      console.log("✅ Troubleshoot results received:", results);
 
-      // Display results
-      let resultsHtml = '<div class="test-summary">';
+      // Display summary results
+      displayTestSummary(results, testResults);
       
+      // Display detailed diagnostics
+      displayDetailedDiagnostics(results, diagnosticInfo);
+      
+      // Show completion toast
       if (results.success) {
-        resultsHtml += '<div class="test-success">✅ Connection Successful</div>';
-        showToast('Connection test completed successfully', 'success');
+        showToast('Connection test completed successfully! ✅', 'success');
       } else {
-        resultsHtml += '<div class="test-failure">❌ Connection Failed</div>';
-        showToast('Connection test found issues', 'warning');
+        showToast('Connection test found issues. Check diagnostics below.', 'warning');
       }
-
-      resultsHtml += '</div>';
-      testResults.innerHTML = resultsHtml;
-
-      // Display diagnostic information
-      let diagnosticHtml = '<div class="diagnostic-results">';
-      
-      diagnosticHtml += `<div class="diagnostic-item">
-        <strong>API Key Status:</strong> ${results.api_key_valid ? '✅ Valid' : '❌ Invalid'}
-      </div>`;
-      
-      diagnosticHtml += `<div class="diagnostic-item">
-        <strong>Account Balance:</strong> ${results.balance_info || 'Unable to retrieve'}
-      </div>`;
-      
-      diagnosticHtml += `<div class="diagnostic-item">
-        <strong>Network Latency:</strong> ${results.latency || 'N/A'}ms
-      </div>`;
-
-      if (results.error_message) {
-        diagnosticHtml += `<div class="diagnostic-item error">
-          <strong>Error Details:</strong> ${results.error_message}
-        </div>`;
-      }
-
-      if (results.recommendations && results.recommendations.length > 0) {
-        diagnosticHtml += '<div class="diagnostic-item"><strong>Recommendations:</strong><ul>';
-        results.recommendations.forEach(rec => {
-          diagnosticHtml += `<li>${rec}</li>`;
-        });
-        diagnosticHtml += '</ul></div>';
-      }
-
-      diagnosticHtml += '</div>';
-      diagnosticInfo.innerHTML = diagnosticHtml;
 
     } catch (error) {
       console.error("❌ Connection test failed:", error);
-      testResults.innerHTML = `<div class="test-failure">❌ Test Failed: ${error.message}</div>`;
-      diagnosticInfo.innerHTML = `<div class="diagnostic-results">
-        <div class="diagnostic-item error">
-          <strong>Error:</strong> Unable to perform connectivity test. ${error.message}
-        </div>
-        <div class="diagnostic-item">
-          <strong>Possible Causes:</strong>
-          <ul>
-            <li>Network connectivity issues</li>
-            <li>Invalid API credentials</li>
-            <li>Binance API temporarily unavailable</li>
-            <li>Account permissions insufficient</li>
-          </ul>
-        </div>
-        <div class="diagnostic-item">
-          <strong>Troubleshooting Steps:</strong>
-          <ul>
-            <li>Verify your internet connection</li>
-            <li>Check your API key and secret are correct</li>
-            <li>Ensure API key has required permissions</li>
-            <li>Try again in a few minutes</li>
-          </ul>
-        </div>
-      </div>`;
-      showToast(`Test failed: ${error.message}`, 'error');
+      
+      if (error.name === 'AbortError') {
+        showToast('Test timed out. This may indicate network connectivity issues.', 'error');
+        testResults.innerHTML = `<div class="test-failure">❌ Test Timed Out</div>`;
+        diagnosticInfo.innerHTML = getTimeoutDiagnostics();
+      } else {
+        showToast(`Test failed: ${error.message}`, 'error');
+        testResults.innerHTML = `<div class="test-failure">❌ Test Failed: ${error.message}</div>`;
+        diagnosticInfo.innerHTML = getErrorDiagnostics(error);
+      }
     } finally {
       testBtn.disabled = false;
       testBtn.textContent = 'Test Binance Connection';
     }
+  }
+
+  function displayTestSummary(results, container) {
+    let summaryHtml = '<div class="test-summary">';
+    
+    // Overall status
+    if (results.success) {
+      summaryHtml += '<div class="test-success">✅ Connection Successful</div>';
+    } else {
+      summaryHtml += '<div class="test-failure">❌ Connection Issues Detected</div>';
+    }
+    
+    // Key metrics
+    summaryHtml += '<div class="summary-metrics">';
+    
+    if (results.total_usdt_value !== null && results.total_usdt_value !== undefined) {
+      summaryHtml += `<div class="metric"><strong>Portfolio Value:</strong> $${parseFloat(results.total_usdt_value).toFixed(2)} USDT</div>`;
+    }
+    
+    if (results.execution_time_ms) {
+      summaryHtml += `<div class="metric"><strong>Test Duration:</strong> ${results.execution_time_ms.toFixed(0)}ms</div>`;
+    }
+    
+    summaryHtml += `<div class="metric"><strong>API Key Valid:</strong> ${results.api_key_valid ? '✅ Yes' : '❌ No'}</div>`;
+    summaryHtml += `<div class="metric"><strong>IP Whitelisted:</strong> ${results.ip_whitelisted ? '✅ Yes' : '❌ No'}</div>`;
+    
+    // Asset count
+    if (results.balances && results.balances.length > 0) {
+      const nonZeroAssets = results.balances.filter(b => b.total > 0).length;
+      summaryHtml += `<div class="metric"><strong>Active Assets:</strong> ${nonZeroAssets}</div>`;
+    }
+    
+    summaryHtml += '</div></div>';
+    
+    container.innerHTML = summaryHtml;
+  }
+
+  function displayDetailedDiagnostics(results, container) {
+    let diagnosticHtml = '<div class="diagnostic-results">';
+    
+    // Test stages results
+    if (results.test_results && results.test_results.length > 0) {
+      diagnosticHtml += '<div class="diagnostic-section">';
+      diagnosticHtml += '<h4>🔍 Diagnostic Tests</h4>';
+      
+      results.test_results.forEach(test => {
+        const statusIcon = test.success ? '✅' : '❌';
+        const itemClass = test.success ? 'diagnostic-item' : 'diagnostic-item error';
+        
+        diagnosticHtml += `<div class="${itemClass}">`;
+        diagnosticHtml += `<strong>${statusIcon} ${formatStageTitle(test.stage)}</strong>`;
+        diagnosticHtml += `<div class="test-message">${test.message}</div>`;
+        
+        if (test.latency_ms) {
+          diagnosticHtml += `<div class="test-detail">Latency: ${test.latency_ms.toFixed(1)}ms</div>`;
+        }
+        
+        if (test.error_code) {
+          diagnosticHtml += `<div class="test-detail error-code">Error Code: ${test.error_code}</div>`;
+        }
+        
+        diagnosticHtml += '</div>';
+      });
+      
+      diagnosticHtml += '</div>';
+    }
+
+    // Asset balances
+    if (results.balances && results.balances.length > 0) {
+      const nonZeroBalances = results.balances.filter(b => b.total > 0);
+      
+      if (nonZeroBalances.length > 0) {
+        diagnosticHtml += '<div class="diagnostic-section">';
+        diagnosticHtml += `<h4>💰 Portfolio Assets (${nonZeroBalances.length})</h4>`;
+        
+        // Sort by USDT value descending
+        nonZeroBalances.sort((a, b) => (b.usdt_value || 0) - (a.usdt_value || 0));
+        
+        diagnosticHtml += '<div class="balance-list">';
+        nonZeroBalances.slice(0, 10).forEach(balance => { // Show top 10
+          const usdtValue = balance.usdt_value ? parseFloat(balance.usdt_value).toFixed(2) : 'N/A';
+          const total = parseFloat(balance.total).toFixed(8);
+          
+          diagnosticHtml += '<div class="diagnostic-item">';
+          diagnosticHtml += `<strong>${balance.asset}</strong>`;
+          diagnosticHtml += `<div class="balance-details">`;
+          diagnosticHtml += `<span class="balance-amount">${total} ${balance.asset}</span>`;
+          if (balance.usdt_value) {
+            diagnosticHtml += `<span class="balance-value">≈ $${usdtValue} USDT</span>`;
+          }
+          diagnosticHtml += `</div>`;
+          diagnosticHtml += '</div>';
+        });
+        
+        if (nonZeroBalances.length > 10) {
+          diagnosticHtml += `<div class="diagnostic-item">... and ${nonZeroBalances.length - 10} more assets</div>`;
+        }
+        
+        diagnosticHtml += '</div>';
+        diagnosticHtml += '</div>';
+      }
+    }
+
+    // Recommendations
+    if (results.recommendations && results.recommendations.length > 0) {
+      diagnosticHtml += '<div class="diagnostic-section">';
+      diagnosticHtml += '<h4>💡 Recommendations</h4>';
+      diagnosticHtml += '<div class="diagnostic-item">';
+      diagnosticHtml += '<ul>';
+      results.recommendations.forEach(rec => {
+        diagnosticHtml += `<li>${rec}</li>`;
+      });
+      diagnosticHtml += '</ul>';
+      diagnosticHtml += '</div>';
+      diagnosticHtml += '</div>';
+    }
+
+    diagnosticHtml += '</div>';
+    container.innerHTML = diagnosticHtml;
+  }
+
+  function formatStageTitle(stage) {
+    return stage.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+  }
+
+  function getTimeoutDiagnostics() {
+    return `<div class="diagnostic-results">
+      <div class="diagnostic-item error">
+        <strong>⏱️ Connection Timeout</strong>
+        <div>The test took too long to complete, which may indicate:</div>
+        <ul>
+          <li>Network connectivity issues</li>
+          <li>Binance API is responding slowly</li>
+          <li>Firewall blocking the connection</li>
+          <li>DNS resolution problems</li>
+        </ul>
+      </div>
+      <div class="diagnostic-item">
+        <strong>🔧 Troubleshooting Steps:</strong>
+        <ul>
+          <li>Check your internet connection</li>
+          <li>Try again in a few minutes</li>
+          <li>Verify that api.binance.com is accessible</li>
+          <li>Contact your network administrator if issues persist</li>
+        </ul>
+      </div>
+    </div>`;
+  }
+
+  function getErrorDiagnostics(error) {
+    return `<div class="diagnostic-results">
+      <div class="diagnostic-item error">
+        <strong>❌ Test Error</strong>
+        <div>Error: ${error.message}</div>
+      </div>
+      <div class="diagnostic-item">
+        <strong>🔧 Troubleshooting Steps:</strong>
+        <ul>
+          <li>Verify your API credentials are correct</li>
+          <li>Check if your account has the required permissions</li>
+          <li>Ensure your IP is whitelisted in Binance API settings</li>
+          <li>Try refreshing the page and testing again</li>
+          <li>Contact support if the error persists</li>
+        </ul>
+      </div>
+    </div>`;
   }
 
   // Wire up events
