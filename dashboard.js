@@ -141,11 +141,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const div = document.createElement("div");
     div.className = "instrument-field";
     div.innerHTML = `
-      <input type="text" name="symbol"  placeholder="Symbol (e.g., BTCUSDT)" value="${sym}" required>
-      <input type="number" name="weight" placeholder="Weight (%)" value="${wt}" step="0.01" min="0" max="100" required>
+      <input type="text" name="symbol"  placeholder="Symbol (e.g., BTCUSDT)" value="${sym}">
+      <input type="number" name="weight" placeholder="Weight (%)" value="${wt}" step="0.01" min="0" max="100">
       <button type="button" class="remove-instrument">×</button>
     `;
     instrumentsWrap.appendChild(div);
+    
+    // Add required attribute if the portfolio is currently visible
+    if (strategySelect.value === "Custom Portfolio Rebalancing") {
+      div.querySelectorAll('input').forEach(input => {
+        input.setAttribute('required', 'required');
+      });
+    }
+    
     div.querySelector(".remove-instrument")
        .addEventListener("click", () => div.remove());
   }
@@ -515,14 +523,25 @@ document.addEventListener("DOMContentLoaded", () => {
   
   strategySelect.onchange   = () => {
     const topXWrapper = document.getElementById("top-x-wrapper") || addTopXInput();
+    const topXInput = document.getElementById("top-x-count");
     
     if (strategySelect.value === "Top X Instruments of Vapaus") {
       topXWrapper.style.display = "block";
+      if (topXInput) {
+        topXInput.setAttribute('required', 'required');
+      }
       instrumentsWrap.style.display = "none";
       addInstrumentBtn.style.display = "none";
       instrumentsWrap.innerHTML = "";
+      // Remove required from instrument inputs
+      instrumentsWrap.querySelectorAll('input').forEach(input => {
+        input.removeAttribute('required');
+      });
     } else if (strategySelect.value === "Custom Portfolio Rebalancing") {
       topXWrapper.style.display = "none";
+      if (topXInput) {
+        topXInput.removeAttribute('required');
+      }
       instrumentsWrap.style.display = "flex";
       addInstrumentBtn.style.display = "inline-block";
       if (!instrumentsWrap.children.length) {
@@ -530,8 +549,15 @@ document.addEventListener("DOMContentLoaded", () => {
         addInstrumentField("ETHUSDT", 30);
         addInstrumentField("BNBUSDT", 20);
       }
+      // Add required to instrument inputs
+      instrumentsWrap.querySelectorAll('input').forEach(input => {
+        input.setAttribute('required', 'required');
+      });
     } else {
       topXWrapper.style.display = "none";
+      if (topXInput) {
+        topXInput.removeAttribute('required');
+      }
       instrumentsWrap.style.display = "none";
       addInstrumentBtn.style.display = "none";
       instrumentsWrap.innerHTML = "";
