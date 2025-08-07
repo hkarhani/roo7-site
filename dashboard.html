@@ -1,3 +1,4 @@
+<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,26 +8,24 @@
   <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
-  <header>
-    <div class="left">
-      <h1>Dashboard</h1>
-    </div>
-    <div class="right">
-      <span>Welcome, <strong id="username"></strong></span>
-      <button id="toggle-theme">🌓</button>
+  <div class="dashboard-header">
+    <h1>Welcome, <span id="username"></span></h1>
+    <div class="actions">
+      <button id="toggle-theme">Toggle Theme</button>
       <button id="logout-btn">Logout</button>
     </div>
-  </header>
+  </div>
 
-  <main>
-    <section>
+  <main class="dashboard-grid">
+    <!-- Section 1: Live Accounts Table -->
+    <section id="section-accounts" class="dashboard-card">
       <h2>Live Accounts</h2>
       <table id="accounts-table">
         <thead>
           <tr>
-            <th>Account</th>
+            <th>Account Name</th>
             <th>Strategy</th>
-            <th>Value</th>
+            <th>Value ($)</th>
             <th>Hedge %</th>
           </tr>
         </thead>
@@ -34,9 +33,9 @@
       </table>
     </section>
 
-    <section>
-      <h2>Manage Accounts</h2>
-      <button id="open-modal">Add New Account</button>
+    <!-- Section 2: Account Settings -->
+    <section id="section-settings" class="dashboard-card">
+      <h2>Account Settings</h2>
       <table id="settings-table">
         <thead>
           <tr>
@@ -46,61 +45,38 @@
         </thead>
         <tbody></tbody>
       </table>
+      <button id="open-modal">Add New Account</button>
+    </section>
+
+    <!-- Section 3: Full-width Bottom -->
+    <section id="section-third" class="dashboard-card">
+      <h2>Third Section</h2>
+      <p>Put your bottom-row content here.</p>
     </section>
   </main>
 
-  <!-- Account Modal -->
+  <!-- Modal Form (unchanged) -->
   <div id="account-modal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Add New Account</h2>
-    <form id="account-form">
-      <div class="form-group">
-        <label for="account-name">Account Name</label>
-        <input type="text" id="account-name" required>
-      </div>
-      <div class="form-group">
-        <label for="strategy">Strategy</label>
-        <select id="strategy" required>
-          <option value="Long Only">Long Only</option>
-          <option value="Short Only">Short Only</option>
-          <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
-        </select>
-      </div>
-      <div id="instruments-wrapper" style="display: none;"></div>
-      <button type="button" id="add-instrument" style="display:none;">+ Add Instrument</button>
-      <div class="form-group">
-        <label for="api-key">API Key</label>
-        <input type="text" id="api-key">
-      </div>
-      <div class="form-group">
-        <label for="api-secret">API Secret</label>
-        <input type="text" id="api-secret">
-      </div>
-      <button type="submit">Save</button>
-    </form>
-  </div>
     <div class="modal-content">
       <span class="close">&times;</span>
-      <h2>Add Account</h2>
+      <h3>Add New Account</h3>
       <form id="account-form">
-        <input id="account-name" type="text" placeholder="Account Name" required />
-        <input id="api-key" type="text" placeholder="API Key" required />
-        <input id="api-secret" type="text" placeholder="API Secret" required />
-        <input id="hedge" type="text" placeholder="Hedge Value (put 0 for full account usage)" required />
-        <select id="strategy" required>
-          <option value="">Select Strategy</option>
-          <option value="Original Vapaus">Original Vapaus</option>
-          <option value="Top N Coins of Vapaus">Top N Coins of Vapaus</option>
+        <input type="text" id="account-name" placeholder="Account Name" required />
+        <input type="text" id="api-key" placeholder="Binance API Key" required />
+        <input type="password" id="api-secret" placeholder="Binance API Secret" required />
+        <select id="strategy">
+          <option value="Standard Vapaus">Standard Vapaus</option>
+          <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
           <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
         </select>
         <div id="instruments-wrapper" style="display:none;"></div>
         <button type="button" id="add-instrument" style="display:none;">+ Add Instrument</button>
-        <button type="submit">Submit</button>
+        <button type="submit">Save Account</button>
       </form>
     </div>
   </div>
 
-  <script src="dashboard.js?v=1.0.2" defer></script>
+<script src="dashboard.js?v=1691428123977"></script>
+
 </body>
 </html>
