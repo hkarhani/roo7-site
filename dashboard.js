@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (!res.ok) throw new Error("Not authorized");
       const user = await res.json();
-      usernameDisplay.textContent = user.username;
+      usernameDisplay.textContent = user.full_name;
     } catch (err) {
       console.error("Auth error", err);
       localStorage.removeItem("token");
