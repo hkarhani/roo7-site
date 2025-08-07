@@ -243,8 +243,24 @@ body.dark-mode .toast-info {
   color: #60a5fa;
 }
 
+/* CLOUDFLARE TURNSTILE STYLING */
+#captcha-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.cf-turnstile {
+  transform: scale(0.85);
+  transform-origin: center;
+}
+
 /* MOBILE RESPONSIVENESS */
 @media (max-width: 768px) {
+  .cf-turnstile {
+    transform: scale(0.75);
+    transform-origin: center;
+  }
   body {
     padding: 0.5rem;
     align-items: flex-start;
@@ -297,6 +313,11 @@ body.dark-mode .toast-info {
 
   h1 {
     font-size: 1.3rem;
+  }
+
+  .cf-turnstile {
+    transform: scale(0.65);
+    transform-origin: center;
   }
 
   .toast {
