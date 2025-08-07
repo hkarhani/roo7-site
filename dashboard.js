@@ -103,6 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
     settingsTbody.innerHTML = "";
 
     accounts.forEach(acc => {
+      // Escape and sanitize account name and other text fields
+      const accountName = (acc.account_name || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
+      const strategy = (acc.strategy || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
+      
       // Status badges
       let statusBadges = '';
       if (acc.is_disabled) {
@@ -126,160 +130,42 @@ document.addEventListener("DOMContentLoaded", () => {
           break;
       }
 
+      // Format current value safely
+      let currentValueDisplay = 'N/A';
+      if (acc.current_value !== undefined && acc.current_value !== null && !isNaN(acc.current_value)) {
+        currentValueDisplay = '$' + parseFloat(acc.current_value).toFixed(2);
+      }
+
+      // Format hedge percent safely
+      let hedgePercentDisplay = 'N/A';
+      if (acc.hedge_percent !== undefined && acc.hedge_percent !== null && !isNaN(acc.hedge_percent)) {
+        hedgePercentDisplay = parseFloat(acc.hedge_percent).toFixed(1) + '%';
+      }
+
       liveTbody.innerHTML += `
         <tr>
           <td>
             <div class="account-status">
-              ${acc.account_name}
+              ${accountName}
               ${statusBadges}
             </div>
           </td>
-          <td>${acc.strategy}</td>
-          <td>${acc.current_value !== undefined && acc.current_value !== null ? '
-
-  function bindAccountEvents(accounts) {
-    // Clear any existing event listeners and bind fresh ones
-    setTimeout(() => {
-      console.log("🔗 Binding fresh event listeners...");
-
-      // Edit account buttons
-      document.querySelectorAll('.edit-account').forEach((btn, index) => {
-        const accountId = btn.dataset.id;
-        const accountName = btn.dataset.name;
-        
-        console.log(`📝 Binding edit button ${index + 1} for ${accountName} (ID: ${accountId})`);
-        
-        btn.onclick = function(e) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          console.log(`✏️ EDIT CLICKED for ${accountName}`);
-          
-          const account = accounts.find(acc => acc.id === accountId);
-          if (account) {
-            console.log("🎯 Found account data:", account);
-            modalManager.openEditAccountModal(account);
-          } else {
-            console.error("❌ Account not found for ID:", accountId);
-            showToast("Account not found", 'error');
-          }
-        };
-      });
-
-      // Delete account buttons  
-      document.querySelectorAll('.delete-account').forEach(btn => {
-        btn.onclick = function(e) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          deleteAccount(btn.dataset.id);
-        };
-      });
-
-      // Troubleshoot buttons
-      document.querySelectorAll('.troubleshoot-icon').forEach(btn => {
-        btn.onclick = function() {
-          const accountName = btn.dataset.account;
-          const token = localStorage.getItem("token");
-          if (token) {
-            window.open(`troubleshoot.html?account=${encodeURIComponent(accountName)}`, '_blank');
-          } else {
-            showToast("You must be logged in to access troubleshooting.", 'error');
-          }
-        };
-      });
-
-      // Hedge edit buttons
-      document.querySelectorAll('.hedge-edit-icon').forEach(btn => {
-        btn.onclick = function() {
-          const accountId = btn.dataset.id;
-          const account = accounts.find(acc => acc.id === accountId);
-          if (account) {
-            modalManager.openHedgeModal(account);
-          }
-        };
-      });
-
-      console.log("✅ All event listeners bound successfully");
-    }, 50);
-  }
-
-  async function deleteAccount(accountId) {
-    if (!confirm("Are you sure you want to delete this account? This action cannot be undone.")) {
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      showToast("You must be logged in to delete an account.", 'error');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/accounts/${accountId}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-
-      showToast("Account deleted successfully!", 'success');
-      loadAccounts();
-
-    } catch (err) {
-      showToast(`Error deleting account: ${err.message}`, 'error');
-    }
-  }
-
-  async function fetchUser() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/me`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        document.getElementById("user-fullname").textContent = data.full_name || data.username || "User";
-      } else if (res.status !== 404) {
-        localStorage.removeItem("token");
-        setTimeout(() => window.location.href = "/auth.html", 2000);
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-    }
-  }
-
-  // Event handlers
-  logoutBtn.onclick = logout;
-  const openModalBtn = document.getElementById("open-modal");
-  openModalBtn.onclick = () => {
-    console.log("🆕 ADD NEW ACCOUNT clicked");
-    modalManager.openAddAccountModal();
-  };
-
-  // Initialize
-  fetchUser();
-  loadAccounts();
-}); + acc.current_value.toFixed(2) : 'N/A'}</td>
-          <td>${acc.hedge_percent !== undefined && acc.hedge_percent !== null ? acc.hedge_percent + '%' : 'N/A'}</td>
+          <td>${strategy}</td>
+          <td>${currentValueDisplay}</td>
+          <td>${hedgePercentDisplay}</td>
           <td>${testStatusHtml}</td>
           <td class="account-actions">
-            <button class="action-icon troubleshoot-icon" data-account="${acc.account_name}" title="Troubleshoot">🔧</button>
-            <button class="action-icon hedge-edit-icon" data-id="${acc.id}" title="Edit Settings">⚙️</button>
+            <button class="action-icon troubleshoot-icon" data-account="${accountName}" title="Troubleshoot">🔧</button>
+            <button class="action-icon hedge-edit-icon" data-id="${acc.id || ''}" title="Edit Settings">⚙️</button>
           </td>
         </tr>`;
 
       settingsTbody.innerHTML += `
         <tr>
-          <td>${acc.account_name}</td>
+          <td>${accountName}</td>
           <td>
-            <button class="edit-account" data-id="${acc.id}" data-name="${acc.account_name}">Edit</button>
-            <button class="delete-account" data-id="${acc.id}">Delete</button>
+            <button class="edit-account" data-id="${acc.id || ''}" data-name="${accountName}">Edit</button>
+            <button class="delete-account" data-id="${acc.id || ''}">Delete</button>
           </td>
         </tr>`;
     });
