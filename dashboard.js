@@ -48,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadAccounts() {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/accounts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
