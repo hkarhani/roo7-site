@@ -1,194 +1,49 @@
-/* dashboard.css */
-
-/* Base Theme */
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: Arial, sans-serif;
   margin: 0;
-  background: #f4f4f4;
-  color: #333;
+  padding: 0;
 }
 
-.dark-theme {
-  background: #121212;
-  color: #e0e0e0;
-}
-
-/* Center container if used */
-/* .dashboard-container {
-  max-width: 1200px;
-  margin: auto;
-} */
-
-/* Header */
-.dashboard-header {
+header {
+  background-color: #2a2a2a;
+  color: white;
+  padding: 10px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 25px;
 }
 
-.dashboard-header button {
+header .right button {
   margin-left: 10px;
-  padding: 8px 14px;
-  background: #0077cc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.dashboard-header button:hover {
-  background: #005fa3;
 }
 
-/* GRID LAYOUT */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: auto;
-  gap: 30px;
-  padding: 0 20px 40px;
-}
-
-/* Make the third section span both columns */
-#section-third {
-  grid-column: 1 / -1;
-}
-
-/* CARD STYLING FOR SECTIONS */
-.dashboard-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Dark-theme overrides */
-.dark-theme .dashboard-header {
-  background-color: #1e1e1e;
-  color: #f5f5f5;
-}
-.dark-theme .dashboard-header button {
-  background-color: #444;
-  color: #fff;
-}
-.dark-theme .dashboard-header button:hover {
-  background-color: #666;
-}
-.dark-theme .dashboard-card {
-  background: #1e1e1e;
-  box-shadow: 0 2px 8px rgba(255,255,255,0.05);
-}
-
-/* Typography & Tables */
-h2 {
-  margin-top: 0;
-  margin-bottom: 15px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th, td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-th {
-  background-color: #f0f0f0;
-}
-.dark-theme th {
-  background-color: #2a2a2a;
-}
-
-/* Buttons inside cards */
-button#open-modal,
-button#add-instrument,
-button[type="submit"],
-button.edit-account,
-button.delete-account {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background: #0077cc;
-  color: #fff;
-}
-button#open-modal:hover,
-button#add-instrument:hover,
-button[type="submit"]:hover {
-  background: #005fa3;
-}
-
-/* Modal Background */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.6);
-}
-
-/* Modal Content Box */
-.modal-content {
-  background-color: #fff;
-  margin: 10% auto; /* Center vertically */
-  padding: 20px;
-  border: 1px solid #888;
-  width: 400px;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  position: relative;
-}
-
-/* Close Button */
-.modal .close {
-  position: absolute;
-  top: 10px;
-  right: 16px;
-  font-size: 22px;
-  font-weight: bold;
-  color: #888;
-  cursor: pointer;
-}
-
-.modal .close:hover {
-  color: #000;
-}
-
-
-/* Grid layout */
 main {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.section {
-  flex: 1;
-  background-color: var(--bg-secondary, #f9f9f9);
   padding: 20px;
-  border-radius: 8px;
 }
 
-/* Modal Styling */
+.top-section {
+  display: flex;
+  gap: 40px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.top-section section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.bottom-section {
+  margin-top: 40px;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
+
+/* Modal styling */
 .modal {
   display: none;
   position: fixed;
-  z-index: 1000;
+  z-index: 999;
   left: 0;
   top: 0;
   width: 100%;
@@ -198,54 +53,97 @@ main {
 }
 
 .modal-content {
-  background-color: #fff;
+  background-color: #fefefe;
   margin: 5% auto;
   padding: 30px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 500px;
+  border: 1px solid #888;
+  width: 400px;
+  border-radius: 8px;
+  position: relative;
 }
 
 .modal-content h2 {
   margin-top: 0;
-}
-
-.modal-content .form-group {
-  margin-bottom: 15px;
-}
-
-.modal-content .form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.modal-content .form-group input,
-.modal-content .form-group select {
-  width: 100%;
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.modal-content button[type="submit"] {
-  margin-top: 15px;
-  width: 100%;
-  padding: 10px;
-  background-color: #007BFF;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.modal-content button[type="submit"]:hover {
-  background-color: #0056b3;
+  margin-bottom: 20px;
+  font-size: 20px;
 }
 
 .modal .close {
-  float: right;
+  position: absolute;
+  right: 16px;
+  top: 16px;
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
+}
+
+/* Form styling */
+form .form-group {
+  margin-bottom: 16px;
+}
+
+form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+form input,
+form select {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+form button {
+  margin-top: 10px;
+}
+
+/* Instrument input fields */
+.instrument-field {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.instrument-field input {
+  flex: 1;
+}
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+table th {
+  background-color: #f4f4f4;
+}
+
+/* Dark mode */
+body.dark-theme {
+  background-color: #121212;
+  color: white;
+}
+
+body.dark-theme table th {
+  background-color: #333;
+}
+
+body.dark-theme .modal-content {
+  background-color: #2a2a2a;
+  color: white;
+}
+
+body.dark-theme input,
+body.dark-theme select {
+  background-color: #444;
+  color: white;
+  border: 1px solid #555;
 }
