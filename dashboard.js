@@ -1,6 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = "https://api.roo7.site";
 
+  // First, check if token exists before doing anything else
+  const token = localStorage.getItem("token");
+  console.log("🔍 Initial token check:", token ? "Token found" : "No token found");
+  console.log("🔍 Token value:", token);
+  
+  if (!token) {
+    console.log("❌ No token found, redirecting to auth");
+    window.location.href = "/auth.html";
+    return;
+  }
+
   // grab these once
   const logoutBtn       = document.getElementById("logout-btn");
   const toggleThemeBtn  = document.getElementById("toggle-theme");
@@ -182,38 +193,55 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (!token) {
       console.error("No token found in localStorage for fetchUser");
-      window.location.href = "/auth.html";
+      setTimeout(() => {
+        window.location.href = "/auth.html";
+      }, 2000); // Delay redirect by 2 seconds to see logs
       return;
     }
 
     try {
+      console.log("🔗 Making request to:", `${API_BASE}/me`);
       const res = await fetch(`${API_BASE}/me`, {
+        method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`
+          "Authorization": `Bearer ${token}`
         }
       });
 
       console.log("⏳ /me status:", res.status);
+      console.log("⏳ /me response:", res);
 
       if (res.ok) {
         const data = await res.json();
         console.log("✅ User data:", data);
-        document.getElementById("user-fullname").textContent = data.full_name;
+        document.getElementById("user-fullname").textContent = data.full_name || "User";
       } else {
-        console.warn("Failed to fetch user data, redirecting to auth");
+        console.warn("Failed to fetch user data, status:", res.status);
+        const errorText = await res.text();
+        console.warn("Error response:", errorText);
         localStorage.removeItem("token");
-        window.location.href = "/auth.html";
+        setTimeout(() => {
+          window.location.href = "/auth.html";
+        }, 3000); // Delay redirect to see error logs
       }
     } catch (error) {
       console.error("Error fetching user:", error);
       localStorage.removeItem("token");
-      window.location.href = "/auth.html";
+      setTimeout(() => {
+        window.location.href = "/auth.html";
+      }, 3000); // Delay redirect to see error logs
     }
   };
 
-  // fetch the user 
-  fetchUser();
+  // fetch the user with a small delay to ensure DOM is ready
+  setTimeout(() => {
+    console.log("🚀 Starting fetchUser...");
+    fetchUser();
+  }, 100);
 
-  // initial load
-  loadAccounts();
+  // initial load with delay
+  setTimeout(() => {
+    console.log("🚀 Starting loadAccounts...");
+    loadAccounts();  
+  }, 200);
 });
