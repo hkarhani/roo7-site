@@ -596,6 +596,43 @@ function initializeTroubleshootPage() {
     console.error("❌ Test connection button not found");
   }
 
+  // Initialize alignment fix
+  function fixSectionAlignment() {
+    console.log("🔧 Applying section alignment fixes...");
+    
+    // Force grid layout recalculation
+    const grid = document.querySelector('.troubleshoot-grid');
+    if (grid) {
+      grid.style.display = 'grid';
+      grid.style.gridTemplateRows = 'minmax(200px, auto) 1fr';
+      grid.style.height = 'calc(100vh - 120px)';
+      grid.style.alignItems = 'stretch';
+    }
+    
+    // Ensure all sections have proper heights
+    const sections = grid.querySelectorAll('.dashboard-card, #portfolio-section, #section-diagnostics');
+    sections.forEach(section => {
+      section.style.height = '100%';
+      section.style.display = 'flex';
+      section.style.flexDirection = 'column';
+      section.style.boxSizing = 'border-box';
+    });
+    
+    // Force table to full width
+    const table = document.querySelector('#portfolio-section .portfolio-table');
+    if (table) {
+      table.style.width = '100%';
+      table.style.maxWidth = '100%';
+      table.style.tableLayout = 'fixed';
+      table.style.display = 'table';
+    }
+    
+    console.log("✅ Section alignment fixes applied");
+  }
+
+  // Initialize alignment fix
+  fixSectionAlignment();
+
   // Initialize connection status
   updateAPIConnectionStatus('ready', 'Ready to test connection');
 

@@ -1,31 +1,36 @@
 /* troubleshoot.css - Dedicated styles for troubleshoot page */
 
-/* TROUBLESHOOT PAGE GRID LAYOUT */
+/* TROUBLESHOOT PAGE GRID LAYOUT - FIXED */
 .troubleshoot-grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: minmax(200px, auto) 1fr;
   gap: 20px;
   padding: 0 20px 40px;
-  min-height: calc(100vh - 120px);
-  align-items: start;
+  height: calc(100vh - 120px);
+  align-items: stretch;
 }
 
-/* Grid positioning - Equal bottom alignment */
+/* Force equal heights with grid positioning */
 .troubleshoot-grid > .dashboard-card:nth-child(1) {
-  /* Account Details - Top Left - Wider */
+  /* Account Details - Top Left */
   grid-column: 1;
   grid-row: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 30px;
+  padding: 25px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(2) {
   /* Connectivity Test - Top Right */
   grid-column: 2;
   grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .troubleshoot-grid > #portfolio-section {
@@ -35,7 +40,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  align-self: stretch;
+  box-sizing: border-box;
 }
 
 .troubleshoot-grid > #section-diagnostics {
@@ -45,7 +50,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  align-self: stretch;
+  box-sizing: border-box;
 }
 
 /* TEST SUMMARY STYLES */
@@ -154,43 +159,39 @@
   color: #ccc;
 }
 
-/* ENHANCED ACCOUNT DETAILS SECTION */
-.troubleshoot-grid > .dashboard-card:nth-child(1) {
-  /* Account Details - Top Left - Wider with larger font */
-  grid-column: 1;
-  grid-row: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 30px;
-}
-
+/* ENHANCED ACCOUNT DETAILS SECTION - COMPACT */
 .troubleshoot-grid > .dashboard-card:nth-child(1) .account-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-evenly;
   height: 100%;
-  gap: 25px;
+  gap: 0;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 0;
+  padding: 12px 0;
   border-bottom: 1px solid #eee;
-  font-size: 18px;
+  font-size: 17px;
+  flex: 1;
+  min-height: 50px;
+}
+
+.troubleshoot-grid > .dashboard-card:nth-child(1) .info-row:last-child {
+  border-bottom: none;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row label {
   font-weight: 700;
   color: #333;
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row span {
   font-weight: 600;
-  font-size: 18px;
+  font-size: 17px;
   text-align: right;
 }
 
@@ -202,13 +203,14 @@
   color: #e0e0e0;
 }
 
-/* ENHANCED PORTFOLIO SECTION */
+/* ENHANCED PORTFOLIO SECTION - FULL WIDTH TABLE */
 #portfolio-section {
   padding: 25px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   height: 100%;
+  box-sizing: border-box;
 }
 
 #portfolio-section h2 {
@@ -232,27 +234,32 @@
   gap: 20px;
   flex: 1;
   min-height: 0;
-  align-items: stretch;
+  width: 100%;
 }
 
-/* Portfolio Table Section - FULL WIDTH */
+/* Portfolio Table Section - FORCE FULL WIDTH */
 .portfolio-table-wrapper {
   flex: 1;
   width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 #portfolio-section .portfolio-table {
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
   border-collapse: collapse;
   font-size: 16px;
   margin: 0;
   flex: 1;
-  display: block;
+  display: table !important;
+  table-layout: fixed;
   overflow-y: auto;
   max-height: 350px;
+  box-sizing: border-box;
 }
 
 #portfolio-section .portfolio-table thead {
@@ -261,6 +268,7 @@
   top: 0;
   z-index: 10;
   background: #fff;
+  width: 100%;
 }
 
 .dark-theme #portfolio-section .portfolio-table thead {
@@ -269,6 +277,7 @@
 
 #portfolio-section .portfolio-table tbody {
   display: table-row-group;
+  width: 100%;
 }
 
 #portfolio-section .portfolio-table tr {
@@ -284,32 +293,28 @@
   border-bottom: 1px solid #eee;
   font-size: 16px;
   vertical-align: middle;
-  width: auto;
+  box-sizing: border-box;
 }
 
-/* Make table columns use full width */
+/* FORCE table columns to use full width */
 #portfolio-section .portfolio-table th:nth-child(1),
 #portfolio-section .portfolio-table td:nth-child(1) {
-  width: 25%;
-  min-width: 80px;
+  width: 20%;
 }
 
 #portfolio-section .portfolio-table th:nth-child(2),
 #portfolio-section .portfolio-table td:nth-child(2) {
-  width: 35%;
-  min-width: 120px;
+  width: 30%;
 }
 
 #portfolio-section .portfolio-table th:nth-child(3),
 #portfolio-section .portfolio-table td:nth-child(3) {
-  width: 25%;
-  min-width: 100px;
+  width: 30%;
 }
 
 #portfolio-section .portfolio-table th:nth-child(4),
 #portfolio-section .portfolio-table td:nth-child(4) {
-  width: 15%;
-  min-width: 80px;
+  width: 20%;
   text-align: center;
 }
 
