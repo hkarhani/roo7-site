@@ -54,40 +54,79 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Load account details
-  async function loadAccountDetails() {
-    console.log("📋 Loading account details for:", accountName);
+  // Enhanced retry mechanism for loading account details
+  async function loadAccountDetails(retryCount = 0) {
+    const maxRetries = 3;
+    console.log(`📋 Loading account details for: ${accountName} (attempt ${retryCount + 1})`);
     
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("❌ No token available");
+        throw new Error("Authentication token not found");
+      }
+
+      console.log("🔐 Token found, making API request...");
+      
       const res = await fetch(`${API_BASE}/accounts`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
         }
       });
 
+      console.log(`📡 API Response status: ${res.status}`);
+
+      if (res.status === 401) {
+        console.error("❌ Authentication failed - token expired");
+        localStorage.removeItem("token");
+        alert("Session expired. Please log in again.");
+        window.close();
+        return;
+      }
+
       if (!res.ok) {
-        console.error("❌ Failed to fetch accounts:", res.status);
-        throw new Error(`Status ${res.status}`);
+        console.error("❌ API request failed:", res.status, res.statusText);
+        throw new Error(`API request failed: ${res.status} ${res.statusText}`);
       }
 
       const accounts = await res.json();
       console.log("✅ Retrieved accounts:", accounts.length);
       
+      if (!Array.isArray(accounts)) {
+        console.error("❌ Invalid response format - expected array");
+        throw new Error("Invalid response format");
+      }
+
       const account = accounts.find(acc => acc.account_name === accountName);
-      console.log("🎯 Found account:", account);
+      console.log("🎯 Found account:", account ? "Yes" : "No");
 
       if (!account) {
         console.error("❌ Account not found:", accountName);
-        throw new Error("Account not found");
+        console.log("Available accounts:", accounts.map(a => a.account_name));
+        throw new Error(`Account '${accountName}' not found`);
       }
 
-      // Populate account details
-      document.getElementById('account-name').textContent = account.account_name || 'N/A';
-      document.getElementById('strategy').textContent = account.strategy || 'N/A';
-      document.getElementById('current-value').textContent = account.current_value !== undefined ? `${account.current_value}` : 'N/A';
-      document.getElementById('hedge-percent').textContent = account.hedge_percent !== undefined ? `${account.hedge_percent}%` : 'N/A';
-      document.getElementById('api-key-status').textContent = account.api_key ? '✅ Configured' : '❌ Not Configured';
+      // Populate account details with safety checks
+      const elements = {
+        'account-name': account.account_name || 'N/A',
+        'strategy': account.strategy || 'N/A',
+        'current-value': account.current_value !== undefined ? `$${account.current_value}` : 'N/A',
+        'hedge-percent': account.hedge_percent !== undefined ? `${account.hedge_percent}%` : 'N/A',
+        'api-key-status': account.api_key ? '✅ Configured' : '❌ Not Configured'
+      };
+
+      // Update UI elements with error handling
+      for (const [elementId, value] of Object.entries(elements)) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = value;
+          console.log(`✅ Updated ${elementId}: ${value}`);
+        } else {
+          console.warn(`⚠️ Element not found: ${elementId}`);
+        }
+      }
 
       // Store account data for troubleshooting
       window.currentAccount = account;
@@ -96,14 +135,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (error) {
       console.error("❌ Error loading account:", error);
+      
+      // Retry logic for first-load issues
+      if (retryCount < maxRetries) {
+        console.log(`🔄 Retrying in 1 second... (${retryCount + 1}/${maxRetries})`);
+        setTimeout(() => {
+          loadAccountDetails(retryCount + 1);
+        }, 1000);
+        return;
+      }
+      
+      // Final failure - show error in UI
       showToast(`Error loading account: ${error.message}`, 'error');
       
-      // Show error state in the UI
-      document.getElementById('account-name').textContent = accountName;
-      document.getElementById('strategy').textContent = 'Error loading';
-      document.getElementById('current-value').textContent = 'Error loading';
-      document.getElementById('hedge-percent').textContent = 'Error loading';
-      document.getElementById('api-key-status').textContent = 'Error loading';
+      // Show error state in the UI with the account name we do have
+      const errorElements = {
+        'account-name': accountName,
+        'strategy': 'Error loading',
+        'current-value': 'Error loading', 
+        'hedge-percent': 'Error loading',
+        'api-key-status': 'Error loading'
+      };
+
+      for (const [elementId, value] of Object.entries(errorElements)) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = value;
+          element.style.color = '#dc3545'; // Red color for error state
+        }
+      }
     }
   }
 
@@ -114,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const diagnosticInfo = document.getElementById('diagnostic-info');
 
     if (!window.currentAccount) {
-      showToast('Account details not loaded', 'error');
+      showToast('Account details not loaded. Please wait for account information to load first.', 'error');
       return;
     }
 
@@ -221,7 +281,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Wire up events
   document.getElementById('test-connection').onclick = testBinanceConnection;
 
-  // Load account details immediately when page loads
-  console.log("🚀 Starting to load account details...");
-  loadAccountDetails();
+  // Enhanced initialization with better timing
+  console.log("🚀 Starting initialization sequence...");
+  
+  // Wait a short moment to ensure all scripts are loaded
+  setTimeout(() => {
+    console.log("🎯 Starting account details load...");
+    loadAccountDetails();
+  }, 100); // Small delay to ensure DOM is fully ready and scripts loaded
 });
