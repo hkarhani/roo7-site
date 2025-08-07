@@ -93,6 +93,58 @@ function initializeTroubleshootPage() {
     testResults.innerHTML = statusDiv + (message ? `<div class="test-details">${message}</div>` : '');
   }
 
+  // Update API Key Status in Account Details section
+  function updateAPIKeyStatus(isConfigured, isValid) {
+    const apiKeyStatusElement = document.getElementById('api-key-status');
+    if (!apiKeyStatusElement) return;
+
+    if (isValid) {
+      apiKeyStatusElement.textContent = '✅ Valid & Working';
+      apiKeyStatusElement.style.color = '#28a745';
+    } else if (isConfigured) {
+      apiKeyStatusElement.textContent = '⚠️ Configured (Not Tested)';
+      apiKeyStatusElement.style.color = '#ffc107';
+    } else {
+      apiKeyStatusElement.textContent = '❌ Not Configured';
+      apiKeyStatusElement.style.color = '#dc3545';
+    }
+  }
+
+  function displayTestSummary(results, container) {
+    let summaryHtml = '<div class="test-summary">';
+    
+    // Overall status
+    if (results.success) {
+      summaryHtml += '<div class="test-success">✅ Connection Successful</div>';
+    } else {
+      summaryHtml += '<div class="test-failure">❌ Connection Issues Detected</div>';
+    }
+    
+    // Key metrics
+    summaryHtml += '<div class="summary-metrics">';
+    
+    if (results.total_usdt_value !== null && results.total_usdt_value !== undefined) {
+      summaryHtml += `<div class="metric"><strong>Portfolio Value:</strong> ${parseFloat(results.total_usdt_value).toFixed(2)} USDT</div>`;
+    }
+    
+    if (results.execution_time_ms) {
+      summaryHtml += `<div class="metric"><strong>Test Duration:</strong> ${results.execution_time_ms.toFixed(0)}ms</div>`;
+    }
+    
+    summaryHtml += `<div class="metric"><strong>API Key Valid:</strong> ${results.api_key_valid ? '✅ Yes' : '❌ No'}</div>`;
+    summaryHtml += `<div class="metric"><strong>IP Whitelisted:</strong> ${results.ip_whitelisted ? '✅ Yes' : '❌ No'}</div>`;
+    
+    // Asset count
+    if (results.balances && results.balances.length > 0) {
+      const nonZeroAssets = results.balances.filter(b => b.total > 0).length;
+      summaryHtml += `<div class="metric"><strong>Active Assets:</strong> ${nonZeroAssets}</div>`;
+    }
+    
+    summaryHtml += '</div></div>';
+    
+    return summaryHtml;
+  }
+
   // Load account details with enhanced error handling
   async function loadAccountDetails() {
     console.log("📋 Starting to load account details...");
@@ -275,15 +327,23 @@ function initializeTroubleshootPage() {
       const results = await res.json();
       console.log("✅ Troubleshoot results received:", results);
 
-      // Update API connection status based on results
+      // Update API connection status and Account Details based on results
       if (results.success && results.api_key_valid && results.ip_whitelisted) {
         updateAPIConnectionStatus('connected', `Total Value: ${parseFloat(results.total_usdt_value || 0).toFixed(2)} USDT`);
+        updateAPIKeyStatus(true, true); // Update Account Details API Key Status
       } else {
         const issues = [];
         if (!results.api_key_valid) issues.push('Invalid API Key');
         if (!results.ip_whitelisted) issues.push('IP Not Whitelisted');
         updateAPIConnectionStatus('failed', issues.join(', '));
+        updateAPIKeyStatus(true, false); // Configured but not working
       }
+      
+      // Display test summary in test results
+      const testResults = document.getElementById('test-results');
+      const summaryHtml = displayTestSummary(results, testResults);
+      const currentStatus = testResults.innerHTML;
+      testResults.innerHTML = currentStatus + summaryHtml;
       
       // Display portfolio section if balances are available
       displayPortfolioSection(results);
@@ -352,48 +412,73 @@ function initializeTroubleshootPage() {
       `;
     });
     
-    // Initialize pie chart
+    // Initialize pie chart with a longer delay to ensure DOM is ready
     setTimeout(() => {
       initializePortfolioPieChart(nonZeroBalances);
-    }, 100);
+    }, 300);
   }
 
   function initializePortfolioPieChart(balances) {
     const chartContainer = document.getElementById('portfolio-pie-chart');
-    if (!chartContainer || typeof PieChart === 'undefined') {
-      console.warn('PieChart not available or container not found');
+    if (!chartContainer) {
+      console.warn('Pie chart container not found');
+      return;
+    }
+
+    if (typeof PieChart === 'undefined') {
+      console.warn('PieChart class not available - check if pie-chart.js is loaded');
       return;
     }
     
-    // Clear existing chart
+    // Clear existing chart completely
     chartContainer.innerHTML = '';
     
     // Only show top 10 assets in pie chart
     const topAssets = balances.slice(0, 10);
     
+    if (topAssets.length === 0) {
+      console.warn('No assets to display in pie chart');
+      return;
+    }
+    
+    console.log('Initializing pie chart with', topAssets.length, 'assets');
+    
     // Prepare data for pie chart
     const chartData = topAssets.map(balance => ({
       label: balance.asset,
-      value: balance.usdt_value || 0,
-      percentage: balance.percentage
+      value: parseFloat(balance.usdt_value) || 0,
+      percentage: parseFloat(balance.percentage) || 0
     }));
     
-    // Create pie chart
-    const pieChart = new PieChart('portfolio-pie-chart', {
-      width: 250,
-      height: 250,
-      radius: 80,
-      showLegend: false, // We'll show the table instead
-      showTooltip: true,
-      title: null,
-      minSlicePercentage: 1, // Group assets smaller than 1%
-      showPercentages: true
-    });
+    console.log('Chart data prepared:', chartData);
     
-    pieChart.setData(chartData);
-    
-    // Store reference for cleanup
-    window.currentPieChart = pieChart;
+    try {
+      // Create pie chart
+      const pieChart = new PieChart('portfolio-pie-chart', {
+        width: 280,
+        height: 280,
+        radius: 100,
+        showLegend: false, // We'll show the table instead
+        showTooltip: true,
+        title: null,
+        minSlicePercentage: 0.5, // Group assets smaller than 0.5%
+        showPercentages: true,
+        colors: [
+          '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+          '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+        ]
+      });
+      
+      pieChart.setData(chartData);
+      console.log('✅ Pie chart created successfully');
+      
+      // Store reference for cleanup
+      window.currentPieChart = pieChart;
+      
+    } catch (error) {
+      console.error('❌ Error creating pie chart:', error);
+      chartContainer.innerHTML = '<div class="chart-error">Chart loading failed</div>';
+    }
   }
 
   function displayDetailedDiagnostics(results, container) {

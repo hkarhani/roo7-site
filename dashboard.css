@@ -1175,6 +1175,309 @@ input:checked + .toggle-slider:before {
   }
 }
 
+/* NEW TROUBLESHOOT SPECIFIC STYLES */
+
+/* TROUBLESHOOT PAGE GRID LAYOUT */
+.troubleshoot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 20px;
+  padding: 0 20px 40px;
+}
+
+/* Position sections in the grid */
+.troubleshoot-grid > .dashboard-card:nth-child(1) {
+  /* Account Details - Top Left */
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.troubleshoot-grid > .dashboard-card:nth-child(2) {
+  /* Connectivity Test - Top Right */
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.troubleshoot-grid > #portfolio-section {
+  /* Portfolio Assets - Bottom Left */
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 400px;
+}
+
+.troubleshoot-grid > #section-diagnostics {
+  /* Diagnostics - Bottom Right */
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* TEST SUMMARY STYLES */
+.test-summary {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.dark-theme .test-summary {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.test-success {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.test-failure {
+  color: #dc3545;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.metric {
+  padding: 6px 10px;
+  background: #fff;
+  border-radius: 4px;
+  border-left: 3px solid #0077cc;
+  font-size: 13px;
+}
+
+.dark-theme .metric {
+  background: #1e1e1e;
+  color: #e0e0e0;
+}
+
+/* API CONNECTION STATUS STYLES */
+.api-connection-status {
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.status-connected {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-failed {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.status-testing {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.dark-theme .status-connected {
+  background-color: #1e3a2e;
+  color: #4ade80;
+  border-color: #2d5a3d;
+}
+
+.dark-theme .status-failed {
+  background-color: #3a1e1e;
+  color: #f87171;
+  border-color: #5d2d2d;
+}
+
+.dark-theme .status-testing {
+  background-color: #1e2a3a;
+  color: #60a5fa;
+  border-color: #2d3d5a;
+}
+
+.test-details {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  font-weight: normal;
+}
+
+.dark-theme .test-details {
+  color: #ccc;
+}
+
+/* ENHANCED PORTFOLIO SECTION FOR TROUBLESHOOT */
+#portfolio-section {
+  padding: 20px;
+}
+
+#portfolio-section h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark-theme #portfolio-section h2 {
+  color: #e0e0e0;
+}
+
+#portfolio-section .portfolio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+#portfolio-section .portfolio-table-container {
+  flex: 1;
+  overflow-x: auto;
+  min-height: 200px;
+}
+
+#portfolio-section .portfolio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+#portfolio-section .portfolio-table th,
+#portfolio-section .portfolio-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+#portfolio-section .portfolio-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dark-theme #portfolio-section .portfolio-table th {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.dark-theme #portfolio-section .portfolio-table td {
+  border-bottom-color: #444;
+}
+
+#portfolio-section .portfolio-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.dark-theme #portfolio-section .portfolio-table tbody tr:hover {
+  background-color: #2a2a2a;
+}
+
+#portfolio-section .portfolio-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.dark-theme #portfolio-section .portfolio-chart-container {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+#portfolio-section .portfolio-pie-chart {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+
+.chart-error {
+  color: #dc3545;
+  text-align: center;
+  font-style: italic;
+  padding: 20px;
+}
+
+/* Override existing percentage-badge for troubleshoot page */
+#portfolio-section .percentage-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dark-theme #portfolio-section .percentage-badge {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+/* Mobile troubleshoot layout */
+@media (max-width: 768px) {
+  .troubleshoot-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 15px;
+  }
+  
+  .troubleshoot-grid > .dashboard-card:nth-child(1),
+  .troubleshoot-grid > .dashboard-card:nth-child(2),
+  .troubleshoot-grid > #portfolio-section,
+  .troubleshoot-grid > #section-diagnostics {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  
+  #portfolio-section {
+    min-height: auto;
+  }
+  
+  #portfolio-section .portfolio-table {
+    font-size: 13px;
+  }
+  
+  #portfolio-section .portfolio-table th,
+  #portfolio-section .portfolio-table td {
+    padding: 8px 10px;
+  }
+  
+  .summary-metrics {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .metric {
+    font-size: 12px;
+  }
+  
+  #portfolio-section .portfolio-chart-container {
+    min-height: 250px;
+    padding: 10px;
+  }
+}
+
 /* MOBILE RESPONSIVENESS */
 @media (max-width: 768px) {
   .dashboard-header {
@@ -1352,174 +1655,5 @@ input:checked + .toggle-slider:before {
 
   table {
     min-width: 500px;
-  }
-}
-
-/* ADD THESE TROUBLESHOOT STYLES TO THE END OF dashboard.css */
-
-/* TROUBLESHOOT PAGE GRID LAYOUT */
-.troubleshoot-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 20px;
-  padding: 0 20px 40px;
-}
-
-/* Position sections in the grid */
-.troubleshoot-grid > .dashboard-card:nth-child(1) {
-  /* Account Details - Top Left */
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.troubleshoot-grid > .dashboard-card:nth-child(2) {
-  /* Connectivity Test - Top Right */
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.troubleshoot-grid > #portfolio-section {
-  /* Portfolio Assets - Bottom Left */
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.troubleshoot-grid > #section-diagnostics {
-  /* Diagnostics - Bottom Right */
-  grid-column: 2;
-  grid-row: 2;
-}
-
-/* API CONNECTION STATUS STYLES */
-.api-connection-status {
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 12px;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.status-connected {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.status-failed {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.status-testing {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
-}
-
-.dark-theme .status-connected {
-  background-color: #1e3a2e;
-  color: #4ade80;
-  border-color: #2d5a3d;
-}
-
-.dark-theme .status-failed {
-  background-color: #3a1e1e;
-  color: #f87171;
-  border-color: #5d2d2d;
-}
-
-.dark-theme .status-testing {
-  background-color: #1e2a3a;
-  color: #60a5fa;
-  border-color: #2d3d5a;
-}
-
-/* ENHANCED PORTFOLIO SECTION FOR TROUBLESHOOT */
-#portfolio-section .portfolio-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-#portfolio-section .portfolio-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-#portfolio-section .portfolio-table th,
-#portfolio-section .portfolio-table td {
-  padding: 6px 8px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-#portfolio-section .portfolio-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #333;
-  font-size: 12px;
-}
-
-.dark-theme #portfolio-section .portfolio-table th {
-  background-color: #2a2a2a;
-  color: #e0e0e0;
-}
-
-.dark-theme #portfolio-section .portfolio-table td {
-  border-bottom-color: #444;
-}
-
-#portfolio-section .portfolio-chart-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-#portfolio-section .portfolio-pie-chart {
-  max-width: 100%;
-}
-
-/* Override existing percentage-badge for troubleshoot page */
-#portfolio-section .percentage-badge {
-  background: #e3f2fd;
-  color: #1976d2;
-  padding: 1px 4px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.dark-theme #portfolio-section .percentage-badge {
-  background: #1e3a5f;
-  color: #60a5fa;
-}
-
-/* Mobile troubleshoot layout */
-@media (max-width: 768px) {
-  .troubleshoot-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    gap: 15px;
-  }
-  
-  .troubleshoot-grid > .dashboard-card:nth-child(1),
-  .troubleshoot-grid > .dashboard-card:nth-child(2),
-  .troubleshoot-grid > #portfolio-section,
-  .troubleshoot-grid > #section-diagnostics {
-    grid-column: 1;
-    grid-row: auto;
-  }
-  
-  #portfolio-section .portfolio-table {
-    font-size: 12px;
-  }
-  
-  #portfolio-section .portfolio-table th,
-  #portfolio-section .portfolio-table td {
-    padding: 4px 6px;
   }
 }
