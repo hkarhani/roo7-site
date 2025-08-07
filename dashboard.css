@@ -103,6 +103,9 @@ th {
 .dark-theme th {
   background-color: #2a2a2a;
 }
+.dark-theme td {
+  border-bottom-color: #444;
+}
 
 /* Buttons inside cards */
 button#open-modal,
@@ -116,9 +119,194 @@ button.delete-account {
   cursor: pointer;
   background: #0077cc;
   color: #fff;
+  margin: 2px;
 }
 button#open-modal:hover,
 button#add-instrument:hover,
-button[type="submit"]:hover {
+button[type="submit"]:hover,
+button.edit-account:hover {
   background: #005fa3;
+}
+
+button.delete-account {
+  background: #dc3545;
+}
+button.delete-account:hover {
+  background: #c82333;
+}
+
+/* MODAL STYLES */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.dark-theme .modal-content {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+}
+
+.dark-theme .close:hover,
+.dark-theme .close:focus {
+  color: #fff;
+}
+
+/* FORM STYLES */
+#account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+#account-form input,
+#account-form select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+#account-form input:focus,
+#account-form select:focus {
+  outline: none;
+  border-color: #0077cc;
+  box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.2);
+}
+
+.dark-theme #account-form input,
+.dark-theme #account-form select {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.dark-theme #account-form input:focus,
+.dark-theme #account-form select:focus {
+  border-color: #0077cc;
+}
+
+/* INSTRUMENT FIELDS */
+#instruments-wrapper {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.instrument-field {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.instrument-field input {
+  flex: 1;
+  margin: 0;
+}
+
+.instrument-field input[name="symbol"] {
+  flex: 2;
+}
+
+.instrument-field input[name="weight"] {
+  flex: 1;
+}
+
+.remove-instrument {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-instrument:hover {
+  background: #c82333;
+}
+
+/* Form submit button styling */
+#account-form button[type="submit"] {
+  background: #28a745;
+  padding: 12px 20px;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+#account-form button[type="submit"]:hover {
+  background: #218838;
+}
+
+#add-instrument {
+  align-self: flex-start;
+  background: #17a2b8;
+  margin-top: 5px;
+}
+
+#add-instrument:hover {
+  background: #138496;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    padding: 0 10px 20px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+    padding: 20px;
+  }
+  
+  .instrument-field {
+    flex-wrap: wrap;
+  }
+  
+  .instrument-field input {
+    min-width: 120px;
+  }
 }

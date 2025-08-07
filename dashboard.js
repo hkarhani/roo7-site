@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn       = document.getElementById("logout-btn");
   const toggleThemeBtn  = document.getElementById("toggle-theme");
   const openModalBtn    = document.getElementById("open-modal");
+  const modal           = document.getElementById("account-modal"); // Added this line
   const closeModalBtn   = document.querySelector(".modal .close");
   const accountForm     = document.getElementById("account-form");
   const strategySelect  = document.getElementById("strategy");
@@ -30,6 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
     instrumentsWrap.innerHTML = "";
     instrumentsWrap.style.display = "none";
     addInstrumentBtn.style.display = "none";
+  }
+
+  // Close modal when clicking outside of it
+  window.onclick = function(event) {
+    if (event.target === modal) {
+      closeModal();
+    }
   }
 
   function addInstrumentField(sym = "", wt = 0) {
@@ -81,8 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <tr>
           <td>${acc.account_name}</td>
           <td>${acc.strategy}</td>
-          <td>${acc.current_value}</td>
-          <td>${acc.hedge_percent}</td>
+          <td>${acc.current_value || 'N/A'}</td>
+          <td>${acc.hedge_percent || 'N/A'}</td>
         </tr>`;
   
       settingsTbody.innerHTML += `
@@ -153,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
   accountForm.onsubmit      = submitAccount;
   strategySelect.onchange   = () => {
     if (strategySelect.value === "Custom Portfolio Rebalancing") {
-      instrumentsWrap.style.display = "block";
+      instrumentsWrap.style.display = "flex"; // Changed to flex for proper layout
       addInstrumentBtn.style.display = "inline-block";
       if (!instrumentsWrap.children.length) {
         addInstrumentField("BTCUSDT", 50);
