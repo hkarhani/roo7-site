@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentEditingId = null;
   let currentHedgeAccountId = null;
   let binanceSymbols = [];
+  let useSameCredentials = false;
 
   // Toast notification system
   function showToast(message, type = 'info', duration = 4000) {
@@ -102,6 +103,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (topXWrapper) {
       topXWrapper.style.display = "none";
     }
+
+    // Remove "Use Same Credentials" button
+    const useSameBtn = document.getElementById("use-same-credentials");
+    if (useSameBtn) {
+      useSameBtn.remove();
+    }
+
+    // Reset credentials state
+    useSameCredentials = false;
+    const apiKeyField = document.getElementById("binance-api-key");
+    const apiSecretField = document.getElementById("binance-api-secret");
+    if (apiKeyField && apiSecretField) {
+      apiKeyField.disabled = false;
+      apiSecretField.disabled = false;
+      apiKeyField.style.opacity = "1";
+      apiSecretField.style.opacity = "1";
+    }
     
     currentEditingId = null;
     document.querySelector("#account-modal h3").textContent = "Add New Account";
@@ -110,8 +128,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openHedgeModal(account) {
     document.getElementById("hedge-account-name").value = account.account_name;
-    document.getElementById("hedge-current-value").value = `$${account.current_value || 0}`;
+    document.getElementById("hedge-current-value").value = `${account.current_value || 0}`;
     document.getElementById("hedge-percent-input").value = account.hedge_percent || 0;
+    document.getElementById("account-disabled").checked = account.is_disabled || false;
+    document.getElementById("account-revoked").checked = account.is_revoked || false;
     currentHedgeAccountId = account.id;
     hedgeModal.style.display = "block";
   }
@@ -120,6 +140,43 @@ document.addEventListener("DOMContentLoaded", () => {
     hedgeModal.style.display = "none";
     hedgeForm.reset();
     currentHedgeAccountId = null;
+  }
+
+  function addUseSameCredentialsButton() {
+    // Check if button already exists
+    if (document.getElementById("use-same-credentials")) return;
+
+    const button = document.createElement("button");
+    button.id = "use-same-credentials";
+    button.type = "button";
+    button.className = "use-same-credentials";
+    button.textContent = "Use Same API Credentials";
+    
+    const apiKeyField = document.getElementById("binance-api-key");
+    apiKeyField.parentNode.insertBefore(button, apiKeyField);
+
+    button.addEventListener('click', function() {
+      const apiKeyField = document.getElementById("binance-api-key");
+      const apiSecretField = document.getElementById("binance-api-secret");
+      
+      useSameCredentials = !useSameCredentials;
+      
+      if (useSameCredentials) {
+        apiKeyField.disabled = true;
+        apiSecretField.disabled = true;
+        apiKeyField.style.opacity = "0.5";
+        apiSecretField.style.opacity = "0.5";
+        button.textContent = "Change API Credentials";
+        button.classList.add("active");
+      } else {
+        apiKeyField.disabled = false;
+        apiSecretField.disabled = false;
+        apiKeyField.style.opacity = "1";
+        apiSecretField.style.opacity = "1";
+        button.textContent = "Use Same API Credentials";
+        button.classList.remove("active");
+      }
+    });
   }
 
   // Window click handler
@@ -221,15 +278,29 @@ document.addEventListener("DOMContentLoaded", () => {
       settingsTbody.innerHTML = "";
 
       accounts.forEach(acc => {
+        // Create status badges
+        let statusBadges = '';
+        if (acc.is_disabled) {
+          statusBadges += '<span class="status-badge status-disabled">Disabled</span>';
+        }
+        if (acc.is_revoked) {
+          statusBadges += '<span class="status-badge status-revoked">Revoked</span>';
+        }
+
         liveTbody.innerHTML += `
           <tr>
-            <td>${acc.account_name}</td>
+            <td>
+              <div class="account-status">
+                ${acc.account_name}
+                ${statusBadges}
+              </div>
+            </td>
             <td>${acc.strategy}</td>
             <td>${acc.current_value !== undefined && acc.current_value !== null ? acc.current_value : 'N/A'}</td>
             <td>${acc.hedge_percent !== undefined && acc.hedge_percent !== null ? acc.hedge_percent + '%' : 'N/A'}</td>
             <td class="account-actions">
               <button class="action-icon troubleshoot-icon" data-account="${acc.account_name}" title="Troubleshoot">🔧</button>
-              <button class="action-icon hedge-edit-icon" data-id="${acc.id}" title="Edit Hedge %">%</button>
+              <button class="action-icon hedge-edit-icon" data-id="${acc.id}" title="Edit Settings">⚙️</button>
             </td>
           </tr>`;
     
@@ -394,11 +465,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const data = {
       account_name: document.getElementById("trading-account-name").value,
-      api_key: document.getElementById("binance-api-key").value,
-      api_secret: document.getElementById("binance-api-secret").value,
       strategy: strategySelect.value,
       custom_portfolio: []
     };
+
+    // Only include API credentials if not using same credentials
+    if (!useSameCredentials) {
+      data.api_key = document.getElementById("binance-api-key").value;
+      data.api_secret = document.getElementById("binance-api-secret").value;
+    }
 
     if (data.strategy === "Top X Instruments of Vapaus") {
       const topXCount = document.getElementById("top-x-count");
@@ -494,12 +569,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      showToast("You must be logged in to update hedge percentage.", 'error');
+      showToast("You must be logged in to update account settings.", 'error');
       window.location.href = "/auth.html";
       return;
     }
 
     const hedgePercent = parseFloat(document.getElementById("hedge-percent-input").value);
+    const isDisabled = document.getElementById("account-disabled").checked;
+    const isRevoked = document.getElementById("account-revoked").checked;
     
     if (isNaN(hedgePercent) || hedgePercent < 0 || hedgePercent > 100) {
       showToast("Hedge percentage must be a number between 0 and 100.", 'warning');
@@ -507,22 +584,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // Use the existing PUT /accounts/{account_id} endpoint
-      // Send only the hedge_percent field - FastAPI will update only this field
+      const updateData = {
+        hedge_percent: hedgePercent,
+        is_disabled: isDisabled,
+        is_revoked: isRevoked
+      };
+
       const res = await fetch(`${API_BASE}/accounts/${currentHedgeAccountId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({
-          hedge_percent: hedgePercent
-        })
+        body: JSON.stringify(updateData)
       });
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.error("Update hedge error response:", errorText);
+        console.error("Update account error response:", errorText);
         
         let errorData;
         try {
@@ -534,13 +613,13 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(errorData.detail || errorData.message || `HTTP ${res.status}: ${res.statusText}`);
       }
 
-      showToast("Hedge percentage updated successfully!", 'success');
+      showToast("Account settings updated successfully!", 'success');
       closeHedgeModal();
       loadAccounts();
 
     } catch (err) {
-      console.error("Error updating hedge:", err);
-      showToast(`Error updating hedge percentage: ${err.message}`, 'error');
+      console.error("Error updating account:", err);
+      showToast(`Error updating account settings: ${err.message}`, 'error');
     }
   }
 
