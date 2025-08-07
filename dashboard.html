@@ -77,7 +77,12 @@
     </div>
   </div>
 
- <script src="dashboard.js?v=<%= Date.now() %>"></script> 
+ <script>
+   // Dynamically load dashboard.js with cache-busting parameter
+   const script = document.createElement('script');
+   script.src = `dashboard.js?v=${Date.now()}`;
+   document.head.appendChild(script);
+ </script> 
 
 </body>
 </html>
