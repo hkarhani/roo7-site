@@ -468,11 +468,11 @@ button.delete-account:hover {
 
 .hedge-modal-content {
   background-color: #fff;
-  margin: 10% auto;
+  margin: 5% auto;
   padding: 30px;
   border-radius: 10px;
   width: 90%;
-  max-width: 400px;
+  max-width: 500px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: relative;
 }
@@ -489,6 +489,34 @@ button.delete-account:hover {
   margin-top: 20px;
 }
 
+.hedge-form input,
+.hedge-form select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.hedge-form input:focus,
+.hedge-form select:focus {
+  outline: none;
+  border-color: #0077cc;
+  box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.2);
+}
+
+.dark-theme .hedge-form input,
+.dark-theme .hedge-form select {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.dark-theme .hedge-form input:focus,
+.dark-theme .hedge-form select:focus {
+  border-color: #0077cc;
+}
+
 .hedge-form input[readonly] {
   background-color: #f8f9fa;
   cursor: not-allowed;
@@ -497,6 +525,21 @@ button.delete-account:hover {
 .dark-theme .hedge-form input[readonly] {
   background-color: #2a2a2a;
   color: #ccc;
+}
+
+.hedge-form button[type="submit"] {
+  background: #0077cc;
+  padding: 12px 20px;
+  font-size: 16px;
+  margin-top: 10px;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hedge-form button[type="submit"]:hover {
+  background: #005fa3;
 }
 
 /* TROUBLESHOOT PAGE STYLES */

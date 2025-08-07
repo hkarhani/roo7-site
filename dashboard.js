@@ -507,6 +507,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
+      // Use the existing PUT /accounts/{account_id} endpoint
+      // Send only the hedge_percent field - FastAPI will update only this field
       const res = await fetch(`${API_BASE}/accounts/${currentHedgeAccountId}`, {
         method: "PUT",
         headers: {
@@ -519,8 +521,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+        const errorText = await res.text();
+        console.error("Update hedge error response:", errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { detail: `HTTP ${res.status}: ${res.statusText}` };
+        }
+        
+        throw new Error(errorData.detail || errorData.message || `HTTP ${res.status}: ${res.statusText}`);
       }
 
       showToast("Hedge percentage updated successfully!", 'success');
@@ -528,6 +539,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadAccounts();
 
     } catch (err) {
+      console.error("Error updating hedge:", err);
       showToast(`Error updating hedge percentage: ${err.message}`, 'error');
     }
   }
