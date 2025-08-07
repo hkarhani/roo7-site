@@ -90,6 +90,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openModal() {
+    console.log("🚀 Opening modal in ADD mode");
+    // Ensure we're in add mode when opening modal normally
+    resetModalToAddMode();
     modal.style.display = "block";
   }
 
@@ -135,6 +138,8 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("🚪 Closing modal and cleaning up state");
     
     modal.style.display = "none";
+    
+    // Reset form completely
     accountForm.reset();
     instrumentsWrap.innerHTML = "";
     instrumentsWrap.style.display = "none";
@@ -145,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
       topXWrapper.style.display = "none";
     }
 
-    // Reset all fields to enabled state
+    // Reset all fields to enabled state and clear any special styling
     const apiKeyField = document.getElementById("binance-api-key");
     const apiSecretField = document.getElementById("binance-api-secret");
     if (apiKeyField && apiSecretField) {
@@ -155,12 +160,14 @@ document.addEventListener("DOMContentLoaded", () => {
       apiSecretField.style.opacity = "1";
       apiKeyField.removeAttribute('readonly');
       apiSecretField.removeAttribute('readonly');
+      apiKeyField.value = "";
+      apiSecretField.value = "";
     }
     
-    // Reset modal to add mode
+    // Reset modal to add mode (this will hide the button)
     resetModalToAddMode();
     
-    console.log("✅ Modal closed and state cleaned");
+    console.log("✅ Modal closed and completely reset to Add mode");
   }
 
   function openHedgeModal(account) {
