@@ -144,7 +144,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const apiKeyField = document.getElementById("binance-api-key");
     const apiSecretField = document.getElementById("binance-api-secret");
     
+    if (!button) {
+      console.error("❌ Use same credentials button not found!");
+      return;
+    }
+    
     button.style.display = "block";
+    console.log("👁️ Use same credentials button shown");
     
     // Reset the button state
     useSameCredentials = false;
@@ -160,7 +166,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function hideUseSameCredentialsButton() {
     const button = document.getElementById("use-same-credentials");
-    button.style.display = "none";
+    if (button) {
+      button.style.display = "none";
+      console.log("👁️ Use same credentials button hidden");
+    }
   }
 
   // Wire up the use same credentials button
