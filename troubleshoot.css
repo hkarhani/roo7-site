@@ -8,12 +8,12 @@
   gap: 20px;
   padding: 0 20px 40px;
   min-height: calc(100vh - 120px);
-  align-items: stretch;
+  align-items: start;
 }
 
-/* Grid positioning - Account Details spans wider */
+/* Grid positioning - Equal bottom alignment */
 .troubleshoot-grid > .dashboard-card:nth-child(1) {
-  /* Account Details - Top Left - Wider with larger font */
+  /* Account Details - Top Left - Wider */
   grid-column: 1;
   grid-row: 1;
   display: flex;
@@ -34,6 +34,8 @@
   grid-row: 2;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  align-self: stretch;
 }
 
 .troubleshoot-grid > #section-diagnostics {
@@ -42,6 +44,8 @@
   grid-row: 2;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  align-self: stretch;
 }
 
 /* TEST SUMMARY STYLES */
@@ -151,32 +155,42 @@
 }
 
 /* ENHANCED ACCOUNT DETAILS SECTION */
+.troubleshoot-grid > .dashboard-card:nth-child(1) {
+  /* Account Details - Top Left - Wider with larger font */
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px;
+}
+
 .troubleshoot-grid > .dashboard-card:nth-child(1) .account-info {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  gap: 20px;
+  gap: 25px;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
+  padding: 18px 0;
   border-bottom: 1px solid #eee;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row label {
   font-weight: 700;
   color: #333;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .troubleshoot-grid > .dashboard-card:nth-child(1) .info-row span {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 18px;
   text-align: right;
 }
 
@@ -214,16 +228,17 @@
 
 #portfolio-section .portfolio-content {
   display: flex;
-  gap: 25px;
+  flex-direction: column;
+  gap: 20px;
   flex: 1;
   min-height: 0;
   align-items: stretch;
 }
 
-/* Portfolio Table Section - Full Width */
+/* Portfolio Table Section - FULL WIDTH */
 .portfolio-table-wrapper {
-  flex: 2;
-  min-width: 0;
+  flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -237,7 +252,7 @@
   flex: 1;
   display: block;
   overflow-y: auto;
-  max-height: 100%;
+  max-height: 350px;
 }
 
 #portfolio-section .portfolio-table thead {
@@ -259,6 +274,7 @@
 #portfolio-section .portfolio-table tr {
   display: table-row;
   height: 55px;
+  width: 100%;
 }
 
 #portfolio-section .portfolio-table th,
@@ -268,6 +284,33 @@
   border-bottom: 1px solid #eee;
   font-size: 16px;
   vertical-align: middle;
+  width: auto;
+}
+
+/* Make table columns use full width */
+#portfolio-section .portfolio-table th:nth-child(1),
+#portfolio-section .portfolio-table td:nth-child(1) {
+  width: 25%;
+  min-width: 80px;
+}
+
+#portfolio-section .portfolio-table th:nth-child(2),
+#portfolio-section .portfolio-table td:nth-child(2) {
+  width: 35%;
+  min-width: 120px;
+}
+
+#portfolio-section .portfolio-table th:nth-child(3),
+#portfolio-section .portfolio-table td:nth-child(3) {
+  width: 25%;
+  min-width: 100px;
+}
+
+#portfolio-section .portfolio-table th:nth-child(4),
+#portfolio-section .portfolio-table td:nth-child(4) {
+  width: 15%;
+  min-width: 80px;
+  text-align: center;
 }
 
 #portfolio-section .portfolio-table th {
@@ -355,20 +398,20 @@
   color: #60a5fa;
 }
 
-/* Portfolio Chart Section - Side by Side & Centered */
+/* Portfolio Chart Section - Compact */
 .portfolio-chart-wrapper {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 15px;
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border-radius: 12px;
   border: 1px solid #dee2e6;
   box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-  min-height: 350px;
-  max-height: 100%;
+  height: 280px;
+  width: 100%;
 }
 
 .dark-theme .portfolio-chart-wrapper {
@@ -391,8 +434,8 @@
 
 #portfolio-section .portfolio-pie-chart {
   width: 100%;
-  max-width: 280px;
-  max-height: 280px;
+  max-width: 240px;
+  max-height: 240px;
   height: auto;
   flex-shrink: 0;
 }
