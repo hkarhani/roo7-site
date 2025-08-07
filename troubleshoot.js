@@ -23,10 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById('account-name-display').textContent = accountName;
 
-  // Theme toggle
-  document.getElementById('toggle-theme').onclick = () => {
-    document.body.classList.toggle("dark-theme");
-  };
+  // Note: Theme toggle is now handled by theme-manager.js
 
   // Toast notification system (reuse from dashboard)
   function showToast(message, type = 'info', duration = 4000) {

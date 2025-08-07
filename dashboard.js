@@ -19,8 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // DOM elements
   const logoutBtn = document.getElementById("logout-btn");
-  const toggleThemeBtn = document.getElementById("toggle-theme");
-  const openModalBtn = document.getElementById("open-modal");
+  // Note: theme toggle is now handled by theme-manager.js
 
   // Toast notification system
   window.showToast = function(message, type = 'info', duration = 4000) {
@@ -52,10 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Basic functions
-  function toggleTheme() {
-    document.body.classList.toggle("dark-theme");
-  }
-
   function logout() {
     localStorage.removeItem("token");
     window.location.href = "/auth.html";
@@ -263,8 +258,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Event handlers
-  toggleThemeBtn.onclick = toggleTheme;
   logoutBtn.onclick = logout;
+  const openModalBtn = document.getElementById("open-modal");
   openModalBtn.onclick = () => {
     console.log("🆕 ADD NEW ACCOUNT clicked");
     modalManager.openAddAccountModal();
