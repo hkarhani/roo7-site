@@ -8,9 +8,10 @@
   gap: 20px;
   padding: 0 20px 40px;
   min-height: calc(100vh - 120px);
+  align-items: start; /* Align grid items to start */
 }
 
-/* Grid positioning */
+/* Grid positioning with equal heights */
 .troubleshoot-grid > .dashboard-card:nth-child(1) {
   grid-column: 1;
   grid-row: 1;
@@ -24,12 +25,13 @@
 .troubleshoot-grid > #portfolio-section {
   grid-column: 1;
   grid-row: 2;
-  min-height: 500px;
+  height: 600px; /* Fixed height to match diagnostics */
 }
 
 .troubleshoot-grid > #section-diagnostics {
   grid-column: 2;
   grid-row: 2;
+  height: 600px; /* Fixed height to match portfolio */
 }
 
 /* TEST SUMMARY STYLES */
@@ -144,6 +146,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Prevent content from extending beyond bounds */
+  height: 100%; /* Use full allocated height */
 }
 
 #portfolio-section h2 {
@@ -154,6 +157,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0; /* Don't shrink the header */
 }
 
 .dark-theme #portfolio-section h2 {
@@ -166,12 +170,16 @@
   flex: 1;
   align-items: stretch;
   min-height: 0; /* Allow proper flex shrinking */
+  height: 100%; /* Use remaining height */
 }
 
-/* Portfolio Table Section */
+/* Portfolio Table Section - Scrollable */
 #portfolio-section .portfolio-table-container {
   flex: 2;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Use full height */
 }
 
 #portfolio-section .portfolio-table {
@@ -179,6 +187,27 @@
   border-collapse: collapse;
   font-size: 16px;
   margin-bottom: 0;
+  display: block; /* Make table scrollable */
+  height: 100%;
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 480px; /* Maximum height for scrolling */
+}
+
+#portfolio-section .portfolio-table thead {
+  display: table-header-group;
+}
+
+#portfolio-section .portfolio-table tbody {
+  display: table-row-group;
+}
+
+#portfolio-section .portfolio-table tr {
+  display: table-row;
+}
+
+#portfolio-section .portfolio-table th,
+#portfolio-section .portfolio-table td {
+  display: table-cell;
 }
 
 #portfolio-section .portfolio-table th {
@@ -238,14 +267,14 @@
   color: #60a5fa;
 }
 
-/* Portfolio Chart Section */
+/* Portfolio Chart Section - Centered */
 #portfolio-section .portfolio-chart-container {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  max-height: 400px; /* Limit maximum height */
+  justify-content: center; /* Center vertically */
+  align-items: center; /* Center horizontally */
+  height: 100%; /* Use full height */
   padding: 20px;
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border-radius: 12px;
@@ -264,6 +293,7 @@
   max-width: 280px;
   max-height: 280px;
   height: auto;
+  flex-shrink: 0; /* Don't shrink the chart */
 }
 
 /* Chart title */
@@ -319,20 +349,22 @@
   .troubleshoot-grid > #section-diagnostics {
     grid-column: 1;
     grid-row: auto;
+    height: auto !important; /* Reset fixed heights on mobile */
   }
   
   #portfolio-section {
-    min-height: auto;
     padding: 20px;
   }
   
   #portfolio-section .portfolio-content {
     flex-direction: column;
     gap: 20px;
+    height: auto;
   }
   
   #portfolio-section .portfolio-table {
     font-size: 14px;
+    max-height: 300px; /* Smaller max height on mobile */
   }
   
   #portfolio-section .portfolio-table th,
@@ -341,7 +373,7 @@
   }
   
   #portfolio-section .portfolio-chart-container {
-    min-height: 280px;
+    height: 320px; /* Fixed height for mobile */
     padding: 15px;
   }
   
