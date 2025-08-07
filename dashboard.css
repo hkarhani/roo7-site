@@ -588,29 +588,40 @@ button.delete-account:hover {
 .use-same-credentials {
   background: #17a2b8 !important;
   color: white !important;
-  border: none !important;
+  border: 2px solid #17a2b8 !important;
   padding: 10px 15px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
   font-size: 14px !important;
-  font-weight: 500 !important;
-  margin-bottom: 10px !important;
+  font-weight: 600 !important;
+  margin: 10px 0 !important;
   align-self: flex-start !important;
-  display: block !important;
   width: auto !important;
-  min-width: 200px !important;
+  min-width: 220px !important;
+  position: relative !important;
+  z-index: 10 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .use-same-credentials:hover {
   background: #138496 !important;
+  border-color: #138496 !important;
 }
 
 .use-same-credentials.active {
   background: #28a745 !important;
+  border-color: #28a745 !important;
 }
 
 .use-same-credentials.active:hover {
   background: #218838 !important;
+  border-color: #218838 !important;
+}
+
+/* Force display when shown */
+#use-same-credentials[style*="block"] {
+  display: block !important;
 }
 
 /* FORM ACTIONS */

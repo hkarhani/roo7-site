@@ -178,23 +178,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showUseSameCredentialsButton() {
-    console.log("🔍 Attempting to show Use Same Credentials button...");
+    console.log("🔍 showUseSameCredentialsButton called");
     const button = document.getElementById("use-same-credentials");
     
     if (!button) {
-      console.error("❌ Use same credentials button not found in DOM!");
+      console.error("❌ CRITICAL: use-same-credentials button not found in DOM!");
+      // Let's check if it exists at all
+      const allButtons = document.querySelectorAll('button');
+      console.log("🔍 All buttons in DOM:", Array.from(allButtons).map(b => b.id || b.className));
       return;
     }
     
-    console.log("✅ Button found, making it visible");
-    button.style.display = "block";
-    button.style.visibility = "visible";
+    console.log("✅ Button found in DOM:", button);
+    console.log("📍 Button current display style:", button.style.display);
+    console.log("📍 Button computed display:", window.getComputedStyle(button).display);
+    
+    // Force show with multiple methods
+    button.style.display = "block !important";
+    button.style.visibility = "visible !important";
+    button.style.opacity = "1 !important";
+    button.removeAttribute('hidden');
+    button.classList.remove('hidden');
     
     // Reset the button state
     useSameCredentials = false;
     button.textContent = "🔒 Use Same API Credentials";
     button.classList.remove("active");
-    console.log("🔄 Button text set to:", button.textContent);
+    
+    console.log("🔄 After forcing display:");
+    console.log("📍 Button style.display:", button.style.display);
+    console.log("📍 Button textContent:", button.textContent);
+    console.log("📍 Button classList:", Array.from(button.classList));
     
     // Reset field states
     const apiKeyField = document.getElementById("binance-api-key");
@@ -207,6 +221,8 @@ document.addEventListener("DOMContentLoaded", () => {
       apiKeyField.removeAttribute('readonly');
       apiSecretField.removeAttribute('readonly');
       console.log("✅ API fields reset to enabled state");
+    } else {
+      console.error("❌ API fields not found!");
     }
   }
 
