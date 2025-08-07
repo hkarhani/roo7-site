@@ -104,11 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
       topXWrapper.style.display = "none";
     }
 
-    // Remove "Use Same Credentials" button
-    const useSameBtn = document.getElementById("use-same-credentials");
-    if (useSameBtn) {
-      useSameBtn.remove();
-    }
+    // Hide the "Use Same Credentials" button
+    hideUseSameCredentialsButton();
 
     // Reset credentials state
     useSameCredentials = false;
@@ -142,42 +139,54 @@ document.addEventListener("DOMContentLoaded", () => {
     currentHedgeAccountId = null;
   }
 
-  function addUseSameCredentialsButton() {
-    // Check if button already exists
-    if (document.getElementById("use-same-credentials")) return;
-
-    const button = document.createElement("button");
-    button.id = "use-same-credentials";
-    button.type = "button";
-    button.className = "use-same-credentials";
-    button.textContent = "Use Same API Credentials";
-    
+  function showUseSameCredentialsButton() {
+    const button = document.getElementById("use-same-credentials");
     const apiKeyField = document.getElementById("binance-api-key");
-    apiKeyField.parentNode.insertBefore(button, apiKeyField);
-
-    button.addEventListener('click', function() {
-      const apiKeyField = document.getElementById("binance-api-key");
-      const apiSecretField = document.getElementById("binance-api-secret");
-      
-      useSameCredentials = !useSameCredentials;
-      
-      if (useSameCredentials) {
-        apiKeyField.disabled = true;
-        apiSecretField.disabled = true;
-        apiKeyField.style.opacity = "0.5";
-        apiSecretField.style.opacity = "0.5";
-        button.textContent = "Change API Credentials";
-        button.classList.add("active");
-      } else {
-        apiKeyField.disabled = false;
-        apiSecretField.disabled = false;
-        apiKeyField.style.opacity = "1";
-        apiSecretField.style.opacity = "1";
-        button.textContent = "Use Same API Credentials";
-        button.classList.remove("active");
-      }
-    });
+    const apiSecretField = document.getElementById("binance-api-secret");
+    
+    button.style.display = "block";
+    
+    // Reset the button state
+    useSameCredentials = false;
+    button.textContent = "Use Same API Credentials";
+    button.classList.remove("active");
+    
+    // Reset field states
+    apiKeyField.disabled = false;
+    apiSecretField.disabled = false;
+    apiKeyField.style.opacity = "1";
+    apiSecretField.style.opacity = "1";
   }
+
+  function hideUseSameCredentialsButton() {
+    const button = document.getElementById("use-same-credentials");
+    button.style.display = "none";
+  }
+
+  // Wire up the use same credentials button
+  document.getElementById("use-same-credentials").addEventListener('click', function() {
+    const apiKeyField = document.getElementById("binance-api-key");
+    const apiSecretField = document.getElementById("binance-api-secret");
+    const button = this;
+    
+    useSameCredentials = !useSameCredentials;
+    
+    if (useSameCredentials) {
+      apiKeyField.disabled = true;
+      apiSecretField.disabled = true;
+      apiKeyField.style.opacity = "0.5";
+      apiSecretField.style.opacity = "0.5";
+      button.textContent = "Change API Credentials";
+      button.classList.add("active");
+    } else {
+      apiKeyField.disabled = false;
+      apiSecretField.disabled = false;
+      apiKeyField.style.opacity = "1";
+      apiSecretField.style.opacity = "1";
+      button.textContent = "Use Same API Credentials";
+      button.classList.remove("active");
+    }
+  });
 
   // Window click handler
   window.onclick = function(event) {
@@ -278,13 +287,13 @@ document.addEventListener("DOMContentLoaded", () => {
       settingsTbody.innerHTML = "";
 
       accounts.forEach(acc => {
-        // Create status badges
+        // Create status badges with icons
         let statusBadges = '';
         if (acc.is_disabled) {
-          statusBadges += '<span class="status-badge status-disabled">Disabled</span>';
+          statusBadges += '<span class="status-badge status-disabled" title="Account Disabled">⏸️</span>';
         }
         if (acc.is_revoked) {
-          statusBadges += '<span class="status-badge status-revoked">Revoked</span>';
+          statusBadges += '<span class="status-badge status-revoked" title="Access Revoked">🚫</span>';
         }
 
         liveTbody.innerHTML += `

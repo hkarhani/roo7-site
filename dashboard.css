@@ -545,16 +545,22 @@ button.delete-account:hover {
 /* ACCOUNT STATUS INDICATORS */
 .account-status {
   display: inline-flex;
-  gap: 5px;
+  gap: 8px;
   align-items: center;
 }
 
 .status-badge {
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+  cursor: help;
 }
 
 .status-disabled {
