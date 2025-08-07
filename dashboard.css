@@ -91,14 +91,17 @@ h2 {
 table {
   width: 100%;
   border-collapse: collapse;
+  overflow-x: auto;
 }
 th, td {
   padding: 10px 12px;
   border-bottom: 1px solid #ddd;
   text-align: left;
+  white-space: nowrap;
 }
 th {
   background-color: #f0f0f0;
+  font-weight: 600;
 }
 .dark-theme th {
   background-color: #2a2a2a;
@@ -156,6 +159,8 @@ button.delete-account:hover {
   max-width: 500px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .dark-theme .modal-content {
@@ -299,34 +304,13 @@ button.delete-account:hover {
   background: #138496;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-    padding: 0 10px 20px;
-  }
-  
-  .modal-content {
-    width: 95%;
-    margin: 10% auto;
-    padding: 20px;
-  }
-  
-  .instrument-field {
-    flex-wrap: wrap;
-  }
-  
-  .instrument-field input {
-    min-width: 120px;
-  }
-}
-
-/* TOAST NOTIFICATION STYLES */
+/* TOAST NOTIFICATION STYLES - Wider and Mobile Friendly */
 .toast {
   position: fixed;
   top: 20px;
   right: 20px;
-  max-width: 400px;
+  min-width: 350px;
+  max-width: 500px;
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -334,6 +318,7 @@ button.delete-account:hover {
   transform: translateX(100%);
   transition: transform 0.3s ease-in-out;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .toast-show {
@@ -368,11 +353,13 @@ button.delete-account:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
 }
 
 .toast-message {
   flex: 1;
-  margin-right: 10px;
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 
 .toast-close {
@@ -382,6 +369,7 @@ button.delete-account:hover {
   cursor: pointer;
   color: inherit;
   opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .toast-close:hover {
@@ -414,6 +402,7 @@ button.delete-account:hover {
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .action-icon {
@@ -475,6 +464,8 @@ button.delete-account:hover {
   max-width: 500px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .dark-theme .hedge-modal-content {
@@ -880,4 +871,184 @@ input:checked + .toggle-slider:before {
 
 .diagnostic-item li {
   margin: 4px 0;
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    text-align: center;
+  }
+
+  .dashboard-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .dashboard-header .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .dashboard-header button {
+    margin: 0;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 15px 30px;
+  }
+
+  .dashboard-card {
+    padding: 15px;
+  }
+
+  /* Table scrolling on mobile */
+  .dashboard-card {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  /* Modal adjustments */
+  .modal-content,
+  .hedge-modal-content {
+    width: 95%;
+    margin: 10% auto;
+    padding: 20px;
+    max-height: 85vh;
+  }
+
+  /* Form adjustments */
+  .instrument-field {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .instrument-field input {
+    min-width: 120px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  /* Toggle group mobile layout */
+  .toggle-group {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  /* Toast mobile positioning */
+  .toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+    transform: translateY(-100%);
+  }
+
+  .toast-show {
+    transform: translateY(0);
+  }
+
+  /* Account actions mobile */
+  .account-actions {
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+  }
+
+  .action-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  /* Troubleshoot page mobile */
+  .info-row {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .info-row label {
+    font-size: 14px;
+  }
+
+  .info-row span {
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: 10px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .dashboard-header button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .dashboard-grid {
+    padding: 0 10px 20px;
+  }
+
+  .dashboard-card {
+    padding: 12px;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  .modal-content,
+  .hedge-modal-content {
+    padding: 15px;
+    margin: 5% auto;
+  }
+
+  .toast {
+    top: 10px;
+    right: 5px;
+    left: 5px;
+    padding: 12px;
+  }
+
+  .toast-message {
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  table {
+    min-width: 500px;
+  }
 }
