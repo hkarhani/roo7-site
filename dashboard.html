@@ -76,6 +76,11 @@
     </div>
   </div>
 
-  <script src="dashboard.js"></script>
+  <script>
+   const script = document.createElement('script');
+   script.src = 'dashboard.js?v=' + new Date().getTime();  // Prevent caching
+   document.head.appendChild(script);
+  </script>
+
 </body>
 </html>
