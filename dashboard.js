@@ -168,6 +168,26 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   addInstrumentBtn.onclick = () => addInstrumentField();
 
+  const fetchUser = async () => {
+    const token = localStorage.getItem("token");
+    const res = await fetch("/me", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById("user-fullname").textContent = data.full_name;
+        } else {
+          // Optionally handle token expiry / invalid token
+          window.location.href = "/login.html";
+        }
+      };
+
+  // fetch the user 
+  fetchUser();
+
   // initial load
   loadAccounts();
 });
