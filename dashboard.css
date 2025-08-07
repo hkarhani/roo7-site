@@ -568,6 +568,37 @@ button.delete-account:hover {
   color: #dc3545 !important;
 }
 
+/* TEST STATUS INDICATORS */
+.test-status-success {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.test-status-failed {
+  color: #dc3545;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.test-status-na {
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.dark-theme .test-status-success {
+  color: #4ade80;
+}
+
+.dark-theme .test-status-failed {
+  color: #f87171;
+}
+
+.dark-theme .test-status-na {
+  color: #9ca3af;
+}
+
 /* CREDENTIALS SECTION */
 .credentials-section {
   display: flex;
@@ -1012,6 +1043,135 @@ input:checked + .toggle-slider:before {
   
   .test-message {
     font-size: 13px;
+  }
+}
+
+/* PORTFOLIO SECTION STYLES */
+.portfolio-section {
+  margin: 25px 0;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.dark-theme .portfolio-section {
+  background: #1e1e1e;
+  border-color: #444;
+}
+
+.portfolio-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.portfolio-header h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.dark-theme .portfolio-header h3 {
+  color: #e0e0e0;
+}
+
+.portfolio-header p {
+  margin: 0;
+  color: #666;
+  font-size: 16px;
+}
+
+.dark-theme .portfolio-header p {
+  color: #ccc;
+}
+
+.portfolio-content {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+.portfolio-chart-container {
+  flex-shrink: 0;
+}
+
+.portfolio-table-container {
+  flex: 1;
+  overflow-x: auto;
+}
+
+.portfolio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.portfolio-table th,
+.portfolio-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.portfolio-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.dark-theme .portfolio-table th {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.dark-theme .portfolio-table td {
+  border-bottom-color: #444;
+}
+
+.percentage-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dark-theme .percentage-badge {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+.portfolio-empty {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+.dark-theme .portfolio-empty {
+  color: #ccc;
+}
+
+/* Mobile portfolio layout */
+@media (max-width: 768px) {
+  .portfolio-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .portfolio-table-container {
+    width: 100%;
+  }
+  
+  .portfolio-table {
+    font-size: 13px;
+  }
+  
+  .portfolio-table th,
+  .portfolio-table td {
+    padding: 6px 8px;
   }
 }
 

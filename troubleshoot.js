@@ -246,6 +246,9 @@ function initializeTroubleshootPage() {
       // Display summary results
       displayTestSummary(results, testResults);
       
+      // Display portfolio section with pie chart
+      displayPortfolioSection(results);
+      
       // Display detailed diagnostics
       displayDetailedDiagnostics(results, diagnosticInfo);
       
@@ -288,7 +291,7 @@ function initializeTroubleshootPage() {
     summaryHtml += '<div class="summary-metrics">';
     
     if (results.total_usdt_value !== null && results.total_usdt_value !== undefined) {
-      summaryHtml += `<div class="metric"><strong>Portfolio Value:</strong> $${parseFloat(results.total_usdt_value).toFixed(2)} USDT</div>`;
+      summaryHtml += `<div class="metric"><strong>Portfolio Value:</strong> ${parseFloat(results.total_usdt_value).toFixed(2)} USDT</div>`;
     }
     
     if (results.execution_time_ms) {
@@ -307,6 +310,107 @@ function initializeTroubleshootPage() {
     summaryHtml += '</div></div>';
     
     container.innerHTML = summaryHtml;
+  }
+
+  function displayPortfolioSection(results) {
+    // Find or create portfolio section after summary
+    const testResults = document.getElementById('test-results');
+    let portfolioSection = document.getElementById('portfolio-section');
+    
+    if (!portfolioSection && results.balances && results.balances.length > 0) {
+      portfolioSection = document.createElement('div');
+      portfolioSection.id = 'portfolio-section';
+      portfolioSection.className = 'portfolio-section';
+      
+      // Insert after test results
+      testResults.parentNode.insertBefore(portfolioSection, testResults.nextSibling);
+    }
+    
+    if (!portfolioSection || !results.balances || results.balances.length === 0) {
+      return;
+    }
+
+    const nonZeroBalances = results.balances.filter(b => b.total > 0 && b.percentage > 0);
+    
+    if (nonZeroBalances.length === 0) {
+      portfolioSection.innerHTML = '<div class="portfolio-empty">No assets with value found</div>';
+      return;
+    }
+
+    let portfolioHtml = '<div class="portfolio-header">';
+    portfolioHtml += '<h3>💰 Portfolio Assets</h3>';
+    portfolioHtml += `<p>Total Value: <strong>${parseFloat(results.total_usdt_value).toFixed(2)} USDT</strong></p>`;
+    portfolioHtml += '</div>';
+    
+    // Create container for chart and table
+    portfolioHtml += '<div class="portfolio-content">';
+    
+    // Pie chart container
+    portfolioHtml += '<div class="portfolio-chart-container">';
+    portfolioHtml += '<div id="portfolio-pie-chart" class="portfolio-pie-chart"></div>';
+    portfolioHtml += '</div>';
+    
+    // Asset table
+    portfolioHtml += '<div class="portfolio-table-container">';
+    portfolioHtml += '<table class="portfolio-table">';
+    portfolioHtml += '<thead><tr><th>Asset</th><th>Amount</th><th>Value (USDT)</th><th>%</th></tr></thead>';
+    portfolioHtml += '<tbody>';
+    
+    nonZeroBalances.forEach(balance => {
+      const usdtValue = balance.usdt_value ? parseFloat(balance.usdt_value).toFixed(2) : 'N/A';
+      const total = parseFloat(balance.total);
+      const displayTotal = total < 0.001 ? total.toExponential(3) : total.toFixed(6);
+      
+      portfolioHtml += '<tr>';
+      portfolioHtml += `<td><strong>${balance.asset}</strong></td>`;
+      portfolioHtml += `<td>${displayTotal}</td>`;
+      portfolioHtml += `<td>${usdtValue}</td>`;
+      portfolioHtml += `<td><span class="percentage-badge">${balance.percentage}%</span></td>`;
+      portfolioHtml += '</tr>';
+    });
+    
+    portfolioHtml += '</tbody></table>';
+    portfolioHtml += '</div>';
+    portfolioHtml += '</div>';
+    
+    portfolioSection.innerHTML = portfolioHtml;
+    
+    // Initialize pie chart
+    setTimeout(() => {
+      initializePortfolioPieChart(nonZeroBalances);
+    }, 100);
+  }
+
+  function initializePortfolioPieChart(balances) {
+    const chartContainer = document.getElementById('portfolio-pie-chart');
+    if (!chartContainer || typeof PieChart === 'undefined') {
+      console.warn('PieChart not available or container not found');
+      return;
+    }
+    
+    // Prepare data for pie chart
+    const chartData = balances.map(balance => ({
+      label: balance.asset,
+      value: balance.usdt_value || 0,
+      percentage: balance.percentage
+    }));
+    
+    // Create pie chart
+    const pieChart = new PieChart('portfolio-pie-chart', {
+      width: 300,
+      height: 300,
+      radius: 100,
+      showLegend: true,
+      legendPosition: 'right',
+      title: 'Asset Allocation',
+      minSlicePercentage: 2, // Group assets smaller than 2%
+      showTooltip: true
+    });
+    
+    pieChart.setData(chartData);
+    
+    // Store reference for cleanup
+    window.currentPieChart = pieChart;
   }
 
   function displayDetailedDiagnostics(results, container) {
