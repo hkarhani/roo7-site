@@ -10,14 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const strategySelect = document.getElementById("strategy");
   const instrumentsWrapper = document.getElementById("instruments-wrapper");
   const addInstrumentBtn = document.getElementById("add-instrument");
-  const token = localStorage.getItem("access_token");
+  const token = localStorage.getItem("token");
 
   function toggleTheme() {
     document.body.classList.toggle("dark-theme");
   }
 
   function logout() {
-    localStorage.removeItem("access_token");
+    localStorage.removeItem("token");
     window.location.href = "/auth.html";
   }
 
