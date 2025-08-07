@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("user-fullname").textContent = data.full_name;
         } else {
           // Optionally handle token expiry / invalid token
-          window.location.href = "/login.html";
+          window.location.href = "/auth.html";
         }
       };
 
