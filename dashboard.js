@@ -1,16 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = "https://api.roo7.site";
 
-  const logoutBtn = document.getElementById("logout-btn");
-  const toggleThemeBtn = document.getElementById("toggle-theme");
-  const openModalBtn = document.getElementById("open-modal");
-  const modal = document.getElementById("account-modal");
-  const closeModalBtn = document.querySelector(".modal .close");
-  const accountForm = document.getElementById("account-form");
-  const strategySelect = document.getElementById("strategy");
-  const instrumentsWrapper = document.getElementById("instruments-wrapper");
-  const addInstrumentBtn = document.getElementById("add-instrument");
-  const token = localStorage.getItem("token");
+  // grab these once
+  const logoutBtn       = document.getElementById("logout-btn");
+  const toggleThemeBtn  = document.getElementById("toggle-theme");
+  const openModalBtn    = document.getElementById("open-modal");
+  const closeModalBtn   = document.querySelector(".modal .close");
+  const accountForm     = document.getElementById("account-form");
+  const strategySelect  = document.getElementById("strategy");
+  const instrumentsWrap = document.getElementById("instruments-wrapper");
+  const addInstrumentBtn= document.getElementById("add-instrument");
 
   function toggleTheme() {
     document.body.classList.toggle("dark-theme");
@@ -28,126 +27,147 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeModal() {
     modal.style.display = "none";
     accountForm.reset();
-    instrumentsWrapper.innerHTML = "";
-    instrumentsWrapper.style.display = "none";
+    instrumentsWrap.innerHTML = "";
+    instrumentsWrap.style.display = "none";
     addInstrumentBtn.style.display = "none";
   }
 
-  function addInstrumentField(symbol = '', weight = 0) {
+  function addInstrumentField(sym = "", wt = 0) {
     const div = document.createElement("div");
     div.className = "instrument-field";
     div.innerHTML = `
-      <input type="text" name="symbol" placeholder="Symbol" value="${symbol}" required>
-      <input type="number" name="weight" placeholder="Weight (%)" value="${weight}" required>
+      <input type="text" name="symbol"  placeholder="Symbol" value="${sym}" required>
+      <input type="number" name="weight" placeholder="Weight (%)" value="${wt}" required>
       <button type="button" class="remove-instrument">×</button>
     `;
-    instrumentsWrapper.appendChild(div);
-
-    div.querySelector(".remove-instrument").addEventListener("click", () => div.remove());
+    instrumentsWrap.appendChild(div);
+    div.querySelector(".remove-instrument")
+       .addEventListener("click", () => div.remove());
   }
 
   async function loadAccounts() {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/accounts`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const accounts = await res.json();
-      const liveTbody = document.querySelector("#accounts-table tbody");
-      const settingsTbody = document.querySelector("#settings-table tbody");
-
-      liveTbody.innerHTML = "";
-      settingsTbody.innerHTML = "";
-
-      accounts.forEach(account => {
-        liveTbody.innerHTML += `
-          <tr>
-            <td>${account.account_name}</td>
-            <td>${account.strategy}</td>
-            <td>${account.current_value}</td>
-            <td>${account.hedge_percent}</td>
-          </tr>
-        `;
-
-        settingsTbody.innerHTML += `
-          <tr>
-            <td>${account.account_name}</td>
-            <td>
-              <button class="edit-account" data-id="${account.id}">Edit</button>
-              <button class="delete-account" data-id="${account.id}">Delete</button>
-            </td>
-          </tr>
-        `;
-      });
-    } catch (err) {
-      console.error("Failed to load accounts", err);
+    // 1) pull token, 2) debug‐log it, 3) bail if null
+    const token = localStorage.getItem("token");
+    console.log("▶️ loadAccounts() token:", token);
+    if (!token) {
+      console.error("No token found in localStorage, redirecting to login.");
+      return (window.location.href = "/auth.html");
     }
+
+    // 4) do an explicit GET with quoted headers
+    const res = await fetch(`${API_BASE}/accounts`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    console.log("⏳ /accounts status:", res.status);
+    if (res.status === 401) {
+      console.warn("Unauthorized — clearing token & bouncing back.");
+      localStorage.removeItem("token");
+      return alert("Session expired. Please log in again.");
+    }
+
+    const accounts = await res.json();
+    const liveTbody     = document.querySelector("#accounts-table tbody");
+    const settingsTbody = document.querySelector("#settings-table tbody");
+
+    liveTbody.innerHTML = "";
+    settingsTbody.innerHTML = "";
+
+    accounts.forEach(acc => {
+      liveTbody.innerHTML += `
+        <tr>
+          <td>${acc.account_name}</td>
+          <td>${acc.strategy}</td>
+          <td>${acc.current_value}</td>
+          <td>${acc.hedge_percent}</td>
+        </tr>`;
+  
+      settingsTbody.innerHTML += `
+        <tr>
+          <td>${acc.account_name}</td>
+          <td>
+            <button class="edit-account" data-id="${acc.id}">Edit</button>
+            <button class="delete-account" data-id="${acc.id}">Delete</button>
+          </td>
+        </tr>`;
+    });
   }
 
   async function submitAccount(e) {
     e.preventDefault();
 
+    // re-read token immediately
+    const token = localStorage.getItem("token");
+    console.log("▶️ submitAccount() token:", token);
+
+    if (!token) {
+      alert("You must be logged in to add an account.");
+      return window.location.href = "/auth.html";
+    }
+
     const data = {
       account_name: document.getElementById("account-name").value,
-      api_key: document.getElementById("api-key").value,
-      api_secret: document.getElementById("api-secret").value,
-      strategy: strategySelect.value,
+      api_key:       document.getElementById("api-key").value,
+      api_secret:    document.getElementById("api-secret").value,
+      strategy:      strategySelect.value,
       custom_portfolio: []
     };
 
     if (data.strategy === "Custom Portfolio Rebalancing") {
-      const symbols = instrumentsWrapper.querySelectorAll("input[name='symbol']");
-      const weights = instrumentsWrapper.querySelectorAll("input[name='weight']");
-      for (let i = 0; i < symbols.length; i++) {
+      const syms    = instrumentsWrap.querySelectorAll("input[name='symbol']");
+      const weights = instrumentsWrap.querySelectorAll("input[name='weight']");
+      syms.forEach((inp, i) => {
         data.custom_portfolio.push({
-          symbol: symbols[i].value.trim().toUpperCase(),
+          symbol: inp.value.trim().toUpperCase(),
           weight: parseFloat(weights[i].value)
         });
-      }
+      });
     }
 
     try {
       const res = await fetch(`${API_BASE}/accounts`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(data)
       });
 
-      if (!res.ok) throw new Error("Failed to create account");
-
+      if (!res.ok) throw new Error(`Status ${res.status}`);
       closeModal();
       loadAccounts();
     } catch (err) {
-      alert("Error: " + err.message);
+      alert("Error creating account: " + err.message);
     }
   }
 
-  toggleThemeBtn.onclick = toggleTheme;
-  logoutBtn.onclick = logout;
-  openModalBtn.onclick = openModal;
-  closeModalBtn.onclick = closeModal;
-  accountForm.onsubmit = submitAccount;
-
-  strategySelect.onchange = () => {
+  // wire up UI
+  toggleThemeBtn.onclick    = toggleTheme;
+  logoutBtn.onclick         = logout;
+  openModalBtn.onclick      = openModal;
+  closeModalBtn.onclick     = closeModal;
+  accountForm.onsubmit      = submitAccount;
+  strategySelect.onchange   = () => {
     if (strategySelect.value === "Custom Portfolio Rebalancing") {
-      instrumentsWrapper.style.display = "block";
+      instrumentsWrap.style.display = "block";
       addInstrumentBtn.style.display = "inline-block";
-      if (instrumentsWrapper.children.length === 0) {
+      if (!instrumentsWrap.children.length) {
         addInstrumentField("BTCUSDT", 50);
         addInstrumentField("ETHUSDT", 30);
         addInstrumentField("BNBUSDT", 20);
       }
     } else {
-      instrumentsWrapper.style.display = "none";
-      addInstrumentBtn.style.display = "none";
-      instrumentsWrapper.innerHTML = "";
+      instrumentsWrap.style.display = "none";
+      addInstrumentBtn.style.display  = "none";
+      instrumentsWrap.innerHTML       = "";
     }
   };
-
   addInstrumentBtn.onclick = () => addInstrumentField();
 
+  // initial load
   loadAccounts();
 });
