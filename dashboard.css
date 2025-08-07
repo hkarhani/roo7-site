@@ -269,14 +269,14 @@ button.delete-account:hover {
 
 /* Form submit button styling */
 #account-form button[type="submit"] {
-  background: #28a745;
+  background: #0077cc;
   padding: 12px 20px;
   font-size: 16px;
   margin-top: 10px;
 }
 
 #account-form button[type="submit"]:hover {
-  background: #218838;
+  background: #005fa3;
 }
 
 #add-instrument {
