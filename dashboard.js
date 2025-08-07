@@ -166,8 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <tr>
           <td>${acc.account_name}</td>
           <td>${acc.strategy}</td>
-          <td>${acc.current_value || 'N/A'}</td>
-          <td>${acc.hedge_percent || 'N/A'}</td>
+          <td>${acc.current_value !== undefined && acc.current_value !== null ? acc.current_value : 'N/A'}</td>
+          <td>${acc.hedge_percent !== undefined && acc.hedge_percent !== null ? acc.hedge_percent + '%' : 'N/A'}</td>
         </tr>`;
   
       settingsTbody.innerHTML += `
