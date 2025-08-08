@@ -341,10 +341,10 @@ class MarketInsightsStandalone {
     const topGainerEl = document.getElementById('top-gainer-metric');
     if (topGainerEl) {
       if (topGainer) {
-        topGainerEl.textContent = `${topGainer.symbol} (+${topGainer.priceChangePercent.toFixed(2)}%)`;
+        topGainerEl.textContent = topGainer.symbol + ' (+' + topGainer.priceChangePercent.toFixed(2) + '%)';
         topGainerEl.className = 'metric-value positive';
       } else {
-        topGainerEl.textContent = `No ${this.currentMarketType} gainers`;
+        topGainerEl.textContent = 'No ' + this.currentMarketType + ' gainers';
         topGainerEl.className = 'metric-value';
       }
     }
@@ -357,10 +357,10 @@ class MarketInsightsStandalone {
     const topLoserEl = document.getElementById('top-loser-metric');
     if (topLoserEl) {
       if (topLoser) {
-        topLoserEl.textContent = `${topLoser.symbol} (${topLoser.priceChangePercent.toFixed(2)}%)`;
+        topLoserEl.textContent = topLoser.symbol + ' (' + topLoser.priceChangePercent.toFixed(2) + '%)';
         topLoserEl.className = 'metric-value negative';
       } else {
-        topLoserEl.textContent = `No ${this.currentMarketType} losers`;
+        topLoserEl.textContent = 'No ' + this.currentMarketType + ' losers';
         topLoserEl.className = 'metric-value';
       }
     }
@@ -372,10 +372,10 @@ class MarketInsightsStandalone {
     const highestVolumeEl = document.getElementById('highest-volume-metric');
     if (highestVolumeEl) {
       if (highestVolume) {
-        highestVolumeEl.textContent = `${highestVolume.symbol} (${this.formatVolume(highestVolume.volume)})`;
+        highestVolumeEl.textContent = highestVolume.symbol + ' (' + this.formatVolume(highestVolume.volume) + ')';
         highestVolumeEl.className = 'metric-value';
       } else {
-        highestVolumeEl.textContent = `No ${this.currentMarketType} data`;
+        highestVolumeEl.textContent = 'No ' + this.currentMarketType + ' data';
         highestVolumeEl.className = 'metric-value';
       }
     }
@@ -387,13 +387,13 @@ class MarketInsightsStandalone {
       const losersCount = filteredData.filter(item => item.priceChangePercent < 0).length;
       
       if (gainersCount > losersCount) {
-        marketTrendEl.textContent = `📈 ${this.currentMarketType} Bullish`;
+        marketTrendEl.textContent = '📈 ' + this.currentMarketType + ' Bullish';
         marketTrendEl.className = 'metric-value positive';
       } else if (losersCount > gainersCount) {
-        marketTrendEl.textContent = `📉 ${this.currentMarketType} Bearish`;
+        marketTrendEl.textContent = '📉 ' + this.currentMarketType + ' Bearish';
         marketTrendEl.className = 'metric-value negative';
       } else {
-        marketTrendEl.textContent = `↔️ ${this.currentMarketType} Neutral`;
+        marketTrendEl.textContent = '↔️ ' + this.currentMarketType + ' Neutral';
         marketTrendEl.className = 'metric-value';
       }
     }
@@ -437,7 +437,7 @@ class MarketInsightsStandalone {
     const lastUpdatedEl = document.getElementById('last-updated');
     if (lastUpdatedEl && this.lastUpdateTime) {
       const timeStr = this.lastUpdateTime.toLocaleTimeString();
-      lastUpdatedEl.textContent = `Last updated: ${timeStr} (${this.currentMarketType})`;
+      lastUpdatedEl.textContent = 'Last updated: ' + timeStr + ' (' + this.currentMarketType + ')';
     }
   }
 
