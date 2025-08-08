@@ -278,13 +278,26 @@ class MarketInsightsStandalone {
     const tbody = document.querySelector('#major-coins-table tbody');
     if (!tbody) return;
 
-    // Filter by current market type
-    const filtered = this.cachedData.majorCoins.filter(item => 
-      item.market_type === this.currentMarketType
-    ).slice(0, 10);
+    // Don't filter by market type for Major Coins - show both SPOT and FUTURES
+    // Filter out USDTUSDT and sort by market cap or volume
+    const filtered = this.cachedData.majorCoins
+      .filter(item => item.symbol !== 'USDTUSDT') // Remove USDTUSDT
+      .sort((a, b) => {
+        // Sort by market cap rank first, then by volume
+        if (a.market_cap_rank && b.market_cap_rank) {
+          return a.market_cap_rank - b.market_cap_rank;
+        } else if (a.market_cap_rank) {
+          return -1;
+        } else if (b.market_cap_rank) {
+          return 1;
+        } else {
+          return b.volume - a.volume;
+        }
+      })
+      .slice(0, 10);
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No ${this.currentMarketType} major coins available</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No major coins data available</td></tr>`;
       return;
     }
 
@@ -299,7 +312,7 @@ class MarketInsightsStandalone {
             ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
           </span></td>
           <td>${this.formatVolume(item.volume)}</td>
-          <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
+          <td>${this.formatMarketCap(item.market_cap)}</td>
         </tr>
       `;
     }).join('');
@@ -539,6 +552,309 @@ class MarketInsightsStandalone {
       return (volume / 1e3).toFixed(2) + 'K';
     } else {
       return volume.toFixed(2);
+    }
+  }
+
+  formatMarketCap(marketCap) {
+    if (!marketCap || marketCap === 0) {
+      return 'N/A';
+    }
+    
+    if (marketCap >= 1e12) {
+      return '
+
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      z-index: 10000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+      toast.style.background = '#28a745';
+    } else if (type === 'error') {
+      toast.style.background = '#dc3545';
+    } else if (type === 'warning') {
+      toast.style.background = '#ffc107';
+      toast.style.color = '#212529';
+    } else {
+      toast.style.background = '#17a2b8';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  destroy() {
+    this.stopAutoRefresh();
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = "https://api.roo7.site";
+  const MARKET_DATA_API = "https://api.roo7.site:8002";
+  
+  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (window.marketInsights) {
+    window.marketInsights.destroy();
+  }
+}); + (marketCap / 1e12).toFixed(2) + 'T';
+    } else if (marketCap >= 1e9) {
+      return '
+
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      z-index: 10000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+      toast.style.background = '#28a745';
+    } else if (type === 'error') {
+      toast.style.background = '#dc3545';
+    } else if (type === 'warning') {
+      toast.style.background = '#ffc107';
+      toast.style.color = '#212529';
+    } else {
+      toast.style.background = '#17a2b8';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  destroy() {
+    this.stopAutoRefresh();
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = "https://api.roo7.site";
+  const MARKET_DATA_API = "https://api.roo7.site:8002";
+  
+  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (window.marketInsights) {
+    window.marketInsights.destroy();
+  }
+}); + (marketCap / 1e9).toFixed(2) + 'B';
+    } else if (marketCap >= 1e6) {
+      return '
+
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      z-index: 10000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+      toast.style.background = '#28a745';
+    } else if (type === 'error') {
+      toast.style.background = '#dc3545';
+    } else if (type === 'warning') {
+      toast.style.background = '#ffc107';
+      toast.style.color = '#212529';
+    } else {
+      toast.style.background = '#17a2b8';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  destroy() {
+    this.stopAutoRefresh();
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = "https://api.roo7.site";
+  const MARKET_DATA_API = "https://api.roo7.site:8002";
+  
+  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (window.marketInsights) {
+    window.marketInsights.destroy();
+  }
+}); + (marketCap / 1e6).toFixed(2) + 'M';
+    } else if (marketCap >= 1e3) {
+      return '
+
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      z-index: 10000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+      toast.style.background = '#28a745';
+    } else if (type === 'error') {
+      toast.style.background = '#dc3545';
+    } else if (type === 'warning') {
+      toast.style.background = '#ffc107';
+      toast.style.color = '#212529';
+    } else {
+      toast.style.background = '#17a2b8';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  destroy() {
+    this.stopAutoRefresh();
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = "https://api.roo7.site";
+  const MARKET_DATA_API = "https://api.roo7.site:8002";
+  
+  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (window.marketInsights) {
+    window.marketInsights.destroy();
+  }
+}); + (marketCap / 1e3).toFixed(2) + 'K';
+    } else {
+      return '
+
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      z-index: 10000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+      toast.style.background = '#28a745';
+    } else if (type === 'error') {
+      toast.style.background = '#dc3545';
+    } else if (type === 'warning') {
+      toast.style.background = '#ffc107';
+      toast.style.color = '#212529';
+    } else {
+      toast.style.background = '#17a2b8';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  destroy() {
+    this.stopAutoRefresh();
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = "https://api.roo7.site";
+  const MARKET_DATA_API = "https://api.roo7.site:8002";
+  
+  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (window.marketInsights) {
+    window.marketInsights.destroy();
+  }
+}); + marketCap.toFixed(2);
     }
   }
 
