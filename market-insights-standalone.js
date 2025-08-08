@@ -289,12 +289,15 @@ class MarketInsightsStandalone {
       const changeClass = item.priceChangePercent >= 0 ? 'positive' : 'negative';
       const changeSign = item.priceChangePercent >= 0 ? '+' : '';
       
+      // Check for market cap in different possible field names from the API
+      let marketCap = item.market_cap_usd || item.market_cap || item.marketCap || 0;
+      
       return '<tr>' +
         '<td><strong>' + displayName + '</strong></td>' +
         '<td>' + this.formatPrice(item.price) + '</td>' +
         '<td><span class="price-change ' + changeClass + '">' + changeSign + item.priceChangePercent.toFixed(2) + '%</span></td>' +
         '<td>' + this.formatVolume(item.volume) + '</td>' +
-        '<td>' + this.formatMarketCap(item.market_cap) + '</td>' +
+        '<td>' + this.formatMarketCap(marketCap) + '</td>' +
       '</tr>';
     }).join('');
   }
