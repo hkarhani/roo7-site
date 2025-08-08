@@ -22,19 +22,26 @@ class ModalManager {
   }
 
   init() {
-    this.loadBinanceSymbols();
     this.bindEvents();
+    // Don't load symbols immediately - load them when needed
   }
 
-  // Load Binance symbols for validation from market-data-service
+  // Load Binance symbols for validation from market-data-service (lazy loading)
   async loadBinanceSymbols() {
+    // If already loaded, don't load again
+    if (this.binanceSymbols.length > 0) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.warn('⚠️ No token found for market data API');
+        console.warn('⚠️ No token found for market data API - symbol validation will be skipped');
         return;
       }
 
+      console.log('📡 Loading SPOT symbols from market-data-service...');
+      
       const response = await fetch(`${this.MARKET_DATA_API}/spot-instruments?active_only=true`, {
         method: 'GET',
         headers: {
@@ -42,6 +49,12 @@ class ModalManager {
           'Content-Type': 'application/json'
         }
       });
+
+      if (response.status === 401) {
+        console.warn('⚠️ Authentication failed for market data API - symbol validation will be skipped');
+        window.showToast('Warning: Could not authenticate with market data service. Symbol validation will be skipped.', 'warning');
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -66,6 +79,7 @@ class ModalManager {
     } catch (error) {
       console.error('❌ Failed to load symbols from market-data-service:', error);
       window.showToast('Warning: Could not load trading symbols. Symbol validation will be skipped.', 'warning');
+      // Don't throw - let the form work without validation
     }
   }
 
@@ -349,6 +363,9 @@ class ModalManager {
     this.instrumentsWrap.style.display = "flex";
     this.addInstrumentBtn.style.display = "inline-block";
     
+    // Load symbols when portfolio fields are shown (lazy loading)
+    this.loadBinanceSymbols();
+    
     // Only add default instruments for NEW accounts (when not editing)
     if (!this.instrumentsWrap.children.length && !this.currentEditingId) {
       console.log("🆕 Adding default instruments for NEW account");
@@ -443,6 +460,9 @@ class ModalManager {
         return;
       }
 
+      // Ensure symbols are loaded before validation
+      await this.loadBinanceSymbols();
+
       // Validate and build portfolio
       let totalWeight = 0;
       const symbolSet = new Set(); // Check for duplicate symbols
@@ -471,10 +491,13 @@ class ModalManager {
         }
 
         // ✅ UPDATED: Use market-data-service validation instead of direct Binance API
-        if (this.binanceSymbols.length && !this.binanceSymbols.includes(symbol)) {
+        // Only validate if symbols were successfully loaded
+        if (this.binanceSymbols.length > 0 && !this.binanceSymbols.includes(symbol)) {
           window.showToast(`Symbol ${symbol} does not exist or is not active on Binance SPOT.`, 'error');
           symbols[i].focus();
           return;
+        } else if (this.binanceSymbols.length === 0) {
+          console.warn(`⚠️ Symbol validation skipped for ${symbol} - market data service unavailable`);
         }
 
         if (isNaN(weight) || weight <= 0 || weight > 100) {
