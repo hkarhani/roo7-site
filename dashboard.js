@@ -247,6 +247,29 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Find the delete button that was clicked
+    const deleteButton = document.querySelector(`button.delete-account[data-id="${accountId}"]`);
+    if (!deleteButton) {
+      console.error("Delete button not found");
+      return;
+    }
+
+    const originalButtonText = deleteButton.textContent;
+    
+    // Prevent multiple submissions
+    if (deleteButton.disabled) {
+      return;
+    }
+
+    // Set loading state IMMEDIATELY
+    deleteButton.disabled = true;
+    deleteButton.style.opacity = "0.6";
+    deleteButton.style.cursor = "not-allowed";
+    deleteButton.textContent = "Deleting...";
+    
+    // Show loading toast
+    showToast("Deleting account...", 'info', 10000); // 10 second duration
+
     try {
       const res = await fetch(`${API_BASE}/accounts/${accountId}`, {
         method: "DELETE",
@@ -255,11 +278,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!res.ok) throw new Error(`Status ${res.status}`);
 
-      showToast("Account deleted successfully!", 'success');
+      // Clear any existing toasts first
+      document.querySelectorAll('.toast').forEach(toast => toast.remove());
+      showToast("✅ Account deleted successfully!", 'success');
       loadAccounts();
 
     } catch (err) {
-      showToast(`Error deleting account: ${err.message}`, 'error');
+      // Clear any existing toasts first
+      document.querySelectorAll('.toast').forEach(toast => toast.remove());
+      showToast(`❌ Error deleting account: ${err.message}`, 'error');
+    } finally {
+      // Always restore button state
+      deleteButton.disabled = false;
+      deleteButton.style.opacity = "1";
+      deleteButton.style.cursor = "pointer";
+      deleteButton.textContent = originalButtonText;
     }
   }
 

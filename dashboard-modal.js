@@ -474,8 +474,10 @@ class ModalManager {
       return;
     }
     
-    // Set loading state
+    // Set loading state IMMEDIATELY
     submitButton.disabled = true;
+    submitButton.style.opacity = "0.6";
+    submitButton.style.cursor = "not-allowed";
     submitButton.textContent = isEditing ? "Updating..." : "Creating...";
     
     // Show loading toast
@@ -628,6 +630,8 @@ class ModalManager {
     } finally {
       // Always restore button state
       submitButton.disabled = false;
+      submitButton.style.opacity = "1";
+      submitButton.style.cursor = "pointer";
       submitButton.textContent = originalButtonText;
     }
   }
