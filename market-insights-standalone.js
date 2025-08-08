@@ -208,19 +208,19 @@ class MarketInsightsStandalone {
     ).slice(0, 10);
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No ${this.currentMarketType} gainers available</td></tr>`;
+      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No ' + this.currentMarketType + ' gainers available</td></tr>';
       return;
     }
 
-    tbody.innerHTML = filtered.map(item => `
-      <tr>
-        <td><strong>${item.symbol}</strong></td>
-        <td>${this.formatPrice(item.price)}</td>
-        <td><span class="price-change positive">+${item.priceChangePercent.toFixed(2)}%</span></td>
-        <td>${this.formatVolume(item.volume)}</td>
-        <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = filtered.map(item => 
+      '<tr>' +
+        '<td><strong>' + item.symbol + '</strong></td>' +
+        '<td>' + this.formatPrice(item.price) + '</td>' +
+        '<td><span class="price-change positive">+' + item.priceChangePercent.toFixed(2) + '%</span></td>' +
+        '<td>' + this.formatVolume(item.volume) + '</td>' +
+        '<td><span class="market-badge ' + item.market_type.toLowerCase() + '">' + item.market_type + '</span></td>' +
+      '</tr>'
+    ).join('');
   }
 
   updateLosersTableFromCache() {
@@ -233,18 +233,18 @@ class MarketInsightsStandalone {
     ).slice(0, 10);
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="market-loading">No ${this.currentMarketType} losers available</td></tr>`;
+      tbody.innerHTML = '<tr><td colspan="4" class="market-loading">No ' + this.currentMarketType + ' losers available</td></tr>';
       return;
     }
 
-    tbody.innerHTML = filtered.map(item => `
-      <tr>
-        <td><strong>${item.symbol}</strong></td>
-        <td>${this.formatPrice(item.price)}</td>
-        <td><span class="price-change negative">${item.priceChangePercent.toFixed(2)}%</span></td>
-        <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = filtered.map(item => 
+      '<tr>' +
+        '<td><strong>' + item.symbol + '</strong></td>' +
+        '<td>' + this.formatPrice(item.price) + '</td>' +
+        '<td><span class="price-change negative">' + item.priceChangePercent.toFixed(2) + '%</span></td>' +
+        '<td><span class="market-badge ' + item.market_type.toLowerCase() + '">' + item.market_type + '</span></td>' +
+      '</tr>'
+    ).join('');
   }
 
   updateVolumeTableFromCache() {
@@ -257,21 +257,22 @@ class MarketInsightsStandalone {
     ).slice(0, 10);
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No ${this.currentMarketType} volume data available</td></tr>`;
+      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No ' + this.currentMarketType + ' volume data available</td></tr>';
       return;
     }
 
-    tbody.innerHTML = filtered.map(item => `
-      <tr>
-        <td><strong>${item.symbol}</strong></td>
-        <td>${this.formatPrice(item.price)}</td>
-        <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
-          ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
-        </span></td>
-        <td>${this.formatVolume(item.volume)}</td>
-        <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = filtered.map(item => {
+      const changeClass = item.priceChangePercent >= 0 ? 'positive' : 'negative';
+      const changeSign = item.priceChangePercent >= 0 ? '+' : '';
+      
+      return '<tr>' +
+        '<td><strong>' + item.symbol + '</strong></td>' +
+        '<td>' + this.formatPrice(item.price) + '</td>' +
+        '<td><span class="price-change ' + changeClass + '">' + changeSign + item.priceChangePercent.toFixed(2) + '%</span></td>' +
+        '<td>' + this.formatVolume(item.volume) + '</td>' +
+        '<td><span class="market-badge ' + item.market_type.toLowerCase() + '">' + item.market_type + '</span></td>' +
+      '</tr>';
+    }).join('');
   }
 
   updateMajorCoinsTableFromCache() {
@@ -297,24 +298,22 @@ class MarketInsightsStandalone {
       .slice(0, 10);
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No major coins data available</td></tr>`;
+      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No major coins data available</td></tr>';
       return;
     }
 
     tbody.innerHTML = filtered.map(item => {
-      const displayName = item.market_cap_rank ? `${item.symbol} (#${item.market_cap_rank})` : item.symbol;
+      const displayName = item.market_cap_rank ? item.symbol + ' (#' + item.market_cap_rank + ')' : item.symbol;
+      const changeClass = item.priceChangePercent >= 0 ? 'positive' : 'negative';
+      const changeSign = item.priceChangePercent >= 0 ? '+' : '';
       
-      return `
-        <tr>
-          <td><strong>${displayName}</strong></td>
-          <td>${this.formatPrice(item.price)}</td>
-          <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
-            ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
-          </span></td>
-          <td>${this.formatVolume(item.volume)}</td>
-          <td>${this.formatMarketCap(item.market_cap)}</td>
-        </tr>
-      `;
+      return '<tr>' +
+        '<td><strong>' + displayName + '</strong></td>' +
+        '<td>' + this.formatPrice(item.price) + '</td>' +
+        '<td><span class="price-change ' + changeClass + '">' + changeSign + item.priceChangePercent.toFixed(2) + '%</span></td>' +
+        '<td>' + this.formatVolume(item.volume) + '</td>' +
+        '<td>' + this.formatMarketCap(item.market_cap) + '</td>' +
+      '</tr>';
     }).join('');
   }
 
@@ -469,7 +468,7 @@ class MarketInsightsStandalone {
     tables.forEach(table => {
       const tbody = document.querySelector(table.selector);
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="${table.cols}" class="market-loading">Loading ${this.currentMarketType} data...</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="' + table.cols + '" class="market-loading">Loading ' + this.currentMarketType + ' data...</td></tr>';
       }
     });
 
@@ -501,7 +500,7 @@ class MarketInsightsStandalone {
     tables.forEach(table => {
       const tbody = document.querySelector(table.selector);
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="${table.cols}" class="market-error">${message}</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="' + table.cols + '" class="market-error">' + message + '</td></tr>';
       }
     });
   }
