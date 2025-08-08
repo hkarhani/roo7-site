@@ -4,13 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Market Insights</title>
-  <link rel="stylesheet" href="market-insights.css?v=2.0" />
+  <link rel="stylesheet" href="market-insights.css?v=3.0" />
 </head>
 <body>
   <div class="market-header">
     <div class="header-content">
       <h1>📊 Market Insights</h1>
       <div class="header-actions">
+        <div class="market-type-toggle">
+          <button id="spot-toggle" class="toggle-btn active">📈 SPOT</button>
+          <button id="futures-toggle" class="toggle-btn">⚡ FUTURES</button>
+        </div>
         <button id="refresh-market-data" class="refresh-btn">🔄 Refresh</button>
         <button id="back-to-dashboard" class="back-btn">← Back to Dashboard</button>
       </div>
@@ -184,6 +188,6 @@
 
   <!-- Load scripts -->
   <script src="theme-manager.js?v=1"></script>
-  <script src="market-insights-standalone.js?v=1.0"></script>
+  <script src="market-insights-optimized.js?v=3.0"></script>
 </body>
 </html>

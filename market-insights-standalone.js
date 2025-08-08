@@ -1,19 +1,14 @@
-// market-insights-standalone.js - Dedicated Market Insights Page
+// market-insights-optimized.js - Single API Call with Local Filtering
 
-class MarketInsightsStandalone {
+class MarketInsightsOptimized {
   constructor(apiBase, marketDataApi) {
     this.API_BASE = apiBase;
     this.MARKET_DATA_API = marketDataApi;
     this.isLoading = false;
     this.lastUpdateTime = null;
     this.refreshInterval = null;
-    this.loadingOrder = [
-      { endpoint: '/top-gainers?limit=10', handler: 'updateGainersTable', name: 'Top Gainers' },
-      { endpoint: '/top-losers?limit=10', handler: 'updateLosersTable', name: 'Top Losers' },
-      { endpoint: '/top-movers?limit=10', handler: 'updateVolumeTable', name: 'Top Volume' },
-      { endpoint: '/major-coins-movement?limit=10', handler: 'updateMajorCoinsTable', name: 'Major Coins' },
-      { endpoint: '/health', handler: 'updateMarketChanges', name: 'Market Changes', requireAuth: false }
-    ];
+    this.currentMarketType = 'SPOT'; // Default to SPOT
+    this.allMarketData = null; // Store all data locally
     
     this.init();
   }
@@ -21,7 +16,7 @@ class MarketInsightsStandalone {
   init() {
     this.checkAuth();
     this.bindEvents();
-    this.loadMarketDataSequentially();
+    this.loadAllMarketData();
     this.startAutoRefresh();
   }
 
@@ -37,24 +32,54 @@ class MarketInsightsStandalone {
   }
 
   bindEvents() {
+    // Refresh button
     const refreshBtn = document.getElementById('refresh-market-data');
-    const backBtn = document.getElementById('back-to-dashboard');
-    
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => this.refreshMarketData());
     }
     
+    // Back button
+    const backBtn = document.getElementById('back-to-dashboard');
     if (backBtn) {
       backBtn.addEventListener('click', () => {
         window.location.href = '/dashboard.html';
       });
+    }
+
+    // Market type toggle buttons
+    const spotToggle = document.getElementById('spot-toggle');
+    const futuresToggle = document.getElementById('futures-toggle');
+    
+    if (spotToggle) {
+      spotToggle.addEventListener('click', () => this.switchMarketType('SPOT'));
+    }
+    
+    if (futuresToggle) {
+      futuresToggle.addEventListener('click', () => this.switchMarketType('FUTURES'));
+    }
+  }
+
+  switchMarketType(marketType) {
+    console.log(`🔄 Switching to ${marketType} market`);
+    
+    // Update button states
+    document.getElementById('spot-toggle').classList.toggle('active', marketType === 'SPOT');
+    document.getElementById('futures-toggle').classList.toggle('active', marketType === 'FUTURES');
+    
+    // Update current market type
+    this.currentMarketType = marketType;
+    
+    // Re-filter and display data if we have it
+    if (this.allMarketData) {
+      this.updateAllTables();
+      this.updateAnalytics();
     }
   }
 
   startAutoRefresh() {
     // Auto-refresh every 5 minutes
     this.refreshInterval = setInterval(() => {
-      this.loadMarketDataSequentially();
+      this.loadAllMarketData();
     }, 5 * 60 * 1000);
   }
 
@@ -68,11 +93,11 @@ class MarketInsightsStandalone {
   async refreshMarketData() {
     const refreshBtn = document.getElementById('refresh-market-data');
     if (refreshBtn && !refreshBtn.disabled) {
-      await this.loadMarketDataSequentially(true);
+      await this.loadAllMarketData(true);
     }
   }
 
-  async loadMarketDataSequentially(isManualRefresh = false) {
+  async loadAllMarketData(isManualRefresh = false) {
     if (this.isLoading) return;
 
     const token = localStorage.getItem('token');
@@ -85,44 +110,41 @@ class MarketInsightsStandalone {
     this.showLoadingInTables();
 
     try {
-      // Load data sequentially with progress updates
-      for (let i = 0; i < this.loadingOrder.length; i++) {
-        const item = this.loadingOrder[i];
+      console.log('📡 Loading all market data in single API call...');
+      
+      // Single API call to get all market movers
+      const data = await this.fetchMarketData('/all-market-movers');
+      
+      if (data && data.success && data.data) {
+        this.allMarketData = data.data;
+        console.log(`✅ Loaded ${this.allMarketData.length} instruments`);
         
+        // Update all tables with filtered data
+        this.updateAllTables();
+        this.updateAnalytics();
+        
+        // Load market health separately (independent of market type)
         try {
-          console.log(`📡 Loading ${item.name}...`);
-          const data = await this.fetchMarketData(item.endpoint, item.requireAuth !== false);
-          
-          // Update the specific table immediately
-          this[item.handler](data);
-          
-          // Update progress
-          this.updateLoadingProgress(item.name, i + 1, this.loadingOrder.length);
-          
-          // Small delay between requests to prevent overwhelming the API
-          if (i < this.loadingOrder.length - 1) {
-            await this.delay(200);
-          }
-          
+          const healthData = await this.fetchMarketData('/health', false);
+          this.updateMarketChanges(healthData);
         } catch (error) {
-          console.error(`❌ Error loading ${item.name}:`, error);
-          this.showSingleTableError(item.handler, `Failed to load ${item.name}`);
+          console.error('❌ Error loading market health:', error);
         }
-      }
+        
+        // Update last updated time
+        this.lastUpdateTime = new Date();
+        this.updateLastUpdatedTime();
 
-      // Update analytics after all data is loaded
-      this.updateAnalytics();
-
-      // Update last updated time
-      this.lastUpdateTime = new Date();
-      this.updateLastUpdatedTime();
-
-      if (isManualRefresh) {
-        this.showToast('✅ Market data refreshed successfully!', 'success');
+        if (isManualRefresh) {
+          this.showToast('✅ Market data refreshed successfully!', 'success');
+        }
+      } else {
+        throw new Error('Invalid response format from market data service');
       }
 
     } catch (error) {
-      console.error('❌ Error in sequential loading:', error);
+      console.error('❌ Error loading market data:', error);
+      this.showError(`Failed to load market data: ${error.message}`);
       
       if (isManualRefresh) {
         this.showToast('❌ Failed to refresh market data', 'error');
@@ -132,66 +154,38 @@ class MarketInsightsStandalone {
     }
   }
 
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  updateAllTables() {
+    if (!this.allMarketData) return;
+
+    // Filter data by current market type
+    const filteredData = this.allMarketData.filter(item => 
+      item.market_type === this.currentMarketType
+    );
+
+    console.log(`📊 Filtered ${filteredData.length} ${this.currentMarketType} instruments from ${this.allMarketData.length} total`);
+
+    // Sort and update each table
+    this.updateGainersTable(filteredData);
+    this.updateLosersTable(filteredData);
+    this.updateVolumeTable(filteredData);
+    this.updateMajorCoinsTable(filteredData);
   }
 
-  updateLoadingProgress(currentItem, completed, total) {
-    const refreshBtn = document.getElementById('refresh-market-data');
-    if (refreshBtn) {
-      refreshBtn.textContent = `🔄 Loading ${currentItem}... (${completed}/${total})`;
-    }
-  }
-
-  showSingleTableError(handlerName, message) {
-    const tableMap = {
-      'updateGainersTable': { selector: '#top-gainers-table tbody', cols: 5 },
-      'updateLosersTable': { selector: '#top-losers-table tbody', cols: 4 },
-      'updateVolumeTable': { selector: '#top-volume-table tbody', cols: 5 },
-      'updateMajorCoinsTable': { selector: '#major-coins-table tbody', cols: 5 }
-    };
-
-    const tableInfo = tableMap[handlerName];
-    if (tableInfo) {
-      const tbody = document.querySelector(tableInfo.selector);
-      if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="${tableInfo.cols}" class="market-error">${message}</td></tr>`;
-      }
-    }
-  }
-
-  async fetchMarketData(endpoint, requireAuth = true) {
-    const token = localStorage.getItem('token');
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    
-    if (requireAuth && token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${this.MARKET_DATA_API}${endpoint}`, {
-      method: 'GET',
-      headers: headers
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    return await response.json();
-  }
-
-  updateGainersTable(gainersData) {
+  updateGainersTable(data) {
     const tbody = document.querySelector('#top-gainers-table tbody');
     if (!tbody) return;
 
-    if (!gainersData || !gainersData.success || !gainersData.data) {
-      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
+    // Get top 10 gainers
+    const gainers = data
+      .filter(item => item.priceChangePercent > 0)
+      .sort((a, b) => b.priceChangePercent - a.priceChangePercent)
+      .slice(0, 10);
+
+    if (gainers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No ${this.currentMarketType} gainers available</td></tr>`;
       return;
     }
 
-    const gainers = gainersData.data.slice(0, 10);
     tbody.innerHTML = gainers.map(item => `
       <tr>
         <td><strong>${item.symbol}</strong></td>
@@ -203,16 +197,21 @@ class MarketInsightsStandalone {
     `).join('');
   }
 
-  updateLosersTable(losersData) {
+  updateLosersTable(data) {
     const tbody = document.querySelector('#top-losers-table tbody');
     if (!tbody) return;
 
-    if (!losersData || !losersData.success || !losersData.data) {
-      tbody.innerHTML = '<tr><td colspan="4" class="market-loading">No data available</td></tr>';
+    // Get top 10 losers
+    const losers = data
+      .filter(item => item.priceChangePercent < 0)
+      .sort((a, b) => a.priceChangePercent - b.priceChangePercent)
+      .slice(0, 10);
+
+    if (losers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="market-loading">No ${this.currentMarketType} losers available</td></tr>`;
       return;
     }
 
-    const losers = losersData.data.slice(0, 10);
     tbody.innerHTML = losers.map(item => `
       <tr>
         <td><strong>${item.symbol}</strong></td>
@@ -223,16 +222,20 @@ class MarketInsightsStandalone {
     `).join('');
   }
 
-  updateVolumeTable(volumeData) {
+  updateVolumeTable(data) {
     const tbody = document.querySelector('#top-volume-table tbody');
     if (!tbody) return;
 
-    if (!volumeData || !volumeData.success || !volumeData.data) {
-      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
+    // Get top 10 by volume
+    const topVolume = data
+      .sort((a, b) => b.volume - a.volume)
+      .slice(0, 10);
+
+    if (topVolume.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No ${this.currentMarketType} volume data available</td></tr>`;
       return;
     }
 
-    const topVolume = volumeData.data.slice(0, 10);
     tbody.innerHTML = topVolume.map(item => `
       <tr>
         <td><strong>${item.symbol}</strong></td>
@@ -246,23 +249,50 @@ class MarketInsightsStandalone {
     `).join('');
   }
 
-  updateMajorCoinsTable(majorCoinsData) {
+  updateMajorCoinsTable(data) {
     const tbody = document.querySelector('#major-coins-table tbody');
     if (!tbody) return;
 
-    if (!majorCoinsData || !majorCoinsData.success || !majorCoinsData.data) {
-      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
-      return;
-    }
-
-    const majorCoins = majorCoinsData.data.slice(0, 10);
+    // Get major coins (filter by market cap rank if available, otherwise top by volume)
+    const majorCoins = data
+      .filter(item => {
+        // Major coins logic - could be by market cap rank or well-known symbols
+        if (item.market_cap_rank && item.market_cap_rank <= 100) {
+          return true;
+        }
+        // Fallback to major symbol patterns
+        const majorSymbols = ['BTC', 'ETH', 'BNB', 'ADA', 'DOT', 'LINK', 'SOL', 'AVAX', 'MATIC', 'UNI'];
+        return majorSymbols.some(symbol => item.symbol.startsWith(symbol));
+      })
+      .sort((a, b) => b.volume - a.volume)
+      .slice(0, 10);
 
     if (majorCoins.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No major coins data available</td></tr>';
+      // Fallback to top volume if no major coins found
+      const fallback = data
+        .sort((a, b) => b.volume - a.volume)
+        .slice(0, 10);
+      
+      if (fallback.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="market-loading">No ${this.currentMarketType} major coins available</td></tr>`;
+        return;
+      }
+      
+      tbody.innerHTML = fallback.map(item => `
+        <tr>
+          <td><strong>${item.symbol}</strong></td>
+          <td>${this.formatPrice(item.price)}</td>
+          <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
+            ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
+          </span></td>
+          <td>${this.formatVolume(item.volume)}</td>
+          <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
+        </tr>
+      `).join('');
       return;
     }
 
-    tbody.innerHTML = majorCoins.map((item, index) => {
+    tbody.innerHTML = majorCoins.map(item => {
       const displayName = item.market_cap_rank ? `${item.symbol} (#${item.market_cap_rank})` : item.symbol;
       
       return `
@@ -273,9 +303,7 @@ class MarketInsightsStandalone {
             ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
           </span></td>
           <td>${this.formatVolume(item.volume)}</td>
-          <td>
-            <span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span>
-          </td>
+          <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
         </tr>
       `;
     }).join('');
@@ -316,103 +344,77 @@ class MarketInsightsStandalone {
   }
 
   updateAnalytics() {
+    if (!this.allMarketData) return;
+
+    // Filter by current market type for analytics
+    const filteredData = this.allMarketData.filter(item => 
+      item.market_type === this.currentMarketType
+    );
+
     // Update top gainer metric
-    const gainersTable = document.querySelector('#top-gainers-table tbody');
+    const topGainer = filteredData
+      .filter(item => item.priceChangePercent > 0)
+      .sort((a, b) => b.priceChangePercent - a.priceChangePercent)[0];
+    
     const topGainerEl = document.getElementById('top-gainer-metric');
-    if (gainersTable && topGainerEl) {
-      const firstRow = gainersTable.querySelector('tr:first-child');
-      if (firstRow && !firstRow.querySelector('.market-loading')) {
-        const symbol = firstRow.querySelector('td:first-child strong')?.textContent;
-        const change = firstRow.querySelector('.price-change')?.textContent;
-        if (symbol && change) {
-          topGainerEl.textContent = `${symbol} (${change})`;
-          topGainerEl.className = 'metric-value positive';
-        }
+    if (topGainerEl) {
+      if (topGainer) {
+        topGainerEl.textContent = `${topGainer.symbol} (+${topGainer.priceChangePercent.toFixed(2)}%)`;
+        topGainerEl.className = 'metric-value positive';
+      } else {
+        topGainerEl.textContent = 'No gainers found';
+        topGainerEl.className = 'metric-value';
       }
     }
 
     // Update top loser metric
-    const losersTable = document.querySelector('#top-losers-table tbody');
+    const topLoser = filteredData
+      .filter(item => item.priceChangePercent < 0)
+      .sort((a, b) => a.priceChangePercent - b.priceChangePercent)[0];
+    
     const topLoserEl = document.getElementById('top-loser-metric');
-    if (losersTable && topLoserEl) {
-      const firstRow = losersTable.querySelector('tr:first-child');
-      if (firstRow && !firstRow.querySelector('.market-loading')) {
-        const symbol = firstRow.querySelector('td:first-child strong')?.textContent;
-        const change = firstRow.querySelector('.price-change')?.textContent;
-        if (symbol && change) {
-          topLoserEl.textContent = `${symbol} (${change})`;
-          topLoserEl.className = 'metric-value negative';
-        }
+    if (topLoserEl) {
+      if (topLoser) {
+        topLoserEl.textContent = `${topLoser.symbol} (${topLoser.priceChangePercent.toFixed(2)}%)`;
+        topLoserEl.className = 'metric-value negative';
+      } else {
+        topLoserEl.textContent = 'No losers found';
+        topLoserEl.className = 'metric-value';
       }
     }
 
     // Update highest volume metric
-    const volumeTable = document.querySelector('#top-volume-table tbody');
+    const highestVolume = filteredData
+      .sort((a, b) => b.volume - a.volume)[0];
+    
     const highestVolumeEl = document.getElementById('highest-volume-metric');
-    if (volumeTable && highestVolumeEl) {
-      const firstRow = volumeTable.querySelector('tr:first-child');
-      if (firstRow && !firstRow.querySelector('.market-loading')) {
-        const symbol = firstRow.querySelector('td:first-child strong')?.textContent;
-        const volume = firstRow.querySelector('td:nth-child(4)')?.textContent;
-        if (symbol && volume) {
-          highestVolumeEl.textContent = `${symbol} (${volume})`;
-          highestVolumeEl.className = 'metric-value';
-        }
+    if (highestVolumeEl) {
+      if (highestVolume) {
+        highestVolumeEl.textContent = `${highestVolume.symbol} (${this.formatVolume(highestVolume.volume)})`;
+        highestVolumeEl.className = 'metric-value';
+      } else {
+        highestVolumeEl.textContent = 'No volume data';
+        highestVolumeEl.className = 'metric-value';
       }
     }
 
     // Update market trend
     const marketTrendEl = document.getElementById('market-trend-metric');
     if (marketTrendEl) {
-      // Simple trend calculation based on gainers vs losers
-      const gainersCount = document.querySelectorAll('#top-gainers-table tbody tr:not(:has(.market-loading))').length;
-      const losersCount = document.querySelectorAll('#top-losers-table tbody tr:not(:has(.market-loading))').length;
+      const gainersCount = filteredData.filter(item => item.priceChangePercent > 0).length;
+      const losersCount = filteredData.filter(item => item.priceChangePercent < 0).length;
       
-      if (gainersCount > 0 || losersCount > 0) {
-        if (gainersCount > losersCount) {
-          marketTrendEl.textContent = '📈 Bullish';
-          marketTrendEl.className = 'metric-value positive';
-        } else if (losersCount > gainersCount) {
-          marketTrendEl.textContent = '📉 Bearish';
-          marketTrendEl.className = 'metric-value negative';
-        } else {
-          marketTrendEl.textContent = '↔️ Neutral';
-          marketTrendEl.className = 'metric-value';
-        }
+      if (gainersCount > losersCount) {
+        marketTrendEl.textContent = '📈 Bullish';
+        marketTrendEl.className = 'metric-value positive';
+      } else if (losersCount > gainersCount) {
+        marketTrendEl.textContent = '📉 Bearish';
+        marketTrendEl.className = 'metric-value negative';
+      } else {
+        marketTrendEl.textContent = '↔️ Neutral';
+        marketTrendEl.className = 'metric-value';
       }
     }
-
-    // Update major coins performance
-    this.updateMajorCoinsPerformance();
-  }
-
-  updateMajorCoinsPerformance() {
-    const performanceContainer = document.getElementById('major-coins-performance');
-    const majorCoinsTable = document.querySelector('#major-coins-table tbody');
-    
-    if (!performanceContainer || !majorCoinsTable) return;
-
-    const rows = majorCoinsTable.querySelectorAll('tr:not(:has(.market-loading))');
-    
-    if (rows.length === 0) {
-      performanceContainer.innerHTML = '<div class="loading-text">No major coins data available</div>';
-      return;
-    }
-
-    const performanceItems = Array.from(rows).slice(0, 5).map(row => {
-      const symbol = row.querySelector('td:first-child strong')?.textContent || '';
-      const change = row.querySelector('.price-change')?.textContent || '';
-      const isPositive = row.querySelector('.price-change')?.classList.contains('positive');
-      
-      return `
-        <div class="performance-item">
-          <span class="performance-symbol">${symbol}</span>
-          <span class="performance-change ${isPositive ? 'positive' : 'negative'}">${change}</span>
-        </div>
-      `;
-    }).join('');
-
-    performanceContainer.innerHTML = performanceItems;
   }
 
   updateLastUpdatedTime() {
@@ -434,6 +436,7 @@ class MarketInsightsStandalone {
         refreshBtn.style.opacity = '1';
       } else {
         refreshBtn.style.opacity = '0.6';
+        refreshBtn.textContent = '🔄 Loading...';
       }
     }
   }
@@ -468,11 +471,6 @@ class MarketInsightsStandalone {
         el.className = 'metric-value loading';
       }
     });
-
-    const performanceContainer = document.getElementById('major-coins-performance');
-    if (performanceContainer) {
-      performanceContainer.innerHTML = '<div class="loading-text">Loading major coins performance...</div>';
-    }
   }
 
   showError(message) {
@@ -489,6 +487,28 @@ class MarketInsightsStandalone {
         tbody.innerHTML = `<tr><td colspan="${table.cols}" class="market-error">${message}</td></tr>`;
       }
     });
+  }
+
+  async fetchMarketData(endpoint, requireAuth = true) {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (requireAuth && token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.MARKET_DATA_API}${endpoint}`, {
+      method: 'GET',
+      headers: headers
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
   }
 
   formatPrice(price) {
@@ -562,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const API_BASE = "https://api.roo7.site";
   const MARKET_DATA_API = "https://api.roo7.site:8002";
   
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
+  window.marketInsights = new MarketInsightsOptimized(API_BASE, MARKET_DATA_API);
 });
 
 // Cleanup on page unload

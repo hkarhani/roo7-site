@@ -53,6 +53,59 @@ body {
   align-items: center;
 }
 
+.market-type-toggle {
+  display: flex;
+  gap: 0;
+  background: #f8f9fa;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+}
+
+.dark-theme .market-type-toggle {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.toggle-btn {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.toggle-btn:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.toggle-btn.active {
+  background: #0077cc;
+  color: white;
+}
+
+.toggle-btn.active:hover {
+  background: #005fa3;
+}
+
+.dark-theme .toggle-btn {
+  color: #ccc;
+}
+
+.dark-theme .toggle-btn:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+.dark-theme .toggle-btn.active {
+  background: #0077cc;
+  color: white;
+}
+
 .refresh-btn, .back-btn {
   padding: 8px 16px;
   border: none;
