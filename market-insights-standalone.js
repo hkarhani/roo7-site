@@ -566,18 +566,18 @@ class MarketInsightsStandalone {
   showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-      z-index: 10000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
+    
+    // Set styles individually to avoid string literal issues
+    toast.style.position = 'fixed';
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.padding = '15px 20px';
+    toast.style.borderRadius = '6px';
+    toast.style.color = 'white';
+    toast.style.fontWeight = '600';
+    toast.style.zIndex = '10000';
+    toast.style.transform = 'translateX(100%)';
+    toast.style.transition = 'transform 0.3s ease';
     
     if (type === 'success') {
       toast.style.background = '#28a745';
