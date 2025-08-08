@@ -465,53 +465,6 @@ body {
   font-style: italic;
 }
 
-.performance-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.performance-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 10px;
-  background: #fff;
-  border-radius: 4px;
-  font-size: 13px; /* Increased font size */
-}
-
-.dark-theme .performance-item {
-  background: #1e1e1e;
-}
-
-.performance-symbol {
-  font-weight: 600;
-}
-
-.performance-change {
-  font-weight: 600;
-  font-size: 12px; /* Increased font size */
-}
-
-.performance-change.positive {
-  color: #28a745;
-}
-
-.performance-change.negative {
-  color: #dc3545;
-}
-
-.dark-theme .performance-change.positive {
-  color: #4ade80;
-}
-
-.dark-theme .performance-change.negative {
-  color: #f87171;
-}
-
 /* Loading and Error States */
 .market-loading, .loading-text {
   text-align: center;
@@ -543,52 +496,45 @@ body {
 /* Custom Scrollbar */
 .table-container::-webkit-scrollbar,
 .market-changes::-webkit-scrollbar,
-.analytics-content::-webkit-scrollbar,
-.performance-list::-webkit-scrollbar {
+.analytics-content::-webkit-scrollbar {
   width: 6px;
 }
 
 .table-container::-webkit-scrollbar-track,
 .market-changes::-webkit-scrollbar-track,
-.analytics-content::-webkit-scrollbar-track,
-.performance-list::-webkit-scrollbar-track {
+.analytics-content::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 3px;
 }
 
 .table-container::-webkit-scrollbar-thumb,
 .market-changes::-webkit-scrollbar-thumb,
-.analytics-content::-webkit-scrollbar-thumb,
-.performance-list::-webkit-scrollbar-thumb {
+.analytics-content::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
 }
 
 .table-container::-webkit-scrollbar-thumb:hover,
 .market-changes::-webkit-scrollbar-thumb:hover,
-.analytics-content::-webkit-scrollbar-thumb:hover,
-.performance-list::-webkit-scrollbar-thumb:hover {
+.analytics-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
 
 .dark-theme .table-container::-webkit-scrollbar-track,
 .dark-theme .market-changes::-webkit-scrollbar-track,
-.dark-theme .analytics-content::-webkit-scrollbar-track,
-.dark-theme .performance-list::-webkit-scrollbar-track {
+.dark-theme .analytics-content::-webkit-scrollbar-track {
   background: #2a2a2a;
 }
 
 .dark-theme .table-container::-webkit-scrollbar-thumb,
 .dark-theme .market-changes::-webkit-scrollbar-thumb,
-.dark-theme .analytics-content::-webkit-scrollbar-thumb,
-.dark-theme .performance-list::-webkit-scrollbar-thumb {
+.dark-theme .analytics-content::-webkit-scrollbar-thumb {
   background: #555;
 }
 
 .dark-theme .table-container::-webkit-scrollbar-thumb:hover,
 .dark-theme .market-changes::-webkit-scrollbar-thumb:hover,
-.dark-theme .analytics-content::-webkit-scrollbar-thumb:hover,
-.dark-theme .performance-list::-webkit-scrollbar-thumb:hover {
+.dark-theme .analytics-content::-webkit-scrollbar-thumb:hover {
   background: #666;
 }
 
