@@ -11,6 +11,8 @@
     <div id="note" class="notification" style="display: none;"></div>
 
     <h1 id="form-title">Login</h1>
+    
+    <!-- Main Auth Form -->
     <form id="auth-form">
       <div class="input-group">
         <label for="username">Username</label>
@@ -39,12 +41,76 @@
       <button type="submit" id="submit-btn">Login</button>
     </form>
 
+    <!-- Magic Link and Password Reset Buttons (only show in login mode) -->
+    <div id="login-options" style="margin-top: 1rem;">
+      <button type="button" id="magic-link-btn" class="secondary-btn">Send Magic Link</button>
+      <button type="button" id="forgot-password-btn" class="secondary-btn">Forgot Password?</button>
+    </div>
+
     <p id="toggle-text">
       Don't have an account?
       <a href="#" id="toggle-link" data-mode="register">Register here</a>
     </p>
 
     <button id="toggle-theme">Toggle Dark Mode</button>
+  </div>
+
+  <!-- Magic Link Modal -->
+  <div id="magic-link-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" id="close-magic-modal">&times;</span>
+      <h2>Magic Link Login</h2>
+      <p>Enter your email address and we'll send you a magic link to login instantly.</p>
+      <form id="magic-link-form">
+        <div class="input-group">
+          <label for="magic-email">Email</label>
+          <input type="email" id="magic-email" name="email" required />
+        </div>
+        <div class="input-group" id="magic-captcha-wrapper">
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAABo9zZnReMKrbMti"></div>
+        </div>
+        <button type="submit" id="magic-submit-btn">Send Magic Link</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div id="reset-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" id="close-reset-modal">&times;</span>
+      <h2>Reset Password</h2>
+      <p>Enter your email address and we'll send you a link to reset your password.</p>
+      <form id="reset-form">
+        <div class="input-group">
+          <label for="reset-email">Email</label>
+          <input type="email" id="reset-email" name="email" required />
+        </div>
+        <div class="input-group" id="reset-captcha-wrapper">
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAABo9zZnReMKrbMti"></div>
+        </div>
+        <button type="submit" id="reset-submit-btn">Send Reset Link</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Password Reset Confirmation Modal -->
+  <div id="reset-confirm-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Set New Password</h2>
+      <p id="reset-username-display"></p>
+      <form id="reset-confirm-form">
+        <input type="hidden" id="reset-token" name="token" />
+        <div class="input-group">
+          <label for="new-password">New Password</label>
+          <input type="password" id="new-password" name="new_password" required minlength="6" />
+        </div>
+        <div class="input-group">
+          <label for="confirm-password">Confirm New Password</label>
+          <input type="password" id="confirm-password" name="confirm_password" required minlength="6" />
+        </div>
+        <button type="submit" id="reset-confirm-btn">Update Password</button>
+      </form>
+    </div>
   </div>
 
   <!-- Cloudflare Turnstile -->
@@ -61,9 +127,22 @@
     const fullNameGroup = document.getElementById('full-name-group');
     const toggleText = document.getElementById('toggle-text');
     const note = document.getElementById('note');
+    const loginOptions = document.getElementById('login-options');
+
+    // Modal elements
+    const magicLinkModal = document.getElementById('magic-link-modal');
+    const resetModal = document.getElementById('reset-modal');
+    const resetConfirmModal = document.getElementById('reset-confirm-modal');
+    const magicLinkForm = document.getElementById('magic-link-form');
+    const resetForm = document.getElementById('reset-form');
+    const resetConfirmForm = document.getElementById('reset-confirm-form');
 
     let isRegister = false;
-    let isSubmitting = false; // Prevent multiple submissions
+    let isSubmitting = false;
+
+    // Check for reset token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('reset_token');
 
     // Use the same toast system as dashboard
     function showToast(message, type = 'info', duration = 4000) {
@@ -114,6 +193,7 @@
       submitBtn.textContent = isRegister ? 'Register' : 'Login';
       emailGroup.style.display = isRegister ? 'block' : 'none';
       fullNameGroup.style.display = isRegister ? 'block' : 'none';
+      loginOptions.style.display = isRegister ? 'none' : 'block';
 
       toggleText.innerHTML = isRegister
         ? `Already have an account? <a href="#" id="toggle-link" data-mode="login">Login here</a>`
@@ -121,10 +201,192 @@
 
       document.getElementById('toggle-link').addEventListener('click', (e) => {
         e.preventDefault();
-        if (isSubmitting) return; // Prevent mode change during submission
+        if (isSubmitting) return;
         isRegister = e.target.dataset.mode === "register";
         updateFormMode();
       });
+    }
+
+    // Modal functions
+    function openModal(modal) {
+      modal.style.display = 'block';
+      document.body.classList.add('modal-open');
+    }
+
+    function closeModal(modal) {
+      modal.style.display = 'none';
+      document.body.classList.remove('modal-open');
+    }
+
+    // Magic Link button
+    document.getElementById('magic-link-btn').addEventListener('click', () => {
+      openModal(magicLinkModal);
+    });
+
+    // Forgot Password button
+    document.getElementById('forgot-password-btn').addEventListener('click', () => {
+      openModal(resetModal);
+    });
+
+    // Close modal buttons
+    document.getElementById('close-magic-modal').addEventListener('click', () => {
+      closeModal(magicLinkModal);
+    });
+
+    document.getElementById('close-reset-modal').addEventListener('click', () => {
+      closeModal(resetModal);
+    });
+
+    // Close modals when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === magicLinkModal) closeModal(magicLinkModal);
+      if (e.target === resetModal) closeModal(resetModal);
+      if (e.target === resetConfirmModal) closeModal(resetConfirmModal);
+    });
+
+    // Magic Link form submission
+    magicLinkForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitButton = document.getElementById('magic-submit-btn');
+      const originalText = submitButton.textContent;
+      
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+      
+      const formData = new FormData(magicLinkForm);
+      
+      try {
+        const response = await fetch('https://api.roo7.site/magic-link', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('Magic link sent! Check your email.', 'success');
+          closeModal(magicLinkModal);
+          magicLinkForm.reset();
+        } else {
+          showToast(result.detail || 'Failed to send magic link', 'error');
+        }
+      } catch (err) {
+        showToast('Network error. Please try again.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    });
+
+    // Password Reset form submission
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitButton = document.getElementById('reset-submit-btn');
+      const originalText = submitButton.textContent;
+      
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+      
+      const formData = new FormData(resetForm);
+      
+      try {
+        const response = await fetch('https://api.roo7.site/reset-password', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('Password reset link sent! Check your email.', 'success');
+          closeModal(resetModal);
+          resetForm.reset();
+        } else {
+          showToast(result.detail || 'Failed to send reset link', 'error');
+        }
+      } catch (err) {
+        showToast('Network error. Please try again.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    });
+
+    // Password Reset Confirmation form submission
+    resetConfirmForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+      }
+      
+      const submitButton = document.getElementById('reset-confirm-btn');
+      const originalText = submitButton.textContent;
+      
+      submitButton.disabled = true;
+      submitButton.textContent = 'Updating...';
+      
+      const formData = new FormData(resetConfirmForm);
+      
+      try {
+        const response = await fetch('https://api.roo7.site/reset-password-confirm', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('Password updated successfully! You can now login.', 'success');
+          closeModal(resetConfirmModal);
+          
+          // Clear URL parameters and reset form
+          window.history.replaceState({}, document.title, window.location.pathname);
+          resetConfirmForm.reset();
+          
+          // Switch to login mode
+          isRegister = false;
+          updateFormMode();
+        } else {
+          showToast(result.detail || 'Failed to update password', 'error');
+        }
+      } catch (err) {
+        showToast('Network error. Please try again.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    });
+
+    // Check for reset token on page load
+    if (resetToken) {
+      // Validate the reset token
+      fetch(`https://api.roo7.site/validate-reset-token?token=${resetToken}`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.valid) {
+            document.getElementById('reset-token').value = resetToken;
+            document.getElementById('reset-username-display').textContent = `Resetting password for: ${result.username}`;
+            openModal(resetConfirmModal);
+          } else {
+            showToast('Invalid or expired reset link', 'error');
+            // Clear the token from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        })
+        .catch(err => {
+          showToast('Error validating reset token', 'error');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        });
     }
 
     updateFormMode();
@@ -133,7 +395,6 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      // Prevent multiple submissions
       if (isSubmitting) {
         showToast('Please wait, request in progress...', 'warning');
         return;
@@ -141,12 +402,10 @@
       
       isSubmitting = true;
       
-      // Show loading state
       const originalButtonText = submitBtn.textContent;
       submitBtn.disabled = true;
       submitBtn.textContent = isRegister ? 'Registering...' : 'Logging in...';
       
-      // Show toast notification
       const loadingMessage = isRegister ? 'Creating your account...' : 'Trying to login...';
       showToast(loadingMessage, 'info');
       
@@ -185,7 +444,6 @@
             showToast('Login successful! Redirecting...', 'success');
             localStorage.setItem('token', result.access_token);
             
-            // Small delay to show success message before redirect
             setTimeout(() => {
               window.location.href = "/dashboard.html";
             }, 1500);
@@ -197,7 +455,6 @@
         showToast(errorMessage, 'error');
         showNote(errorMessage, false);
       } finally {
-        // Reset button state
         isSubmitting = false;
         submitBtn.disabled = false;
         submitBtn.textContent = originalButtonText;
