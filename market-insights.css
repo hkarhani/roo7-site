@@ -363,6 +363,43 @@ body {
   color: #fbbf24;
 }
 
+/* Trading Links Styling */
+.trading-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.trading-link:hover {
+  background: #f0f7ff;
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.dark-theme .trading-link:hover {
+  background: #1a2332;
+  color: #60a5fa;
+}
+
+.trading-icon {
+  font-size: 12px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.trading-link:hover .trading-icon {
+  opacity: 1;
+}
+
+.trading-link strong {
+  font-weight: 600;
+}
+
 /* Market Changes Section - Compact */
 .market-changes {
   display: grid;
