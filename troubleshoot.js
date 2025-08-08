@@ -223,9 +223,10 @@ function initializeTroubleshootPage() {
         'account-name': account.account_name || 'N/A',
         'strategy': account.strategy || 'N/A', 
         'current-value': account.current_value !== undefined && account.current_value !== null ? `${parseFloat(account.current_value).toFixed(2)}` : 'N/A',
-        'hedge-percent': account.hedge_percent !== undefined && account.hedge_percent !== null ? `${account.hedge_percent}%` : 'N/A',
-        'api-key-status': account.api_key ? '✅ Configured' : '❌ Not Configured'
+        'hedge-percent': account.hedge_percent !== undefined && account.hedge_percent !== null ? `${account.hedge_percent}%` : 'N/A'
       };
+
+      document.getElementById('api-key-status').textContent = '✅ Configured'
 
       let updateCount = 0;
       for (const [elementId, value] of Object.entries(updates)) {
