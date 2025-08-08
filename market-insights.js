@@ -7,13 +7,20 @@ class MarketInsights {
     this.isLoading = false;
     this.lastUpdateTime = null;
     this.refreshInterval = null;
+    this.loadingOrder = [
+      { endpoint: '/top-gainers?limit=10', handler: 'updateGainersTable', name: 'Top Gainers' },
+      { endpoint: '/top-losers?limit=10', handler: 'updateLosersTable', name: 'Top Losers' },
+      { endpoint: '/top-movers?limit=10', handler: 'updateVolumeTable', name: 'Top Volume' },
+      { endpoint: '/major-coins-movement?limit=10', handler: 'updateMajorCoinsTable', name: 'Major Coins' },
+      { endpoint: '/health', handler: 'updateMarketChanges', name: 'Market Changes', requireAuth: false }
+    ];
     
     this.init();
   }
 
   init() {
     this.bindEvents();
-    this.loadMarketData();
+    this.loadMarketDataSequentially();
     this.startAutoRefresh();
   }
 
@@ -27,7 +34,7 @@ class MarketInsights {
   startAutoRefresh() {
     // Auto-refresh every 5 minutes
     this.refreshInterval = setInterval(() => {
-      this.loadMarketData();
+      this.loadMarketDataSequentially();
     }, 5 * 60 * 1000);
   }
 
@@ -41,11 +48,11 @@ class MarketInsights {
   async refreshMarketData() {
     const refreshBtn = document.getElementById('refresh-market-data');
     if (refreshBtn && !refreshBtn.disabled) {
-      await this.loadMarketData(true);
+      await this.loadMarketDataSequentially(true);
     }
   }
 
-  async loadMarketData(isManualRefresh = false) {
+  async loadMarketDataSequentially(isManualRefresh = false) {
     if (this.isLoading) return;
 
     const token = localStorage.getItem('token');
@@ -55,23 +62,33 @@ class MarketInsights {
     }
 
     this.setLoadingState(true);
+    this.showLoadingInTables(); // Show initial loading state
 
     try {
-      // Load data from multiple endpoints concurrently
-      const [gainersData, losersData, volumeData, majorCoinsData, healthData] = await Promise.all([
-        this.fetchMarketData('/top-gainers?limit=10'),
-        this.fetchMarketData('/top-losers?limit=10'),
-        this.fetchMarketData('/top-movers?limit=10'),
-        this.fetchMarketData('/major-coins-movement?limit=10'), // Fixed: Use the correct endpoint
-        this.fetchMarketData('/health', false) // No auth required for health
-      ]);
-
-      // Update tables
-      this.updateGainersTable(gainersData);
-      this.updateLosersTable(losersData);
-      this.updateVolumeTable(volumeData);
-      this.updateMajorCoinsTable(majorCoinsData);
-      this.updateMarketChanges(healthData);
+      // Load data sequentially with progress updates
+      for (let i = 0; i < this.loadingOrder.length; i++) {
+        const item = this.loadingOrder[i];
+        
+        try {
+          console.log(`📡 Loading ${item.name}...`);
+          const data = await this.fetchMarketData(item.endpoint, item.requireAuth !== false);
+          
+          // Update the specific table immediately
+          this[item.handler](data);
+          
+          // Update progress
+          this.updateLoadingProgress(item.name, i + 1, this.loadingOrder.length);
+          
+          // Small delay between requests to prevent overwhelming the API
+          if (i < this.loadingOrder.length - 1) {
+            await this.delay(200); // 200ms delay between requests
+          }
+          
+        } catch (error) {
+          console.error(`❌ Error loading ${item.name}:`, error);
+          this.showSingleTableError(item.handler, `Failed to load ${item.name}`);
+        }
+      }
 
       // Update last updated time
       this.lastUpdateTime = new Date();
@@ -82,14 +99,47 @@ class MarketInsights {
       }
 
     } catch (error) {
-      console.error('❌ Error loading market data:', error);
-      this.showError(`Failed to load market data: ${error.message}`);
+      console.error('❌ Error in sequential loading:', error);
       
       if (isManualRefresh) {
         window.showToast('❌ Failed to refresh market data', 'error');
       }
     } finally {
       this.setLoadingState(false);
+    }
+  }
+
+  async loadMarketData(isManualRefresh = false) {
+    // Fallback to parallel loading if needed
+    return this.loadMarketDataSequentially(isManualRefresh);
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  updateLoadingProgress(currentItem, completed, total) {
+    const refreshBtn = document.getElementById('refresh-market-data');
+    if (refreshBtn) {
+      refreshBtn.textContent = `🔄 Loading ${currentItem}... (${completed}/${total})`;
+    }
+  }
+
+  showSingleTableError(handlerName, message) {
+    // Map handler names to table selectors and column counts
+    const tableMap = {
+      'updateGainersTable': { selector: '#top-gainers-table tbody', cols: 5 },
+      'updateLosersTable': { selector: '#top-losers-table tbody', cols: 4 },
+      'updateVolumeTable': { selector: '#top-volume-table tbody', cols: 5 },
+      'updateMajorCoinsTable': { selector: '#major-coins-table tbody', cols: 5 }
+    };
+
+    const tableInfo = tableMap[handlerName];
+    if (tableInfo) {
+      const tbody = document.querySelector(tableInfo.selector);
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="${tableInfo.cols}" class="market-error">${message}</td></tr>`;
+      }
     }
   }
 
@@ -196,14 +246,16 @@ class MarketInsights {
       return;
     }
 
-    tbody.innerHTML = majorCoins.map(item => {
+    tbody.innerHTML = majorCoins.map((item, index) => {
       // Handle the new API response format which includes coin_name and market_cap info
       const displayName = item.coin_name ? `${item.symbol} (${item.coin_name})` : item.symbol;
-      const dataSource = item.data_source || 'binance';
       
       return `
         <tr>
-          <td><strong>${displayName}</strong></td>
+          <td>
+            <strong>${displayName}</strong>
+            ${item.market_cap_rank ? `<div style="font-size: 10px; color: #666; margin-top: 2px;">#${item.market_cap_rank}</div>` : ''}
+          </td>
           <td>${this.formatPrice(item.price)}</td>
           <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
             ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
@@ -211,7 +263,6 @@ class MarketInsights {
           <td>${this.formatVolume(item.volume)}</td>
           <td>
             <span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span>
-            ${item.market_cap_rank ? `<small style="display:block;font-size:10px;color:#666;">#${item.market_cap_rank}</small>` : ''}
           </td>
         </tr>
       `;
@@ -269,8 +320,12 @@ class MarketInsights {
     
     if (refreshBtn) {
       refreshBtn.disabled = isLoading;
-      refreshBtn.textContent = isLoading ? '🔄 Loading...' : '🔄 Refresh';
-      refreshBtn.style.opacity = isLoading ? '0.6' : '1';
+      if (!isLoading) {
+        refreshBtn.textContent = '🔄 Refresh';
+        refreshBtn.style.opacity = '1';
+      } else {
+        refreshBtn.style.opacity = '0.6';
+      }
     }
 
     // Show loading state in tables if this is the first load
@@ -282,7 +337,7 @@ class MarketInsights {
   showLoadingInTables() {
     const tables = [
       { selector: '#top-gainers-table tbody', cols: 5 },
-      { selector: '#top-losers-table tbody', cols: 4 }, // Fixed: Losers table has 4 columns
+      { selector: '#top-losers-table tbody', cols: 4 },
       { selector: '#top-volume-table tbody', cols: 5 },
       { selector: '#major-coins-table tbody', cols: 5 }
     ];
@@ -313,7 +368,7 @@ class MarketInsights {
   showError(message) {
     const tables = [
       { selector: '#top-gainers-table tbody', cols: 5 },
-      { selector: '#top-losers-table tbody', cols: 4 }, // Fixed: Losers table has 4 columns
+      { selector: '#top-losers-table tbody', cols: 4 },
       { selector: '#top-volume-table tbody', cols: 5 },
       { selector: '#major-coins-table tbody', cols: 5 }
     ];
@@ -327,7 +382,13 @@ class MarketInsights {
   }
 
   formatPrice(price) {
-    if (price >= 1) {
+    if (price >= 1000) {
+      // Add commas for prices >= 1000
+      return price.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    } else if (price >= 1) {
       return price.toFixed(2);
     } else if (price >= 0.01) {
       return price.toFixed(4);

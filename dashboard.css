@@ -1659,8 +1659,8 @@ input:checked + .toggle-slider:before {
 }
 
 /* ========================================
-   MARKET INSIGHTS SECTION - NEW STYLES
-   Append these styles to the END of your existing dashboard.css
+   MARKET INSIGHTS SECTION - UPDATED STYLES
+   Fixed consistent table styling and alignment
    ======================================== */
 
 /* Updated Grid Layout for 4 sections */
@@ -1722,6 +1722,7 @@ input:checked + .toggle-slider:before {
   cursor: pointer !important;
   font-size: 13px !important;
   transition: background-color 0.2s ease !important;
+  white-space: nowrap !important;
 }
 
 .refresh-btn:hover {
@@ -1801,7 +1802,7 @@ input:checked + .toggle-slider:before {
   color: #f87171;
 }
 
-/* Market Tables */
+/* Market Tables - FIXED CONSISTENT STYLING */
 .market-table {
   width: 100%;
   border-collapse: collapse;
@@ -1822,14 +1823,16 @@ input:checked + .toggle-slider:before {
   margin-top: 10px;
 }
 
+/* CONSISTENT TABLE HEADERS */
 .market-table th {
   background: #f8f9fa;
   color: #333;
   font-weight: 600;
   font-size: 12px;
-  padding: 8px 10px;
+  padding: 10px 8px;
   text-align: left;
   border-bottom: 1px solid #dee2e6;
+  white-space: nowrap;
 }
 
 .dark-theme .market-table th {
@@ -1838,10 +1841,13 @@ input:checked + .toggle-slider:before {
   border-bottom-color: #444;
 }
 
+/* CONSISTENT TABLE CELLS */
 .market-table td {
-  padding: 8px 10px;
+  padding: 10px 8px;
   border-bottom: 1px solid #f1f3f4;
   font-size: 12px;
+  white-space: nowrap;
+  vertical-align: top;
 }
 
 .dark-theme .market-table td {
@@ -1856,11 +1862,46 @@ input:checked + .toggle-slider:before {
   background: #2a2a2a;
 }
 
+/* SYMBOL COLUMN STYLING */
+.market-table td:first-child {
+  font-weight: 600;
+  min-width: 120px;
+}
+
+/* PRICE COLUMN STYLING */
+.market-table td:nth-child(2) {
+  font-family: 'Courier New', monospace;
+  text-align: right;
+  min-width: 80px;
+}
+
+/* CHANGE COLUMN STYLING */
+.market-table td:nth-child(3) {
+  text-align: center;
+  min-width: 80px;
+}
+
+/* VOLUME COLUMN STYLING */
+.market-table td:nth-child(4) {
+  text-align: right;
+  min-width: 70px;
+}
+
+/* MARKET TYPE COLUMN STYLING */
+.market-table td:nth-child(5) {
+  text-align: center;
+  min-width: 60px;
+}
+
 /* Price Change Styling */
 .price-change {
   font-weight: 600;
   border-radius: 3px;
   padding: 2px 4px;
+  font-size: 11px;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
 }
 
 .price-change.positive {
@@ -1891,6 +1932,8 @@ input:checked + .toggle-slider:before {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
+  min-width: 50px;
+  text-align: center;
 }
 
 .market-badge.spot {
@@ -1911,6 +1954,24 @@ input:checked + .toggle-slider:before {
 .dark-theme .market-badge.futures {
   background: #3a2f1e;
   color: #fbbf24;
+}
+
+/* MAJOR COINS TABLE - SPECIAL STYLING */
+#major-coins-table td:first-child {
+  min-width: 160px;
+  line-height: 1.3;
+}
+
+#major-coins-table .coin-rank {
+  font-size: 10px;
+  color: #666;
+  font-weight: normal;
+  display: block;
+  margin-top: 2px;
+}
+
+.dark-theme #major-coins-table .coin-rank {
+  color: #ccc;
 }
 
 /* Market Changes Section */
@@ -2027,13 +2088,66 @@ input:checked + .toggle-slider:before {
   
   .market-table th,
   .market-table td {
-    padding: 6px 8px;
+    padding: 6px 4px;
+  }
+  
+  .market-table td:first-child {
+    min-width: 100px;
+  }
+  
+  .market-table td:nth-child(2) {
+    min-width: 60px;
+  }
+  
+  .market-table td:nth-child(3) {
+    min-width: 60px;
+  }
+  
+  .market-table td:nth-child(4) {
+    min-width: 50px;
+  }
+  
+  .market-table td:nth-child(5) {
+    min-width: 50px;
+  }
+  
+  #major-coins-table td:first-child {
+    min-width: 120px;
   }
   
   .change-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
+  }
+  
+  .price-change {
+    font-size: 10px;
+    padding: 1px 3px;
+    min-width: 50px;
+  }
+  
+  .market-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+    min-width: 40px;
+  }
+}
+
+/* Scrollable table wrapper for very small screens */
+@media (max-width: 480px) {
+  .market-table-wrapper {
+    overflow-x: auto;
+  }
+  
+  .market-table {
+    min-width: 400px;
+    font-size: 10px;
+  }
+  
+  .market-table th,
+  .market-table td {
+    padding: 4px 3px;
   }
 }
 
