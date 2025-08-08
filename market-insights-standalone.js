@@ -186,6 +186,23 @@ class MarketInsightsStandalone {
     this.updateMajorCoinsTableFromCache();
   }
 
+  createTradingLink(displayText, marketType, symbol) {
+    const tradingSymbol = symbol || displayText.replace(/\s*\(#\d+\)/, '');
+    
+    let binanceUrl;
+    if (marketType === 'FUTURES') {
+      binanceUrl = 'https://www.binance.com/en/futures/' + tradingSymbol;
+    } else {
+      binanceUrl = 'https://www.binance.com/en/trade/' + tradingSymbol + '?type=spot';
+    }
+    
+    const linkStart = '<a href="' + binanceUrl + '" target="_blank" rel="noopener noreferrer" class="trading-link" title="Trade ' + tradingSymbol + ' on Binance">';
+    const linkContent = '<strong>' + displayText + '</strong><span class="trading-icon">&#128279;</span>';
+    const linkEnd = '</a>';
+    
+    return linkStart + linkContent + linkEnd;
+  }
+
   updateGainersTableFromCache() {
     const tbody = document.querySelector('#top-gainers-table tbody');
     if (!tbody) return;
@@ -199,15 +216,15 @@ class MarketInsightsStandalone {
       return;
     }
 
-    tbody.innerHTML = filtered.map(item => 
-      '<tr>' +
+    tbody.innerHTML = filtered.map(item => {
+      return '<tr>' +
         '<td>' + this.createTradingLink(item.symbol, item.market_type) + '</td>' +
         '<td>' + this.formatPrice(item.price) + '</td>' +
         '<td><span class="price-change positive">+' + item.priceChangePercent.toFixed(2) + '%</span></td>' +
         '<td>' + this.formatVolume(item.volume) + '</td>' +
         '<td><span class="market-badge ' + item.market_type.toLowerCase() + '">' + item.market_type + '</span></td>' +
-      '</tr>'
-    ).join('');
+      '</tr>';
+    }).join('');
   }
 
   updateLosersTableFromCache() {
@@ -223,14 +240,14 @@ class MarketInsightsStandalone {
       return;
     }
 
-    tbody.innerHTML = filtered.map(item => 
-      '<tr>' +
+    tbody.innerHTML = filtered.map(item => {
+      return '<tr>' +
         '<td>' + this.createTradingLink(item.symbol, item.market_type) + '</td>' +
         '<td>' + this.formatPrice(item.price) + '</td>' +
         '<td><span class="price-change negative">' + item.priceChangePercent.toFixed(2) + '%</span></td>' +
         '<td><span class="market-badge ' + item.market_type.toLowerCase() + '">' + item.market_type + '</span></td>' +
-      '</tr>'
-    ).join('');
+      '</tr>';
+    }).join('');
   }
 
   updateVolumeTableFromCache() {
@@ -289,8 +306,7 @@ class MarketInsightsStandalone {
       const changeClass = item.priceChangePercent >= 0 ? 'positive' : 'negative';
       const changeSign = item.priceChangePercent >= 0 ? '+' : '';
       
-      // Check for market cap in different possible field names from the API
-      let marketCap = item.market_cap_usd || item.market_cap || item.marketCap || 0;
+      const marketCap = item.market_cap_usd || item.market_cap || item.marketCap || 0;
       
       return '<tr>' +
         '<td>' + this.createTradingLink(displayName, 'SPOT', item.symbol) + '</td>' +
@@ -538,306 +554,16 @@ class MarketInsightsStandalone {
     }
     
     if (marketCap >= 1e12) {
-      return '
-
-  showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.padding = '15px 20px';
-    toast.style.borderRadius = '6px';
-    toast.style.color = 'white';
-    toast.style.fontWeight = '600';
-    toast.style.zIndex = '10000';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'transform 0.3s ease';
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = 'https://api.roo7.site';
-  const MARKET_DATA_API = 'https://api.roo7.site:8002';
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e12).toFixed(2) + 'T';
+      return '$' + (marketCap / 1e12).toFixed(2) + 'T';
     } else if (marketCap >= 1e9) {
-      return '
-
-  showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.padding = '15px 20px';
-    toast.style.borderRadius = '6px';
-    toast.style.color = 'white';
-    toast.style.fontWeight = '600';
-    toast.style.zIndex = '10000';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'transform 0.3s ease';
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = 'https://api.roo7.site';
-  const MARKET_DATA_API = 'https://api.roo7.site:8002';
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e9).toFixed(2) + 'B';
+      return '$' + (marketCap / 1e9).toFixed(2) + 'B';
     } else if (marketCap >= 1e6) {
-      return '
-
-  showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.padding = '15px 20px';
-    toast.style.borderRadius = '6px';
-    toast.style.color = 'white';
-    toast.style.fontWeight = '600';
-    toast.style.zIndex = '10000';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'transform 0.3s ease';
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = 'https://api.roo7.site';
-  const MARKET_DATA_API = 'https://api.roo7.site:8002';
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e6).toFixed(2) + 'M';
+      return '$' + (marketCap / 1e6).toFixed(2) + 'M';
     } else if (marketCap >= 1e3) {
-      return '
-
-  showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.padding = '15px 20px';
-    toast.style.borderRadius = '6px';
-    toast.style.color = 'white';
-    toast.style.fontWeight = '600';
-    toast.style.zIndex = '10000';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'transform 0.3s ease';
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
+      return '$' + (marketCap / 1e3).toFixed(2) + 'K';
     } else {
-      toast.style.background = '#17a2b8';
+      return '$' + marketCap.toFixed(2);
     }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = 'https://api.roo7.site';
-  const MARKET_DATA_API = 'https://api.roo7.site:8002';
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e3).toFixed(2) + 'K';
-    } else {
-      return '
-
-  showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.padding = '15px 20px';
-    toast.style.borderRadius = '6px';
-    toast.style.color = 'white';
-    toast.style.fontWeight = '600';
-    toast.style.zIndex = '10000';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'transform 0.3s ease';
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = 'https://api.roo7.site';
-  const MARKET_DATA_API = 'https://api.roo7.site:8002';
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + marketCap.toFixed(2);
-    }
-  }
-
-  createTradingLink(displayText, marketType, symbol) {
-    // Use symbol parameter if provided (for major coins), otherwise extract from displayText
-    const tradingSymbol = symbol || displayText.replace(/\s*\(#\d+\)/, ''); // Remove rank info like (#1)
-    
-    // Generate Binance trading URL
-    let binanceUrl;
-    if (marketType === 'FUTURES') {
-      binanceUrl = 'https://www.binance.com/en/futures/' + tradingSymbol;
-    } else {
-      // Default to SPOT trading
-      binanceUrl = 'https://www.binance.com/en/trade/' + tradingSymbol + '?type=spot';
-    }
-    
-    const linkStart = '<a href="' + binanceUrl + '" target="_blank" rel="noopener noreferrer" class="trading-link" title="Trade ' + tradingSymbol + ' on Binance">';
-    const linkContent = '<strong>' + displayText + '</strong><span class="trading-icon">🔗</span>';
-    const linkEnd = '</a>';
-    
-    return linkStart + linkContent + linkEnd;
   }
 
   showToast(message, type) {
