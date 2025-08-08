@@ -61,8 +61,8 @@ class MarketInsights {
       const [gainersData, losersData, volumeData, majorCoinsData, healthData] = await Promise.all([
         this.fetchMarketData('/top-gainers?limit=10'),
         this.fetchMarketData('/top-losers?limit=10'),
-        this.fetchMarketData('/top-movers?limit=50'), // Get more to filter for major coins
-        this.fetchMarketData('/top-movers?limit=50'), // Same data, different filtering
+        this.fetchMarketData('/top-movers?limit=10'),
+        this.fetchMarketData('/major-coins-movement?limit=10'), // Fixed: Use the correct endpoint
         this.fetchMarketData('/health', false) // No auth required for health
       ]);
 
@@ -141,7 +141,7 @@ class MarketInsights {
     if (!tbody) return;
 
     if (!losersData || !losersData.success || !losersData.data) {
-      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="market-loading">No data available</td></tr>';
       return;
     }
 
@@ -151,7 +151,6 @@ class MarketInsights {
         <td><strong>${item.symbol}</strong></td>
         <td>${this.formatPrice(item.price)}</td>
         <td><span class="price-change negative">${item.priceChangePercent.toFixed(2)}%</span></td>
-        <td>${this.formatVolume(item.volume)}</td>
         <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
       </tr>
     `).join('');
@@ -180,44 +179,43 @@ class MarketInsights {
     `).join('');
   }
 
-  updateMajorCoinsTable(volumeData) {
+  updateMajorCoinsTable(majorCoinsData) {
     const tbody = document.querySelector('#major-coins-table tbody');
     if (!tbody) return;
 
-    if (!volumeData || !volumeData.success || !volumeData.data) {
+    if (!majorCoinsData || !majorCoinsData.success || !majorCoinsData.data) {
       tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
       return;
     }
 
-    // Define major coins by market cap (approximate ranking)
-    const majorCoins = [
-      'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 
-      'SOLUSDT', 'DOGEUSDT', 'DOTUSDT', 'MATICUSDT', 'LTCUSDT',
-      'AVAXUSDT', 'LINKUSDT', 'ATOMUSDT', 'NEARUSDT', 'UNIUSDT'
-    ];
+    // Updated: Use the new API response format for major coins movement
+    const majorCoins = majorCoinsData.data.slice(0, 10);
 
-    // Filter for major coins and sort by volume
-    const majorCoinsData = volumeData.data
-      .filter(item => majorCoins.includes(item.symbol))
-      .sort((a, b) => b.volume - a.volume)
-      .slice(0, 10);
-
-    if (majorCoinsData.length === 0) {
+    if (majorCoins.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No major coins data available</td></tr>';
       return;
     }
 
-    tbody.innerHTML = majorCoinsData.map(item => `
-      <tr>
-        <td><strong>${item.symbol}</strong></td>
-        <td>${this.formatPrice(item.price)}</td>
-        <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
-          ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
-        </span></td>
-        <td>${this.formatVolume(item.volume)}</td>
-        <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = majorCoins.map(item => {
+      // Handle the new API response format which includes coin_name and market_cap info
+      const displayName = item.coin_name ? `${item.symbol} (${item.coin_name})` : item.symbol;
+      const dataSource = item.data_source || 'binance';
+      
+      return `
+        <tr>
+          <td><strong>${displayName}</strong></td>
+          <td>${this.formatPrice(item.price)}</td>
+          <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
+            ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
+          </span></td>
+          <td>${this.formatVolume(item.volume)}</td>
+          <td>
+            <span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span>
+            ${item.market_cap_rank ? `<small style="display:block;font-size:10px;color:#666;">#${item.market_cap_rank}</small>` : ''}
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   updateMarketChanges(healthData) {
@@ -283,17 +281,16 @@ class MarketInsights {
 
   showLoadingInTables() {
     const tables = [
-      '#top-gainers-table tbody',
-      '#top-losers-table tbody',
-      '#top-volume-table tbody',
-      '#major-coins-table tbody'
+      { selector: '#top-gainers-table tbody', cols: 5 },
+      { selector: '#top-losers-table tbody', cols: 4 }, // Fixed: Losers table has 4 columns
+      { selector: '#top-volume-table tbody', cols: 5 },
+      { selector: '#major-coins-table tbody', cols: 5 }
     ];
 
-    tables.forEach(selector => {
-      const tbody = document.querySelector(selector);
+    tables.forEach(table => {
+      const tbody = document.querySelector(table.selector);
       if (tbody) {
-        const colCount = 5; // All tables now have 5 columns
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="market-loading">Loading market data...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${table.cols}" class="market-loading">Loading market data...</td></tr>`;
       }
     });
 
@@ -315,17 +312,16 @@ class MarketInsights {
 
   showError(message) {
     const tables = [
-      '#top-gainers-table tbody',
-      '#top-losers-table tbody',
-      '#top-volume-table tbody',
-      '#major-coins-table tbody'
+      { selector: '#top-gainers-table tbody', cols: 5 },
+      { selector: '#top-losers-table tbody', cols: 4 }, // Fixed: Losers table has 4 columns
+      { selector: '#top-volume-table tbody', cols: 5 },
+      { selector: '#major-coins-table tbody', cols: 5 }
     ];
 
-    tables.forEach(selector => {
-      const tbody = document.querySelector(selector);
+    tables.forEach(table => {
+      const tbody = document.querySelector(table.selector);
       if (tbody) {
-        const colCount = 5; // All tables now have 5 columns
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="market-error">${message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${table.cols}" class="market-error">${message}</td></tr>`;
       }
     });
   }
