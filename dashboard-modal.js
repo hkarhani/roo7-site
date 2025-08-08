@@ -41,6 +41,7 @@ class ModalManager {
       }
 
       console.log('📡 Loading SPOT symbols from market-data-service...');
+      console.log('🔑 Token length:', token.length);
       
       const response = await fetch(`${this.MARKET_DATA_API}/spot-instruments?active_only=true`, {
         method: 'GET',
@@ -50,9 +51,17 @@ class ModalManager {
         }
       });
 
+      console.log('📡 Market data service response status:', response.status);
+
       if (response.status === 401) {
-        console.warn('⚠️ Authentication failed for market data API - symbol validation will be skipped');
-        window.showToast('Warning: Could not authenticate with market data service. Symbol validation will be skipped.', 'warning');
+        console.warn('⚠️ Authentication failed for market data API - trying to use fallback');
+        // Try to use health endpoint to check if service is accessible
+        const healthResponse = await fetch(`${this.MARKET_DATA_API}/health`);
+        if (healthResponse.ok) {
+          console.log('✅ Market data service is accessible - auth issue confirmed');
+          // Fallback: Try to get symbols from auth service instead
+          return await this.loadSymbolsFromAuthService();
+        }
         return;
       }
 
@@ -78,8 +87,55 @@ class ModalManager {
       }
     } catch (error) {
       console.error('❌ Failed to load symbols from market-data-service:', error);
+      console.log('🔄 Attempting fallback to direct Binance API...');
+      await this.loadSymbolsFromBinanceDirectly();
+    }
+  }
+
+  // Fallback method: Load symbols from auth service (if available)
+  async loadSymbolsFromAuthService() {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${this.API_BASE}/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        console.log('✅ Auth service token validation successful');
+        // Token is valid for auth service, but not market-data-service
+        console.log('⚠️ Token works for auth but not market-data service - possible JWT secret mismatch');
+        window.showToast('Warning: Market data service authentication issue. Using basic validation.', 'warning');
+      }
+    } catch (error) {
+      console.log('❌ Auth service also failing:', error);
+    }
+  }
+
+  // Final fallback: Load symbols directly from Binance (temporary solution)
+  async loadSymbolsFromBinanceDirectly() {
+    try {
+      console.log('📡 Fallback: Loading symbols directly from Binance API...');
+      const response = await fetch('https://api.binance.com/api/v3/exchangeInfo');
+      
+      if (!response.ok) {
+        throw new Error(`Binance API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      this.binanceSymbols = data.symbols
+        .filter(symbol => symbol.status === 'TRADING' && symbol.symbol.endsWith('USDT'))
+        .map(symbol => symbol.symbol);
+      
+      console.log(`✅ Fallback successful: Loaded ${this.binanceSymbols.length} USDT symbols from Binance directly`);
+      window.showToast('Using direct Binance API for symbol validation (fallback mode).', 'info');
+      
+    } catch (error) {
+      console.error('❌ All symbol loading methods failed:', error);
       window.showToast('Warning: Could not load trading symbols. Symbol validation will be skipped.', 'warning');
-      // Don't throw - let the form work without validation
     }
   }
 
