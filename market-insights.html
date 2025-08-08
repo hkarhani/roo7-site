@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Market Insights</title>
-  <link rel="stylesheet" href="market-insights.css?v=1.0" />
+  <link rel="stylesheet" href="market-insights.css?v=1.5" />
 </head>
 <body>
   <div class="market-header">
@@ -25,22 +25,24 @@
     <section class="market-card">
       <div class="market-section">
         <h2>📈 Top 10 Gainers (24h)</h2>
-        <table id="top-gainers-table" class="market-table">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Price</th>
-              <th>24h Change %</th>
-              <th>24h Volume</th>
-              <th>Market</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" class="market-loading">Loading market data...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table id="top-gainers-table" class="market-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>24h Change %</th>
+                <th>24h Volume</th>
+                <th>Market</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="market-loading">Loading market data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -48,21 +50,23 @@
     <section class="market-card">
       <div class="market-section">
         <h2>📉 Top 10 Losers (24h)</h2>
-        <table id="top-losers-table" class="market-table">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Price</th>
-              <th>24h Change %</th>
-              <th>Market</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="4" class="market-loading">Loading market data...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table id="top-losers-table" class="market-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>24h Change %</th>
+                <th>Market</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4" class="market-loading">Loading market data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -70,22 +74,24 @@
     <section class="market-card">
       <div class="market-section">
         <h2>💰 Top 10 by Volume</h2>
-        <table id="top-volume-table" class="market-table">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Price</th>
-              <th>24h Change %</th>
-              <th>24h Volume</th>
-              <th>Market</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" class="market-loading">Loading market data...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table id="top-volume-table" class="market-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>24h Change %</th>
+                <th>24h Volume</th>
+                <th>Market</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="market-loading">Loading market data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -93,22 +99,24 @@
     <section class="market-card">
       <div class="market-section">
         <h2>🏆 Major Coins Movement</h2>
-        <table id="major-coins-table" class="market-table">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Price</th>
-              <th>24h Change %</th>
-              <th>24h Volume</th>
-              <th>Market</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" class="market-loading">Loading market data...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table id="major-coins-table" class="market-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>24h Change %</th>
+                <th>24h Volume</th>
+                <th>Market</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="market-loading">Loading market data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -183,6 +191,6 @@
 
   <!-- Load scripts -->
   <script src="theme-manager.js?v=1"></script>
-  <script src="market-insights-standalone.js?v=1.1"></script>
+  <script src="market-insights-standalone.js?v=1.0"></script>
 </body>
 </html>
