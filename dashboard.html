@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css?v=2" />
+  <link rel="stylesheet" href="dashboard.css?v=3" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -18,7 +18,7 @@
   </div>
 
   <main class="dashboard-grid">
-    <!-- Section 1: Live Accounts Table -->
+    <!-- Section 1: Live Accounts Table (Top Left) -->
     <section id="section-accounts" class="dashboard-card">
       <h2>Live Accounts</h2>
       <table id="accounts-table">
@@ -36,7 +36,7 @@
       </table>
     </section>
 
-    <!-- Section 2: Account Settings -->
+    <!-- Section 2: Account Settings (Top Right) -->
     <section id="section-settings" class="dashboard-card">
       <h2>Account Settings</h2>
       <table id="settings-table">
@@ -51,10 +51,110 @@
       <button id="open-modal">Add New Account</button>
     </section>
 
-    <!-- Section 3: Full-width Bottom -->
-    <section id="section-third" class="dashboard-card">
-      <h2>Third Section</h2>
-      <p>Put your bottom-row content here.</p>
+    <!-- Section 3: Market Insights (Bottom Left) -->
+    <section id="section-market-insights" class="dashboard-card">
+      <div class="market-header">
+        <h2>Market Insights</h2>
+        <div class="market-controls">
+          <button id="refresh-market-data" class="refresh-btn">🔄 Refresh</button>
+          <span id="last-updated" class="last-updated">Last updated: Never</span>
+        </div>
+      </div>
+      
+      <!-- Top Gainers/Losers -->
+      <div class="market-section">
+        <h3>📈 Top Movers (24h)</h3>
+        <div class="market-tables-container">
+          <div class="market-table-wrapper">
+            <h4 class="table-title positive">🟢 Top 10 Gainers</h4>
+            <table id="top-gainers-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>Change %</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="4" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="market-table-wrapper">
+            <h4 class="table-title negative">🔴 Top 10 Losers</h4>
+            <table id="top-losers-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>Change %</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="4" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Volume -->
+      <div class="market-section">
+        <h3>💰 Top 10 by Volume</h3>
+        <table id="top-volume-table" class="market-table full-width">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+              <th>Change %</th>
+              <th>Volume</th>
+              <th>Market</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Market Changes -->
+      <div class="market-section">
+        <h3>📊 Market Changes</h3>
+        <div id="market-changes" class="market-changes">
+          <div class="change-item">
+            <span class="change-label">📈 New Instruments Today:</span>
+            <span id="new-instruments-count" class="change-value loading">Loading...</span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">📉 Removed Instruments Today:</span>
+            <span id="removed-instruments-count" class="change-value loading">Loading...</span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">🔢 Total Active Instruments:</span>
+            <span id="total-instruments-count" class="change-value loading">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Analytics & Reports (Bottom Right) -->
+    <section id="section-fifth" class="dashboard-card">
+      <h2>Analytics & Reports</h2>
+      <p>Coming soon - Advanced portfolio analytics and performance reports.</p>
+      
+      <div style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
+        <h3 style="margin-top: 0; color: #666; font-size: 16px;">🚀 Planned Features:</h3>
+        <ul style="color: #666; font-size: 14px; line-height: 1.6;">
+          <li>📊 Portfolio performance tracking</li>
+          <li>📈 Historical price charts</li>
+          <li>🎯 Risk analysis reports</li>
+          <li>💡 Trading recommendations</li>
+          <li>📋 Strategy comparison</li>
+        </ul>
+      </div>
     </section>
   </main>
 
@@ -127,10 +227,11 @@
     </div>
   </div>
 
- <!-- Load theme manager first, then other scripts -->
+ <!-- Load scripts in correct order -->
  <script src="theme-manager.js?v=1"></script>
- <script src="dashboard-modal.js?v=1.9"></script>
- <script src="dashboard.js?v=5.8"></script> 
+ <script src="dashboard-modal.js?v=1.3"></script>
+ <script src="market-insights.js?v=1"></script>
+ <script src="dashboard.js?v=5.7"></script> 
 
 </body>
 </html>
