@@ -2,7 +2,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = "https://api.roo7.site";
-  const BINANCE_API = "https://api.binance.com/api/v3/exchangeInfo";
+  const MARKET_DATA_API = "https://api.roo7.site:8002"; // Changed from BINANCE_API to MARKET_DATA_API
 
   // Check authentication
   const token = localStorage.getItem("token");
@@ -14,8 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Initialize modal manager
-  const modalManager = new window.ModalManager(API_BASE, BINANCE_API);
+  // Initialize modal manager with market data API
+  const modalManager = new window.ModalManager(API_BASE, MARKET_DATA_API);
 
   // DOM elements
   const logoutBtn = document.getElementById("logout-btn");

@@ -1,9 +1,9 @@
 // dashboard-modal.js - Modal and Form Management
 
 class ModalManager {
-  constructor(apiBase, binanceApi) {
+  constructor(apiBase, marketDataApi) {
     this.API_BASE = apiBase;
-    this.BINANCE_API = binanceApi;
+    this.MARKET_DATA_API = marketDataApi; // Changed from BINANCE_API to MARKET_DATA_API
     this.modal = document.getElementById("account-modal");
     this.hedgeModal = document.getElementById("hedge-modal");
     this.accountForm = document.getElementById("account-form");
@@ -26,18 +26,46 @@ class ModalManager {
     this.bindEvents();
   }
 
-  // Load Binance symbols for validation
+  // Load Binance symbols for validation from market-data-service
   async loadBinanceSymbols() {
     try {
-      const response = await fetch(this.BINANCE_API);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn('⚠️ No token found for market data API');
+        return;
+      }
+
+      const response = await fetch(`${this.MARKET_DATA_API}/spot-instruments?active_only=true`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
-      this.binanceSymbols = data.symbols
-        .filter(symbol => symbol.status === 'TRADING' && symbol.symbol.endsWith('USDT'))
-        .map(symbol => symbol.symbol);
-      console.log(`✅ Loaded ${this.binanceSymbols.length} Binance USDT symbols`);
+      
+      if (data.success && data.data && Array.isArray(data.data)) {
+        // Filter for USDT symbols only and extract symbol names
+        this.binanceSymbols = data.data
+          .filter(instrument => 
+            instrument.symbol && 
+            instrument.symbol.endsWith('USDT') && 
+            instrument.is_active === true
+          )
+          .map(instrument => instrument.symbol);
+        
+        console.log(`✅ Loaded ${this.binanceSymbols.length} active SPOT USDT symbols from market-data-service`);
+      } else {
+        throw new Error('Invalid response format from market-data-service');
+      }
     } catch (error) {
-      console.error('❌ Failed to load Binance symbols:', error);
-      window.showToast('Warning: Could not load Binance symbols. Symbol validation will be skipped.', 'warning');
+      console.error('❌ Failed to load symbols from market-data-service:', error);
+      window.showToast('Warning: Could not load trading symbols. Symbol validation will be skipped.', 'warning');
     }
   }
 
@@ -442,8 +470,9 @@ class ModalManager {
           return;
         }
 
+        // ✅ UPDATED: Use market-data-service validation instead of direct Binance API
         if (this.binanceSymbols.length && !this.binanceSymbols.includes(symbol)) {
-          window.showToast(`Symbol ${symbol} does not exist on Binance SPOT.`, 'error');
+          window.showToast(`Symbol ${symbol} does not exist or is not active on Binance SPOT.`, 'error');
           symbols[i].focus();
           return;
         }
