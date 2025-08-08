@@ -58,10 +58,11 @@ class MarketInsights {
 
     try {
       // Load data from multiple endpoints concurrently
-      const [gainersData, losersData, volumeData, healthData] = await Promise.all([
+      const [gainersData, losersData, volumeData, majorCoinsData, healthData] = await Promise.all([
         this.fetchMarketData('/top-gainers?limit=10'),
         this.fetchMarketData('/top-losers?limit=10'),
-        this.fetchMarketData('/top-movers?limit=10'),
+        this.fetchMarketData('/top-movers?limit=50'), // Get more to filter for major coins
+        this.fetchMarketData('/top-movers?limit=50'), // Same data, different filtering
         this.fetchMarketData('/health', false) // No auth required for health
       ]);
 
@@ -69,6 +70,7 @@ class MarketInsights {
       this.updateGainersTable(gainersData);
       this.updateLosersTable(losersData);
       this.updateVolumeTable(volumeData);
+      this.updateMajorCoinsTable(majorCoinsData);
       this.updateMarketChanges(healthData);
 
       // Update last updated time
@@ -118,7 +120,7 @@ class MarketInsights {
     if (!tbody) return;
 
     if (!gainersData || !gainersData.success || !gainersData.data) {
-      tbody.innerHTML = '<tr><td colspan="4" class="market-loading">No data available</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
       return;
     }
 
@@ -126,8 +128,9 @@ class MarketInsights {
     tbody.innerHTML = gainers.map(item => `
       <tr>
         <td><strong>${item.symbol}</strong></td>
-        <td>$${this.formatPrice(item.price)}</td>
+        <td>${this.formatPrice(item.price)}</td>
         <td><span class="price-change positive">+${item.priceChangePercent.toFixed(2)}%</span></td>
+        <td>${this.formatVolume(item.volume)}</td>
         <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
       </tr>
     `).join('');
@@ -138,7 +141,7 @@ class MarketInsights {
     if (!tbody) return;
 
     if (!losersData || !losersData.success || !losersData.data) {
-      tbody.innerHTML = '<tr><td colspan="4" class="market-loading">No data available</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
       return;
     }
 
@@ -146,8 +149,9 @@ class MarketInsights {
     tbody.innerHTML = losers.map(item => `
       <tr>
         <td><strong>${item.symbol}</strong></td>
-        <td>$${this.formatPrice(item.price)}</td>
+        <td>${this.formatPrice(item.price)}</td>
         <td><span class="price-change negative">${item.priceChangePercent.toFixed(2)}%</span></td>
+        <td>${this.formatVolume(item.volume)}</td>
         <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
       </tr>
     `).join('');
@@ -166,7 +170,47 @@ class MarketInsights {
     tbody.innerHTML = topVolume.map(item => `
       <tr>
         <td><strong>${item.symbol}</strong></td>
-        <td>$${this.formatPrice(item.price)}</td>
+        <td>${this.formatPrice(item.price)}</td>
+        <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
+          ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
+        </span></td>
+        <td>${this.formatVolume(item.volume)}</td>
+        <td><span class="market-badge ${item.market_type.toLowerCase()}">${item.market_type}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  updateMajorCoinsTable(volumeData) {
+    const tbody = document.querySelector('#major-coins-table tbody');
+    if (!tbody) return;
+
+    if (!volumeData || !volumeData.success || !volumeData.data) {
+      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No data available</td></tr>';
+      return;
+    }
+
+    // Define major coins by market cap (approximate ranking)
+    const majorCoins = [
+      'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 
+      'SOLUSDT', 'DOGEUSDT', 'DOTUSDT', 'MATICUSDT', 'LTCUSDT',
+      'AVAXUSDT', 'LINKUSDT', 'ATOMUSDT', 'NEARUSDT', 'UNIUSDT'
+    ];
+
+    // Filter for major coins and sort by volume
+    const majorCoinsData = volumeData.data
+      .filter(item => majorCoins.includes(item.symbol))
+      .sort((a, b) => b.volume - a.volume)
+      .slice(0, 10);
+
+    if (majorCoinsData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="market-loading">No major coins data available</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = majorCoinsData.map(item => `
+      <tr>
+        <td><strong>${item.symbol}</strong></td>
+        <td>${this.formatPrice(item.price)}</td>
         <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
           ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
         </span></td>
@@ -241,13 +285,14 @@ class MarketInsights {
     const tables = [
       '#top-gainers-table tbody',
       '#top-losers-table tbody',
-      '#top-volume-table tbody'
+      '#top-volume-table tbody',
+      '#major-coins-table tbody'
     ];
 
     tables.forEach(selector => {
       const tbody = document.querySelector(selector);
       if (tbody) {
-        const colCount = selector.includes('volume') ? 5 : 4;
+        const colCount = 5; // All tables now have 5 columns
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="market-loading">Loading market data...</td></tr>`;
       }
     });
@@ -272,13 +317,14 @@ class MarketInsights {
     const tables = [
       '#top-gainers-table tbody',
       '#top-losers-table tbody',
-      '#top-volume-table tbody'
+      '#top-volume-table tbody',
+      '#major-coins-table tbody'
     ];
 
     tables.forEach(selector => {
       const tbody = document.querySelector(selector);
       if (tbody) {
-        const colCount = selector.includes('volume') ? 5 : 4;
+        const colCount = 5; // All tables now have 5 columns
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="market-error">${message}</td></tr>`;
       }
     });

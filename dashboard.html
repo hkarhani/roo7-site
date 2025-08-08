@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css?v=3" />
+  <link rel="stylesheet" href="dashboard.css?v=3.5" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -73,11 +73,12 @@
                   <th>Symbol</th>
                   <th>Price</th>
                   <th>24h Change %</th>
+                  <th>24h Volume</th>
                   <th>Market</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td colspan="4" class="market-loading">Loading market data...</td></tr>
+                <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
               </tbody>
             </table>
           </div>
@@ -101,23 +102,45 @@
         </div>
       </div>
 
-      <!-- Top Volume -->
+      <!-- Top Volume and Market Movers -->
       <div class="market-section">
-        <h3>💰 Top 10 by Volume</h3>
-        <table id="top-volume-table" class="market-table full-width">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Price</th>
-              <th>24h Change %</th>
-              <th>24h Volume</th>
-              <th>Market</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
-          </tbody>
-        </table>
+        <div class="market-tables-container">
+          <div class="market-table-wrapper">
+            <h3>💰 Top 10 by Volume</h3>
+            <table id="top-volume-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>24h Change %</th>
+                  <th>24h Volume</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="market-table-wrapper">
+            <h3>🏆 Major Coins Movement</h3>
+            <table id="major-coins-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>24h Change %</th>
+                  <th>24h Volume</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- Market Changes -->
@@ -230,8 +253,8 @@
  <!-- Load scripts in correct order -->
  <script src="theme-manager.js?v=1"></script>
  <script src="dashboard-modal.js?v=1.3"></script>
- <script src="market-insights.js?v=1"></script>
- <script src="dashboard.js?v=5.9"></script> 
+ <script src="market-insights.js?v=1.1"></script>
+ <script src="dashboard.js?v=6.1"></script> 
 
 </body>
 </html>
