@@ -247,15 +247,12 @@ class MarketInsights {
     }
 
     tbody.innerHTML = majorCoins.map((item, index) => {
-      // Handle the new API response format which includes coin_name and market_cap info
-      const displayName = item.coin_name ? `${item.symbol} (${item.coin_name})` : item.symbol;
+      // Fixed: Show only symbol with rank, no coin name to prevent spacing issues
+      const displayName = item.market_cap_rank ? `${item.symbol} (#${item.market_cap_rank})` : item.symbol;
       
       return `
         <tr>
-          <td>
-            <strong>${displayName}</strong>
-            ${item.market_cap_rank ? `<div style="font-size: 10px; color: #666; margin-top: 2px;">#${item.market_cap_rank}</div>` : ''}
-          </td>
+          <td><strong>${displayName}</strong></td>
           <td>${this.formatPrice(item.price)}</td>
           <td><span class="price-change ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}">
             ${item.priceChangePercent >= 0 ? '+' : ''}${item.priceChangePercent.toFixed(2)}%
