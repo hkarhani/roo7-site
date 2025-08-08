@@ -465,116 +465,133 @@ class ModalManager {
       return;
     }
 
-    const accountName = document.getElementById("trading-account-name").value.trim();
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    const isEditing = this.currentEditingId;
     
-    // ✅ Enhanced validation: Check for empty account name
-    if (!accountName) {
-      window.showToast("Account name is required.", 'warning');
-      document.getElementById("trading-account-name").focus();
+    // Prevent multiple submissions
+    if (submitButton.disabled) {
       return;
     }
-
-    const data = {
-      account_name: accountName,
-      strategy: this.strategySelect.value,
-      custom_portfolio: []
-    };
-
-    // Only include API credentials if not using same credentials
-    if (!this.useSameCredentials) {
-      const apiKey = document.getElementById("binance-api-key").value.trim();
-      const apiSecret = document.getElementById("binance-api-secret").value.trim();
-      
-      if (!apiKey || !apiSecret) {
-        window.showToast("API Key and Secret are required.", 'warning');
-        return;
-      }
-      
-      data.api_key = apiKey;
-      data.api_secret = apiSecret;
-    }
-
-    // Handle strategy-specific data
-    if (data.strategy === "Top X Instruments of Vapaus") {
-      const topXCount = document.getElementById("top-x-count");
-      if (!topXCount || !topXCount.value) {
-        window.showToast("Please specify the number of top instruments.", 'warning');
-        topXCount?.focus();
-        return;
-      }
-      data.top_x_count = parseInt(topXCount.value);
-      if (data.top_x_count < 1 || data.top_x_count > 50) {
-        window.showToast("Number of top instruments must be between 1 and 50.", 'warning');
-        return;
-      }
-    } else if (data.strategy === "Custom Portfolio Rebalancing") {
-      const symbols = this.instrumentsWrap.querySelectorAll("input[name='symbol']");
-      const weights = this.instrumentsWrap.querySelectorAll("input[name='weight']");
-      
-      if (symbols.length === 0) {
-        window.showToast("Please add at least one instrument for custom portfolio.", 'warning');
-        return;
-      }
-
-      // Ensure symbols are loaded before validation
-      await this.loadBinanceSymbols();
-
-      // Validate and build portfolio
-      let totalWeight = 0;
-      const symbolSet = new Set(); // Check for duplicate symbols
-      
-      for (let i = 0; i < symbols.length; i++) {
-        const symbol = symbols[i].value.trim().toUpperCase();
-        const weight = parseFloat(weights[i].value);
-
-        if (!symbol) {
-          window.showToast("All symbols must be filled in.", 'warning');
-          symbols[i].focus();
-          return;
-        }
-
-        if (symbolSet.has(symbol)) {
-          window.showToast(`Duplicate symbol found: ${symbol}. Each symbol can only be used once.`, 'warning');
-          symbols[i].focus();
-          return;
-        }
-        symbolSet.add(symbol);
-
-        if (!symbol.endsWith('USDT')) {
-          window.showToast(`Symbol ${symbol} must end with USDT.`, 'warning');
-          symbols[i].focus();
-          return;
-        }
-
-        // ✅ UPDATED: Use market-data-service validation instead of direct Binance API
-        // Only validate if symbols were successfully loaded
-        if (this.binanceSymbols.length > 0 && !this.binanceSymbols.includes(symbol)) {
-          window.showToast(`Symbol ${symbol} does not exist or is not active on Binance SPOT.`, 'error');
-          symbols[i].focus();
-          return;
-        } else if (this.binanceSymbols.length === 0) {
-          console.warn(`⚠️ Symbol validation skipped for ${symbol} - market data service unavailable`);
-        }
-
-        if (isNaN(weight) || weight <= 0 || weight > 100) {
-          window.showToast(`Weight for ${symbol} must be between 0 and 100.`, 'warning');
-          weights[i].focus();
-          return;
-        }
-
-        totalWeight += weight;
-        data.custom_portfolio.push({ symbol, weight });
-      }
-
-      if (Math.abs(totalWeight - 100) > 0.01) {
-        window.showToast(`Portfolio weights must sum to 100%. Current total: ${totalWeight.toFixed(2)}%`, 'warning');
-        return;
-      }
-    }
-
-    console.log("📤 Submitting account data:", data);
+    
+    // Set loading state
+    submitButton.disabled = true;
+    submitButton.textContent = isEditing ? "Updating..." : "Creating...";
+    
+    // Show loading toast
+    const loadingToastMessage = isEditing ? "Updating account..." : "Creating account...";
+    window.showToast(loadingToastMessage, 'info', 10000); // 10 second duration
 
     try {
+      const accountName = document.getElementById("trading-account-name").value.trim();
+      
+      // ✅ Enhanced validation: Check for empty account name
+      if (!accountName) {
+        window.showToast("Account name is required.", 'warning');
+        document.getElementById("trading-account-name").focus();
+        return;
+      }
+
+      const data = {
+        account_name: accountName,
+        strategy: this.strategySelect.value,
+        custom_portfolio: []
+      };
+
+      // Only include API credentials if not using same credentials
+      if (!this.useSameCredentials) {
+        const apiKey = document.getElementById("binance-api-key").value.trim();
+        const apiSecret = document.getElementById("binance-api-secret").value.trim();
+        
+        if (!apiKey || !apiSecret) {
+          window.showToast("API Key and Secret are required.", 'warning');
+          return;
+        }
+        
+        data.api_key = apiKey;
+        data.api_secret = apiSecret;
+      }
+
+      // Handle strategy-specific data
+      if (data.strategy === "Top X Instruments of Vapaus") {
+        const topXCount = document.getElementById("top-x-count");
+        if (!topXCount || !topXCount.value) {
+          window.showToast("Please specify the number of top instruments.", 'warning');
+          topXCount?.focus();
+          return;
+        }
+        data.top_x_count = parseInt(topXCount.value);
+        if (data.top_x_count < 1 || data.top_x_count > 50) {
+          window.showToast("Number of top instruments must be between 1 and 50.", 'warning');
+          return;
+        }
+      } else if (data.strategy === "Custom Portfolio Rebalancing") {
+        const symbols = this.instrumentsWrap.querySelectorAll("input[name='symbol']");
+        const weights = this.instrumentsWrap.querySelectorAll("input[name='weight']");
+        
+        if (symbols.length === 0) {
+          window.showToast("Please add at least one instrument for custom portfolio.", 'warning');
+          return;
+        }
+
+        // Ensure symbols are loaded before validation
+        await this.loadBinanceSymbols();
+
+        // Validate and build portfolio
+        let totalWeight = 0;
+        const symbolSet = new Set(); // Check for duplicate symbols
+        
+        for (let i = 0; i < symbols.length; i++) {
+          const symbol = symbols[i].value.trim().toUpperCase();
+          const weight = parseFloat(weights[i].value);
+
+          if (!symbol) {
+            window.showToast("All symbols must be filled in.", 'warning');
+            symbols[i].focus();
+            return;
+          }
+
+          if (symbolSet.has(symbol)) {
+            window.showToast(`Duplicate symbol found: ${symbol}. Each symbol can only be used once.`, 'warning');
+            symbols[i].focus();
+            return;
+          }
+          symbolSet.add(symbol);
+
+          if (!symbol.endsWith('USDT')) {
+            window.showToast(`Symbol ${symbol} must end with USDT.`, 'warning');
+            symbols[i].focus();
+            return;
+          }
+
+          // ✅ UPDATED: Use market-data-service validation instead of direct Binance API
+          // Only validate if symbols were successfully loaded
+          if (this.binanceSymbols.length > 0 && !this.binanceSymbols.includes(symbol)) {
+            window.showToast(`Symbol ${symbol} does not exist or is not active on Binance SPOT.`, 'error');
+            symbols[i].focus();
+            return;
+          } else if (this.binanceSymbols.length === 0) {
+            console.warn(`⚠️ Symbol validation skipped for ${symbol} - market data service unavailable`);
+          }
+
+          if (isNaN(weight) || weight <= 0 || weight > 100) {
+            window.showToast(`Weight for ${symbol} must be between 0 and 100.`, 'warning');
+            weights[i].focus();
+            return;
+          }
+
+          totalWeight += weight;
+          data.custom_portfolio.push({ symbol, weight });
+        }
+
+        if (Math.abs(totalWeight - 100) > 0.01) {
+          window.showToast(`Portfolio weights must sum to 100%. Current total: ${totalWeight.toFixed(2)}%`, 'warning');
+          return;
+        }
+      }
+
+      console.log("📤 Submitting account data:", data);
+
       const method = this.currentEditingId ? "PUT" : "POST";
       const url = this.currentEditingId 
         ? `${this.API_BASE}/accounts/${this.currentEditingId}`
@@ -597,13 +614,21 @@ class ModalManager {
       }
 
       const action = this.currentEditingId ? "updated" : "created";
-      window.showToast(`Account ${action} successfully!`, 'success');
+      // Clear any existing toasts first
+      document.querySelectorAll('.toast').forEach(toast => toast.remove());
+      window.showToast(`✅ Account ${action} successfully!`, 'success');
       this.closeAccountModal();
       if (window.loadAccounts) window.loadAccounts();
 
     } catch (err) {
       console.error("❌ Submit error:", err);
-      window.showToast(`Error ${this.currentEditingId ? 'updating' : 'creating'} account: ${err.message}`, 'error');
+      // Clear any existing toasts first
+      document.querySelectorAll('.toast').forEach(toast => toast.remove());
+      window.showToast(`❌ Error ${this.currentEditingId ? 'updating' : 'creating'} account: ${err.message}`, 'error');
+    } finally {
+      // Always restore button state
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
     }
   }
 
@@ -616,16 +641,31 @@ class ModalManager {
       return;
     }
 
-    const hedgePercent = parseFloat(document.getElementById("hedge-percent-input").value);
-    const isDisabled = document.getElementById("account-disabled").checked;
-    const isRevoked = document.getElementById("account-revoked").checked;
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
     
-    if (isNaN(hedgePercent) || hedgePercent < 0 || hedgePercent > 100) {
-      window.showToast("Hedge percentage must be a number between 0 and 100.", 'warning');
+    // Prevent multiple submissions
+    if (submitButton.disabled) {
       return;
     }
+    
+    // Set loading state
+    submitButton.disabled = true;
+    submitButton.textContent = "Updating...";
+    
+    // Show loading toast
+    window.showToast("Updating account settings...", 'info', 10000); // 10 second duration
 
     try {
+      const hedgePercent = parseFloat(document.getElementById("hedge-percent-input").value);
+      const isDisabled = document.getElementById("account-disabled").checked;
+      const isRevoked = document.getElementById("account-revoked").checked;
+      
+      if (isNaN(hedgePercent) || hedgePercent < 0 || hedgePercent > 100) {
+        window.showToast("Hedge percentage must be a number between 0 and 100.", 'warning');
+        return;
+      }
+
       const res = await fetch(`${this.API_BASE}/accounts/${this.currentHedgeAccountId}`, {
         method: "PUT",
         headers: {
@@ -644,12 +684,20 @@ class ModalManager {
         throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
       }
 
-      window.showToast("Account settings updated successfully!", 'success');
+      // Clear any existing toasts first
+      document.querySelectorAll('.toast').forEach(toast => toast.remove());
+      window.showToast("✅ Account settings updated successfully!", 'success');
       this.closeHedgeModal();
       if (window.loadAccounts) window.loadAccounts();
 
     } catch (err) {
-      window.showToast(`Error updating account settings: ${err.message}`, 'error');
+      // Clear any existing toasts first
+      document.querySelectorAll('.toast').forEach(toast => toast.remove());
+      window.showToast(`❌ Error updating account settings: ${err.message}`, 'error');
+    } finally {
+      // Always restore button state
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
     }
   }
 }
