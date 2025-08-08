@@ -1,4 +1,4 @@
-// market-insights-standalone.js - Optimized Market Insights with Toggle
+// market-insights-standalone.js - Market Insights with Toggle
 
 class MarketInsightsStandalone {
   constructor(apiBase, marketDataApi) {
@@ -7,7 +7,7 @@ class MarketInsightsStandalone {
     this.isLoading = false;
     this.lastUpdateTime = null;
     this.refreshInterval = null;
-    this.currentMarketType = 'SPOT'; // Default to SPOT
+    this.currentMarketType = 'SPOT';
     this.cachedData = {
       gainers: [],
       losers: [], 
@@ -28,22 +28,20 @@ class MarketInsightsStandalone {
   checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log("❌ No token found, redirecting to auth...");
+      console.log('No token found, redirecting to auth...');
       setTimeout(() => {
-        window.location.href = "/auth.html";
+        window.location.href = '/auth.html';
       }, 2000);
       return;
     }
   }
 
   bindEvents() {
-    // Refresh button
     const refreshBtn = document.getElementById('refresh-market-data');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => this.refreshMarketData());
     }
     
-    // Back button
     const backBtn = document.getElementById('back-to-dashboard');
     if (backBtn) {
       backBtn.addEventListener('click', () => {
@@ -51,7 +49,6 @@ class MarketInsightsStandalone {
       });
     }
 
-    // Market type toggle buttons
     const spotToggle = document.getElementById('spot-toggle');
     const futuresToggle = document.getElementById('futures-toggle');
     
@@ -65,22 +62,18 @@ class MarketInsightsStandalone {
   }
 
   switchMarketType(marketType) {
-    console.log(`🔄 Switching to ${marketType} market`);
+    console.log('Switching to ' + marketType + ' market');
     
-    // Update button states
     document.getElementById('spot-toggle').classList.toggle('active', marketType === 'SPOT');
     document.getElementById('futures-toggle').classList.toggle('active', marketType === 'FUTURES');
     
-    // Update current market type
     this.currentMarketType = marketType;
     
-    // Re-filter and display cached data
     this.updateAllTablesFromCache();
     this.updateAnalyticsFromCache();
   }
 
   startAutoRefresh() {
-    // Auto-refresh every 5 minutes
     this.refreshInterval = setInterval(() => {
       this.loadMarketDataOptimized();
     }, 5 * 60 * 1000);
@@ -113,9 +106,8 @@ class MarketInsightsStandalone {
     this.showLoadingInTables();
 
     try {
-      console.log('📡 Loading market data using existing endpoints...');
+      console.log('Loading market data using existing endpoints...');
       
-      // Load all data in parallel but with better error handling
       const promises = [
         this.fetchMarketDataSafe('/top-gainers?limit=20'),
         this.fetchMarketDataSafe('/top-losers?limit=20'),
@@ -126,33 +118,29 @@ class MarketInsightsStandalone {
 
       const [gainersData, losersData, volumeData, majorCoinsData, healthData] = await Promise.allSettled(promises);
 
-      // Process successful responses
-      if (gainersData.status === 'fulfilled' && gainersData.value?.success) {
+      if (gainersData.status === 'fulfilled' && gainersData.value && gainersData.value.success) {
         this.cachedData.gainers = gainersData.value.data || [];
       }
       
-      if (losersData.status === 'fulfilled' && losersData.value?.success) {
+      if (losersData.status === 'fulfilled' && losersData.value && losersData.value.success) {
         this.cachedData.losers = losersData.value.data || [];
       }
       
-      if (volumeData.status === 'fulfilled' && volumeData.value?.success) {
+      if (volumeData.status === 'fulfilled' && volumeData.value && volumeData.value.success) {
         this.cachedData.volume = volumeData.value.data || [];
       }
       
-      if (majorCoinsData.status === 'fulfilled' && majorCoinsData.value?.success) {
+      if (majorCoinsData.status === 'fulfilled' && majorCoinsData.value && majorCoinsData.value.success) {
         this.cachedData.majorCoins = majorCoinsData.value.data || [];
       }
 
-      // Update tables with filtered data
       this.updateAllTablesFromCache();
       this.updateAnalyticsFromCache();
 
-      // Update market changes (independent of market type)
       if (healthData.status === 'fulfilled') {
         this.updateMarketChanges(healthData.value);
       }
 
-      // Update last updated time
       this.lastUpdateTime = new Date();
       this.updateLastUpdatedTime();
 
@@ -160,22 +148,22 @@ class MarketInsightsStandalone {
         result => result.status === 'fulfilled'
       ).length;
 
-      console.log(`✅ Loaded ${successCount}/4 market data endpoints successfully`);
+      console.log('Loaded ' + successCount + '/4 market data endpoints successfully');
 
       if (isManualRefresh) {
         if (successCount === 4) {
-          this.showToast('✅ Market data refreshed successfully!', 'success');
+          this.showToast('Market data refreshed successfully!', 'success');
         } else {
-          this.showToast(`⚠️ Partially loaded: ${successCount}/4 data sources`, 'warning');
+          this.showToast('Partially loaded: ' + successCount + '/4 data sources', 'warning');
         }
       }
 
     } catch (error) {
-      console.error('❌ Error loading market data:', error);
-      this.showError(`Failed to load market data: ${error.message}`);
+      console.error('Error loading market data:', error);
+      this.showError('Failed to load market data: ' + error.message);
       
       if (isManualRefresh) {
-        this.showToast('❌ Failed to refresh market data', 'error');
+        this.showToast('Failed to refresh market data', 'error');
       }
     } finally {
       this.setLoadingState(false);
@@ -186,7 +174,7 @@ class MarketInsightsStandalone {
     try {
       return await this.fetchMarketData(endpoint, requireAuth);
     } catch (error) {
-      console.warn(`⚠️ Failed to load ${endpoint}:`, error.message);
+      console.warn('Failed to load ' + endpoint + ': ' + error.message);
       return { success: false, error: error.message };
     }
   }
@@ -202,7 +190,6 @@ class MarketInsightsStandalone {
     const tbody = document.querySelector('#top-gainers-table tbody');
     if (!tbody) return;
 
-    // Filter by current market type
     const filtered = this.cachedData.gainers.filter(item => 
       item.market_type === this.currentMarketType
     ).slice(0, 10);
@@ -227,7 +214,6 @@ class MarketInsightsStandalone {
     const tbody = document.querySelector('#top-losers-table tbody');
     if (!tbody) return;
 
-    // Filter by current market type
     const filtered = this.cachedData.losers.filter(item => 
       item.market_type === this.currentMarketType
     ).slice(0, 10);
@@ -251,7 +237,6 @@ class MarketInsightsStandalone {
     const tbody = document.querySelector('#top-volume-table tbody');
     if (!tbody) return;
 
-    // Filter by current market type
     const filtered = this.cachedData.volume.filter(item => 
       item.market_type === this.currentMarketType
     ).slice(0, 10);
@@ -279,12 +264,9 @@ class MarketInsightsStandalone {
     const tbody = document.querySelector('#major-coins-table tbody');
     if (!tbody) return;
 
-    // Don't filter by market type for Major Coins - show both SPOT and FUTURES
-    // Filter out USDTUSDT and sort by market cap or volume
     const filtered = this.cachedData.majorCoins
-      .filter(item => item.symbol !== 'USDTUSDT') // Remove USDTUSDT
+      .filter(item => item.symbol !== 'USDTUSDT')
       .sort((a, b) => {
-        // Sort by market cap rank first, then by volume
         if (a.market_cap_rank && b.market_cap_rank) {
           return a.market_cap_rank - b.market_cap_rank;
         } else if (a.market_cap_rank) {
@@ -318,7 +300,6 @@ class MarketInsightsStandalone {
   }
 
   updateAnalyticsFromCache() {
-    // Combine all cached data for analytics
     const allData = [
       ...this.cachedData.gainers,
       ...this.cachedData.losers,
@@ -326,14 +307,12 @@ class MarketInsightsStandalone {
       ...this.cachedData.majorCoins
     ];
 
-    // Filter by current market type and remove duplicates
     const filteredData = allData
       .filter(item => item.market_type === this.currentMarketType)
       .filter((item, index, self) => 
         index === self.findIndex(i => i.symbol === item.symbol)
       );
 
-    // Update top gainer metric
     const topGainer = filteredData
       .filter(item => item.priceChangePercent > 0)
       .sort((a, b) => b.priceChangePercent - a.priceChangePercent)[0];
@@ -349,7 +328,6 @@ class MarketInsightsStandalone {
       }
     }
 
-    // Update top loser metric
     const topLoser = filteredData
       .filter(item => item.priceChangePercent < 0)
       .sort((a, b) => a.priceChangePercent - b.priceChangePercent)[0];
@@ -365,7 +343,6 @@ class MarketInsightsStandalone {
       }
     }
 
-    // Update highest volume metric
     const highestVolume = filteredData
       .sort((a, b) => b.volume - a.volume)[0];
     
@@ -380,20 +357,19 @@ class MarketInsightsStandalone {
       }
     }
 
-    // Update market trend
     const marketTrendEl = document.getElementById('market-trend-metric');
     if (marketTrendEl) {
       const gainersCount = filteredData.filter(item => item.priceChangePercent > 0).length;
       const losersCount = filteredData.filter(item => item.priceChangePercent < 0).length;
       
       if (gainersCount > losersCount) {
-        marketTrendEl.textContent = '📈 ' + this.currentMarketType + ' Bullish';
+        marketTrendEl.textContent = 'Bullish ' + this.currentMarketType;
         marketTrendEl.className = 'metric-value positive';
       } else if (losersCount > gainersCount) {
-        marketTrendEl.textContent = '📉 ' + this.currentMarketType + ' Bearish';
+        marketTrendEl.textContent = 'Bearish ' + this.currentMarketType;
         marketTrendEl.className = 'metric-value negative';
       } else {
-        marketTrendEl.textContent = '↔️ ' + this.currentMarketType + ' Neutral';
+        marketTrendEl.textContent = 'Neutral ' + this.currentMarketType;
         marketTrendEl.className = 'metric-value';
       }
     }
@@ -410,7 +386,7 @@ class MarketInsightsStandalone {
       const totalInstruments = totalSpot + totalFutures;
 
       if (totalInstrumentsEl) {
-        totalInstrumentsEl.textContent = `${totalInstruments.toLocaleString()} (SPOT: ${totalSpot.toLocaleString()}, FUTURES: ${totalFutures.toLocaleString()})`;
+        totalInstrumentsEl.textContent = totalInstruments.toLocaleString() + ' (SPOT: ' + totalSpot.toLocaleString() + ', FUTURES: ' + totalFutures.toLocaleString() + ')';
         totalInstrumentsEl.className = 'change-value';
       }
 
@@ -448,11 +424,11 @@ class MarketInsightsStandalone {
     if (refreshBtn) {
       refreshBtn.disabled = isLoading;
       if (!isLoading) {
-        refreshBtn.textContent = '🔄 Refresh';
+        refreshBtn.textContent = 'Refresh';
         refreshBtn.style.opacity = '1';
       } else {
         refreshBtn.style.opacity = '0.6';
-        refreshBtn.textContent = '🔄 Loading...';
+        refreshBtn.textContent = 'Loading...';
       }
     }
   }
@@ -472,7 +448,6 @@ class MarketInsightsStandalone {
       }
     });
 
-    // Show loading in analytics
     const analyticsElements = [
       'top-gainer-metric',
       'top-loser-metric',
@@ -512,16 +487,16 @@ class MarketInsightsStandalone {
     };
     
     if (requireAuth && token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = 'Bearer ' + token;
     }
 
-    const response = await fetch(`${this.MARKET_DATA_API}${endpoint}`, {
+    const response = await fetch(this.MARKET_DATA_API + endpoint, {
       method: 'GET',
       headers: headers
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error('HTTP ' + response.status + ': ' + response.statusText);
     }
 
     return await response.json();
@@ -560,13 +535,22 @@ class MarketInsightsStandalone {
     }
     
     if (marketCap >= 1e12) {
-      return '
+      return '$' + (marketCap / 1e12).toFixed(2) + 'T';
+    } else if (marketCap >= 1e9) {
+      return '$' + (marketCap / 1e9).toFixed(2) + 'B';
+    } else if (marketCap >= 1e6) {
+      return '$' + (marketCap / 1e6).toFixed(2) + 'M';
+    } else if (marketCap >= 1e3) {
+      return '$' + (marketCap / 1e3).toFixed(2) + 'K';
+    } else {
+      return '$' + marketCap.toFixed(2);
+    }
+  }
 
-  showToast(message, type = 'info') {
+  showToast(message, type) {
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+    toast.className = 'toast toast-' + type;
     
-    // Set styles individually to avoid string literal issues
     toast.style.position = 'fixed';
     toast.style.top = '20px';
     toast.style.right = '20px';
@@ -604,310 +588,13 @@ class MarketInsightsStandalone {
   }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = "https://api.roo7.site";
-  const MARKET_DATA_API = "https://api.roo7.site:8002";
+  const API_BASE = 'https://api.roo7.site';
+  const MARKET_DATA_API = 'https://api.roo7.site:8002';
   
   window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
 });
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e12).toFixed(2) + 'T';
-    } else if (marketCap >= 1e9) {
-      return '
-
-  showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-      z-index: 10000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = "https://api.roo7.site";
-  const MARKET_DATA_API = "https://api.roo7.site:8002";
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e9).toFixed(2) + 'B';
-    } else if (marketCap >= 1e6) {
-      return '
-
-  showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-      z-index: 10000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = "https://api.roo7.site";
-  const MARKET_DATA_API = "https://api.roo7.site:8002";
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e6).toFixed(2) + 'M';
-    } else if (marketCap >= 1e3) {
-      return '
-
-  showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-      z-index: 10000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = "https://api.roo7.site";
-  const MARKET_DATA_API = "https://api.roo7.site:8002";
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + (marketCap / 1e3).toFixed(2) + 'K';
-    } else {
-      return '
-
-  showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-      z-index: 10000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = "https://api.roo7.site";
-  const MARKET_DATA_API = "https://api.roo7.site:8002";
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  if (window.marketInsights) {
-    window.marketInsights.destroy();
-  }
-}); + marketCap.toFixed(2);
-    }
-  }
-
-  showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-      z-index: 10000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-      toast.style.background = '#28a745';
-    } else if (type === 'error') {
-      toast.style.background = '#dc3545';
-    } else if (type === 'warning') {
-      toast.style.background = '#ffc107';
-      toast.style.color = '#212529';
-    } else {
-      toast.style.background = '#17a2b8';
-    }
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  destroy() {
-    this.stopAutoRefresh();
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = "https://api.roo7.site";
-  const MARKET_DATA_API = "https://api.roo7.site:8002";
-  
-  window.marketInsights = new MarketInsightsStandalone(API_BASE, MARKET_DATA_API);
-});
-
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   if (window.marketInsights) {
     window.marketInsights.destroy();
