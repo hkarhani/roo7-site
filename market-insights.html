@@ -21,102 +21,99 @@
   </div>
 
   <main class="market-grid">
-    <!-- Top Movers Section -->
+    <!-- Row 1, Column 1: Top Gainers -->
     <section class="market-card">
       <div class="market-section">
-        <h2>📈 Top Movers (24h)</h2>
-        <div class="market-tables-container">
-          <div class="market-table-wrapper">
-            <h3 class="table-title positive">🟢 Top 10 Gainers</h3>
-            <table id="top-gainers-table" class="market-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Price</th>
-                  <th>24h Change %</th>
-                  <th>24h Volume</th>
-                  <th>Market</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="5" class="market-loading">Loading market data...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="market-table-wrapper">
-            <h3 class="table-title negative">🔴 Top 10 Losers</h3>
-            <table id="top-losers-table" class="market-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Price</th>
-                  <th>24h Change %</th>
-                  <th>Market</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="4" class="market-loading">Loading market data...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <h2>📈 Top 10 Gainers (24h)</h2>
+        <table id="top-gainers-table" class="market-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+              <th>24h Change %</th>
+              <th>24h Volume</th>
+              <th>Market</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" class="market-loading">Loading market data...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
-    <!-- Volume and Major Coins Section -->
+    <!-- Row 1, Column 2: Top Losers -->
     <section class="market-card">
       <div class="market-section">
-        <div class="market-tables-container">
-          <div class="market-table-wrapper">
-            <h2>💰 Top 10 by Volume</h2>
-            <table id="top-volume-table" class="market-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Price</th>
-                  <th>24h Change %</th>
-                  <th>24h Volume</th>
-                  <th>Market</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="5" class="market-loading">Loading market data...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="market-table-wrapper">
-            <h2>🏆 Major Coins Movement</h2>
-            <table id="major-coins-table" class="market-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Price</th>
-                  <th>24h Change %</th>
-                  <th>24h Volume</th>
-                  <th>Market</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="5" class="market-loading">Loading market data...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <h2>📉 Top 10 Losers (24h)</h2>
+        <table id="top-losers-table" class="market-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+              <th>24h Change %</th>
+              <th>Market</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="4" class="market-loading">Loading market data...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
-    <!-- Market Changes Section -->
-    <section class="market-card full-width">
+    <!-- Row 2, Column 1: Top Volume -->
+    <section class="market-card">
+      <div class="market-section">
+        <h2>💰 Top 10 by Volume</h2>
+        <table id="top-volume-table" class="market-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+              <th>24h Change %</th>
+              <th>24h Volume</th>
+              <th>Market</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" class="market-loading">Loading market data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Row 2, Column 2: Major Coins -->
+    <section class="market-card">
+      <div class="market-section">
+        <h2>🏆 Major Coins Movement</h2>
+        <table id="major-coins-table" class="market-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+              <th>24h Change %</th>
+              <th>24h Volume</th>
+              <th>Market</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" class="market-loading">Loading market data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Row 3, Column 1: Market Changes -->
+    <section class="market-card">
       <div class="market-section">
         <h2>📊 Market Changes</h2>
         <div id="market-changes" class="market-changes">
@@ -144,8 +141,8 @@
       </div>
     </section>
 
-    <!-- Market Analytics Section -->
-    <section class="market-card full-width">
+    <!-- Row 3, Column 2: Market Analytics -->
+    <section class="market-card">
       <div class="market-section">
         <h2>📈 Market Analytics</h2>
         <div class="analytics-content">
@@ -186,6 +183,6 @@
 
   <!-- Load scripts -->
   <script src="theme-manager.js?v=1"></script>
-  <script src="market-insights-standalone.js?v=2.0"></script>
+  <script src="market-insights-standalone.js?v=1.1"></script>
 </body>
 </html>
