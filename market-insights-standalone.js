@@ -833,10 +833,11 @@ window.addEventListener('beforeunload', () => {
       binanceUrl = 'https://www.binance.com/en/trade/' + tradingSymbol + '?type=spot';
     }
     
-    return '<a href="' + binanceUrl + '" target="_blank" rel="noopener noreferrer" class="trading-link" title="Trade ' + tradingSymbol + ' on Binance">' +
-           '<strong>' + displayText + '</strong>' +
-           '<span class="trading-icon">🔗</span>' +
-           '</a>';
+    const linkStart = '<a href="' + binanceUrl + '" target="_blank" rel="noopener noreferrer" class="trading-link" title="Trade ' + tradingSymbol + ' on Binance">';
+    const linkContent = '<strong>' + displayText + '</strong><span class="trading-icon">🔗</span>';
+    const linkEnd = '</a>';
+    
+    return linkStart + linkContent + linkEnd;
   }
 
   showToast(message, type) {
