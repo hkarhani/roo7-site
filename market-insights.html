@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Market Insights</title>
+  <link rel="stylesheet" href="market-insights.css?v=1.0" />
+</head>
+<body>
+  <div class="market-header">
+    <div class="header-content">
+      <h1>📊 Market Insights</h1>
+      <div class="header-actions">
+        <button id="refresh-market-data" class="refresh-btn">🔄 Refresh</button>
+        <button id="back-to-dashboard" class="back-btn">← Back to Dashboard</button>
+      </div>
+    </div>
+    <div class="last-updated-container">
+      <span id="last-updated" class="last-updated">Last updated: Never</span>
+    </div>
+  </div>
+
+  <main class="market-grid">
+    <!-- Top Movers Section -->
+    <section class="market-card">
+      <div class="market-section">
+        <h2>📈 Top Movers (24h)</h2>
+        <div class="market-tables-container">
+          <div class="market-table-wrapper">
+            <h3 class="table-title positive">🟢 Top 10 Gainers</h3>
+            <table id="top-gainers-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>24h Change %</th>
+                  <th>24h Volume</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="market-table-wrapper">
+            <h3 class="table-title negative">🔴 Top 10 Losers</h3>
+            <table id="top-losers-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>24h Change %</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="4" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Volume and Major Coins Section -->
+    <section class="market-card">
+      <div class="market-section">
+        <div class="market-tables-container">
+          <div class="market-table-wrapper">
+            <h2>💰 Top 10 by Volume</h2>
+            <table id="top-volume-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>24h Change %</th>
+                  <th>24h Volume</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="market-table-wrapper">
+            <h2>🏆 Major Coins Movement</h2>
+            <table id="major-coins-table" class="market-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>24h Change %</th>
+                  <th>24h Volume</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" class="market-loading">Loading market data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Market Changes Section -->
+    <section class="market-card full-width">
+      <div class="market-section">
+        <h2>📊 Market Changes</h2>
+        <div id="market-changes" class="market-changes">
+          <div class="change-item">
+            <span class="change-label">📈 New Instruments Today:</span>
+            <span id="new-instruments-count" class="change-value loading">Loading...</span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">📉 Removed Instruments Today:</span>
+            <span id="removed-instruments-count" class="change-value loading">Loading...</span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">🔢 Total Active Instruments:</span>
+            <span id="total-instruments-count" class="change-value loading">Loading...</span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">📊 Data Source:</span>
+            <span class="change-value">Dynamic Market Data Service</span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">🔄 Auto Refresh:</span>
+            <span class="change-value">Every 5 minutes</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Market Analytics Section -->
+    <section class="market-card full-width">
+      <div class="market-section">
+        <h2>📈 Market Analytics</h2>
+        <div class="analytics-content">
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h3>💹 Market Summary</h3>
+              <div class="metric-grid">
+                <div class="metric">
+                  <span class="metric-label">Top Gainer:</span>
+                  <span id="top-gainer-metric" class="metric-value loading">Loading...</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Top Loser:</span>
+                  <span id="top-loser-metric" class="metric-value loading">Loading...</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Highest Volume:</span>
+                  <span id="highest-volume-metric" class="metric-value loading">Loading...</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Market Trend:</span>
+                  <span id="market-trend-metric" class="metric-value loading">Loading...</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="analytics-card">
+              <h3>🏆 Major Coins Performance</h3>
+              <div id="major-coins-performance" class="performance-list">
+                <div class="loading-text">Loading major coins performance...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Load scripts -->
+  <script src="theme-manager.js?v=1"></script>
+  <script src="market-insights-standalone.js?v=1.0"></script>
+</body>
+</html>

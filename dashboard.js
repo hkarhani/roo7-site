@@ -329,6 +329,15 @@ document.addEventListener("DOMContentLoaded", () => {
     modalManager.openAddAccountModal();
   };
 
+  // Market Insights button handler
+  const marketInsightsBtn = document.getElementById("market-insights-btn");
+  if (marketInsightsBtn) {
+    marketInsightsBtn.onclick = () => {
+      console.log("📊 MARKET INSIGHTS clicked");
+      window.location.href = "/market-insights.html";
+    };
+  }
+
   // Initialize
   fetchUser();
   loadAccounts();
