@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Auth Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="auth.css?v=2.1" />
+  <link rel="stylesheet" href="auth.css?v=1.9" />
 </head>
 <body class="auth-page">
   <div class="auth-container">
@@ -140,9 +140,10 @@
     let isRegister = false;
     let isSubmitting = false;
 
-    // Check for reset token in URL
+    // Check for reset token or magic token in URL
     const urlParams = new URLSearchParams(window.location.search);
     const resetToken = urlParams.get('reset_token');
+    const magicToken = urlParams.get('magic_token');
 
     // Use the same toast system as dashboard
     function showToast(message, type = 'info', duration = 4000) {
@@ -366,6 +367,43 @@
         submitButton.textContent = originalText;
       }
     });
+
+    // Handle magic token login
+    if (magicToken) {
+      showToast('Processing magic link login...', 'info');
+      
+      // Call the API to exchange token for access token
+      fetch('https://api.roo7.site/magic-login', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `token=${magicToken}`
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.access_token) {
+          showToast(`Welcome ${result.username}! Redirecting to dashboard...`, 'success');
+          localStorage.setItem('token', result.access_token);
+          
+          // Clear the token from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Redirect to dashboard
+          setTimeout(() => {
+            window.location.href = 'https://www.roo7.site/dashboard.html';
+          }, 2000);
+        } else {
+          showToast('Invalid or expired magic link', 'error');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      })
+      .catch(err => {
+        showToast('Error processing magic link', 'error');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
+    }
 
     // Check for reset token on page load
     if (resetToken) {
