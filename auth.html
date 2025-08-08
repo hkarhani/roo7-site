@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Auth Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="auth.css?v=1.9" />
+  <link rel="stylesheet" href="auth.css?v=3.0" />
 </head>
 <body class="auth-page">
   <div class="auth-container">
@@ -110,6 +110,20 @@
         </div>
         <button type="submit" id="reset-confirm-btn">Update Password</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Magic Link Loading Overlay -->
+  <div id="magic-loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h2>🪄 Processing Magic Link</h2>
+      <p id="magic-loading-message">Logging you in securely...</p>
+      <div class="loading-progress">
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -370,7 +384,22 @@
 
     // Handle magic token login
     if (magicToken) {
-      showToast('Processing magic link login...', 'info');
+      // Show loading overlay and hide auth container
+      const authContainer = document.querySelector('.auth-container');
+      const loadingOverlay = document.getElementById('magic-loading-overlay');
+      const loadingMessage = document.getElementById('magic-loading-message');
+      
+      authContainer.style.display = 'none';
+      loadingOverlay.style.display = 'flex';
+      
+      // Start progress animation
+      const progressFill = document.querySelector('.progress-fill');
+      progressFill.style.animation = 'progressAnimation 3s ease-in-out forwards';
+      
+      // Update loading message after 1 second
+      setTimeout(() => {
+        loadingMessage.textContent = 'Verifying your identity...';
+      }, 1000);
       
       // Call the API to exchange token for access token
       fetch('https://api.roo7.site/magic-login', {
@@ -384,22 +413,28 @@
       .then(response => response.json())
       .then(result => {
         if (result.access_token) {
-          showToast(`Welcome ${result.username}! Redirecting to dashboard...`, 'success');
+          loadingMessage.textContent = `Welcome back, ${result.username}! Redirecting...`;
           localStorage.setItem('token', result.access_token);
           
           // Clear the token from URL
           window.history.replaceState({}, document.title, window.location.pathname);
           
-          // Redirect to dashboard
+          // Redirect to dashboard after a short delay
           setTimeout(() => {
             window.location.href = 'https://www.roo7.site/dashboard.html';
-          }, 2000);
+          }, 1500);
         } else {
+          // Show error and restore auth container
+          loadingOverlay.style.display = 'none';
+          authContainer.style.display = 'block';
           showToast('Invalid or expired magic link', 'error');
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       })
       .catch(err => {
+        // Show error and restore auth container
+        loadingOverlay.style.display = 'none';
+        authContainer.style.display = 'block';
         showToast('Error processing magic link', 'error');
         window.history.replaceState({}, document.title, window.location.pathname);
       });
