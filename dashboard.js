@@ -388,13 +388,34 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Market Insights button handler
-  const marketInsightsBtn = document.getElementById("market-insights-btn");
-  if (marketInsightsBtn) {
-    marketInsightsBtn.onclick = () => {
-      console.log("📊 MARKET INSIGHTS clicked");
-      window.location.href = "/market-insights.html";
-    };
-  }
+  // Market Insights button handler
+    const marketInsightsBtn = document.getElementById("market-insights-btn");
+    if (marketInsightsBtn) {
+      marketInsightsBtn.onclick = () => {
+        console.log("📊 MARKET INSIGHTS clicked");
+        window.location.href = "/market-insights.html";
+      };
+    }
+
+    // Invoices button handler
+    const invoicesBtn = document.getElementById("invoices-btn");
+    if (invoicesBtn) {
+      invoicesBtn.onclick = () => {
+        console.log("📄 INVOICES clicked");
+        window.location.href = "/invoices.html";
+      };
+    }
+
+    // Referrals button handler
+    const referralsBtn = document.getElementById("referrals-btn");
+    if (referralsBtn) {
+      referralsBtn.onclick = () => {
+        console.log("🎯 REFERRALS clicked");
+        window.location.href = "/referrals.html";
+      };
+    }
+
+
 
   // Add event listener for window resize
   window.addEventListener('resize', debounce(handleResize, 250));

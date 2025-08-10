@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Invoices</title>
+  <link rel="stylesheet" href="dashboard.css?v=4.4" />
+  <link rel="stylesheet" href="invoices.css?v=1.0" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>📄 My Invoices</h1>
+
+    <div class="actions">
+      <button id="export-invoices-btn">📊 Export</button>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="back-to-dashboard">← Dashboard</button>
+    </div>
+  </div>
+
+  <main class="dashboard-grid invoices-grid">
+    <!-- Invoice Summary Section -->
+    <section id="section-summary" class="dashboard-card">
+      <h2>📊 Invoice Summary</h2>
+      <div class="summary-stats">
+        <div class="stat-card">
+          <div class="stat-label">Total Paid</div>
+          <div id="total-paid" class="stat-value positive">$0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Outstanding</div>
+          <div id="total-outstanding" class="stat-value warning">$0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Invoices</div>
+          <div id="total-count" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Current Tier</div>
+          <div id="current-tier" class="stat-value">N/A</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Invoice Filters Section -->
+    <section id="section-filters" class="dashboard-card">
+      <h2>🔍 Filters</h2>
+      <div class="filter-controls">
+        <div class="filter-group">
+          <label for="status-filter">Status:</label>
+          <select id="status-filter">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="overdue">Overdue</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="type-filter">Type:</label>
+          <select id="type-filter">
+            <option value="">All Types</option>
+            <option value="initial">Initial</option>
+            <option value="upgrade">Upgrade</option>
+            <option value="renewal">Renewal</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="date-from">From:</label>
+          <input type="date" id="date-from">
+        </div>
+        
+        <div class="filter-group">
+          <label for="date-to">To:</label>
+          <input type="date" id="date-to">
+        </div>
+        
+        <button id="apply-filters" class="filter-btn">Apply Filters</button>
+        <button id="clear-filters" class="filter-btn secondary">Clear</button>
+      </div>
+    </section>
+
+    <!-- Invoice Actions Section -->
+    <section id="section-actions" class="dashboard-card">
+      <h2>⚡ Quick Actions</h2>
+      <div class="action-buttons">
+        <button id="create-upgrade-btn" class="action-btn upgrade">
+          <span class="btn-icon">📈</span>
+          <span class="btn-text">Request Portfolio Upgrade</span>
+        </button>
+        <button id="view-subscription-btn" class="action-btn info">
+          <span class="btn-icon">📋</span>
+          <span class="btn-text">View Subscription Details</span>
+        </button>
+        <button id="payment-help-btn" class="action-btn help">
+          <span class="btn-icon">❓</span>
+          <span class="btn-text">Payment Help</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Invoices Table Section -->
+    <section id="section-invoices" class="dashboard-card">
+      <h2>📄 Invoice History</h2>
+      <div class="table-container">
+        <table id="invoices-table">
+          <thead>
+            <tr>
+              <th>Invoice ID</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Due Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" class="loading-message">Loading invoices...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Invoice Details Modal -->
+  <div id="invoice-modal" class="modal">
+    <div class="modal-content invoice-modal-content">
+      <span class="close" id="close-invoice-modal">&times;</span>
+      <h3 id="modal-title">Invoice Details</h3>
+      
+      <div id="invoice-details" class="invoice-details">
+        <!-- Invoice details will be populated here -->
+      </div>
+      
+      <div class="modal-actions">
+        <button id="download-invoice" class="action-btn primary">📥 Download</button>
+        <button id="print-invoice" class="action-btn secondary">🖨️ Print</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Help Modal -->
+  <div id="payment-help-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="close-help-modal">&times;</span>
+      <h3>💳 Payment Information</h3>
+      
+      <div class="help-content">
+        <div class="help-section">
+          <h4>🔗 Accepted Payment Methods</h4>
+          <ul>
+            <li>Bank Transfer (Wire Transfer)</li>
+            <li>Cryptocurrency (BTC, ETH, USDT)</li>
+            <li>Credit/Debit Card (Visa, MasterCard)</li>
+            <li>PayPal (for certain regions)</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h4>📞 Need Help?</h4>
+          <p>For payment assistance, please contact our support team:</p>
+          <ul>
+            <li>📧 Email: billing@roo7.site</li>
+            <li>💬 Live Chat: Available 24/7</li>
+            <li>📱 Phone: +1-800-ROO7-HELP</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h4>⏰ Payment Terms</h4>
+          <ul>
+            <li>Payment due within 30 days of invoice date</li>
+            <li>Late fees may apply after due date</li>
+            <li>Automatic suspension after 60 days overdue</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="theme-manager.js?v=1"></script>
+  <script src="invoices.js?v=1.0"></script>
+</body>
+</html>

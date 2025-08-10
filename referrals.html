@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Referral Program</title>
+  <link rel="stylesheet" href="dashboard.css?v=4.4" />
+  <link rel="stylesheet" href="referrals.css?v=1.0" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>🎯 Referral Program</h1>
+
+    <div class="actions">
+      <button id="generate-code-btn">🔄 Generate New Code</button>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="back-to-dashboard">← Dashboard</button>
+    </div>
+  </div>
+
+  <main class="dashboard-grid referrals-grid">
+    <!-- Referral Overview Section -->
+    <section id="section-overview" class="dashboard-card">
+      <h2>💰 Earnings Overview</h2>
+      <div class="earnings-stats">
+        <div class="stat-card primary">
+          <div class="stat-icon">💵</div>
+          <div class="stat-content">
+            <div class="stat-label">Current Balance</div>
+            <div id="current-balance" class="stat-value">$0.00</div>
+          </div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon">🎉</div>
+          <div class="stat-content">
+            <div class="stat-label">Total Earned</div>
+            <div id="total-earned" class="stat-value">$0.00</div>
+          </div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon">👥</div>
+          <div class="stat-content">
+            <div class="stat-label">Successful Referrals</div>
+            <div id="referrals-count" class="stat-value">0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Share Your Code Section -->
+    <section id="section-share" class="dashboard-card">
+      <h2>🔗 Share Your Referral Code</h2>
+      <div class="referral-code-section">
+        <div class="code-display">
+          <label for="referral-code-input">Your Referral Code:</label>
+          <div class="code-input-group">
+            <input type="text" id="referral-code-input" readonly placeholder="No code generated yet">
+            <button id="copy-code-btn" class="copy-btn" title="Copy Code">📋</button>
+          </div>
+        </div>
+        
+        <div class="link-display">
+          <label for="referral-link-input">Your Referral Link:</label>
+          <div class="link-input-group">
+            <input type="text" id="referral-link-input" readonly placeholder="No link available yet">
+            <button id="copy-link-btn" class="copy-btn" title="Copy Link">🔗</button>
+          </div>
+        </div>
+
+        <div class="share-buttons">
+          <button id="share-email" class="share-btn email">
+            <span class="share-icon">📧</span>
+            <span class="share-text">Email</span>
+          </button>
+          <button id="share-twitter" class="share-btn twitter">
+            <span class="share-icon">🐦</span>
+            <span class="share-text">Twitter</span>
+          </button>
+          <button id="share-linkedin" class="share-btn linkedin">
+            <span class="share-icon">💼</span>
+            <span class="share-text">LinkedIn</span>
+          </button>
+          <button id="share-whatsapp" class="share-btn whatsapp">
+            <span class="share-icon">💬</span>
+            <span class="share-text">WhatsApp</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Program Details Section -->
+    <section id="section-details" class="dashboard-card">
+      <h2>📋 Program Details</h2>
+      <div class="program-info">
+        <div class="info-card">
+          <div class="info-icon">💸</div>
+          <div class="info-content">
+            <h4>Commission Rate</h4>
+            <p>Earn <strong>20%</strong> of the first year subscription fee for each successful referral</p>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-icon">⏰</div>
+          <div class="info-content">
+            <h4>Payment Schedule</h4>
+            <p>Commissions are paid <strong>monthly</strong> for verified referrals with active subscriptions</p>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-icon">🎯</div>
+          <div class="info-content">
+            <h4>Qualification</h4>
+            <p>Referrals must complete signup and maintain active subscription for <strong>30 days</strong></p>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-icon">💰</div>
+          <div class="info-content">
+            <h4>Payout Methods</h4>
+            <p>Bank transfer, PayPal, or cryptocurrency (minimum payout: <strong>$50</strong>)</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Referral History Section -->
+    <section id="section-history" class="dashboard-card">
+      <h2>📊 Referral History</h2>
+      <div class="history-filters">
+        <select id="status-filter">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="qualified">Qualified</option>
+          <option value="paid">Paid Out</option>
+        </select>
+        <button id="filter-btn" class="filter-btn">Apply Filter</button>
+      </div>
+      
+      <div class="table-container">
+        <table id="referrals-table">
+          <thead>
+            <tr>
+              <th>Referred User</th>
+              <th>Email</th>
+              <th>Sign-up Date</th>
+              <th>Commission</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" class="loading-message">Loading referral history...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tips & Best Practices Section -->
+    <section id="section-tips" class="dashboard-card">
+      <h2>💡 Tips for Success</h2>
+      <div class="tips-content">
+        <div class="tip-item">
+          <div class="tip-icon">🎯</div>
+          <div class="tip-text">
+            <h4>Target the Right Audience</h4>
+            <p>Share with traders and investors who would benefit from automated trading strategies</p>
+          </div>
+        </div>
+        
+        <div class="tip-item">
+          <div class="tip-icon">💬</div>
+          <div class="tip-text">
+            <h4>Personal Recommendations</h4>
+            <p>Personal recommendations work best - explain how the service has helped you</p>
+          </div>
+        </div>
+        
+        <div class="tip-item">
+          <div class="tip-icon">📱</div>
+          <div class="tip-text">
+            <h4>Use Multiple Channels</h4>
+            <p>Share on social media, forums, and direct messages for maximum reach</p>
+          </div>
+        </div>
+        
+        <div class="tip-item">
+          <div class="tip-icon">⭐</div>
+          <div class="tip-text">
+            <h4>Highlight Benefits</h4>
+            <p>Focus on automated portfolio management, risk reduction, and 24/7 monitoring</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="section-faq" class="dashboard-card">
+      <h2>❓ Frequently Asked Questions</h2>
+      <div class="faq-content">
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>When will I receive my commission?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            <p>Commissions are paid monthly after your referral maintains an active subscription for 30 days. Payments are processed on the 1st of each month.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>How much can I earn per referral?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            <p>You earn 20% of the first year subscription fee. For Tier 1 ($500/year), you earn $100. For Tier 2 (8% of portfolio), commissions vary based on portfolio size.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Is there a limit to how many people I can refer?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            <p>No limit! You can refer as many people as you want. The more successful referrals, the more you earn.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>What happens if my referral cancels their subscription?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            <p>If a referral cancels within 30 days, the commission is not paid. If they cancel after 30 days, you keep the commission already earned.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="theme-manager.js?v=1"></script>
+  <script src="referrals.js?v=1.0"></script>
+</body>
+</html>
