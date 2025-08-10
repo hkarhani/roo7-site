@@ -1,4 +1,4 @@
-/* dashboard.css */
+/* dashboard.css - Mobile-Optimized Version */
 
 /* Base Theme */
 body {
@@ -24,14 +24,27 @@ body {
   margin-bottom: 25px;
 }
 
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  flex: 1;
+}
+
+.dashboard-header .actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .dashboard-header button {
-  margin-left: 10px;
   padding: 8px 14px;
   background: #0077cc;
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .dashboard-header button:hover {
@@ -46,41 +59,45 @@ body {
   background: #138496 !important;
 }
 
-/* GRID LAYOUT */
+/* GRID LAYOUT - Mobile First Approach */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 30px;
-  padding: 0 20px 40px;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+  gap: 20px;
+  padding: 0 15px 40px;
 }
 
-/* Section positioning */
+/* Section positioning - Mobile first, then desktop */
 #section-accounts {
   grid-column: 1;
   grid-row: 1;
+  order: 1;
 }
 
 #section-settings {
-  grid-column: 2;
-  grid-row: 1;
+  grid-column: 1;
+  grid-row: 2;
+  order: 2;
 }
 
 #section-portfolio {
   grid-column: 1;
-  grid-row: 2;
+  grid-row: 3;
+  order: 3;
 }
 
 #section-analytics {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 1;
+  grid-row: 4;
+  order: 4;
 }
 
 /* CARD STYLING FOR SECTIONS */
 .dashboard-card {
   background: #fff;
   border-radius: 10px;
-  padding: 20px;
+  padding: 15px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -105,23 +122,39 @@ body {
 h2 {
   margin-top: 0;
   margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+/* Mobile-friendly table container */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: -15px;
+  padding: 15px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  overflow-x: auto;
+  min-width: 600px; /* Minimum width for horizontal scroll */
 }
+
 th, td {
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-bottom: 1px solid #ddd;
   text-align: left;
   white-space: nowrap;
+  font-size: 14px;
 }
+
 th {
   background-color: #f0f0f0;
   font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
+
 .dark-theme th {
   background-color: #2a2a2a;
 }
@@ -142,6 +175,7 @@ button.delete-account {
   background: #0077cc;
   color: #fff;
   margin: 2px;
+  font-size: 13px;
 }
 button#open-modal:hover,
 button#add-instrument:hover,
@@ -159,7 +193,7 @@ button.delete-account:hover {
 
 /* MODAL STYLES */
 .modal {
-  display: none; /* Hidden by default */
+  display: none;
   position: fixed;
   z-index: 1000;
   left: 0;
@@ -172,13 +206,13 @@ button.delete-account:hover {
 .modal-content {
   background-color: #fff;
   margin: 5% auto;
-  padding: 30px;
+  padding: 20px;
   border-radius: 10px;
-  width: 90%;
+  width: 95%;
   max-width: 500px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: relative;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow-y: auto;
 }
 
@@ -193,8 +227,8 @@ button.delete-account:hover {
   font-size: 28px;
   font-weight: bold;
   position: absolute;
-  right: 20px;
-  top: 15px;
+  right: 15px;
+  top: 10px;
   cursor: pointer;
 }
 
@@ -222,8 +256,10 @@ button.delete-account:hover {
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px; /* Prevents zoom on iOS */
   font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #account-form input:focus,
@@ -265,21 +301,39 @@ button.delete-account:hover {
 
 .instrument-field {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.dark-theme .instrument-field {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.instrument-field input {
+  margin: 0;
+  flex: none;
+}
+
+.instrument-field .instrument-row {
+  display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.instrument-field input {
-  flex: 1;
-  margin: 0;
-}
-
 .instrument-field input[name="symbol"] {
   flex: 2;
+  min-width: 120px;
 }
 
 .instrument-field input[name="weight"] {
   flex: 1;
+  min-width: 80px;
 }
 
 .remove-instrument {
@@ -287,10 +341,10 @@ button.delete-account:hover {
   color: white;
   border: none;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,9 +358,10 @@ button.delete-account:hover {
 /* Form submit button styling */
 #account-form button[type="submit"] {
   background: #0077cc;
-  padding: 12px 20px;
+  padding: 14px 20px;
   font-size: 16px;
   margin-top: 10px;
+  width: 100%;
 }
 
 #account-form button[type="submit"]:hover {
@@ -317,31 +372,32 @@ button.delete-account:hover {
   align-self: flex-start;
   background: #17a2b8;
   margin-top: 5px;
+  width: auto;
 }
 
 #add-instrument:hover {
   background: #138496;
 }
 
-/* TOAST NOTIFICATION STYLES - Wider and Mobile Friendly */
+/* TOAST NOTIFICATION STYLES - Mobile Optimized */
 .toast {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  min-width: 350px;
-  max-width: 500px;
-  padding: 16px;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  max-width: none;
+  padding: 14px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10000;
-  transform: translateX(100%);
+  transform: translateY(-100%);
   transition: transform 0.3s ease-in-out;
   font-family: inherit;
   box-sizing: border-box;
 }
 
 .toast-show {
-  transform: translateX(0);
+  transform: translateY(0);
 }
 
 .toast-success {
@@ -379,6 +435,7 @@ button.delete-account:hover {
   flex: 1;
   word-wrap: break-word;
   line-height: 1.4;
+  font-size: 14px;
 }
 
 .toast-close {
@@ -419,23 +476,24 @@ button.delete-account:hover {
 /* ACCOUNT ACTION ICONS */
 .account-actions {
   display: flex;
-  gap: 8px;
+  gap: 5px;
   align-items: center;
   justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 .action-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   border: none;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .troubleshoot-icon {
@@ -477,13 +535,13 @@ button.delete-account:hover {
 .hedge-modal-content {
   background-color: #fff;
   margin: 5% auto;
-  padding: 30px;
+  padding: 20px;
   border-radius: 10px;
-  width: 90%;
+  width: 95%;
   max-width: 500px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: relative;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow-y: auto;
 }
 
@@ -504,8 +562,10 @@ button.delete-account:hover {
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hedge-form input:focus,
@@ -539,13 +599,14 @@ button.delete-account:hover {
 
 .hedge-form button[type="submit"] {
   background: #0077cc;
-  padding: 12px 20px;
+  padding: 14px 20px;
   font-size: 16px;
   margin-top: 10px;
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  width: 100%;
 }
 
 .hedge-form button[type="submit"]:hover {
@@ -557,6 +618,7 @@ button.delete-account:hover {
   display: inline-flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .status-badge {
@@ -591,19 +653,19 @@ button.delete-account:hover {
 .test-status-success {
   color: #28a745;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .test-status-failed {
   color: #dc3545;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .test-status-na {
   color: #6c757d;
   font-weight: 500;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .dark-theme .test-status-success {
@@ -630,19 +692,19 @@ button.delete-account:hover {
   background: #17a2b8 !important;
   color: white !important;
   border: 2px solid #17a2b8 !important;
-  padding: 10px 15px !important;
+  padding: 12px 15px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   margin: 10px 0 !important;
-  align-self: flex-start !important;
-  width: auto !important;
-  min-width: 220px !important;
+  align-self: stretch !important;
+  width: 100% !important;
   position: relative !important;
   z-index: 10 !important;
   opacity: 1 !important;
   visibility: visible !important;
+  box-sizing: border-box !important;
 }
 
 .use-same-credentials:hover {
@@ -684,19 +746,21 @@ button.delete-account:hover {
 /* FORM ACTIONS */
 .form-actions {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-top: 15px;
-  justify-content: flex-end;
 }
 
 .cancel-button {
   background: #6c757d !important;
   color: white !important;
   border: none !important;
-  padding: 12px 20px !important;
+  padding: 14px 20px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
   font-size: 16px !important;
+  width: 100% !important;
+  order: 2;
 }
 
 .cancel-button:hover {
@@ -708,10 +772,12 @@ button.delete-account:hover {
   background: #0077cc !important;
   color: #fff !important;
   border: none !important;
-  padding: 12px 20px !important;
+  padding: 14px 20px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
   font-size: 16px !important;
+  width: 100% !important;
+  order: 1;
 }
 
 .form-actions button[type="submit"]:hover {
@@ -721,14 +787,15 @@ button.delete-account:hover {
 /* TOGGLE SWITCHES */
 .toggle-group {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  gap: 15px;
   margin-top: 15px;
 }
 
 .toggle-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .toggle-switch {
@@ -783,172 +850,151 @@ input:checked + .toggle-slider:before {
 .toggle-label {
   font-weight: 500;
   color: #666;
+  font-size: 14px;
 }
 
 .dark-theme .toggle-label {
   color: #ccc;
 }
 
-/* MOBILE RESPONSIVENESS */
-@media (max-width: 768px) {
+/* DESKTOP BREAKPOINTS */
+@media (min-width: 769px) {
   .dashboard-header {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
-    text-align: center;
+    padding: 20px;
   }
 
   .dashboard-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
 
   .dashboard-header .actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-
-  .dashboard-header button {
-    margin: 0;
-    padding: 10px 16px;
-    font-size: 14px;
+    flex-wrap: nowrap;
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding: 0 15px 30px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 30px;
+    padding: 0 20px 40px;
+  }
+
+  #section-accounts {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #section-settings {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  #section-portfolio {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #section-analytics {
+    grid-column: 2;
+    grid-row: 2;
   }
 
   .dashboard-card {
-    padding: 15px;
-  }
-
-  /* Table scrolling on mobile */
-  .dashboard-card {
-    overflow-x: auto;
-  }
-
-  table {
-    min-width: 600px;
-  }
-
-  th, td {
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-
-  /* Modal adjustments */
-  .modal-content,
-  .hedge-modal-content {
-    width: 95%;
-    margin: 10% auto;
     padding: 20px;
-    max-height: 85vh;
-  }
-
-  /* Form adjustments */
-  .instrument-field {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .instrument-field input {
-    min-width: 120px;
-  }
-
-  .form-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .form-actions button {
-    width: 100%;
-  }
-
-  /* Toggle group mobile layout */
-  .toggle-group {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  /* Toast mobile positioning */
-  .toast {
-    right: 10px;
-    left: 10px;
-    min-width: auto;
-    max-width: none;
-    transform: translateY(-100%);
-  }
-
-  .toast-show {
-    transform: translateY(0);
-  }
-
-  /* Account actions mobile */
-  .account-actions {
-    flex-direction: column;
-    gap: 5px;
-    align-items: flex-start;
-  }
-
-  .action-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-header {
-    padding: 10px;
-  }
-
-  .dashboard-header h1 {
-    font-size: 1.3rem;
-  }
-
-  .dashboard-header button {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .dashboard-grid {
-    padding: 0 10px 20px;
-  }
-
-  .dashboard-card {
-    padding: 12px;
   }
 
   h2 {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
+  }
+
+  th, td {
+    padding: 10px 12px;
+    font-size: 14px;
   }
 
   .modal-content,
   .hedge-modal-content {
-    padding: 15px;
+    width: 90%;
+    max-width: 500px;
     margin: 5% auto;
+    padding: 30px;
+    max-height: 80vh;
   }
 
   .toast {
-    top: 10px;
-    right: 5px;
-    left: 5px;
-    padding: 12px;
+    top: 20px;
+    right: 20px;
+    left: auto;
+    min-width: 350px;
+    max-width: 500px;
+    transform: translateX(100%);
   }
 
-  .toast-message {
-    font-size: 14px;
+  .toast-show {
+    transform: translateX(0);
   }
 
-  th, td {
-    padding: 6px 8px;
-    font-size: 13px;
+  .instrument-field {
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
 
-  table {
-    min-width: 500px;
+  .instrument-field .instrument-row {
+    display: contents;
+  }
+
+  .form-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .form-actions button {
+    width: auto !important;
+  }
+
+  .cancel-button {
+    order: 1;
+  }
+
+  .form-actions button[type="submit"] {
+    order: 2;
+  }
+
+  .toggle-group {
+    flex-direction: row;
+    gap: 20px;
+  }
+
+  .use-same-credentials {
+    align-self: flex-start !important;
+    width: auto !important;
+    min-width: 220px !important;
+  }
+
+  .account-actions {
+    flex-wrap: nowrap;
+  }
+
+  .action-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dashboard-header {
+    padding: 25px;
+  }
+
+  .dashboard-grid {
+    gap: 35px;
+    padding: 0 30px 50px;
+  }
+
+  .dashboard-card {
+    padding: 25px;
   }
 }

@@ -441,18 +441,25 @@ class ModalManager {
     this.addInstrumentBtn.style.display = "none";
   }
 
-  addInstrumentField(sym = "", wt = 0) {
-    const div = document.createElement("div");
-    div.className = "instrument-field";
-    div.innerHTML = `
+ // addInstrumentField
+
+  // Updated addInstrumentField function for better mobile layout
+// Replace the existing addInstrumentField function in dashboard-modal.js
+
+addInstrumentField(sym = "", wt = 0) {
+  const div = document.createElement("div");
+  div.className = "instrument-field";
+  div.innerHTML = `
+    <div class="instrument-row">
       <input type="text" name="symbol" placeholder="Symbol (e.g., BTCUSDT)" value="${sym}">
       <input type="number" name="weight" placeholder="Weight (%)" value="${wt}" step="0.01" min="0" max="100">
       <button type="button" class="remove-instrument">×</button>
-    `;
-    this.instrumentsWrap.appendChild(div);
-    
-    div.querySelector(".remove-instrument").addEventListener("click", () => div.remove());
-  }
+    </div>
+  `;
+  this.instrumentsWrap.appendChild(div);
+  
+  div.querySelector(".remove-instrument").addEventListener("click", () => div.remove());
+}
 
   // FORM SUBMISSION
   async submitAccount(e) {

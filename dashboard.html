@@ -1,4 +1,3 @@
-<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +8,7 @@
 </head>
 <body>
   <div class="dashboard-header">
-    <h1>Welcome, <strong id="user-fullname"></strong> </h1>
+    <h1>Welcome, <strong id="user-fullname"></strong></h1>
 
     <div class="actions">
       <button id="market-insights-btn">📊 Market Insights</button>
@@ -22,33 +21,37 @@
     <!-- Section 1: Live Accounts Table (Top Left) -->
     <section id="section-accounts" class="dashboard-card">
       <h2>Live Accounts</h2>
-      <table id="accounts-table">
-        <thead>
-          <tr>
-            <th>Account Name</th>
-            <th>Strategy</th>
-            <th>Value ($)</th>
-            <th>Hedge %</th>
-            <th>Test Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-container">
+        <table id="accounts-table">
+          <thead>
+            <tr>
+              <th>Account Name</th>
+              <th>Strategy</th>
+              <th>Value ($)</th>
+              <th>Hedge %</th>
+              <th>Test Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- Section 2: Account Settings (Top Right) -->
     <section id="section-settings" class="dashboard-card">
       <h2>Account Settings</h2>
-      <table id="settings-table">
-        <thead>
-          <tr>
-            <th>Account</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-container">
+        <table id="settings-table">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
       <button id="open-modal">Add New Account</button>
     </section>
 
@@ -57,9 +60,9 @@
       <h2>Portfolio Overview</h2>
       <p>Portfolio analytics and performance metrics will be displayed here.</p>
       
-      <div style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
+      <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
         <h3 style="margin-top: 0; color: #666; font-size: 16px;">📊 Coming Soon:</h3>
-        <ul style="color: #666; font-size: 14px; line-height: 1.6;">
+        <ul style="color: #666; font-size: 14px; line-height: 1.6; padding-left: 20px;">
           <li>📈 Combined portfolio performance</li>
           <li>💰 Total portfolio value tracking</li>
           <li>📊 Asset allocation breakdown</li>
@@ -74,9 +77,9 @@
       <h2>Trading Analytics</h2>
       <p>Advanced trading analytics and strategy performance reports.</p>
       
-      <div style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
+      <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
         <h3 style="margin-top: 0; color: #666; font-size: 16px;">🚀 Planned Features:</h3>
-        <ul style="color: #666; font-size: 14px; line-height: 1.6;">
+        <ul style="color: #666; font-size: 14px; line-height: 1.6; padding-left: 20px;">
           <li>📊 Strategy performance comparison</li>
           <li>💹 Trade execution analytics</li>
           <li>🎯 Success rate metrics</li>
@@ -116,8 +119,8 @@
         
         <!-- Action buttons -->
         <div class="form-actions">
-          <button type="button" id="cancel-edit" class="cancel-button hidden">Cancel</button>
           <button type="submit">Save Account</button>
+          <button type="button" id="cancel-edit" class="cancel-button hidden">Cancel</button>
         </div>
       </form>
     </div>
@@ -162,4 +165,4 @@
  <script src="dashboard.js?v=7.1"></script> 
 
 </body>
-</html>
+</html> 
