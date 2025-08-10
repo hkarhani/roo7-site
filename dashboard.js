@@ -1,4 +1,4 @@
-// dashboard.js - Main Dashboard Logic
+// dashboard.js - Main Dashboard Logic (Mobile Optimized)
 
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = "https://api.roo7.site";
@@ -56,6 +56,119 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "/auth.html";
   }
 
+  // Updated mobile-optimized updateAccountTables function
+  function updateAccountTables(accounts) {
+    const liveTbody = document.querySelector("#accounts-table tbody");
+    const settingsTbody = document.querySelector("#settings-table tbody");
+
+    liveTbody.innerHTML = "";
+    settingsTbody.innerHTML = "";
+
+    accounts.forEach(acc => {
+      // Escape and sanitize account name and other text fields
+      const accountName = (acc.account_name || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
+      const strategy = (acc.strategy || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
+      
+      // Mobile-friendly strategy abbreviations
+      let strategyDisplay = strategy;
+      if (window.innerWidth <= 768) {
+        switch(strategy) {
+          case 'Standard Vapaus':
+            strategyDisplay = 'Standard';
+            break;
+          case 'Top X Instruments of Vapaus':
+            strategyDisplay = `Top ${acc.top_x_count || 'X'}`;
+            break;
+          case 'Custom Portfolio Rebalancing':
+            strategyDisplay = 'Custom';
+            break;
+          default:
+            strategyDisplay = strategy.length > 8 ? strategy.substring(0, 8) + '...' : strategy;
+        }
+      }
+      
+      // Status badges
+      let statusBadges = '';
+      if (acc.is_disabled) {
+        statusBadges += '<span class="status-badge status-disabled" title="Account Disabled">⏸️</span>';
+      }
+      if (acc.is_revoked) {
+        statusBadges += '<span class="status-badge status-revoked" title="Access Revoked">🚫</span>';
+      }
+
+      // Test status formatting - mobile optimized
+      let testStatusHtml = '';
+      switch(acc.test_status) {
+        case 'successful':
+          testStatusHtml = '<span class="test-status-success">✅ Success</span>';
+          break;
+        case 'failed':
+          testStatusHtml = '<span class="test-status-failed">❌ Failed</span>';
+          break;
+        default:
+          testStatusHtml = '<span class="test-status-na">⚪ N/A</span>';
+          break;
+      }
+
+      // Format current value safely - mobile optimized
+      let currentValueDisplay = 'N/A';
+      if (acc.current_value !== undefined && acc.current_value !== null && !isNaN(acc.current_value)) {
+        const value = parseFloat(acc.current_value);
+        if (window.innerWidth <= 768) {
+          // Mobile: Show abbreviated format
+          if (value >= 1000000) {
+            currentValueDisplay = '$' + (value / 1000000).toFixed(1) + 'M';
+          } else if (value >= 1000) {
+            currentValueDisplay = '$' + (value / 1000).toFixed(1) + 'K';
+          } else {
+            currentValueDisplay = '$' + value.toFixed(0);
+          }
+        } else {
+          currentValueDisplay = '$' + value.toFixed(2);
+        }
+      }
+
+      // Format hedge percent safely - mobile optimized
+      let hedgePercentDisplay = 'N/A';
+      if (acc.hedge_percent !== undefined && acc.hedge_percent !== null && !isNaN(acc.hedge_percent)) {
+        hedgePercentDisplay = parseFloat(acc.hedge_percent).toFixed(1) + '%';
+      }
+
+      // Mobile-friendly account name (truncate if too long)
+      let accountNameDisplay = accountName;
+      if (window.innerWidth <= 768 && accountName.length > 12) {
+        accountNameDisplay = accountName.substring(0, 12) + '...';
+      }
+
+      liveTbody.innerHTML += `
+        <tr>
+          <td>
+            <div class="account-status">
+              <span title="${accountName}">${accountNameDisplay}</span>
+              ${statusBadges}
+            </div>
+          </td>
+          <td title="${strategy}">${strategyDisplay}</td>
+          <td>${currentValueDisplay}</td>
+          <td>${hedgePercentDisplay}</td>
+          <td>${testStatusHtml}</td>
+          <td class="account-actions">
+            <button class="action-icon troubleshoot-icon" data-account="${accountName}" title="Troubleshoot">🔧</button>
+            <button class="action-icon hedge-edit-icon" data-id="${acc.id || ''}" title="Edit Settings">⚙️</button>
+          </td>
+        </tr>`;
+
+      settingsTbody.innerHTML += `
+        <tr>
+          <td title="${accountName}">${accountNameDisplay}</td>
+          <td>
+            <button class="edit-account" data-id="${acc.id || ''}" data-name="${accountName}">Edit</button>
+            <button class="delete-account" data-id="${acc.id || ''}">Del</button>
+          </td>
+        </tr>`;
+    });
+  }
+
   // Load accounts and bind events
   window.loadAccounts = async function() {
     console.log("📋 Loading accounts...");
@@ -94,82 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast(`Failed to load accounts: ${error.message}`, 'error');
     }
   };
-
-  function updateAccountTables(accounts) {
-    const liveTbody = document.querySelector("#accounts-table tbody");
-    const settingsTbody = document.querySelector("#settings-table tbody");
-
-    liveTbody.innerHTML = "";
-    settingsTbody.innerHTML = "";
-
-    accounts.forEach(acc => {
-      // Escape and sanitize account name and other text fields
-      const accountName = (acc.account_name || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
-      const strategy = (acc.strategy || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
-      
-      // Status badges
-      let statusBadges = '';
-      if (acc.is_disabled) {
-        statusBadges += '<span class="status-badge status-disabled" title="Account Disabled">⏸️</span>';
-      }
-      if (acc.is_revoked) {
-        statusBadges += '<span class="status-badge status-revoked" title="Access Revoked">🚫</span>';
-      }
-
-      // Test status formatting
-      let testStatusHtml = '';
-      switch(acc.test_status) {
-        case 'successful':
-          testStatusHtml = '<span class="test-status-success">✅ Successful</span>';
-          break;
-        case 'failed':
-          testStatusHtml = '<span class="test-status-failed">❌ Failed</span>';
-          break;
-        default:
-          testStatusHtml = '<span class="test-status-na">⚪ N/A</span>';
-          break;
-      }
-
-      // Format current value safely
-      let currentValueDisplay = 'N/A';
-      if (acc.current_value !== undefined && acc.current_value !== null && !isNaN(acc.current_value)) {
-        currentValueDisplay = '$' + parseFloat(acc.current_value).toFixed(2);
-      }
-
-      // Format hedge percent safely
-      let hedgePercentDisplay = 'N/A';
-      if (acc.hedge_percent !== undefined && acc.hedge_percent !== null && !isNaN(acc.hedge_percent)) {
-        hedgePercentDisplay = parseFloat(acc.hedge_percent).toFixed(1) + '%';
-      }
-
-      liveTbody.innerHTML += `
-        <tr>
-          <td>
-            <div class="account-status">
-              ${accountName}
-              ${statusBadges}
-            </div>
-          </td>
-          <td>${strategy}</td>
-          <td>${currentValueDisplay}</td>
-          <td>${hedgePercentDisplay}</td>
-          <td>${testStatusHtml}</td>
-          <td class="account-actions">
-            <button class="action-icon troubleshoot-icon" data-account="${accountName}" title="Troubleshoot">🔧</button>
-            <button class="action-icon hedge-edit-icon" data-id="${acc.id || ''}" title="Edit Settings">⚙️</button>
-          </td>
-        </tr>`;
-
-      settingsTbody.innerHTML += `
-        <tr>
-          <td>${accountName}</td>
-          <td>
-            <button class="edit-account" data-id="${acc.id || ''}" data-name="${accountName}">Edit</button>
-            <button class="delete-account" data-id="${acc.id || ''}">Delete</button>
-          </td>
-        </tr>`;
-    });
-  }
 
   function bindAccountEvents(accounts) {
     // Clear any existing event listeners and bind fresh ones
@@ -321,6 +358,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Add resize handler for mobile optimization
+  function handleResize() {
+    // Reload tables on resize to update mobile/desktop formatting
+    if (window.loadAccounts) {
+      window.loadAccounts();
+    }
+  }
+
+  // Debounce function to limit resize event calls
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
   // Event handlers
   logoutBtn.onclick = logout;
   const openModalBtn = document.getElementById("open-modal");
@@ -337,6 +395,9 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "/market-insights.html";
     };
   }
+
+  // Add event listener for window resize
+  window.addEventListener('resize', debounce(handleResize, 250));
 
   // Initialize
   fetchUser();

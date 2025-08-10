@@ -136,15 +136,78 @@ h2 {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px; /* Minimum width for horizontal scroll */
+  min-width: 100%; /* Remove minimum width constraint */
 }
 
 th, td {
-  padding: 8px 10px;
+  padding: 6px 4px;
   border-bottom: 1px solid #ddd;
   text-align: left;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* Mobile-specific table styling */
+@media (max-width: 768px) {
+  th, td {
+    padding: 4px 2px;
+    font-size: 10px;
+    vertical-align: top;
+  }
+  
+  /* Make specific columns narrower on mobile */
+  #accounts-table th:nth-child(1), /* Account Name */
+  #accounts-table td:nth-child(1) {
+    max-width: 80px;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.1;
+  }
+  
+  #accounts-table th:nth-child(2), /* Strategy */
+  #accounts-table td:nth-child(2) {
+    max-width: 60px;
+    white-space: normal;
+    word-wrap: break-word;
+    font-size: 9px;
+  }
+  
+  #accounts-table th:nth-child(3), /* Value */
+  #accounts-table td:nth-child(3) {
+    max-width: 50px;
+    font-size: 9px;
+  }
+  
+  #accounts-table th:nth-child(4), /* Hedge % */
+  #accounts-table td:nth-child(4) {
+    max-width: 40px;
+    font-size: 9px;
+  }
+  
+  #accounts-table th:nth-child(5), /* Test Status */
+  #accounts-table td:nth-child(5) {
+    max-width: 45px;
+    font-size: 8px;
+  }
+  
+  #accounts-table th:nth-child(6), /* Actions */
+  #accounts-table td:nth-child(6) {
+    max-width: 60px;
+  }
+  
+  /* Settings table mobile optimization */
+  #settings-table th:nth-child(1),
+  #settings-table td:nth-child(1) {
+    max-width: 120px;
+    white-space: normal;
+    word-wrap: break-word;
+  }
+  
+  #settings-table th:nth-child(2),
+  #settings-table td:nth-child(2) {
+    max-width: 120px;
+  }
 }
 
 th {
@@ -162,20 +225,33 @@ th {
   border-bottom-color: #444;
 }
 
-/* Buttons inside cards */
+/* Buttons inside cards - Mobile Optimized */
 button#open-modal,
 button#add-instrument,
 button[type="submit"],
 button.edit-account,
 button.delete-account {
-  padding: 8px 14px;
+  padding: 6px 10px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   background: #0077cc;
   color: #fff;
-  margin: 2px;
-  font-size: 13px;
+  margin: 1px;
+  font-size: 11px;
+}
+
+/* Mobile specific button sizing */
+@media (max-width: 768px) {
+  button#open-modal,
+  button#add-instrument,
+  button[type="submit"],
+  button.edit-account,
+  button.delete-account {
+    padding: 4px 6px;
+    font-size: 9px;
+    border-radius: 3px;
+  }
 }
 button#open-modal:hover,
 button#add-instrument:hover,
@@ -473,10 +549,10 @@ button.delete-account:hover {
   color: #60a5fa;
 }
 
-/* ACCOUNT ACTION ICONS */
+/* ACCOUNT ACTION ICONS - Mobile Optimized */
 .account-actions {
   display: flex;
-  gap: 5px;
+  gap: 2px;
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
@@ -486,14 +562,23 @@ button.delete-account:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   border: none;
-  font-size: 14px;
+  font-size: 10px;
+}
+
+/* Mobile specific action icons */
+@media (max-width: 768px) {
+  .action-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 8px;
+  }
 }
 
 .troubleshoot-icon {
@@ -649,23 +734,47 @@ button.delete-account:hover {
   color: #dc3545 !important;
 }
 
-/* TEST STATUS INDICATORS */
+/* TEST STATUS INDICATORS - Mobile Optimized */
 .test-status-success {
   color: #28a745;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 8px;
 }
 
 .test-status-failed {
   color: #dc3545;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 8px;
 }
 
 .test-status-na {
   color: #6c757d;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 8px;
+}
+
+/* Mobile specific test status */
+@media (max-width: 768px) {
+  .test-status-success:before {
+    content: "✅";
+    font-size: 10px;
+  }
+  
+  .test-status-failed:before {
+    content: "❌";
+    font-size: 10px;
+  }
+  
+  .test-status-na:before {
+    content: "⚪";
+    font-size: 10px;
+  }
+  
+  .test-status-success,
+  .test-status-failed,
+  .test-status-na {
+    font-size: 0; /* Hide text, show only icons */
+  }
 }
 
 .dark-theme .test-status-success {
