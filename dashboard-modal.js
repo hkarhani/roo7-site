@@ -411,8 +411,11 @@ class ModalManager {
   // STRATEGY MODAL FUNCTIONS
   openStrategyModal(account) {
     console.log("🎯 Opening strategy assignment modal for:", account.account_name);
+    console.log("📋 Account strategy data:", account.strategy);
+    console.log("📋 Full account data:", account);
     
     this.currentStrategyAccountId = account.id;
+    this.currentAccount = account; // Store current account data for access
     
     // Display account information
     document.getElementById("strategy-account-name").textContent = account.account_name;
@@ -423,10 +426,22 @@ class ModalManager {
     this.updateStrategyOptionsForAccount(account.exchange || "Binance", account.account_type || "SPOT");
     
     // Set current strategy if assigned
-    if (account.strategy) {
-      this.strategySelect.value = account.strategy;
-      this.handleStrategySelectionChange();
-      document.getElementById("remove-strategy").style.display = "inline-block";
+    if (account.strategy && account.strategy.trim() !== '') {
+      // Find the strategy by name since account.strategy is the strategy name, not ID
+      const strategyConfig = this.availableStrategies.find(s => s.name === account.strategy);
+      
+      if (strategyConfig) {
+        console.log("🎯 Found strategy config:", strategyConfig.name);
+        this.strategySelect.value = strategyConfig.id; // Use the strategy ID for the dropdown
+        this.currentStrategyConfig = strategyConfig;
+        this.handleStrategySelectionChange();
+        document.getElementById("remove-strategy").style.display = "inline-block";
+      } else {
+        console.warn("⚠️ Strategy config not found for strategy name:", account.strategy);
+        this.strategySelect.value = "";
+        this.hideStrategyCustomization();
+        document.getElementById("remove-strategy").style.display = "none";
+      }
     } else {
       this.strategySelect.value = "";
       this.hideStrategyCustomization();
@@ -441,6 +456,7 @@ class ModalManager {
     this.strategyModal.style.display = "none";
     this.strategyForm.reset();
     this.currentStrategyAccountId = null;
+    this.currentAccount = null; // Reset current account data
     this.hideStrategyCustomization();
     console.log("✅ Strategy modal closed");
   }
@@ -537,8 +553,22 @@ class ModalManager {
     }
     
     try {
-      this.currentStrategyConfig = JSON.parse(selectedOption.dataset.strategy);
+      // Try to get strategy config from the option dataset first
+      if (selectedOption.dataset.strategy) {
+        this.currentStrategyConfig = JSON.parse(selectedOption.dataset.strategy);
+      } else {
+        // Fallback: find strategy in availableStrategies array
+        this.currentStrategyConfig = this.availableStrategies.find(s => s.id === selectedStrategyId);
+      }
+      
+      if (!this.currentStrategyConfig) {
+        console.error("❌ Strategy config not found for ID:", selectedStrategyId);
+        this.hideStrategyCustomization();
+        return;
+      }
+      
       console.log("🔄 Strategy selected:", this.currentStrategyConfig.name);
+      console.log("📋 Strategy config:", this.currentStrategyConfig);
       
       this.showStrategyCustomization();
       
@@ -620,8 +650,11 @@ class ModalManager {
   // Show strategy customization based on selected strategy
   showStrategyCustomization() {
     if (!this.currentStrategyConfig || !this.currentStrategyConfig.parameters) {
+      console.warn("❌ No strategy config or parameters found");
       return;
     }
+    
+    console.log("🎨 Showing strategy customization for:", this.currentStrategyConfig.name);
     
     const customizationDiv = document.getElementById('strategy-customization');
     customizationDiv.style.display = 'block';
@@ -636,9 +669,11 @@ class ModalManager {
       
       if (paramName === 'custom_instruments') {
         // Handle custom portfolio specially
+        console.log("📋 Setting up custom portfolio section");
         this.showCustomPortfolioSection();
       } else if (paramName === 'top_x_count') {
         // Handle top X count parameter
+        console.log("🔢 Setting up top X count parameter");
         const wrapper = document.createElement('div');
         wrapper.className = 'parameter-field';
         wrapper.innerHTML = `
@@ -654,6 +689,7 @@ class ModalManager {
         this.strategyParametersForm.appendChild(wrapper);
       } else if (paramName === 'rebalance_frequency') {
         // Handle rebalance frequency dropdown
+        console.log("⏰ Setting up rebalance frequency parameter");
         const wrapper = document.createElement('div');
         wrapper.className = 'parameter-field';
         const options = param.options.map(opt => 
@@ -669,6 +705,37 @@ class ModalManager {
         this.strategyParametersForm.appendChild(wrapper);
       }
     });
+    
+    // If we're opening strategy modal for an existing account with data, populate it
+    this.populateExistingStrategyData();
+  }
+  
+  // Populate existing strategy data for accounts that already have strategy assigned
+  populateExistingStrategyData() {
+    if (!this.currentAccount) {
+      console.log("📝 No current account - using defaults");
+      return;
+    }
+    
+    console.log("🔍 Populating existing account strategy data:", this.currentAccount);
+    
+    // Populate top_x_count if exists
+    if (this.currentAccount.top_x_count !== undefined && this.currentAccount.top_x_count !== null) {
+      const topXInput = document.getElementById("strategy-param-top_x_count");
+      if (topXInput) {
+        topXInput.value = this.currentAccount.top_x_count;
+        console.log("🔢 Set top_x_count to:", this.currentAccount.top_x_count);
+      }
+    }
+    
+    // Populate custom portfolio if exists
+    if (this.currentAccount.custom_portfolio && Array.isArray(this.currentAccount.custom_portfolio) && this.currentAccount.custom_portfolio.length > 0) {
+      console.log("📊 Loading existing custom portfolio:", this.currentAccount.custom_portfolio);
+      this.portfolioInstruments.innerHTML = ''; // Clear first
+      this.currentAccount.custom_portfolio.forEach(instrument => {
+        this.addPortfolioInstrument(instrument.symbol, instrument.weight);
+      });
+    }
   }
 
   hideStrategyCustomization() {

@@ -223,6 +223,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const accounts = await res.json();
       console.log(`✅ Loaded ${accounts.length} accounts`);
       
+      // Store accounts globally for modal access
+      window.lastLoadedAccounts = accounts;
+      
       updateAccountTables(accounts);
       bindAccountEvents(accounts);
       updateStrategyManagement(accounts);
