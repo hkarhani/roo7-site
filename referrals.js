@@ -209,33 +209,55 @@ document.addEventListener("DOMContentLoaded", () => {
     generateBtn.textContent = 'Generating...';
     
     try {
+      console.log('🔄 Generating referral code...');
+      console.log('📡 API URL:', `${INVOICING_API_BASE}/referrals/generate-code`);
+      console.log('🔑 Token exists:', !!token);
+      
       const response = await fetch(`${INVOICING_API_BASE}/referrals/generate-code`, {
         method: 'POST',
         headers: getAuthHeaders(token)
       });
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        let errorMessage;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || `HTTP ${response.status}: ${response.statusText}`;
+          console.error('❌ Error response:', errorData);
+        } catch (parseError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          console.error('❌ Could not parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      console.log('✅ Response data:', data);
       
       if (data.referral_code) {
         // Update local data
         referralData.referral_code = data.referral_code;
         referralData.referral_link = `https://www.roo7.site/signup?ref=${data.referral_code}`;
         
+        console.log('✅ Updated referral data:', {
+          code: referralData.referral_code,
+          link: referralData.referral_link
+        });
+        
         // Update UI
         updateUI();
         
-        showToast('New referral code generated successfully!', 'success');
+        showToast('Referral code generated successfully!', 'success');
       } else {
-        throw new Error('Invalid response from server');
+        console.error('❌ Invalid response - no referral_code field:', data);
+        throw new Error('Invalid response from server - missing referral_code');
       }
       
     } catch (error) {
-      console.error('Error generating referral code:', error);
+      console.error('❌ Error generating referral code:', error);
       showToast(`Failed to generate code: ${error.message}`, 'error');
     } finally {
       generateBtn.disabled = false;
