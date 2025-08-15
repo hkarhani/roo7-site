@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css?v=5.2" />
+  <link rel="stylesheet" href="dashboard.css?v=5.3" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -47,7 +47,10 @@
 
     <!-- Section 2: Strategy Management (Top Right) -->
     <section id="section-strategy" class="dashboard-card">
-      <h2>Strategy Management</h2>
+      <div class="section-header">
+        <h2>Strategy Management</h2>
+        <button id="refresh-strategies" class="secondary-button">🔄 Refresh Strategies</button>
+      </div>
       <div class="strategy-overview">
         <div class="strategy-summary">
           <div class="summary-item">
@@ -64,10 +67,6 @@
           <div class="loading-state">
             <p>Loading available strategies...</p>
           </div>
-        </div>
-        
-        <div class="strategy-actions">
-          <button id="refresh-strategies" class="secondary-button">🔄 Refresh Strategies</button>
         </div>
       </div>
     </section>

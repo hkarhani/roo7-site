@@ -1171,11 +1171,6 @@ input:checked + .toggle-slider:before {
   color: #ccc;
 }
 
-.strategy-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
 
 .secondary-button {
   background: #6c757d;
@@ -1574,10 +1569,6 @@ input:checked + .toggle-slider:before {
     justify-content: space-around;
   }
 
-  .strategy-actions {
-    flex-direction: row;
-    justify-content: flex-start;
-  }
 
   .dashboard-card {
     padding: 20px;
