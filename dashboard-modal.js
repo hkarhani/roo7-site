@@ -628,7 +628,8 @@ class ModalManager {
     const strategyName = this.currentStrategyConfig.name;
     
     // Add standard parameters based on strategy type
-    if (strategyName.includes("Custom Portfolio")) {
+    if (strategyName.toLowerCase().includes("custom portfolio")) {
+      // Custom Portfolio strategies get portfolio management tools
       if (!this.currentStrategyConfig.parameters.custom_instruments) {
         this.currentStrategyConfig.parameters.custom_instruments = {
           description: "Custom Portfolio Instruments",
@@ -638,7 +639,7 @@ class ModalManager {
             { symbol: "XRP", weight: 20 }
           ]
         };
-        console.log("✅ Added custom_instruments parameter");
+        console.log("✅ Added custom_instruments parameter for Custom Portfolio strategy");
       }
       
       if (!this.currentStrategyConfig.parameters.rebalance_frequency) {
@@ -647,10 +648,10 @@ class ModalManager {
           default: "daily",
           options: ["hourly", "daily", "weekly"]
         };
-        console.log("✅ Added rebalance_frequency parameter");
+        console.log("✅ Added rebalance_frequency parameter for Custom Portfolio strategy");
       }
     } else {
-      // For other strategies, add top_x_count parameter
+      // Non-Custom Portfolio strategies get top_x_count and rebalance_frequency only
       if (!this.currentStrategyConfig.parameters.top_x_count) {
         this.currentStrategyConfig.parameters.top_x_count = {
           description: "Number of top instruments to trade (0 = algorithm default)",
@@ -658,7 +659,22 @@ class ModalManager {
           min: 0,
           max: 50
         };
-        console.log("✅ Added top_x_count parameter");
+        console.log("✅ Added top_x_count parameter for non-Custom Portfolio strategy");
+      }
+      
+      if (!this.currentStrategyConfig.parameters.rebalance_frequency) {
+        this.currentStrategyConfig.parameters.rebalance_frequency = {
+          description: "Rebalance Frequency",
+          default: "daily",
+          options: ["hourly", "daily", "weekly"]
+        };
+        console.log("✅ Added rebalance_frequency parameter for non-Custom Portfolio strategy");
+      }
+      
+      // Explicitly remove custom_instruments if it exists (shouldn't be there)
+      if (this.currentStrategyConfig.parameters.custom_instruments) {
+        delete this.currentStrategyConfig.parameters.custom_instruments;
+        console.log("🗑️ Removed custom_instruments parameter from non-Custom Portfolio strategy");
       }
     }
     
@@ -788,7 +804,7 @@ class ModalManager {
       console.log(`🔧 Processing parameter: ${paramName}`, param);
       
       if (paramName === 'custom_instruments') {
-        // Handle custom portfolio specially
+        // Handle custom portfolio specially - only for Custom Portfolio strategies
         console.log("📋 Setting up custom portfolio section");
         this.showCustomPortfolioSection();
       } else if (paramName === 'top_x_count') {
@@ -853,27 +869,54 @@ class ModalManager {
         console.log("🔧 FIXED: Force showed strategy-parameters-form");
       }
       
+      // Only show portfolio section for Custom Portfolio strategies
+      const isCustomPortfolioStrategy = this.currentStrategyConfig && 
+        this.currentStrategyConfig.name.toLowerCase().includes('custom portfolio');
+      
       if (portfolioSection) {
-        portfolioSection.style.setProperty('display', 'block', 'important');
-        portfolioSection.style.setProperty('visibility', 'visible', 'important');
-        portfolioSection.style.setProperty('opacity', '1', 'important');
-        console.log("🔄 Applied portfolio section visibility fix");
+        if (isCustomPortfolioStrategy) {
+          portfolioSection.style.setProperty('display', 'block', 'important');
+          portfolioSection.style.setProperty('visibility', 'visible', 'important');
+          portfolioSection.style.setProperty('opacity', '1', 'important');
+          console.log("🔄 Applied portfolio section visibility fix for Custom Portfolio strategy");
+        } else {
+          portfolioSection.style.setProperty('display', 'none', 'important');
+          console.log("🔄 Hidden portfolio section for non-Custom Portfolio strategy");
+        }
       }
       
-      // CRITICAL FIX: Force show the portfolio-instruments and add button
+      // CONDITIONAL FIX: Only show portfolio instruments for Custom Portfolio strategies
       const portfolioInstruments = document.getElementById('portfolio-instruments');
       const addButton = document.getElementById('add-portfolio-instrument');
       
-      if (portfolioInstruments) {
-        portfolioInstruments.style.setProperty('display', 'block', 'important');
-        portfolioInstruments.style.setProperty('visibility', 'visible', 'important');
-        console.log("🔧 FIXED: Force showed portfolio-instruments");
-      }
+      // Check if current strategy is a Custom Portfolio strategy
+      const isCustomPortfolio = this.currentStrategyConfig && 
+        (this.currentStrategyConfig.name.toLowerCase().includes('custom portfolio') ||
+         this.currentStrategyConfig.parameters?.custom_instruments);
       
-      if (addButton) {
-        addButton.style.setProperty('display', 'inline-block', 'important');
-        addButton.style.setProperty('visibility', 'visible', 'important');
-        console.log("🔧 FIXED: Force showed add-portfolio-instrument button");
+      if (isCustomPortfolio) {
+        if (portfolioInstruments) {
+          portfolioInstruments.style.setProperty('display', 'block', 'important');
+          portfolioInstruments.style.setProperty('visibility', 'visible', 'important');
+          console.log("🔧 FIXED: Force showed portfolio-instruments for Custom Portfolio strategy");
+        }
+        
+        if (addButton) {
+          addButton.style.setProperty('display', 'inline-block', 'important');
+          addButton.style.setProperty('visibility', 'visible', 'important');
+          console.log("🔧 FIXED: Force showed add-portfolio-instrument button for Custom Portfolio strategy");
+        }
+      } else {
+        // Hide portfolio instruments for non-custom strategies
+        if (portfolioInstruments) {
+          portfolioInstruments.style.setProperty('display', 'none', 'important');
+          console.log("🔧 HIDDEN: Portfolio instruments for non-Custom Portfolio strategy");
+        }
+        
+        if (addButton) {
+          addButton.style.setProperty('display', 'none', 'important');
+          console.log("🔧 HIDDEN: Add portfolio button for non-Custom Portfolio strategy");
+        }
       }
       
       // Log all child elements to see what's actually in the customization div
