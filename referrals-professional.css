@@ -1,0 +1,264 @@
+/* Professional Referrals Page Enhancements */
+
+/* ENHANCED PROFESSIONAL STYLING */
+.dashboard-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.dark-theme .dashboard-card {
+  background: #1e1e1e;
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 4px 20px rgba(255,255,255,0.03);
+}
+
+.dashboard-card h2 {
+  margin: 0 0 24px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 12px;
+}
+
+.dark-theme .dashboard-card h2 {
+  color: #e0e0e0;
+  border-bottom-color: #444;
+}
+
+/* PROFESSIONAL SHARE BUTTONS */
+.share-btn {
+  transition: all 0.3s ease;
+}
+
+.share-btn.email {
+  background: linear-gradient(135deg, #ea4335, #d33b2c);
+  color: white;
+}
+
+.share-btn.twitter {
+  background: linear-gradient(135deg, #1da1f2, #0d95e8);
+  color: white;
+}
+
+.share-btn.linkedin {
+  background: linear-gradient(135deg, #0077b5, #005885);
+  color: white;
+}
+
+.share-btn.whatsapp {
+  background: linear-gradient(135deg, #25d366, #20ba5a);
+  color: white;
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* ENHANCED INFO CARDS */
+.info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-radius: 12px;
+  border-left: 4px solid #0077cc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  border-left-color: #005fa3;
+}
+
+.dark-theme .info-card {
+  background: linear-gradient(135deg, #2a2a2a, #333);
+  box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+}
+
+.info-content h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.dark-theme .info-content h4 {
+  color: #e0e0e0;
+}
+
+.info-content p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #666;
+}
+
+.dark-theme .info-content p {
+  color: #ccc;
+}
+
+/* GENERATE BUTTON ENHANCEMENT */
+#generate-code-btn {
+  background: linear-gradient(135deg, #0077cc, #005fa3);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 12px rgba(0,119,204,0.3);
+}
+
+#generate-code-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,119,204,0.4);
+  background: linear-gradient(135deg, #005fa3, #004a7c);
+}
+
+#generate-code-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* PROFESSIONAL TABLE STYLING */
+.table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+#referrals-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.dark-theme #referrals-table {
+  background: #2a2a2a;
+}
+
+#referrals-table th {
+  background: linear-gradient(135deg, #0077cc, #005fa3);
+  color: white;
+  padding: 16px 12px;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+}
+
+#referrals-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.dark-theme #referrals-table td {
+  border-bottom-color: #444;
+}
+
+.referral-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.referral-status.pending {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: #333;
+}
+
+.referral-status.qualified {
+  background: linear-gradient(135deg, #28a745, #20892c);
+  color: white;
+}
+
+.referral-status.paid {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+}
+
+/* ENHANCED GRID LAYOUT */
+.referrals-grid {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* PROFESSIONAL CODE INPUT */
+.code-input-group input {
+  font-family: 'Segoe UI', 'Monaco', 'Consolas', monospace;
+  font-weight: 600;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.code-input-group input:focus {
+  border-color: #0077cc;
+  box-shadow: 0 0 0 3px rgba(0,119,204,0.1);
+  outline: none;
+}
+
+.dark-theme .code-input-group input {
+  background: linear-gradient(135deg, #2a2a2a, #333);
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+/* MOBILE RESPONSIVE ENHANCEMENTS */
+@media (max-width: 768px) {
+  .referrals-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 15px 30px;
+  }
+  
+  #section-overview,
+  #section-share,
+  #section-details,
+  #section-history,
+  #section-tips,
+  #section-faq {
+    grid-column: 1;
+  }
+  
+  .earnings-stats {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .share-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .dashboard-card {
+    padding: 20px;
+  }
+  
+  .stat-card {
+    padding: 20px;
+  }
+  
+  .code-input-group input {
+    font-size: 16px;
+  }
+}

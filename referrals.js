@@ -163,16 +163,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Update referral code section
     const codeInput = document.getElementById('referral-code-input');
-    const linkInput = document.getElementById('referral-link-input');
     
     if (referralData.referral_code) {
       codeInput.value = referralData.referral_code;
-      linkInput.value = referralData.referral_link;
       codeInput.placeholder = referralData.referral_code;
-      linkInput.placeholder = referralData.referral_link;
     } else {
       codeInput.placeholder = 'No code generated yet';
-      linkInput.placeholder = 'Generate a code to get your link';
     }
 
     // Update referral history table
@@ -280,11 +276,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.referral_code) {
         // Update local data
         referralData.referral_code = data.referral_code;
-        referralData.referral_link = `https://www.roo7.site/signup?ref=${data.referral_code}`;
         
         console.log('✅ Updated referral data:', {
-          code: referralData.referral_code,
-          link: referralData.referral_link
+          code: referralData.referral_code
         });
         
         // Update UI
@@ -331,19 +325,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Social sharing functions
   function shareViaEmail() {
-    if (!referralData?.referral_link) {
+    if (!referralData?.referral_code) {
       showToast('Please generate a referral code first', 'warning');
       return;
     }
 
-    const subject = encodeURIComponent('Join me on ROO7 - Automated Trading Platform');
+    const subject = encodeURIComponent('ROO7 - Automated Trading Platform Referral');
     const body = encodeURIComponent(`Hi there!
 
 I've been using ROO7's automated trading platform and thought you might be interested. It's been great for managing my crypto portfolio with minimal effort.
 
-Use my referral link to sign up: ${referralData.referral_link}
+When you pay your first invoice, use my referral code: ${referralData.referral_code}
 
-Let me know if you have any questions!
+This will give you access to professional automated trading strategies while I earn a small commission.
+
+Sign up at: https://www.roo7.site
 
 Best regards`);
     
@@ -351,35 +347,35 @@ Best regards`);
   }
 
   function shareViaTwitter() {
-    if (!referralData?.referral_link) {
+    if (!referralData?.referral_code) {
       showToast('Please generate a referral code first', 'warning');
       return;
     }
 
-    const text = encodeURIComponent(`Just discovered ROO7's automated trading platform! 🚀 Perfect for hands-off crypto portfolio management. Check it out: ${referralData.referral_link} #CryptoTrading #AutomatedInvesting #ROO7`);
+    const text = encodeURIComponent(`Just discovered ROO7's automated trading platform! 🚀 Perfect for hands-off crypto portfolio management. Use referral code: ${referralData.referral_code} when paying invoices. Check it out: https://www.roo7.site #CryptoTrading #AutomatedInvesting #ROO7`);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
   }
 
   function shareViaLinkedIn() {
-    if (!referralData?.referral_link) {
+    if (!referralData?.referral_code) {
       showToast('Please generate a referral code first', 'warning');
       return;
     }
 
-    const url = encodeURIComponent(referralData.referral_link);
+    const url = encodeURIComponent('https://www.roo7.site');
     const title = encodeURIComponent('ROO7 - Automated Trading Platform');
-    const summary = encodeURIComponent('Professional automated trading platform for crypto portfolio management');
+    const summary = encodeURIComponent(`Professional automated trading platform for crypto portfolio management. Use referral code: ${referralData.referral_code} when paying invoices.`);
     
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${summary}`, '_blank');
   }
 
   function shareViaWhatsApp() {
-    if (!referralData?.referral_link) {
+    if (!referralData?.referral_code) {
       showToast('Please generate a referral code first', 'warning');
       return;
     }
 
-    const text = encodeURIComponent(`Hey! I've been using ROO7 for automated crypto trading and it's been amazing. You should check it out: ${referralData.referral_link}`);
+    const text = encodeURIComponent(`Hey! I've been using ROO7 for automated crypto trading and it's been amazing. Use my referral code: ${referralData.referral_code} when paying invoices. Check it out: https://www.roo7.site`);
     window.open(`https://wa.me/?text=${text}`, '_blank');
   }
 
@@ -419,13 +415,6 @@ Best regards`);
       }
     };
 
-    document.getElementById('copy-link-btn').onclick = () => {
-      if (referralData?.referral_link) {
-        copyToClipboard(referralData.referral_link, 'Referral link copied!');
-      } else {
-        showToast('No referral link to copy', 'warning');
-      }
-    };
 
     // Share buttons
     document.getElementById('share-email').onclick = shareViaEmail;
