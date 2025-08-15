@@ -634,9 +634,9 @@ class ModalManager {
         this.currentStrategyConfig.parameters.custom_instruments = {
           description: "Custom Portfolio Instruments",
           default: [
-            { symbol: "BTC", weight: 50 },
-            { symbol: "ETH", weight: 30 },
-            { symbol: "XRP", weight: 20 }
+            { symbol: "BTCUSDT", weight: 50 },
+            { symbol: "ETHUSDT", weight: 30 },
+            { symbol: "XRPUSDT", weight: 20 }
           ]
         };
         console.log("✅ Added custom_instruments parameter for Custom Portfolio strategy");
@@ -645,8 +645,8 @@ class ModalManager {
       if (!this.currentStrategyConfig.parameters.rebalance_frequency) {
         this.currentStrategyConfig.parameters.rebalance_frequency = {
           description: "Rebalance Frequency",
-          default: "daily",
-          options: ["hourly", "daily", "weekly"]
+          default: "default",
+          options: ["default", "hourly", "daily", "weekly"]
         };
         console.log("✅ Added rebalance_frequency parameter for Custom Portfolio strategy");
       }
@@ -665,8 +665,8 @@ class ModalManager {
       if (!this.currentStrategyConfig.parameters.rebalance_frequency) {
         this.currentStrategyConfig.parameters.rebalance_frequency = {
           description: "Rebalance Frequency",
-          default: "daily",
-          options: ["hourly", "daily", "weekly"]
+          default: "default",
+          options: ["default", "hourly", "daily", "weekly"]
         };
         console.log("✅ Added rebalance_frequency parameter for non-Custom Portfolio strategy");
       }
@@ -830,8 +830,8 @@ class ModalManager {
         const wrapper = document.createElement('div');
         wrapper.className = 'parameter-field';
         const options = param.options ? param.options.map(opt => 
-          `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt}</option>`
-        ).join('') : '<option value="daily">Daily</option>';
+          `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`
+        ).join('') : '<option value="default" selected>Default</option><option value="daily">Daily</option>';
         
         wrapper.innerHTML = `
           <label for="strategy-param-${paramName}">${param.description || 'Rebalance Frequency'}</label>
@@ -1003,11 +1003,11 @@ class ModalManager {
           this.addPortfolioInstrument(instrument.symbol, instrument.weight);
         });
       } else {
-        // Fallback to hardcoded defaults
+        // Fallback to hardcoded defaults with proper USDT format
         console.log("📋 Using fallback default instruments");
-        this.addPortfolioInstrument("BTC", 50);
-        this.addPortfolioInstrument("ETH", 30);
-        this.addPortfolioInstrument("XRP", 20);
+        this.addPortfolioInstrument("BTCUSDT", 50);
+        this.addPortfolioInstrument("ETHUSDT", 30);
+        this.addPortfolioInstrument("XRPUSDT", 20);
       }
     }
     
@@ -1223,9 +1223,24 @@ class ModalManager {
     symbolInput.addEventListener('input', () => this.validateStrategyPortfolio());
     weightInput.addEventListener('input', () => this.validateStrategyPortfolio());
     
-    // Auto-format symbol to uppercase
+    // Auto-format symbol to uppercase and validate
     symbolInput.addEventListener('blur', (e) => {
-      e.target.value = e.target.value.toUpperCase();
+      const symbol = e.target.value.toUpperCase().trim();
+      e.target.value = symbol;
+      
+      // Validate symbol against loaded symbols
+      if (symbol && this.binanceSymbols.length > 0) {
+        if (this.binanceSymbols.includes(symbol)) {
+          e.target.style.borderColor = '#28a745'; // Green for valid
+          e.target.title = `✅ Valid SPOT symbol: ${symbol}`;
+        } else {
+          e.target.style.borderColor = '#dc3545'; // Red for invalid
+          e.target.title = `❌ Invalid SPOT symbol: ${symbol}. Please use valid USDT pairs.`;
+        }
+      } else {
+        e.target.style.borderColor = ''; // Reset if no symbols loaded yet
+        e.target.title = '';
+      }
     });
   }
 

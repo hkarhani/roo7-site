@@ -1302,6 +1302,44 @@ input:checked + .toggle-slider:before {
   background: #c82333;
 }
 
+/* Add Portfolio Instrument Button Styling */
+#add-portfolio-instrument {
+  background: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#add-portfolio-instrument:hover {
+  background: #005fa3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 119, 204, 0.3);
+}
+
+#add-portfolio-instrument:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 119, 204, 0.3);
+}
+
+.dark-theme #add-portfolio-instrument {
+  background: #1a73e8;
+  color: #ffffff;
+}
+
+.dark-theme #add-portfolio-instrument:hover {
+  background: #1557b0;
+}
+
 /* Portfolio validation feedback in strategy modal */
 #portfolio-validation-feedback {
   margin-top: 10px;
