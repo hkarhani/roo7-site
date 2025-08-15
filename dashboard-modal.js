@@ -663,14 +663,18 @@ class ModalManager {
   }
 
   showPortfolioFields() {
-    this.instrumentsWrap.style.display = "flex";
-    this.addInstrumentBtn.style.display = "inline-block";
+    if (this.portfolioInstruments) {
+      this.portfolioInstruments.style.display = "flex";
+    }
+    if (this.addPortfolioInstrumentBtn) {
+      this.addPortfolioInstrumentBtn.style.display = "inline-block";
+    }
     
     // Load symbols when portfolio fields are shown (lazy loading)
     this.loadBinanceSymbols();
     
     // Only add default instruments for NEW accounts (when not editing)
-    if (!this.instrumentsWrap.children.length && !this.currentEditingId) {
+    if (this.portfolioInstruments && !this.portfolioInstruments.children.length && !this.currentEditingId) {
       console.log("🆕 Adding default instruments for NEW account");
       
       // Get default instruments from API strategy configuration
@@ -700,11 +704,15 @@ class ModalManager {
     if (topXWrapper) {
       topXWrapper.style.display = "none";
     }
-    this.strategyParametersDiv.style.display = "none";
-    this.strategyParametersDiv.innerHTML = "";
-    this.instrumentsWrap.style.display = "none";
-    this.instrumentsWrap.innerHTML = "";
-    this.addInstrumentBtn.style.display = "none";
+    this.strategyParametersForm.style.display = "none";
+    this.strategyParametersForm.innerHTML = "";
+    if (this.portfolioInstruments) {
+      this.portfolioInstruments.style.display = "none";
+      this.portfolioInstruments.innerHTML = "";
+    }
+    if (this.addPortfolioInstrumentBtn) {
+      this.addPortfolioInstrumentBtn.style.display = "none";
+    }
   }
 
   // Portfolio instrument management for strategy modal
@@ -810,7 +818,9 @@ addInstrumentField(sym = "", wt = 0) {
       <button type="button" class="remove-instrument">×</button>
     </div>
   `;
-  this.instrumentsWrap.appendChild(div);
+  if (this.portfolioInstruments) {
+    this.portfolioInstruments.appendChild(div);
+  }
   
   div.querySelector(".remove-instrument").addEventListener("click", () => {
     div.remove();
@@ -824,7 +834,7 @@ addInstrumentField(sym = "", wt = 0) {
 
   // Portfolio validation function
   validatePortfolio() {
-    const instrumentRows = this.instrumentsWrap.querySelectorAll('.instrument-field');
+    const instrumentRows = this.portfolioInstruments ? this.portfolioInstruments.querySelectorAll('.instrument-field') : [];
     if (instrumentRows.length === 0) return true;
     
     let totalWeight = 0;
@@ -882,7 +892,9 @@ addInstrumentField(sym = "", wt = 0) {
     const feedback = document.createElement('div');
     feedback.id = 'portfolio-feedback';
     feedback.className = 'portfolio-feedback';
-    this.instrumentsWrap.parentNode.insertBefore(feedback, this.addInstrumentBtn);
+    if (this.portfolioInstruments && this.addPortfolioInstrumentBtn) {
+      this.portfolioInstruments.parentNode.insertBefore(feedback, this.addPortfolioInstrumentBtn);
+    }
     return feedback;
   }
 

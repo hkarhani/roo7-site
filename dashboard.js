@@ -471,7 +471,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        const strategies = await response.json();
+        const strategiesResponse = await response.json();
+        const strategies = strategiesResponse.strategies || [];
         
         // Update summary
         totalStrategiesEl.textContent = strategies.length;
