@@ -977,8 +977,22 @@ addInstrumentField(sym = "", wt = 0) {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        const errorMessage = errorData.detail || `HTTP ${res.status}: ${res.statusText}`;
-        console.error("❌ API Error:", errorMessage);
+        console.error("❌ API Error Data:", errorData);
+        
+        let errorMessage;
+        if (Array.isArray(errorData)) {
+          // Handle array of error objects (e.g., validation errors)
+          errorMessage = errorData.map(err => err.msg || err.message || JSON.stringify(err)).join('; ');
+        } else if (Array.isArray(errorData.detail)) {
+          // Handle when detail is an array
+          errorMessage = errorData.detail.map(err => err.msg || err.message || JSON.stringify(err)).join('; ');
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else {
+          errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+        }
+        
+        console.error("❌ Parsed Error Message:", errorMessage);
         throw new Error(errorMessage);
       }
 

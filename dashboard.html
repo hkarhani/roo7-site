@@ -21,9 +21,12 @@
   </div>
 
   <main class="dashboard-grid">
-    <!-- Section 1: Live Accounts Table (Top Left) -->
+    <!-- Section 1: Live Accounts Management (Top Left) -->
     <section id="section-accounts" class="dashboard-card">
-      <h2>Live Accounts</h2>
+      <div class="section-header">
+        <h2>Live Accounts</h2>
+        <button id="open-modal" class="primary-button">+ Add New Account</button>
+      </div>
       <div class="table-container">
         <table id="accounts-table">
           <thead>
@@ -42,24 +45,7 @@
       </div>
     </section>
 
-    <!-- Section 2: Account Settings (Top Right) -->
-    <section id="section-settings" class="dashboard-card">
-      <h2>Account Settings</h2>
-      <div class="table-container">
-        <table id="settings-table">
-          <thead>
-            <tr>
-              <th>Account</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <button id="open-modal">Add New Account</button>
-    </section>
-
-    <!-- Section 3: Strategy Management (Bottom Left) -->
+    <!-- Section 2: Strategy Management (Top Right) -->
     <section id="section-strategy" class="dashboard-card">
       <h2>Strategy Management</h2>
       <div class="strategy-overview">
@@ -229,7 +215,7 @@
  <!-- Load scripts in correct order -->
  <script src="theme-manager.js?v=1"></script>
  <script src="dashboard-modal.js?v=1.6"></script>
- <script src="dashboard.js?v=7.6"></script>
+ <script src="dashboard.js?v=7.6un"></script>
 
 </body>
 </html>

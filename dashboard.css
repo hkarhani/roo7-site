@@ -75,22 +75,16 @@ body {
   order: 1;
 }
 
-#section-settings {
+#section-strategy {
   grid-column: 1;
   grid-row: 2;
   order: 2;
 }
 
-#section-portfolio {
+#section-analytics {
   grid-column: 1;
   grid-row: 3;
   order: 3;
-}
-
-#section-analytics {
-  grid-column: 1;
-  grid-row: 4;
-  order: 4;
 }
 
 /* CARD STYLING FOR SECTIONS */
@@ -99,6 +93,48 @@ body {
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Section Header with Button */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.primary-button {
+  background: #0077cc;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.primary-button:hover {
+  background: #005fa3;
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .primary-button {
+    width: 100%;
+    padding: 10px;
+  }
 }
 
 /* Dark-theme overrides */
@@ -552,32 +588,39 @@ button.delete-account:hover {
 /* ACCOUNT ACTION ICONS - Mobile Optimized */
 .account-actions {
   display: flex;
-  gap: 2px;
+  gap: 1px;
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
+  max-width: 120px;
 }
 
 .action-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   border: none;
-  font-size: 10px;
+  font-size: 9px;
+  margin: 1px;
 }
 
 /* Mobile specific action icons */
 @media (max-width: 768px) {
   .action-icon {
-    width: 20px;
-    height: 20px;
-    font-size: 8px;
+    width: 18px;
+    height: 18px;
+    font-size: 7px;
+  }
+  
+  .account-actions {
+    max-width: 90px;
+    gap: 0px;
   }
 }
 
@@ -603,6 +646,26 @@ button.delete-account:hover {
 
 .dark-theme .hedge-edit-icon {
   color: #000;
+}
+
+.edit-account.action-icon {
+  background: #28a745;
+  color: white;
+}
+
+.edit-account.action-icon:hover {
+  background: #218838;
+  transform: scale(1.1);
+}
+
+.delete-account.action-icon {
+  background: #dc3545;
+  color: white;
+}
+
+.delete-account.action-icon:hover {
+  background: #c82333;
+  transform: scale(1.1);
 }
 
 /* HEDGE EDIT MODAL */
@@ -1335,18 +1398,13 @@ input:checked + .toggle-slider:before {
     grid-row: 1;
   }
 
-  #section-settings {
+  #section-strategy {
     grid-column: 2;
     grid-row: 1;
   }
 
-  #section-strategy {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
   #section-analytics {
-    grid-column: 2;
+    grid-column: 1 / -1;
     grid-row: 2;
   }
 
@@ -1437,12 +1495,13 @@ input:checked + .toggle-slider:before {
 
   .account-actions {
     flex-wrap: nowrap;
+    max-width: 160px;
   }
 
   .action-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
   }
 }
 

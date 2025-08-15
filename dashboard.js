@@ -59,10 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Updated mobile-optimized updateAccountTables function
   function updateAccountTables(accounts) {
     const liveTbody = document.querySelector("#accounts-table tbody");
-    const settingsTbody = document.querySelector("#settings-table tbody");
+
+    if (!liveTbody) {
+      console.error("❌ Accounts table not found");
+      return;
+    }
 
     liveTbody.innerHTML = "";
-    settingsTbody.innerHTML = "";
 
     accounts.forEach(acc => {
       // Escape and sanitize account name and other text fields
@@ -166,15 +169,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <button class="action-icon troubleshoot-icon" data-account="${accountName}" title="Troubleshoot">🔧</button>
             <button class="action-icon hedge-edit-icon" data-id="${acc.id || ''}" title="Edit Settings">⚙️</button>
             <button class="assign-strategy-btn" data-id="${acc.id || ''}" data-name="${accountName}" data-exchange="${exchange}" data-type="${accountType}" title="Assign Strategy">📋</button>
-          </td>
-        </tr>`;
-
-      settingsTbody.innerHTML += `
-        <tr>
-          <td title="${accountName}">${accountNameDisplay}</td>
-          <td>
-            <button class="edit-account" data-id="${acc.id || ''}" data-name="${accountName}">Edit</button>
-            <button class="delete-account" data-id="${acc.id || ''}">Del</button>
+            <button class="edit-account action-icon" data-id="${acc.id || ''}" data-name="${accountName}" title="Edit Account">✏️</button>
+            <button class="delete-account action-icon" data-id="${acc.id || ''}" title="Delete Account">🗑️</button>
           </td>
         </tr>`;
     });
