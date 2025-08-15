@@ -125,7 +125,7 @@ class ModalManager {
       console.log('📡 Loading SPOT symbols from market-data-service...');
       console.log('🔑 Token length:', token.length);
       
-      const response = await fetch(`${this.MARKET_DATA_API}/instruments`, {
+      const response = await fetch(`${this.MARKET_DATA_API}/spot-instruments`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -154,29 +154,21 @@ class ModalManager {
       const data = await response.json();
       console.log('📡 Market data API response:', data);
       
-      // Try different response formats
-      let instruments = null;
+      // Handle the correct /spot-instruments API response format
       if (data.success && data.data && Array.isArray(data.data)) {
-        instruments = data.data;
-      } else if (Array.isArray(data)) {
-        instruments = data;
-      } else if (data.instruments && Array.isArray(data.instruments)) {
-        instruments = data.instruments;
+        // Filter for USDT symbols only and extract symbol names
+        this.binanceSymbols = data.data
+          .filter(instrument => {
+            return instrument.symbol && 
+                   typeof instrument.symbol === 'string' && 
+                   instrument.symbol.endsWith('USDT') && 
+                   instrument.is_active === true; // Only active/tradable instruments
+          })
+          .map(instrument => instrument.symbol);
       } else {
-        console.error('❌ Unknown response format:', data);
-        throw new Error('Invalid response format from market-data-service');
+        console.error('❌ Unexpected response format from /spot-instruments:', data);
+        throw new Error('Invalid response format from market-data-service /spot-instruments');
       }
-      
-      // Filter for USDT symbols only and extract symbol names
-      this.binanceSymbols = instruments
-        .filter(instrument => {
-          const symbol = instrument.symbol || instrument.name || instrument;
-          return symbol && 
-                 typeof symbol === 'string' && 
-                 symbol.endsWith('USDT') && 
-                 (instrument.is_active !== false); // Include if is_active is true or undefined
-        })
-        .map(instrument => instrument.symbol || instrument.name || instrument);
       
       console.log(`✅ Loaded ${this.binanceSymbols.length} active SPOT USDT symbols from market-data-service`);
       console.log('🔍 First 10 symbols:', this.binanceSymbols.slice(0, 10));
@@ -1257,52 +1249,118 @@ class ModalManager {
     let totalWeight = 0;
     let hasEmptySymbols = false;
     let hasInvalidWeights = false;
+    let hasInvalidSymbols = false;
+    const symbolsSeen = new Set();
+    let hasDuplicates = false;
     
-    instrumentRows.forEach(row => {
+    instrumentRows.forEach((row, index) => {
       const symbolInput = row.querySelector('.symbol-input');
       const weightInput = row.querySelector('.weight-input');
       
-      const symbol = symbolInput.value.trim();
+      const symbol = symbolInput.value.trim().toUpperCase();
       const weight = parseFloat(weightInput.value) || 0;
       
+      // Reset styling
+      symbolInput.style.borderColor = '';
+      weightInput.style.borderColor = '';
+      symbolInput.title = '';
+      
+      // Validate symbol
       if (!symbol) {
         hasEmptySymbols = true;
-        symbolInput.style.borderColor = '#ff4444';
+        symbolInput.style.borderColor = '#dc3545';
+        symbolInput.title = 'Symbol is required';
       } else {
-        symbolInput.style.borderColor = '';
+        // Check for duplicates
+        if (symbolsSeen.has(symbol)) {
+          hasDuplicates = true;
+          symbolInput.style.borderColor = '#dc3545';
+          symbolInput.title = `Duplicate symbol: ${symbol}`;
+        } else {
+          symbolsSeen.add(symbol);
+          
+          // Validate against loaded SPOT symbols
+          if (this.binanceSymbols && this.binanceSymbols.length > 0) {
+            if (this.binanceSymbols.includes(symbol)) {
+              symbolInput.style.borderColor = '#28a745'; // Green for valid
+              symbolInput.title = `✅ Valid SPOT symbol: ${symbol}`;
+            } else {
+              hasInvalidSymbols = true;
+              symbolInput.style.borderColor = '#dc3545'; // Red for invalid
+              symbolInput.title = `❌ Invalid SPOT symbol: ${symbol}`;
+            }
+          } else {
+            // Market data not loaded - show warning
+            symbolInput.style.borderColor = '#ffc107'; // Yellow for unknown
+            symbolInput.title = `⚠️ Unable to validate ${symbol} - market data unavailable`;
+          }
+        }
       }
       
-      if (weight <= 0 || weight > 100) {
+      // Validate weight
+      if (weight <= 0) {
         hasInvalidWeights = true;
-        weightInput.style.borderColor = '#ff4444';
+        weightInput.style.borderColor = '#dc3545';
+        weightInput.title = 'Weight must be greater than 0';
+      } else if (weight > 100) {
+        hasInvalidWeights = true;
+        weightInput.style.borderColor = '#dc3545';
+        weightInput.title = 'Weight cannot exceed 100%';
       } else {
-        weightInput.style.borderColor = '';
+        weightInput.title = `Weight: ${weight}%`;
       }
       
       totalWeight += weight;
     });
     
-    // Check total weight
-    const isValidTotal = Math.abs(totalWeight - 100) < 0.01; // Allow small floating point differences
+    // Check total weight - must equal exactly 100%
+    const isValidTotal = Math.abs(totalWeight - 100) < 0.01;
     
     // Update UI feedback
-    const portfolioFeedback = document.getElementById('portfolio-feedback') || this.createPortfolioFeedback();
+    const portfolioFeedback = document.getElementById('portfolio-validation-feedback');
     
-    if (hasEmptySymbols) {
-      portfolioFeedback.textContent = '⚠️ Please fill in all symbol fields';
-      portfolioFeedback.className = 'portfolio-feedback error';
-    } else if (hasInvalidWeights) {
-      portfolioFeedback.textContent = '⚠️ Weights must be between 0.01 and 100';
-      portfolioFeedback.className = 'portfolio-feedback error';
-    } else if (!isValidTotal) {
-      portfolioFeedback.textContent = `⚠️ Total weight: ${totalWeight.toFixed(2)}% (must equal 100%)`;
-      portfolioFeedback.className = 'portfolio-feedback warning';
-    } else {
-      portfolioFeedback.textContent = `✅ Portfolio balanced: ${totalWeight.toFixed(2)}%`;
-      portfolioFeedback.className = 'portfolio-feedback success';
+    if (!portfolioFeedback) {
+      console.warn('Portfolio validation feedback element not found');
+      return false;
     }
     
-    return isValidTotal && !hasEmptySymbols && !hasInvalidWeights;
+    // Generate comprehensive feedback
+    let feedbackHtml = '';
+    let feedbackClass = 'success';
+    
+    if (hasEmptySymbols) {
+      feedbackHtml = '<div class="error">❌ Please fill in all symbol fields</div>';
+      feedbackClass = 'error';
+    } else if (hasDuplicates) {
+      feedbackHtml = '<div class="error">❌ Duplicate symbols found - each symbol must be unique</div>';
+      feedbackClass = 'error';
+    } else if (hasInvalidSymbols) {
+      feedbackHtml = '<div class="error">❌ Some symbols are not valid tradable SPOT instruments</div>';
+      feedbackClass = 'error';
+    } else if (hasInvalidWeights) {
+      feedbackHtml = '<div class="error">❌ All weights must be between 0.01% and 100%</div>';
+      feedbackClass = 'error';
+    } else if (!isValidTotal) {
+      const difference = totalWeight - 100;
+      if (difference > 0) {
+        feedbackHtml = `<div class="warning">⚠️ Total weight is ${totalWeight.toFixed(2)}% - reduce by ${Math.abs(difference).toFixed(2)}%</div>`;
+      } else {
+        feedbackHtml = `<div class="warning">⚠️ Total weight is ${totalWeight.toFixed(2)}% - add ${Math.abs(difference).toFixed(2)}% more</div>`;
+      }
+      feedbackClass = 'warning';
+    } else {
+      feedbackHtml = `<div class="success">✅ Portfolio is valid (${totalWeight.toFixed(2)}% total, ${instrumentRows.length} instruments)</div>`;
+      feedbackClass = 'success';
+    }
+    
+    portfolioFeedback.innerHTML = feedbackHtml;
+    portfolioFeedback.className = `portfolio-feedback ${feedbackClass}`;
+    
+    const isValid = isValidTotal && !hasEmptySymbols && !hasInvalidWeights && !hasInvalidSymbols && !hasDuplicates;
+    
+    console.log(`📊 Portfolio validation: ${isValid ? 'VALID' : 'INVALID'} - Total: ${totalWeight.toFixed(2)}%, Instruments: ${instrumentRows.length}`);
+    
+    return isValid;
   }
   
   createPortfolioFeedback() {
