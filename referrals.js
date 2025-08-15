@@ -346,38 +346,6 @@ Best regards`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   }
 
-  function shareViaTwitter() {
-    if (!referralData?.referral_code) {
-      showToast('Please generate a referral code first', 'warning');
-      return;
-    }
-
-    const text = encodeURIComponent(`Just discovered ROO7's automated trading platform! 🚀 Perfect for hands-off crypto portfolio management. Use referral code: ${referralData.referral_code} when paying invoices. Check it out: https://www.roo7.site #CryptoTrading #AutomatedInvesting #ROO7`);
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-  }
-
-  function shareViaLinkedIn() {
-    if (!referralData?.referral_code) {
-      showToast('Please generate a referral code first', 'warning');
-      return;
-    }
-
-    const url = encodeURIComponent('https://www.roo7.site');
-    const title = encodeURIComponent('ROO7 - Automated Trading Platform');
-    const summary = encodeURIComponent(`Professional automated trading platform for crypto portfolio management. Use referral code: ${referralData.referral_code} when paying invoices.`);
-    
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${summary}`, '_blank');
-  }
-
-  function shareViaWhatsApp() {
-    if (!referralData?.referral_code) {
-      showToast('Please generate a referral code first', 'warning');
-      return;
-    }
-
-    const text = encodeURIComponent(`Hey! I've been using ROO7 for automated crypto trading and it's been amazing. Use my referral code: ${referralData.referral_code} when paying invoices. Check it out: https://www.roo7.site`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  }
 
   // Filter referrals
   function filterReferrals() {
@@ -418,38 +386,9 @@ Best regards`);
 
     // Share buttons
     document.getElementById('share-email').onclick = shareViaEmail;
-    document.getElementById('share-twitter').onclick = shareViaTwitter;
-    document.getElementById('share-linkedin').onclick = shareViaLinkedIn;
-    document.getElementById('share-whatsapp').onclick = shareViaWhatsApp;
 
     // Filter
     document.getElementById('filter-btn').onclick = filterReferrals;
-
-    // FAQ toggles
-    setupFAQToggles();
-  }
-
-  // Setup FAQ toggles
-  function setupFAQToggles() {
-    const faqItems = document.querySelectorAll('.faq-item');
-    
-    faqItems.forEach(item => {
-      const question = item.querySelector('.faq-question');
-      
-      question.onclick = () => {
-        const isActive = item.classList.contains('active');
-        
-        // Close all other FAQ items
-        faqItems.forEach(otherItem => {
-          otherItem.classList.remove('active');
-        });
-        
-        // Toggle current item
-        if (!isActive) {
-          item.classList.add('active');
-        }
-      };
-    });
   }
 
   // Initialize the page

@@ -32,15 +32,6 @@
   grid-row: 3;
 }
 
-#section-tips {
-  grid-column: 1;
-  grid-row: 4;
-}
-
-#section-faq {
-  grid-column: 2;
-  grid-row: 4;
-}
 
 /* EARNINGS STATS */
 .earnings-stats {

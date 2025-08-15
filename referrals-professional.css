@@ -224,6 +224,21 @@
   color: #e0e0e0;
 }
 
+/* ENHANCED EMAIL BUTTON */
+.share-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.share-btn.email {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 200px;
+  justify-content: center;
+}
+
 /* MOBILE RESPONSIVE ENHANCEMENTS */
 @media (max-width: 768px) {
   .referrals-grid {
@@ -235,9 +250,7 @@
   #section-overview,
   #section-share,
   #section-details,
-  #section-history,
-  #section-tips,
-  #section-faq {
+  #section-history {
     grid-column: 1;
   }
   
@@ -247,7 +260,7 @@
   }
   
   .share-buttons {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
   
   .dashboard-card {
@@ -260,5 +273,10 @@
   
   .code-input-group input {
     font-size: 16px;
+  }
+  
+  .share-btn.email {
+    min-width: auto;
+    width: 100%;
   }
 }
