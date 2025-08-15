@@ -435,18 +435,25 @@ class ModalManager {
     
     // Set current strategy if assigned
     if (account.strategy && account.strategy.trim() !== '') {
-      // Find the strategy by name since account.strategy is the strategy name, not ID
-      const strategyConfig = this.availableStrategies.find(s => s.name === account.strategy);
+      // Try to find strategy by ID first (which is what's stored in account.strategy)
+      let strategyConfig = this.availableStrategies.find(s => s.id === account.strategy);
+      
+      // If not found by ID, try by name as fallback
+      if (!strategyConfig) {
+        strategyConfig = this.availableStrategies.find(s => s.name === account.strategy);
+      }
       
       if (strategyConfig) {
-        console.log("🎯 Found strategy config:", strategyConfig.name);
+        console.log("🎯 Found strategy config:", strategyConfig.name, "for account strategy:", account.strategy);
         this.strategySelect.value = strategyConfig.id; // Use the strategy ID for the dropdown
         this.currentStrategyConfig = strategyConfig;
         this.ensureStrategyParameters(); // Ensure parameters exist
         this.handleStrategySelectionChange();
         document.getElementById("remove-strategy").style.display = "inline-block";
       } else {
-        console.warn("⚠️ Strategy config not found for strategy name:", account.strategy);
+        console.warn("⚠️ Strategy config not found for strategy:", account.strategy);
+        console.warn("⚠️ Available strategy IDs:", this.availableStrategies.map(s => s.id));
+        console.warn("⚠️ Available strategy names:", this.availableStrategies.map(s => s.name));
         this.strategySelect.value = "";
         this.hideStrategyCustomization();
         document.getElementById("remove-strategy").style.display = "none";
@@ -837,11 +844,36 @@ class ModalManager {
         console.log("🔄 Applied delayed visibility fix with !important");
       }
       
+      // CRITICAL FIX: Force show the strategy-parameters-form which is hidden
+      const parametersForm = document.getElementById('strategy-parameters-form');
+      if (parametersForm) {
+        parametersForm.style.setProperty('display', 'block', 'important');
+        parametersForm.style.setProperty('visibility', 'visible', 'important');
+        parametersForm.style.setProperty('opacity', '1', 'important');
+        console.log("🔧 FIXED: Force showed strategy-parameters-form");
+      }
+      
       if (portfolioSection) {
         portfolioSection.style.setProperty('display', 'block', 'important');
         portfolioSection.style.setProperty('visibility', 'visible', 'important');
         portfolioSection.style.setProperty('opacity', '1', 'important');
         console.log("🔄 Applied portfolio section visibility fix");
+      }
+      
+      // CRITICAL FIX: Force show the portfolio-instruments and add button
+      const portfolioInstruments = document.getElementById('portfolio-instruments');
+      const addButton = document.getElementById('add-portfolio-instrument');
+      
+      if (portfolioInstruments) {
+        portfolioInstruments.style.setProperty('display', 'block', 'important');
+        portfolioInstruments.style.setProperty('visibility', 'visible', 'important');
+        console.log("🔧 FIXED: Force showed portfolio-instruments");
+      }
+      
+      if (addButton) {
+        addButton.style.setProperty('display', 'inline-block', 'important');
+        addButton.style.setProperty('visibility', 'visible', 'important');
+        console.log("🔧 FIXED: Force showed add-portfolio-instrument button");
       }
       
       // Log all child elements to see what's actually in the customization div
@@ -1456,8 +1488,15 @@ class ModalManager {
       }
 
       // Build strategy assignment data
+      // Use the strategy NAME for backend storage, not the ID
+      const selectedStrategy = this.availableStrategies.find(s => s.id === strategyId);
+      if (!selectedStrategy) {
+        window.showToast("Selected strategy not found.", 'error');
+        return;
+      }
+      
       const data = {
-        strategy: strategyId
+        strategy: selectedStrategy.name  // Use strategy NAME, not ID
       };
 
       // Handle strategy parameters
@@ -1541,7 +1580,7 @@ class ModalManager {
 
     try {
       const data = {
-        strategy: "",
+        strategy: "",  // Empty string to remove strategy
         custom_portfolio: [],
         top_x_count: null
       };
