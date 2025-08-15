@@ -459,6 +459,14 @@ class ModalManager {
     
     this.strategyModal.style.display = "block";
     console.log("✅ Strategy modal opened");
+    
+    // Add a small delay to ensure DOM is ready before processing
+    setTimeout(() => {
+      console.log("🔄 Delayed processing to ensure DOM is ready");
+      if (this.currentStrategyConfig) {
+        this.showStrategyCustomization();
+      }
+    }, 100);
   }
 
   closeStrategyModal() {
@@ -745,10 +753,24 @@ class ModalManager {
     }
     
     customizationDiv.style.display = 'block';
-    console.log("✅ Set strategy-customization display to block");
+    customizationDiv.style.visibility = 'visible';
+    customizationDiv.style.opacity = '1';
+    console.log("✅ Set strategy-customization display to block with full visibility");
+    
+    if (!this.strategyParametersForm) {
+      console.error("❌ strategyParametersForm element not found!");
+      return;
+    }
+    
+    if (!this.portfolioInstruments) {
+      console.error("❌ portfolioInstruments element not found!");
+      return;
+    }
     
     this.strategyParametersForm.innerHTML = '';
     this.portfolioInstruments.innerHTML = '';
+    
+    console.log("🧹 Cleared form contents");
     
     const parameters = this.currentStrategyConfig.parameters;
     console.log("🔍 Processing parameters:", parameters);
@@ -801,8 +823,36 @@ class ModalManager {
       }
     });
     
-    // If we're opening strategy modal for an existing account with data, populate it
-    this.populateExistingStrategyData();
+    // Force a visual refresh of the customization section
+    console.log("🔄 Forcing visual refresh of customization section");
+    setTimeout(() => {
+      const customizationDiv = document.getElementById('strategy-customization');
+      const portfolioSection = document.getElementById('custom-portfolio-section');
+      
+      if (customizationDiv) {
+        customizationDiv.style.setProperty('display', 'block', 'important');
+        customizationDiv.style.setProperty('visibility', 'visible', 'important');
+        customizationDiv.style.setProperty('opacity', '1', 'important');
+        customizationDiv.style.setProperty('height', 'auto', 'important');
+        console.log("🔄 Applied delayed visibility fix with !important");
+      }
+      
+      if (portfolioSection) {
+        portfolioSection.style.setProperty('display', 'block', 'important');
+        portfolioSection.style.setProperty('visibility', 'visible', 'important');
+        portfolioSection.style.setProperty('opacity', '1', 'important');
+        console.log("🔄 Applied portfolio section visibility fix");
+      }
+      
+      // Log all child elements to see what's actually in the customization div
+      if (customizationDiv) {
+        console.log("🔍 Strategy customization div children:", customizationDiv.children);
+        console.log("🔍 Strategy customization div innerHTML:", customizationDiv.innerHTML);
+      }
+      
+      // If we're opening strategy modal for an existing account with data, populate it
+      this.populateExistingStrategyData();
+    }, 50);
   }
   
   // Populate existing strategy data for accounts that already have strategy assigned
@@ -849,7 +899,9 @@ class ModalManager {
     }
     
     portfolioSection.style.display = 'block';
-    console.log("✅ Set custom-portfolio-section display to block");
+    portfolioSection.style.visibility = 'visible';
+    portfolioSection.style.opacity = '1';
+    console.log("✅ Set custom-portfolio-section display to block with full visibility");
     
     if (!this.portfolioInstruments) {
       console.error("❌ portfolioInstruments element not found!");
@@ -1380,8 +1432,20 @@ class ModalManager {
     const submitButton = e.target.querySelector('button[type="submit"]');
     const originalButtonText = submitButton.textContent;
     
+    // Prevent multiple submissions
+    if (submitButton.disabled) {
+      console.log("⚠️ Strategy assignment already in progress, ignoring duplicate click");
+      return;
+    }
+    
+    // Set loading state IMMEDIATELY
     submitButton.disabled = true;
-    submitButton.textContent = "Assigning...";
+    submitButton.style.opacity = "0.6";
+    submitButton.style.cursor = "not-allowed";
+    submitButton.textContent = "Assigning Strategy...";
+    
+    // Show loading toast
+    window.showToast("Assigning strategy to account...", 'info', 10000); // 10 second duration
     
     try {
       const strategyId = this.strategySelect.value;
@@ -1456,7 +1520,10 @@ class ModalManager {
       console.error("❌ Strategy assignment error:", err);
       window.showToast(`❌ Error assigning strategy: ${err.message}`, 'error');
     } finally {
+      // Always restore button state
       submitButton.disabled = false;
+      submitButton.style.opacity = "1";
+      submitButton.style.cursor = "pointer";
       submitButton.textContent = originalButtonText;
     }
   }
