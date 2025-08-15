@@ -831,13 +831,27 @@ class ModalManager {
         console.log("✅ Added top_x_count field to form");
       } else if (paramName === 'rebalance_frequency') {
         // Handle rebalance frequency dropdown
-        console.log("⏰ Setting up rebalance frequency parameter");
+        console.log("⏰ Setting up rebalance frequency parameter", param);
         const wrapper = document.createElement('div');
         wrapper.className = 'parameter-field';
-        const options = param.options ? param.options.map(opt => {
+        
+        // Ensure we always have the default options with 'default' as first option
+        const defaultOptions = ["default", "hourly", "daily", "weekly"];
+        const optionsToUse = param.options && Array.isArray(param.options) && param.options.length > 0 ? param.options : defaultOptions;
+        
+        // Ensure 'default' is always included and is first
+        if (!optionsToUse.includes("default")) {
+          optionsToUse.unshift("default");
+        }
+        
+        const defaultValue = param.default || "default";
+        console.log("⏰ Using options:", optionsToUse, "with default:", defaultValue);
+        
+        const options = optionsToUse.map(opt => {
           const displayText = opt === 'default' ? 'Default' : opt.charAt(0).toUpperCase() + opt.slice(1);
-          return `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${displayText}</option>`;
-        }).join('') : '<option value="default" selected>Default</option><option value="daily">Daily</option>';
+          const isSelected = opt === defaultValue ? 'selected' : '';
+          return `<option value="${opt}" ${isSelected}>${displayText}</option>`;
+        }).join('');
         
         wrapper.innerHTML = `
           <label for="strategy-param-${paramName}">${param.description || 'Rebalance Frequency'}</label>
@@ -846,7 +860,7 @@ class ModalManager {
           </select>
         `;
         this.strategyParametersForm.appendChild(wrapper);
-        console.log("✅ Added rebalance_frequency field to form");
+        console.log("✅ Added rebalance_frequency field to form with options:", options);
       } else {
         console.log(`⚠️ Unknown parameter type: ${paramName}`, param);
       }
@@ -955,16 +969,28 @@ class ModalManager {
     }
     
     // Populate rebalance_frequency if exists, otherwise default to "default"
-    const rebalanceInput = document.getElementById("strategy-param-rebalance_frequency");
-    if (rebalanceInput) {
-      if (this.currentAccount.rebalance_frequency !== undefined && this.currentAccount.rebalance_frequency !== null) {
-        rebalanceInput.value = this.currentAccount.rebalance_frequency;
-        console.log("⏰ Set rebalance_frequency to:", this.currentAccount.rebalance_frequency);
+    setTimeout(() => {
+      const rebalanceInput = document.getElementById("strategy-param-rebalance_frequency");
+      if (rebalanceInput) {
+        const existingValue = this.currentAccount.rebalance_frequency || "default";
+        
+        // Check if the option exists in the dropdown
+        const optionExists = Array.from(rebalanceInput.options).some(option => option.value === existingValue);
+        
+        if (optionExists) {
+          rebalanceInput.value = existingValue;
+          console.log("⏰ Set rebalance_frequency to:", existingValue);
+        } else {
+          // If the value doesn't exist, default to "default" or first option
+          rebalanceInput.value = rebalanceInput.options.length > 0 ? 
+            (Array.from(rebalanceInput.options).find(opt => opt.value === "default")?.value || rebalanceInput.options[0].value) : 
+            "default";
+          console.log("⏰ Set rebalance_frequency to fallback:", rebalanceInput.value);
+        }
       } else {
-        rebalanceInput.value = "default";
-        console.log("⏰ Set rebalance_frequency to default");
+        console.log("⚠️ Rebalance frequency input not found");
       }
-    }
+    }, 100); // Small delay to ensure the dropdown is fully rendered
     
     // Populate custom portfolio if exists
     if (this.currentAccount.custom_portfolio && Array.isArray(this.currentAccount.custom_portfolio) && this.currentAccount.custom_portfolio.length > 0) {

@@ -1410,8 +1410,8 @@ input:checked + .toggle-slider:before {
 /* Hedge Information Display */
 .hedge-info {
   font-size: 11px;
-  margin-top: 2px;
-  line-height: 1.2;
+  margin-top: 0px;
+  line-height: 1.1;
 }
 
 .hedge-info.default em {
@@ -1438,7 +1438,7 @@ input:checked + .toggle-slider:before {
 @media (max-width: 768px) {
   .hedge-info {
     font-size: 9px;
-    margin-top: 1px;
+    margin-top: 0px;
   }
 }
 
