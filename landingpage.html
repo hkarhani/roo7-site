@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoBot Pro - Advanced Trading Automation</title>
+    <link rel="stylesheet" href="landingpage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">CryptoBot Pro</span>
+                </div>
+                <nav class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#strategies">Strategies</a>
+                    <a href="#pricing">Pricing</a>
+                    <a href="#security">Security</a>
+                </nav>
+                <button class="btn btn-primary" onclick="window.location.href='/auth'">Get Started</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Automate Your Crypto Trading with AI-Powered Precision</h1>
+                <p class="hero-subtitle">Professional-grade trading bots for Binance SPOT accounts. Multiple risk strategies, 24/7 monitoring, and institutional-level security.</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">127%</div>
+                        <div class="stat-label">Avg. Annual Return</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Active Monitoring</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">99.9%</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-large" onclick="window.location.href='/auth'">Start Trading Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trading Strategies -->
+    <section id="strategies" class="strategies">
+        <div class="container">
+            <h2 class="section-title">Advanced Trading Strategies</h2>
+            <p class="section-subtitle">Choose from our proven algorithmic strategies designed for different risk profiles</p>
+            <div class="strategies-grid">
+                <div class="strategy-card">
+                    <div class="strategy-icon high-risk">📈</div>
+                    <h3>High R/R Long</h3>
+                    <p>Aggressive growth strategy targeting 3:1 risk-reward ratios with momentum-based entries</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Target: 200%+ APY</span>
+                        <span class="stat-item">Max Drawdown: 25%</span>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="strategy-icon med-risk">📊</div>
+                    <h3>Medium R/R Long</h3>
+                    <p>Balanced approach with 2:1 risk-reward targeting consistent growth with moderate volatility</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Target: 80-120% APY</span>
+                        <span class="stat-item">Max Drawdown: 15%</span>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="strategy-icon low-risk">🛡️</div>
+                    <h3>Fixed Income Low R/R</h3>
+                    <p>Conservative strategy focusing on capital preservation with steady, predictable returns</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Target: 20-40% APY</span>
+                        <span class="stat-item">Max Drawdown: 8%</span>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="strategy-icon custom">⚙️</div>
+                    <h3>Custom Portfolio Rebalancing</h3>
+                    <p>Automated portfolio rebalancing based on your custom allocation preferences and market conditions</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Customizable Risk</span>
+                        <span class="stat-item">Dynamic Allocation</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="section-title">Transparent Pricing</h2>
+            <p class="section-subtitle">Choose the plan that fits your trading capital. No hidden fees, just performance-driven results.</p>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Starter</h3>
+                        <p>Perfect for beginners</p>
+                        <div class="price">
+                            <span class="price-amount">$1,000</span>
+                            <span class="price-period">recurring fee</span>
+                            <span class="price-note">for portfolios up to $10K</span>
+                        </div>
+                    </div>
+                    <div class="pricing-discount">
+                        <span class="discount-badge">⭐ 50% OFF First Year</span>
+                        <span class="discount-note">for referred customers</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ All trading strategies</li>
+                        <li>✓ Binance SPOT integration</li>
+                        <li>✓ Multiple sub-accounts</li>
+                        <li>✓ 24/7 bot monitoring</li>
+                        <li>✓ Email support</li>
+                    </ul>
+                    <button class="btn btn-primary btn-full" onclick="window.location.href='/auth'">Get Started</button>
+                </div>
+
+                <div class="pricing-card featured">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="pricing-header">
+                        <h3>Professional</h3>
+                        <p>For serious traders</p>
+                        <div class="price">
+                            <span class="price-amount">8%</span>
+                            <span class="price-period">of total funds</span>
+                            <span class="price-note">for portfolios up to $100K</span>
+                        </div>
+                    </div>
+                    <div class="pricing-discount">
+                        <span class="discount-badge">Performance-Based</span>
+                        <span class="discount-note">Pay only on your capital</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ All Starter features</li>
+                        <li>✓ Advanced analytics</li>
+                        <li>✓ Custom rebalancing</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ Multiple sub-accounts</li>
+                    </ul>
+                    <button class="btn btn-primary btn-full" onclick="window.location.href='/auth'">Choose Professional</button>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Enterprise</h3>
+                        <p>For institutional clients</p>
+                        <div class="price">
+                            <span class="price-amount">Custom</span>
+                            <span class="price-period">pricing</span>
+                            <span class="price-note">for portfolios above $100K</span>
+                        </div>
+                    </div>
+                    <div class="pricing-discount">
+                        <span class="discount-badge">Tailored Solutions</span>
+                        <span class="discount-note">Custom terms & rates</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ All Professional features</li>
+                        <li>✓ Dedicated account manager</li>
+                        <li>✓ Custom strategies</li>
+                        <li>✓ White-label options</li>
+                        <li>✓ 24/7 phone support</li>
+                    </ul>
+                    <button class="btn btn-outline btn-full" onclick="window.location.href='/auth'">Contact Sales</button>
+                </div>
+            </div>
+            <div class="pricing-note">
+                <p>All plans include secure API integration, real-time monitoring, and transparent reporting.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section id="security" class="security">
+        <div class="container">
+            <h2 class="section-title">Bank-Grade Security</h2>
+            <div class="security-grid">
+                <div class="security-feature">
+                    <div class="security-icon">🔐</div>
+                    <h3>API Key Protection</h3>
+                    <p>Your API keys are encrypted and never stored in plain text. We use industry-standard AES-256 encryption.</p>
+                </div>
+                <div class="security-feature">
+                    <div class="security-icon">🛡️</div>
+                    <h3>Read-Only Access</h3>
+                    <p>Our bots only require trading permissions. We never request withdrawal access to your funds.</p>
+                </div>
+                <div class="security-feature">
+                    <div class="security-icon">🔍</div>
+                    <h3>Real-Time Monitoring</h3>
+                    <p>24/7 system monitoring with instant alerts for any unusual activity or performance deviations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="logo-icon">⚡</span>
+                        <span class="logo-text">CryptoBot Pro</span>
+                    </div>
+                    <p>Professional crypto trading automation for the modern investor.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#strategies">Strategies</a>
+                        <a href="#pricing">Pricing</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <a href="#">Documentation</a>
+                        <a href="#">Help Center</a>
+                        <a href="#">Contact</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 CryptoBot Pro. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
