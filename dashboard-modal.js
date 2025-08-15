@@ -301,40 +301,61 @@ class ModalManager {
 
   openEditAccountModal(account) {
     console.log("✏️ Opening EDIT ACCOUNT modal for:", account.account_name);
+    console.log("📋 Account data:", account);
+    
+    // Check if modal exists
+    if (!this.modal) {
+      console.error("❌ Account modal not found!");
+      window.showToast("Error: Account modal not found", 'error');
+      return;
+    }
     
     // Set edit mode
     this.currentEditingId = account.id;
     this.useSameCredentials = false;
     
-    // Set modal title and button
-    document.querySelector("#account-modal h3").textContent = "Edit Account";
-    document.querySelector("#account-modal button[type='submit']").textContent = "Update Account";
-    
-    // Fill form with account data
-    document.getElementById("trading-account-name").value = account.account_name;
-    document.getElementById("exchange-api-key").value = account.api_key || "";
-    document.getElementById("exchange-api-secret").value = account.api_secret || "";
-    this.exchangeSelect.value = account.exchange || "Binance";
-    this.accountTypeSelect.value = account.account_type || "SPOT";
-    
-    // FORCE SHOW the Use Same Credentials button for Edit mode
-    const useSameCredButton = document.getElementById("use-same-credentials");
-    if (useSameCredButton) {
-      useSameCredButton.style.display = "block";
-      useSameCredButton.textContent = "🔒 Use Same API Credentials";
-      useSameCredButton.classList.remove("active");
-      console.log("✅ FORCED SHOW Use Same Credentials button for EDIT mode");
+    try {
+      // Set modal title and button
+      const modalTitle = document.querySelector("#account-modal h3");
+      const submitButton = document.querySelector("#account-modal button[type='submit']");
+      
+      if (modalTitle) modalTitle.textContent = "Edit Account";
+      if (submitButton) submitButton.textContent = "Update Account";
+      
+      // Fill form with account data
+      const nameField = document.getElementById("trading-account-name");
+      const apiKeyField = document.getElementById("exchange-api-key");
+      const apiSecretField = document.getElementById("exchange-api-secret");
+      
+      if (nameField) nameField.value = account.account_name || "";
+      if (apiKeyField) apiKeyField.value = account.api_key || "";
+      if (apiSecretField) apiSecretField.value = account.api_secret || "";
+      if (this.exchangeSelect) this.exchangeSelect.value = account.exchange || "Binance";
+      if (this.accountTypeSelect) this.accountTypeSelect.value = account.account_type || "SPOT";
+      
+      // FORCE SHOW the Use Same Credentials button for Edit mode
+      const useSameCredButton = document.getElementById("use-same-credentials");
+      if (useSameCredButton) {
+        useSameCredButton.style.display = "block";
+        useSameCredButton.textContent = "🔒 Use Same API Credentials";
+        useSameCredButton.classList.remove("active");
+        console.log("✅ FORCED SHOW Use Same Credentials button for EDIT mode");
+      }
+      
+      // Show edit-specific elements
+      this.showCancelButton();
+      
+      // Handle strategy-specific fields
+      this.handleStrategyForEdit(account);
+      
+      // Show modal
+      this.modal.style.display = "block";
+      console.log("✅ Edit Account modal opened successfully");
+      
+    } catch (error) {
+      console.error("❌ Error in openEditAccountModal:", error);
+      window.showToast("Error opening edit modal: " + error.message, 'error');
     }
-    
-    // Show edit-specific elements
-    this.showCancelButton();
-    
-    // Handle strategy-specific fields
-    this.handleStrategyForEdit(account);
-    
-    // Show modal
-    this.modal.style.display = "block";
-    console.log("✅ Edit Account modal opened");
   }
 
   closeAccountModal() {
@@ -351,8 +372,8 @@ class ModalManager {
     this.hideStrategyFields();
     
     // Reset field states
-    const apiKeyField = document.getElementById("binance-api-key");
-    const apiSecretField = document.getElementById("binance-api-secret");
+    const apiKeyField = document.getElementById("exchange-api-key");
+    const apiSecretField = document.getElementById("exchange-api-secret");
     if (apiKeyField && apiSecretField) {
       apiKeyField.disabled = false;
       apiSecretField.disabled = false;
@@ -559,6 +580,43 @@ class ModalManager {
     }
   }
 
+
+  // Show strategy parameters form
+  showStrategyParameters() {
+    if (!this.currentStrategyConfig || !this.currentStrategyConfig.parameters) {
+      return;
+    }
+
+    const parameters = this.currentStrategyConfig.parameters;
+    this.strategyParametersForm.innerHTML = '';
+
+    Object.keys(parameters).forEach(paramName => {
+      const param = parameters[paramName];
+      
+      if (paramName === 'top_x_count') {
+        this.showTopXFields();
+        const input = document.getElementById('strategy-param-top_x_count');
+        if (input && param.default !== undefined) {
+          input.value = param.default;
+        }
+      } else if (paramName === 'custom_instruments') {
+        this.showPortfolioFields();
+      } else if (paramName === 'rebalance_frequency') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'parameter-field';
+        wrapper.innerHTML = `
+          <label for="strategy-param-${paramName}">Rebalance Frequency:</label>
+          <select id="strategy-param-${paramName}" name="${paramName}">
+            ${param.options.map(opt => 
+              `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt}</option>`
+            ).join('')}
+          </select>
+        `;
+        this.strategyParametersForm.appendChild(wrapper);
+      }
+    });
+  }
+
   // Show strategy customization based on selected strategy
   showStrategyCustomization() {
     if (!this.currentStrategyConfig || !this.currentStrategyConfig.parameters) {
@@ -650,16 +708,33 @@ class ModalManager {
   }
 
   showTopXFields() {
-    let topXWrapper = document.getElementById("top-x-wrapper");
-    if (!topXWrapper) {
-      topXWrapper = document.createElement("div");
-      topXWrapper.id = "top-x-wrapper";
-      topXWrapper.innerHTML = `
-        <input type="number" id="top-x-count" placeholder="Number of top instruments" min="1" max="50">
-      `;
-      this.strategySelect.parentNode.insertBefore(topXWrapper, this.strategySelect.nextSibling);
+    // Create the top X parameter in the strategy parameters form
+    const wrapper = document.createElement('div');
+    wrapper.className = 'parameter-field';
+    wrapper.innerHTML = `
+      <label for="strategy-param-top_x_count">Top X Instruments:</label>
+      <input type="number" id="strategy-param-top_x_count" name="top_x_count" placeholder="Number of top instruments (0 = algorithm default)" min="0" max="50" value="0">
+      <small>Enter 0 to use algorithm default selection</small>
+    `;
+    this.strategyParametersForm.appendChild(wrapper);
+  }
+
+  hideStrategyCustomization() {
+    const customizationDiv = document.getElementById('strategy-customization');
+    if (customizationDiv) {
+      customizationDiv.style.display = 'none';
     }
-    topXWrapper.style.display = "block";
+    
+    const portfolioSection = document.getElementById('custom-portfolio-section');
+    if (portfolioSection) {
+      portfolioSection.style.display = 'none';
+    }
+    
+    this.strategyParametersForm.innerHTML = '';
+    
+    if (this.portfolioInstruments) {
+      this.portfolioInstruments.innerHTML = '';
+    }
   }
 
   showPortfolioFields() {
@@ -805,36 +880,51 @@ class ModalManager {
 
  // addInstrumentField
 
-  // Updated addInstrumentField function for better mobile layout
-// Replace the existing addInstrumentField function in dashboard-modal.js
-
-addInstrumentField(sym = "", wt = 0) {
-  const div = document.createElement("div");
-  div.className = "instrument-field";
-  div.innerHTML = `
-    <div class="instrument-row">
-      <input type="text" name="symbol" placeholder="Symbol (e.g., BTCUSDT)" value="${sym}">
-      <input type="number" name="weight" placeholder="Weight (%)" value="${wt}" step="0.01" min="0" max="100">
-      <button type="button" class="remove-instrument">×</button>
-    </div>
-  `;
-  if (this.portfolioInstruments) {
-    this.portfolioInstruments.appendChild(div);
+  // Professional portfolio instrument field
+  addPortfolioInstrument(sym = "", wt = 0) {
+    const div = document.createElement("div");
+    div.className = "portfolio-instrument-field";
+    div.innerHTML = `
+      <div class="portfolio-row">
+        <div class="symbol-input-wrapper">
+          <label>Symbol</label>
+          <input type="text" class="symbol-input" placeholder="BTCUSDT" value="${sym}">
+        </div>
+        <div class="weight-input-wrapper">
+          <label>Weight (%)</label>
+          <input type="number" class="weight-input" placeholder="50.00" value="${wt}" step="0.01" min="0.01" max="100">
+        </div>
+        <div class="remove-wrapper">
+          <button type="button" class="remove-instrument" title="Remove instrument">🗑️</button>
+        </div>
+      </div>
+    `;
+    
+    if (this.portfolioInstruments) {
+      this.portfolioInstruments.appendChild(div);
+    }
+    
+    div.querySelector(".remove-instrument").addEventListener("click", () => {
+      div.remove();
+      this.validateStrategyPortfolio();
+    });
+    
+    // Add validation on input changes
+    const symbolInput = div.querySelector('.symbol-input');
+    const weightInput = div.querySelector('.weight-input');
+    
+    symbolInput.addEventListener('input', () => this.validateStrategyPortfolio());
+    weightInput.addEventListener('input', () => this.validateStrategyPortfolio());
+    
+    // Auto-format symbol to uppercase
+    symbolInput.addEventListener('blur', (e) => {
+      e.target.value = e.target.value.toUpperCase();
+    });
   }
-  
-  div.querySelector(".remove-instrument").addEventListener("click", () => {
-    div.remove();
-    this.validatePortfolio(); // Validate after removal
-  });
-  
-  // Add validation on weight input change
-  const weightInput = div.querySelector('input[name="weight"]');
-  weightInput.addEventListener('input', () => this.validatePortfolio());
-}
 
-  // Portfolio validation function
-  validatePortfolio() {
-    const instrumentRows = this.portfolioInstruments ? this.portfolioInstruments.querySelectorAll('.instrument-field') : [];
+  // Portfolio validation function for strategy modal
+  validateStrategyPortfolio() {
+    const instrumentRows = this.portfolioInstruments ? this.portfolioInstruments.querySelectorAll('.portfolio-instrument-field') : [];
     if (instrumentRows.length === 0) return true;
     
     let totalWeight = 0;
@@ -842,8 +932,8 @@ addInstrumentField(sym = "", wt = 0) {
     let hasInvalidWeights = false;
     
     instrumentRows.forEach(row => {
-      const symbolInput = row.querySelector('input[name="symbol"]');
-      const weightInput = row.querySelector('input[name="weight"]');
+      const symbolInput = row.querySelector('.symbol-input');
+      const weightInput = row.querySelector('.weight-input');
       
       const symbol = symbolInput.value.trim();
       const weight = parseFloat(weightInput.value) || 0;
@@ -1204,7 +1294,7 @@ addInstrumentField(sym = "", wt = 0) {
 
     try {
       const data = {
-        strategy: null,
+        strategy: "",
         custom_portfolio: [],
         top_x_count: null
       };

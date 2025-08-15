@@ -74,28 +74,45 @@ document.addEventListener("DOMContentLoaded", () => {
       const exchange = (acc.exchange || 'Binance').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
       const accountType = (acc.account_type || 'SPOT').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
       
-      // Mobile-friendly strategy abbreviations
-      let strategyDisplay = strategy || 'No Strategy';
-      if (window.innerWidth <= 768) {
-        switch(strategy) {
-          case 'High Risk / High Returns Long SPOT':
-            strategyDisplay = 'High Risk';
-            break;
-          case 'Medium Risk / Medium Returns Long SPOT':
-            strategyDisplay = 'Med Risk';
-            break;
-          case 'Low Risk / Low Returns Fixed Income':
-            strategyDisplay = 'Low Risk';
-            break;
-          case 'Custom Portfolio Rebalance':
-            strategyDisplay = 'Custom';
-            break;
-          default:
-            if (strategy) {
+      // Strategy display with better names
+      let strategyDisplay = 'No Strategy';
+      if (strategy && strategy.trim() !== '') {
+        if (window.innerWidth <= 768) {
+          // Mobile abbreviations
+          switch(strategy) {
+            case 'High Risk / High Returns Long SPOT':
+              strategyDisplay = 'High RR';
+              break;
+            case 'Medium Risk / Medium Returns Long SPOT':
+              strategyDisplay = 'Med RR';
+              break;
+            case 'Low Risk / Low Returns Fixed Income':
+              strategyDisplay = 'Low RR';
+              break;
+            case 'Custom Portfolio Rebalance':
+              strategyDisplay = 'Custom';
+              break;
+            default:
               strategyDisplay = strategy.length > 8 ? strategy.substring(0, 8) + '...' : strategy;
-            } else {
-              strategyDisplay = 'None';
-            }
+          }
+        } else {
+          // Desktop display names
+          switch(strategy) {
+            case 'High Risk / High Returns Long SPOT':
+              strategyDisplay = 'High RR Long';
+              break;
+            case 'Medium Risk / Medium Returns Long SPOT':
+              strategyDisplay = 'Med RR Long';
+              break;
+            case 'Low Risk / Low Returns Fixed Income':
+              strategyDisplay = 'Low RR Fixed';
+              break;
+            case 'Custom Portfolio Rebalance':
+              strategyDisplay = 'Custom Portfolio';
+              break;
+            default:
+              strategyDisplay = strategy;
+          }
         }
       }
       
