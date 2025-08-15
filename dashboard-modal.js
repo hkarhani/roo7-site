@@ -941,7 +941,10 @@ addInstrumentField(sym = "", wt = 0) {
       const data = {
         account_name: accountName,
         exchange: this.exchangeSelect.value,
-        account_type: this.accountTypeSelect.value
+        account_type: this.accountTypeSelect.value,
+        strategy: "", // Empty strategy for new separated workflow
+        current_value: 0.0,
+        hedge_percent: 0.0
       };
 
       // Only include API credentials if not using same credentials
@@ -982,10 +985,18 @@ addInstrumentField(sym = "", wt = 0) {
         let errorMessage;
         if (Array.isArray(errorData)) {
           // Handle array of error objects (e.g., validation errors)
-          errorMessage = errorData.map(err => err.msg || err.message || JSON.stringify(err)).join('; ');
+          errorMessage = errorData.map(err => {
+            const field = err.loc ? err.loc[err.loc.length - 1] : 'unknown field';
+            const msg = err.msg || err.message || 'validation error';
+            return `${field}: ${msg}`;
+          }).join('; ');
         } else if (Array.isArray(errorData.detail)) {
           // Handle when detail is an array
-          errorMessage = errorData.detail.map(err => err.msg || err.message || JSON.stringify(err)).join('; ');
+          errorMessage = errorData.detail.map(err => {
+            const field = err.loc ? err.loc[err.loc.length - 1] : 'unknown field';
+            const msg = err.msg || err.message || 'validation error';
+            return `${field}: ${msg}`;
+          }).join('; ');
         } else if (errorData.detail) {
           errorMessage = errorData.detail;
         } else {
