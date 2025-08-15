@@ -125,7 +125,7 @@ class ModalManager {
       console.log('📡 Loading SPOT symbols from market-data-service...');
       console.log('🔑 Token length:', token.length);
       
-      const response = await fetch(`${this.MARKET_DATA_API}/spot-instruments?active_only=true`, {
+      const response = await fetch(`${this.MARKET_DATA_API}/instruments`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -152,21 +152,34 @@ class ModalManager {
       }
 
       const data = await response.json();
+      console.log('📡 Market data API response:', data);
       
+      // Try different response formats
+      let instruments = null;
       if (data.success && data.data && Array.isArray(data.data)) {
-        // Filter for USDT symbols only and extract symbol names
-        this.binanceSymbols = data.data
-          .filter(instrument => 
-            instrument.symbol && 
-            instrument.symbol.endsWith('USDT') && 
-            instrument.is_active === true
-          )
-          .map(instrument => instrument.symbol);
-        
-        console.log(`✅ Loaded ${this.binanceSymbols.length} active SPOT USDT symbols from market-data-service`);
+        instruments = data.data;
+      } else if (Array.isArray(data)) {
+        instruments = data;
+      } else if (data.instruments && Array.isArray(data.instruments)) {
+        instruments = data.instruments;
       } else {
+        console.error('❌ Unknown response format:', data);
         throw new Error('Invalid response format from market-data-service');
       }
+      
+      // Filter for USDT symbols only and extract symbol names
+      this.binanceSymbols = instruments
+        .filter(instrument => {
+          const symbol = instrument.symbol || instrument.name || instrument;
+          return symbol && 
+                 typeof symbol === 'string' && 
+                 symbol.endsWith('USDT') && 
+                 (instrument.is_active !== false); // Include if is_active is true or undefined
+        })
+        .map(instrument => instrument.symbol || instrument.name || instrument);
+      
+      console.log(`✅ Loaded ${this.binanceSymbols.length} active SPOT USDT symbols from market-data-service`);
+      console.log('🔍 First 10 symbols:', this.binanceSymbols.slice(0, 10));
     } catch (error) {
       console.error('❌ Failed to load symbols from market-data-service:', error);
       console.log('🔄 Attempting fallback to direct Binance API...');
@@ -1187,23 +1200,15 @@ class ModalManager {
 
  // addInstrumentField
 
-  // Professional portfolio instrument field
+  // Compact portfolio instrument field
   addPortfolioInstrument(sym = "", wt = 0) {
     const div = document.createElement("div");
-    div.className = "portfolio-instrument-field";
+    div.className = "portfolio-instrument-field compact";
     div.innerHTML = `
-      <div class="portfolio-row">
-        <div class="symbol-input-wrapper">
-          <label>Symbol</label>
-          <input type="text" class="symbol-input" placeholder="BTCUSDT" value="${sym}">
-        </div>
-        <div class="weight-input-wrapper">
-          <label>Weight (%)</label>
-          <input type="number" class="weight-input" placeholder="50.00" value="${wt}" step="0.01" min="0.01" max="100">
-        </div>
-        <div class="remove-wrapper">
-          <button type="button" class="remove-instrument" title="Remove instrument">🗑️</button>
-        </div>
+      <div class="portfolio-row compact">
+        <input type="text" class="symbol-input compact" placeholder="BTCUSDT" value="${sym}" title="Trading Symbol">
+        <input type="number" class="weight-input compact" placeholder="50.00" value="${wt}" step="0.01" min="0.01" max="100" title="Weight (%)">
+        <button type="button" class="remove-instrument compact" title="Remove instrument">🗑️</button>
       </div>
     `;
     

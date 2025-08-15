@@ -1340,6 +1340,73 @@ input:checked + .toggle-slider:before {
   background: #1557b0;
 }
 
+/* Compact Portfolio Instrument Fields */
+.portfolio-instrument-field.compact {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.portfolio-row.compact {
+  display: grid;
+  grid-template-columns: 1fr 80px 40px;
+  gap: 8px;
+  align-items: center;
+}
+
+.symbol-input.compact,
+.weight-input.compact {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.symbol-input.compact {
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.weight-input.compact {
+  text-align: center;
+}
+
+.remove-instrument.compact {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.remove-instrument.compact:hover {
+  background: #c82333;
+}
+
+.dark-theme .portfolio-instrument-field.compact {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.dark-theme .symbol-input.compact,
+.dark-theme .weight-input.compact {
+  background: #333;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
 /* Portfolio validation feedback in strategy modal */
 #portfolio-validation-feedback {
   margin-top: 10px;
