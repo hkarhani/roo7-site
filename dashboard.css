@@ -1407,6 +1407,41 @@ input:checked + .toggle-slider:before {
   color: #e0e0e0;
 }
 
+/* Hedge Information Display */
+.hedge-info {
+  font-size: 11px;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.hedge-info.default em {
+  color: #6c757d;
+  font-style: italic;
+  font-weight: normal;
+}
+
+.hedge-info.active em {
+  color: #0077cc;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.dark-theme .hedge-info.default em {
+  color: #adb5bd;
+}
+
+.dark-theme .hedge-info.active em {
+  color: #4dabf7;
+}
+
+/* Mobile optimizations for hedge info */
+@media (max-width: 768px) {
+  .hedge-info {
+    font-size: 9px;
+    margin-top: 1px;
+  }
+}
+
 /* Portfolio validation feedback in strategy modal */
 #portfolio-validation-feedback {
   margin-top: 10px;

@@ -834,9 +834,10 @@ class ModalManager {
         console.log("⏰ Setting up rebalance frequency parameter");
         const wrapper = document.createElement('div');
         wrapper.className = 'parameter-field';
-        const options = param.options ? param.options.map(opt => 
-          `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`
-        ).join('') : '<option value="default" selected>Default</option><option value="daily">Daily</option>';
+        const options = param.options ? param.options.map(opt => {
+          const displayText = opt === 'default' ? 'Default' : opt.charAt(0).toUpperCase() + opt.slice(1);
+          return `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${displayText}</option>`;
+        }).join('') : '<option value="default" selected>Default</option><option value="daily">Daily</option>';
         
         wrapper.innerHTML = `
           <label for="strategy-param-${paramName}">${param.description || 'Rebalance Frequency'}</label>

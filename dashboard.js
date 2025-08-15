@@ -169,12 +169,26 @@ document.addEventListener("DOMContentLoaded", () => {
         accountNameDisplay = accountName.substring(0, 12) + '...';
       }
 
+      // Format hedge display
+      let hedgeDisplay = '';
+      if (acc.hedge_percent !== undefined && acc.hedge_percent !== null && !isNaN(acc.hedge_percent)) {
+        const hedgeValue = parseFloat(acc.hedge_percent);
+        if (hedgeValue === 0) {
+          hedgeDisplay = '<div class="hedge-info default"><em>Default Hedge</em></div>';
+        } else {
+          hedgeDisplay = `<div class="hedge-info active"><em>${hedgeValue.toFixed(1)}% Hedge</em></div>`;
+        }
+      } else {
+        hedgeDisplay = '<div class="hedge-info default"><em>Default Hedge</em></div>';
+      }
+
       liveTbody.innerHTML += `
         <tr>
           <td>
             <div class="account-status">
               <span title="${accountName}">${accountNameDisplay}</span>
               ${statusBadges}
+              ${hedgeDisplay}
             </div>
           </td>
           <td title="${exchange}">${exchange}</td>
