@@ -954,6 +954,18 @@ class ModalManager {
       }
     }
     
+    // Populate rebalance_frequency if exists, otherwise default to "default"
+    const rebalanceInput = document.getElementById("strategy-param-rebalance_frequency");
+    if (rebalanceInput) {
+      if (this.currentAccount.rebalance_frequency !== undefined && this.currentAccount.rebalance_frequency !== null) {
+        rebalanceInput.value = this.currentAccount.rebalance_frequency;
+        console.log("⏰ Set rebalance_frequency to:", this.currentAccount.rebalance_frequency);
+      } else {
+        rebalanceInput.value = "default";
+        console.log("⏰ Set rebalance_frequency to default");
+      }
+    }
+    
     // Populate custom portfolio if exists
     if (this.currentAccount.custom_portfolio && Array.isArray(this.currentAccount.custom_portfolio) && this.currentAccount.custom_portfolio.length > 0) {
       console.log("📊 Loading existing custom portfolio:", this.currentAccount.custom_portfolio);
@@ -1630,6 +1642,16 @@ class ModalManager {
           const topXInput = document.getElementById("strategy-param-top_x_count");
           if (topXInput) {
             data.top_x_count = parseInt(topXInput.value) || 0;
+          }
+        }
+        
+        // Handle rebalance_frequency parameter
+        if (parameters.rebalance_frequency) {
+          const rebalanceInput = document.getElementById("strategy-param-rebalance_frequency");
+          if (rebalanceInput) {
+            data.rebalance_frequency = rebalanceInput.value || "default";
+          } else {
+            data.rebalance_frequency = "default";
           }
         }
         
