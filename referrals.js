@@ -54,9 +54,40 @@ document.addEventListener("DOMContentLoaded", () => {
   let allReferrals = [];
   let filteredReferrals = [];
 
+  // Check if invoicing API is available
+  async function checkServiceStatus() {
+    try {
+      console.log('🔍 Checking invoicing service status...');
+      const response = await fetch(`${INVOICING_API_BASE}/health`, {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'}
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Invoicing service is healthy:', data);
+        return true;
+      } else {
+        console.warn('⚠️ Invoicing service health check failed:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Invoicing service is unreachable:', error);
+      return false;
+    }
+  }
+
   // Load initial data
   async function initializePage() {
     try {
+      // Check service status first
+      const serviceAvailable = await checkServiceStatus();
+      
+      if (!serviceAvailable) {
+        showToast('⚠️ Referral service is currently unavailable. Some features may not work.', 'warning', 8000);
+        // Still try to load data in case it's just the health endpoint
+      }
+      
       await loadReferralData();
       updateUI();
       setupEventListeners();
@@ -69,6 +100,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load referral dashboard data
   async function loadReferralData() {
     try {
+      console.log('🔄 Loading referral data from:', `${INVOICING_API_BASE}/referrals/me`);
+      
       const response = await fetch(`${INVOICING_API_BASE}/referrals/me`, {
         headers: getAuthHeaders(token)
       });
@@ -98,7 +131,14 @@ document.addEventListener("DOMContentLoaded", () => {
       
     } catch (error) {
       console.error('Error loading referral data:', error);
-      showToast(`Failed to load referral data: ${error.message}`, 'error');
+      
+      // Check if it's a network connectivity issue
+      if (error instanceof TypeError && error.message.includes('NetworkError')) {
+        console.warn('⚠️ Invoicing API service appears to be unavailable');
+        showToast('Referral service is currently unavailable. Please try again later.', 'warning', 6000);
+      } else {
+        showToast(`Failed to load referral data: ${error.message}`, 'error');
+      }
       
       // Set default empty state
       referralData = {
@@ -258,7 +298,14 @@ document.addEventListener("DOMContentLoaded", () => {
       
     } catch (error) {
       console.error('❌ Error generating referral code:', error);
-      showToast(`Failed to generate code: ${error.message}`, 'error');
+      
+      // Check if it's a network connectivity issue
+      if (error instanceof TypeError && error.message.includes('NetworkError')) {
+        console.warn('⚠️ Invoicing API service appears to be unavailable');
+        showToast('Referral service is currently unavailable. Please check if the invoicing service is running.', 'error', 8000);
+      } else {
+        showToast(`Failed to generate code: ${error.message}`, 'error');
+      }
     } finally {
       generateBtn.disabled = false;
       generateBtn.textContent = originalText;
