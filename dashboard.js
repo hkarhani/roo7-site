@@ -68,22 +68,31 @@ document.addEventListener("DOMContentLoaded", () => {
       // Escape and sanitize account name and other text fields
       const accountName = (acc.account_name || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
       const strategy = (acc.strategy || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
+      const exchange = (acc.exchange || 'Binance').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
+      const accountType = (acc.account_type || 'SPOT').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
       
       // Mobile-friendly strategy abbreviations
-      let strategyDisplay = strategy;
+      let strategyDisplay = strategy || 'No Strategy';
       if (window.innerWidth <= 768) {
         switch(strategy) {
-          case 'Standard Vapaus':
-            strategyDisplay = 'Standard';
+          case 'High Risk / High Returns Long SPOT':
+            strategyDisplay = 'High Risk';
             break;
-          case 'Top X Instruments of Vapaus':
-            strategyDisplay = `Top ${acc.top_x_count || 'X'}`;
+          case 'Medium Risk / Medium Returns Long SPOT':
+            strategyDisplay = 'Med Risk';
             break;
-          case 'Custom Portfolio Rebalancing':
+          case 'Low Risk / Low Returns Fixed Income':
+            strategyDisplay = 'Low Risk';
+            break;
+          case 'Custom Portfolio Rebalance':
             strategyDisplay = 'Custom';
             break;
           default:
-            strategyDisplay = strategy.length > 8 ? strategy.substring(0, 8) + '...' : strategy;
+            if (strategy) {
+              strategyDisplay = strategy.length > 8 ? strategy.substring(0, 8) + '...' : strategy;
+            } else {
+              strategyDisplay = 'None';
+            }
         }
       }
       
@@ -148,13 +157,15 @@ document.addEventListener("DOMContentLoaded", () => {
               ${statusBadges}
             </div>
           </td>
+          <td title="${exchange}">${exchange}</td>
+          <td title="${accountType}">${accountType}</td>
           <td title="${strategy}">${strategyDisplay}</td>
           <td>${currentValueDisplay}</td>
-          <td>${hedgePercentDisplay}</td>
           <td>${testStatusHtml}</td>
           <td class="account-actions">
             <button class="action-icon troubleshoot-icon" data-account="${accountName}" title="Troubleshoot">🔧</button>
             <button class="action-icon hedge-edit-icon" data-id="${acc.id || ''}" title="Edit Settings">⚙️</button>
+            <button class="assign-strategy-btn" data-id="${acc.id || ''}" data-name="${accountName}" data-exchange="${exchange}" data-type="${accountType}" title="Assign Strategy">📋</button>
           </td>
         </tr>`;
 
@@ -201,6 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       updateAccountTables(accounts);
       bindAccountEvents(accounts);
+      updateStrategyManagement(accounts);
 
     } catch (error) {
       console.error("❌ Error loading accounts:", error);
@@ -265,6 +277,25 @@ document.addEventListener("DOMContentLoaded", () => {
           const account = accounts.find(acc => acc.id === accountId);
           if (account) {
             modalManager.openHedgeModal(account);
+          }
+        };
+      });
+
+      // Strategy assignment buttons
+      document.querySelectorAll('.assign-strategy-btn').forEach(btn => {
+        btn.onclick = function() {
+          const accountId = btn.dataset.id;
+          const accountName = btn.dataset.name;
+          const exchange = btn.dataset.exchange;
+          const accountType = btn.dataset.type;
+          
+          console.log(`📋 Assign strategy clicked for ${accountName}`);
+          
+          const account = accounts.find(acc => acc.id === accountId);
+          if (account) {
+            modalManager.openStrategyModal(account);
+          } else {
+            showToast("Account not found", 'error');
           }
         };
       });
@@ -416,6 +447,98 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+
+  // Strategy management functions
+  async function updateStrategyManagement(accounts) {
+    const totalStrategiesEl = document.getElementById('total-strategies');
+    const assignedAccountsEl = document.getElementById('assigned-accounts');
+    const strategyListEl = document.getElementById('strategy-list');
+    
+    if (!totalStrategiesEl || !assignedAccountsEl || !strategyListEl) {
+      console.log("Strategy management elements not found");
+      return;
+    }
+
+    try {
+      // Load available strategies
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/strategies`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const strategies = await response.json();
+        
+        // Update summary
+        totalStrategiesEl.textContent = strategies.length;
+        const assignedCount = accounts.filter(acc => acc.strategy && acc.strategy.trim() !== '').length;
+        assignedAccountsEl.textContent = assignedCount;
+        
+        // Update strategy list
+        strategyListEl.innerHTML = '';
+        
+        if (strategies.length === 0) {
+          strategyListEl.innerHTML = '<div class="loading-state"><p>No strategies available</p></div>';
+        } else {
+          strategies.forEach(strategy => {
+            const strategyItem = document.createElement('div');
+            strategyItem.className = 'strategy-item';
+            
+            let description = 'Standard trading strategy';
+            switch(strategy.name) {
+              case 'High Risk / High Returns Long SPOT':
+                description = 'Aggressive growth strategy for maximum returns';
+                break;
+              case 'Medium Risk / Medium Returns Long SPOT':
+                description = 'Balanced growth with moderate risk';
+                break;
+              case 'Low Risk / Low Returns Fixed Income':
+                description = 'Conservative strategy for stable returns';
+                break;
+              case 'Custom Portfolio Rebalance':
+                description = 'Fully customizable asset allocation';
+                break;
+            }
+            
+            strategyItem.innerHTML = `
+              <div class="strategy-info">
+                <div class="strategy-name">${strategy.name}</div>
+                <div class="strategy-description">${description}</div>
+              </div>
+            `;
+            
+            strategyListEl.appendChild(strategyItem);
+          });
+        }
+      } else {
+        strategyListEl.innerHTML = '<div class="loading-state"><p>Failed to load strategies</p></div>';
+        totalStrategiesEl.textContent = '-';
+        assignedAccountsEl.textContent = '-';
+      }
+    } catch (error) {
+      console.error('Error updating strategy management:', error);
+      strategyListEl.innerHTML = '<div class="loading-state"><p>Error loading strategies</p></div>';
+      totalStrategiesEl.textContent = '-';
+      assignedAccountsEl.textContent = '-';
+    }
+  }
+
+  // Refresh strategies button handler
+  const refreshStrategiesBtn = document.getElementById('refresh-strategies');
+  if (refreshStrategiesBtn) {
+    refreshStrategiesBtn.onclick = async () => {
+      console.log("🔄 Refresh strategies clicked");
+      showToast("Refreshing strategies...", 'info', 2000);
+      
+      // Reload strategies by calling loadAccounts which will trigger updateStrategyManagement
+      await loadAccounts();
+      showToast("Strategies refreshed", 'success');
+    };
+  }
 
   // Add event listener for window resize
   window.addEventListener('resize', debounce(handleResize, 250));

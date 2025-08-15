@@ -29,9 +29,10 @@
           <thead>
             <tr>
               <th>Account</th>
+              <th>Exchange</th>
+              <th>Type</th>
               <th>Strategy</th>
               <th>Value</th>
-              <th>Hedge</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -58,20 +59,30 @@
       <button id="open-modal">Add New Account</button>
     </section>
 
-    <!-- Section 3: Portfolio Overview (Bottom Left) -->
-    <section id="section-portfolio" class="dashboard-card">
-      <h2>Portfolio Overview</h2>
-      <p>Portfolio analytics and performance metrics will be displayed here.</p>
-      
-      <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
-        <h3 style="margin-top: 0; color: #666; font-size: 16px;">📊 Coming Soon:</h3>
-        <ul style="color: #666; font-size: 14px; line-height: 1.6; padding-left: 20px;">
-          <li>📈 Combined portfolio performance</li>
-          <li>💰 Total portfolio value tracking</li>
-          <li>📊 Asset allocation breakdown</li>
-          <li>⚖️ Risk metrics and analysis</li>
-          <li>📅 Historical performance charts</li>
-        </ul>
+    <!-- Section 3: Strategy Management (Bottom Left) -->
+    <section id="section-strategy" class="dashboard-card">
+      <h2>Strategy Management</h2>
+      <div class="strategy-overview">
+        <div class="strategy-summary">
+          <div class="summary-item">
+            <span class="label">Available Strategies:</span>
+            <span class="value" id="total-strategies">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Assigned Accounts:</span>
+            <span class="value" id="assigned-accounts">-</span>
+          </div>
+        </div>
+        
+        <div class="strategy-list" id="strategy-list">
+          <div class="loading-state">
+            <p>Loading available strategies...</p>
+          </div>
+        </div>
+        
+        <div class="strategy-actions">
+          <button id="refresh-strategies" class="secondary-button">🔄 Refresh Strategies</button>
+        </div>
       </div>
     </section>
 
@@ -101,6 +112,19 @@
       <form id="account-form" autocomplete="off">
         <input type="text" id="trading-account-name" name="trading_account_name" placeholder="Account Name" autocomplete="off" required />
         
+        <!-- Exchange and Account Type Selection -->
+        <div class="exchange-account-section">
+          <select id="exchange-select" name="exchange" autocomplete="off" required>
+            <option value="Binance">Binance</option>
+            <!-- Future exchanges can be added here -->
+          </select>
+          
+          <select id="account-type-select" name="account_type" autocomplete="off" required>
+            <option value="SPOT">SPOT</option>
+            <option value="FUTURES">FUTURES</option>
+          </select>
+        </div>
+        
         <!-- Credentials Section -->
         <div class="credentials-section">
           <!-- Use Same Credentials Button (hidden by CSS class) -->
@@ -108,17 +132,14 @@
             🔒 Use Same API Credentials
           </button>
           
-          <input type="text" id="binance-api-key" name="binance_api_key" placeholder="Binance API Key" autocomplete="new-password" data-lpignore="true" data-form-type="" required />
-          <input type="password" id="binance-api-secret" name="binance_api_secret" placeholder="Binance API Secret" autocomplete="new-password" data-lpignore="true" data-form-type="" required />
+          <input type="text" id="exchange-api-key" name="exchange_api_key" placeholder="Exchange API Key" autocomplete="new-password" data-lpignore="true" data-form-type="" required />
+          <input type="password" id="exchange-api-secret" name="exchange_api_secret" placeholder="Exchange API Secret" autocomplete="new-password" data-lpignore="true" data-form-type="" required />
         </div>
         
-        <select id="trading-strategy" name="trading_strategy" autocomplete="off" required>
-          <option value="Standard Vapaus">Standard Vapaus</option>
-          <option value="Top X Instruments of Vapaus">Top X Instruments of Vapaus</option>
-          <option value="Custom Portfolio Rebalancing">Custom Portfolio Rebalancing</option>
-        </select>
-        <div id="instruments-wrapper" style="display:none;"></div>
-        <button type="button" id="add-instrument" style="display:none;">+ Add Instrument</button>
+        <!-- Account Description -->
+        <div class="account-info">
+          <p class="info-text">💡 <strong>Note:</strong> You can assign and customize trading strategies after creating the account in the Strategy Management section.</p>
+        </div>
         
         <!-- Action buttons -->
         <div class="form-actions">
@@ -158,6 +179,49 @@
         </div>
         
         <button type="submit">Update Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Strategy Assignment Modal -->
+  <div id="strategy-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="strategy-close">&times;</span>
+      <h3>Assign Strategy</h3>
+      <form id="strategy-form" class="strategy-form" autocomplete="off">
+        <div class="strategy-assignment-info">
+          <div class="account-info-display">
+            <span class="label">Account:</span>
+            <span class="value" id="strategy-account-name">-</span>
+          </div>
+          <div class="account-info-display">
+            <span class="label">Exchange:</span>
+            <span class="value" id="strategy-account-exchange">-</span>
+          </div>
+          <div class="account-info-display">
+            <span class="label">Type:</span>
+            <span class="value" id="strategy-account-type">-</span>
+          </div>
+        </div>
+        
+        <select id="strategy-select" name="strategy" autocomplete="off" required>
+          <option value="">Select Strategy...</option>
+        </select>
+        
+        <div id="strategy-customization" style="display:none;">
+          <h4>Strategy Configuration</h4>
+          <div id="strategy-parameters-form"></div>
+          <div id="custom-portfolio-section" style="display:none;">
+            <div id="portfolio-instruments"></div>
+            <button type="button" id="add-portfolio-instrument">+ Add Instrument</button>
+            <div id="portfolio-validation-feedback"></div>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit">Assign Strategy</button>
+          <button type="button" id="remove-strategy" class="remove-button" style="display:none;">Remove Strategy</button>
+        </div>
       </form>
     </div>
   </div>

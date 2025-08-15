@@ -3,27 +3,101 @@
 class ModalManager {
   constructor(apiBase, marketDataApi) {
     this.API_BASE = apiBase;
-    this.MARKET_DATA_API = marketDataApi; // Changed from BINANCE_API to MARKET_DATA_API
+    this.MARKET_DATA_API = marketDataApi;
     this.modal = document.getElementById("account-modal");
     this.hedgeModal = document.getElementById("hedge-modal");
+    this.strategyModal = document.getElementById("strategy-modal");
     this.accountForm = document.getElementById("account-form");
     this.hedgeForm = document.getElementById("hedge-form");
-    this.strategySelect = document.getElementById("trading-strategy");
-    this.instrumentsWrap = document.getElementById("instruments-wrapper");
-    this.addInstrumentBtn = document.getElementById("add-instrument");
+    this.strategyForm = document.getElementById("strategy-form");
+    this.exchangeSelect = document.getElementById("exchange-select");
+    this.accountTypeSelect = document.getElementById("account-type-select");
+    this.strategySelect = document.getElementById("strategy-select");
+    this.strategyParametersForm = document.getElementById("strategy-parameters-form");
+    this.portfolioInstruments = document.getElementById("portfolio-instruments");
+    this.addPortfolioInstrumentBtn = document.getElementById("add-portfolio-instrument");
     this.cancelEditBtn = document.getElementById("cancel-edit");
     
     this.currentEditingId = null;
     this.currentHedgeAccountId = null;
+    this.currentStrategyAccountId = null;
     this.useSameCredentials = false;
     this.binanceSymbols = [];
+    this.availableStrategies = [];
+    this.currentStrategyConfig = null;
     
     this.init();
   }
 
   init() {
     this.bindEvents();
+    this.loadStrategies(); // Load available strategies on init
     // Don't load symbols immediately - load them when needed
+  }
+
+  // Load available strategies from API
+  async loadStrategies() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn('⚠️ No token found for strategies API');
+        return;
+      }
+
+      console.log('📡 Loading strategies from API...');
+      const response = await fetch(`${this.API_BASE}/strategies`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      this.availableStrategies = data.strategies || [];
+      console.log(`✅ Loaded ${this.availableStrategies.length} strategies from API`);
+      
+      // Update strategy dropdown with initial selection
+      this.updateStrategyOptions();
+      
+    } catch (error) {
+      console.error('❌ Failed to load strategies from API:', error);
+      window.showToast('Failed to load trading strategies. Please refresh the page.', 'error');
+    }
+  }
+
+  // Update strategy options based on selected exchange and account type
+  updateStrategyOptions() {
+    const selectedExchange = this.exchangeSelect.value;
+    const selectedAccountType = this.accountTypeSelect.value;
+    
+    // Filter strategies based on selection
+    const filteredStrategies = this.availableStrategies.filter(strategy => 
+      strategy.exchange === selectedExchange && 
+      strategy.account_type === selectedAccountType &&
+      strategy.is_active === true
+    );
+    
+    // Clear existing options
+    this.strategySelect.innerHTML = '<option value="">Select Strategy...</option>';
+    
+    // Add filtered strategies
+    filteredStrategies.forEach(strategy => {
+      const option = document.createElement('option');
+      option.value = strategy.id;
+      option.textContent = strategy.name;
+      option.dataset.strategy = JSON.stringify(strategy);
+      this.strategySelect.appendChild(option);
+    });
+    
+    console.log(`📊 Updated strategy options: ${filteredStrategies.length} strategies available`);
+    
+    // Clear strategy parameters when options change
+    this.hideStrategyFields();
   }
 
   // Load Binance symbols for validation from market-data-service (lazy loading)
@@ -143,12 +217,16 @@ class ModalManager {
     // Modal events
     document.querySelector(".modal .close").onclick = () => this.closeAccountModal();
     document.getElementById("hedge-close").onclick = () => this.closeHedgeModal();
+    document.getElementById("strategy-close").onclick = () => this.closeStrategyModal();
     this.accountForm.onsubmit = (e) => this.submitAccount(e);
     this.hedgeForm.onsubmit = (e) => this.updateHedge(e);
+    this.strategyForm.onsubmit = (e) => this.submitStrategyAssignment(e);
     
-    // Form events
-    this.strategySelect.onchange = () => this.handleStrategyChange();
-    this.addInstrumentBtn.onclick = () => this.addInstrumentField();
+    // Strategy management events
+    this.strategySelect.onchange = () => this.handleStrategySelectionChange();
+    this.addPortfolioInstrumentBtn.onclick = () => this.addPortfolioInstrument();
+    document.getElementById("remove-strategy").onclick = () => this.removeStrategyAssignment();
+    document.getElementById("refresh-strategies").onclick = () => this.loadStrategies();
     
     // Cancel button
     if (this.cancelEditBtn) {
@@ -169,6 +247,9 @@ class ModalManager {
       if (event.target === this.hedgeModal) {
         this.closeHedgeModal();
       }
+      if (event.target === this.strategyModal) {
+        this.closeStrategyModal();
+      }
     };
   }
 
@@ -186,9 +267,10 @@ class ModalManager {
     
     // Clear all form fields
     document.getElementById("trading-account-name").value = "";
-    document.getElementById("binance-api-key").value = "";
-    document.getElementById("binance-api-secret").value = "";
-    this.strategySelect.value = "Standard Vapaus";
+    document.getElementById("exchange-api-key").value = "";
+    document.getElementById("exchange-api-secret").value = "";
+    this.exchangeSelect.value = "Binance";
+    this.accountTypeSelect.value = "SPOT";
     
     // FORCE HIDE the Use Same Credentials button for Add New Account
     const useSameCredButton = document.getElementById("use-same-credentials");
@@ -199,11 +281,10 @@ class ModalManager {
     
     // Hide edit-specific elements
     this.hideCancelButton();
-    this.hideStrategyFields();
     
     // Ensure API credential fields are enabled and visible
-    const apiKeyField = document.getElementById("binance-api-key");
-    const apiSecretField = document.getElementById("binance-api-secret");
+    const apiKeyField = document.getElementById("exchange-api-key");
+    const apiSecretField = document.getElementById("exchange-api-secret");
     if (apiKeyField && apiSecretField) {
       apiKeyField.disabled = false;
       apiSecretField.disabled = false;
@@ -231,9 +312,10 @@ class ModalManager {
     
     // Fill form with account data
     document.getElementById("trading-account-name").value = account.account_name;
-    document.getElementById("binance-api-key").value = account.api_key || "";
-    document.getElementById("binance-api-secret").value = account.api_secret || "";
-    this.strategySelect.value = account.strategy;
+    document.getElementById("exchange-api-key").value = account.api_key || "";
+    document.getElementById("exchange-api-secret").value = account.api_secret || "";
+    this.exchangeSelect.value = account.exchange || "Binance";
+    this.accountTypeSelect.value = account.account_type || "SPOT";
     
     // FORCE SHOW the Use Same Credentials button for Edit mode
     const useSameCredButton = document.getElementById("use-same-credentials");
@@ -305,6 +387,43 @@ class ModalManager {
     this.currentHedgeAccountId = null;
   }
 
+  // STRATEGY MODAL FUNCTIONS
+  openStrategyModal(account) {
+    console.log("🎯 Opening strategy assignment modal for:", account.account_name);
+    
+    this.currentStrategyAccountId = account.id;
+    
+    // Display account information
+    document.getElementById("strategy-account-name").textContent = account.account_name;
+    document.getElementById("strategy-account-exchange").textContent = account.exchange || "Binance";
+    document.getElementById("strategy-account-type").textContent = account.account_type || "SPOT";
+    
+    // Filter and populate strategies for this account's exchange and type
+    this.updateStrategyOptionsForAccount(account.exchange || "Binance", account.account_type || "SPOT");
+    
+    // Set current strategy if assigned
+    if (account.strategy) {
+      this.strategySelect.value = account.strategy;
+      this.handleStrategySelectionChange();
+      document.getElementById("remove-strategy").style.display = "inline-block";
+    } else {
+      this.strategySelect.value = "";
+      this.hideStrategyCustomization();
+      document.getElementById("remove-strategy").style.display = "none";
+    }
+    
+    this.strategyModal.style.display = "block";
+    console.log("✅ Strategy modal opened");
+  }
+
+  closeStrategyModal() {
+    this.strategyModal.style.display = "none";
+    this.strategyForm.reset();
+    this.currentStrategyAccountId = null;
+    this.hideStrategyCustomization();
+    console.log("✅ Strategy modal closed");
+  }
+
   // UI HELPER FUNCTIONS (keeping these for backward compatibility but using direct style.display now)
   showUseSameCredentialsButton() {
     const button = document.getElementById("use-same-credentials");
@@ -340,8 +459,8 @@ class ModalManager {
     e.preventDefault();
     e.stopPropagation();
     
-    const apiKeyField = document.getElementById("binance-api-key");
-    const apiSecretField = document.getElementById("binance-api-secret");
+    const apiKeyField = document.getElementById("exchange-api-key");
+    const apiSecretField = document.getElementById("exchange-api-secret");
     const button = e.target;
     
     this.useSameCredentials = !this.useSameCredentials;
@@ -364,40 +483,168 @@ class ModalManager {
   }
 
   // STRATEGY HANDLING
-  handleStrategyChange() {
-    const selectedStrategy = this.strategySelect.value;
-    console.log("🔄 Strategy changed to:", selectedStrategy);
+  updateStrategyOptionsForAccount(exchange, accountType) {
+    // Filter strategies based on exchange and account type
+    const filteredStrategies = this.availableStrategies.filter(strategy => 
+      strategy.exchange === exchange && 
+      strategy.account_type === accountType &&
+      strategy.is_active === true
+    );
     
-    this.hideStrategyFields();
+    // Clear existing options
+    this.strategySelect.innerHTML = '<option value="">Select Strategy...</option>';
     
-    if (selectedStrategy === "Top X Instruments of Vapaus") {
-      this.showTopXFields();
-    } else if (selectedStrategy === "Custom Portfolio Rebalancing") {
-      this.showPortfolioFields();
+    // Add filtered strategies
+    filteredStrategies.forEach(strategy => {
+      const option = document.createElement('option');
+      option.value = strategy.id;
+      option.textContent = strategy.name;
+      option.dataset.strategy = JSON.stringify(strategy);
+      this.strategySelect.appendChild(option);
+    });
+    
+    console.log(`📊 Updated strategy options for ${exchange} ${accountType}: ${filteredStrategies.length} strategies available`);
+  }
+
+  handleStrategySelectionChange() {
+    const selectedStrategyId = this.strategySelect.value;
+    const selectedOption = this.strategySelect.selectedOptions[0];
+    
+    if (!selectedOption || !selectedStrategyId) {
+      this.hideStrategyCustomization();
+      return;
+    }
+    
+    try {
+      this.currentStrategyConfig = JSON.parse(selectedOption.dataset.strategy);
+      console.log("🔄 Strategy selected:", this.currentStrategyConfig.name);
+      
+      this.showStrategyCustomization();
+      
+    } catch (error) {
+      console.error("❌ Error parsing strategy config:", error);
+      this.hideStrategyCustomization();
     }
   }
 
   handleStrategyForEdit(account) {
-    const strategy = account.strategy;
+    // Find the strategy config from available strategies
+    const strategyConfig = this.availableStrategies.find(s => s.id === account.strategy);
+    if (!strategyConfig) {
+      console.warn("⚠️ Strategy config not found for:", account.strategy);
+      return;
+    }
     
-    if (strategy === "Top X Instruments of Vapaus") {
-      this.showTopXFields();
-      const topXInput = document.getElementById("top-x-count");
-      if (topXInput) {
-        topXInput.value = account.top_x_count || "";
-      }
-    } else if (strategy === "Custom Portfolio Rebalancing") {
-      this.showPortfolioFields();
+    this.currentStrategyConfig = strategyConfig;
+    this.showStrategyParameters();
+    
+    // Populate existing parameter values
+    if (strategyConfig.parameters) {
+      Object.keys(strategyConfig.parameters).forEach(paramName => {
+        const input = document.getElementById(`strategy-${paramName}`);
+        if (input) {
+          if (paramName === 'top_x_count') {
+            input.value = account.top_x_count || 0;
+          } else if (paramName === 'custom_instruments') {
+            // Handle custom portfolio instruments
+            if (account.custom_portfolio && account.custom_portfolio.length > 0) {
+              console.log("📋 Loading existing custom portfolio:", account.custom_portfolio);
+              account.custom_portfolio.forEach(instrument => {
+                this.addInstrumentField(instrument.symbol, instrument.weight);
+              });
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // Show strategy customization based on selected strategy
+  showStrategyCustomization() {
+    if (!this.currentStrategyConfig || !this.currentStrategyConfig.parameters) {
+      return;
+    }
+    
+    const customizationDiv = document.getElementById('strategy-customization');
+    customizationDiv.style.display = 'block';
+    
+    this.strategyParametersForm.innerHTML = '';
+    this.portfolioInstruments.innerHTML = '';
+    
+    const parameters = this.currentStrategyConfig.parameters;
+    
+    Object.keys(parameters).forEach(paramName => {
+      const param = parameters[paramName];
       
-      // ✅ FIX: Only load existing custom portfolio instruments, don't add defaults
-      if (account.custom_portfolio && account.custom_portfolio.length > 0) {
-        console.log("📋 Loading existing custom portfolio:", account.custom_portfolio);
-        account.custom_portfolio.forEach(instrument => {
-          this.addInstrumentField(instrument.symbol, instrument.weight);
+      if (paramName === 'custom_instruments') {
+        // Handle custom portfolio specially
+        this.showCustomPortfolioSection();
+      } else if (paramName === 'top_x_count') {
+        // Handle top X count parameter
+        const wrapper = document.createElement('div');
+        wrapper.className = 'parameter-field';
+        wrapper.innerHTML = `
+          <label for="strategy-param-${paramName}">${param.description}</label>
+          <input type="number" 
+                 id="strategy-param-${paramName}" 
+                 name="${paramName}"
+                 placeholder="${param.description}"
+                 min="${param.min || 0}" 
+                 max="${param.max || 100}"
+                 value="${param.default || 0}">
+        `;
+        this.strategyParametersForm.appendChild(wrapper);
+      } else if (paramName === 'rebalance_frequency') {
+        // Handle rebalance frequency dropdown
+        const wrapper = document.createElement('div');
+        wrapper.className = 'parameter-field';
+        const options = param.options.map(opt => 
+          `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt}</option>`
+        ).join('');
+        
+        wrapper.innerHTML = `
+          <label for="strategy-param-${paramName}">${param.description}</label>
+          <select id="strategy-param-${paramName}" name="${paramName}">
+            ${options}
+          </select>
+        `;
+        this.strategyParametersForm.appendChild(wrapper);
+      }
+    });
+  }
+
+  hideStrategyCustomization() {
+    const customizationDiv = document.getElementById('strategy-customization');
+    customizationDiv.style.display = 'none';
+    document.getElementById('custom-portfolio-section').style.display = 'none';
+  }
+
+  showCustomPortfolioSection() {
+    const portfolioSection = document.getElementById('custom-portfolio-section');
+    portfolioSection.style.display = 'block';
+    
+    // Load symbols for validation
+    this.loadBinanceSymbols();
+    
+    // Add default instruments if none exist
+    if (this.portfolioInstruments.children.length === 0) {
+      if (this.currentStrategyConfig && 
+          this.currentStrategyConfig.parameters && 
+          this.currentStrategyConfig.parameters.custom_instruments &&
+          this.currentStrategyConfig.parameters.custom_instruments.default) {
+        
+        const defaultInstruments = this.currentStrategyConfig.parameters.custom_instruments.default;
+        console.log("📋 Using API default instruments:", defaultInstruments);
+        
+        defaultInstruments.forEach(instrument => {
+          this.addPortfolioInstrument(instrument.symbol, instrument.weight);
         });
       } else {
-        console.log("📋 No existing custom portfolio found - starting with empty portfolio");
-        // Don't add default instruments for edit mode - leave empty
+        // Fallback to hardcoded defaults
+        console.log("📋 Using fallback default instruments");
+        this.addPortfolioInstrument("BTC", 50);
+        this.addPortfolioInstrument("ETH", 30);
+        this.addPortfolioInstrument("XRP", 20);
       }
     }
   }
@@ -425,9 +672,26 @@ class ModalManager {
     // Only add default instruments for NEW accounts (when not editing)
     if (!this.instrumentsWrap.children.length && !this.currentEditingId) {
       console.log("🆕 Adding default instruments for NEW account");
-      this.addInstrumentField("BTCUSDT", 50);
-      this.addInstrumentField("ETHUSDT", 30);
-      this.addInstrumentField("BNBUSDT", 20);
+      
+      // Get default instruments from API strategy configuration
+      if (this.currentStrategyConfig && 
+          this.currentStrategyConfig.parameters && 
+          this.currentStrategyConfig.parameters.custom_instruments &&
+          this.currentStrategyConfig.parameters.custom_instruments.default) {
+        
+        const defaultInstruments = this.currentStrategyConfig.parameters.custom_instruments.default;
+        console.log("📋 Using API default instruments:", defaultInstruments);
+        
+        defaultInstruments.forEach(instrument => {
+          this.addInstrumentField(instrument.symbol, instrument.weight);
+        });
+      } else {
+        // Fallback to hardcoded defaults
+        console.log("📋 Using fallback default instruments");
+        this.addInstrumentField("BTCUSDT", 50);
+        this.addInstrumentField("ETHUSDT", 30);
+        this.addInstrumentField("XRPUSDT", 20);
+      }
     }
   }
 
@@ -436,9 +700,99 @@ class ModalManager {
     if (topXWrapper) {
       topXWrapper.style.display = "none";
     }
+    this.strategyParametersDiv.style.display = "none";
+    this.strategyParametersDiv.innerHTML = "";
     this.instrumentsWrap.style.display = "none";
     this.instrumentsWrap.innerHTML = "";
     this.addInstrumentBtn.style.display = "none";
+  }
+
+  // Portfolio instrument management for strategy modal
+  addPortfolioInstrument(sym = "", wt = 0) {
+    const div = document.createElement("div");
+    div.className = "portfolio-instrument-field";
+    div.innerHTML = `
+      <div class="instrument-row">
+        <input type="text" name="portfolio-symbol" placeholder="Symbol (e.g., BTC)" value="${sym}" class="symbol-input">
+        <input type="number" name="portfolio-weight" placeholder="Weight (%)" value="${wt}" step="0.01" min="0" max="100" class="weight-input">
+        <button type="button" class="remove-portfolio-instrument">×</button>
+      </div>
+    `;
+    this.portfolioInstruments.appendChild(div);
+    
+    div.querySelector(".remove-portfolio-instrument").addEventListener("click", () => {
+      div.remove();
+      this.validateStrategyPortfolio();
+    });
+    
+    // Add validation on input changes
+    const symbolInput = div.querySelector('.symbol-input');
+    const weightInput = div.querySelector('.weight-input');
+    symbolInput.addEventListener('input', () => this.validateStrategyPortfolio());
+    weightInput.addEventListener('input', () => this.validateStrategyPortfolio());
+  }
+
+  // Portfolio validation for strategy modal
+  validateStrategyPortfolio() {
+    const instrumentRows = this.portfolioInstruments.querySelectorAll('.portfolio-instrument-field');
+    const feedbackDiv = document.getElementById('portfolio-validation-feedback');
+    
+    if (instrumentRows.length === 0) {
+      feedbackDiv.innerHTML = '<div class="portfolio-feedback warning">⚠️ Add at least one instrument</div>';
+      return false;
+    }
+    
+    let totalWeight = 0;
+    let hasEmptySymbols = false;
+    let hasInvalidWeights = false;
+    let hasDuplicates = false;
+    const symbols = new Set();
+    
+    instrumentRows.forEach(row => {
+      const symbolInput = row.querySelector('.symbol-input');
+      const weightInput = row.querySelector('.weight-input');
+      
+      const symbol = symbolInput.value.trim().toUpperCase();
+      const weight = parseFloat(weightInput.value) || 0;
+      
+      if (!symbol) {
+        hasEmptySymbols = true;
+        symbolInput.style.borderColor = '#ff4444';
+      } else {
+        symbolInput.style.borderColor = '';
+        if (symbols.has(symbol)) {
+          hasDuplicates = true;
+          symbolInput.style.borderColor = '#ff4444';
+        } else {
+          symbols.add(symbol);
+        }
+      }
+      
+      if (weight <= 0 || weight > 100) {
+        hasInvalidWeights = true;
+        weightInput.style.borderColor = '#ff4444';
+      } else {
+        weightInput.style.borderColor = '';
+      }
+      
+      totalWeight += weight;
+    });
+    
+    const isValidTotal = Math.abs(totalWeight - 100) < 0.01;
+    
+    if (hasEmptySymbols) {
+      feedbackDiv.innerHTML = '<div class="portfolio-feedback error">⚠️ Please fill in all symbol fields</div>';
+    } else if (hasDuplicates) {
+      feedbackDiv.innerHTML = '<div class="portfolio-feedback error">⚠️ Duplicate symbols found</div>';
+    } else if (hasInvalidWeights) {
+      feedbackDiv.innerHTML = '<div class="portfolio-feedback error">⚠️ Weights must be between 0.01 and 100</div>';
+    } else if (!isValidTotal) {
+      feedbackDiv.innerHTML = `<div class="portfolio-feedback warning">⚠️ Total weight: ${totalWeight.toFixed(2)}% (must equal 100%)</div>`;
+    } else {
+      feedbackDiv.innerHTML = `<div class="portfolio-feedback success">✅ Portfolio balanced: ${totalWeight.toFixed(2)}%</div>`;
+    }
+    
+    return isValidTotal && !hasEmptySymbols && !hasInvalidWeights && !hasDuplicates;
   }
 
  // addInstrumentField
@@ -458,8 +812,79 @@ addInstrumentField(sym = "", wt = 0) {
   `;
   this.instrumentsWrap.appendChild(div);
   
-  div.querySelector(".remove-instrument").addEventListener("click", () => div.remove());
+  div.querySelector(".remove-instrument").addEventListener("click", () => {
+    div.remove();
+    this.validatePortfolio(); // Validate after removal
+  });
+  
+  // Add validation on weight input change
+  const weightInput = div.querySelector('input[name="weight"]');
+  weightInput.addEventListener('input', () => this.validatePortfolio());
 }
+
+  // Portfolio validation function
+  validatePortfolio() {
+    const instrumentRows = this.instrumentsWrap.querySelectorAll('.instrument-field');
+    if (instrumentRows.length === 0) return true;
+    
+    let totalWeight = 0;
+    let hasEmptySymbols = false;
+    let hasInvalidWeights = false;
+    
+    instrumentRows.forEach(row => {
+      const symbolInput = row.querySelector('input[name="symbol"]');
+      const weightInput = row.querySelector('input[name="weight"]');
+      
+      const symbol = symbolInput.value.trim();
+      const weight = parseFloat(weightInput.value) || 0;
+      
+      if (!symbol) {
+        hasEmptySymbols = true;
+        symbolInput.style.borderColor = '#ff4444';
+      } else {
+        symbolInput.style.borderColor = '';
+      }
+      
+      if (weight <= 0 || weight > 100) {
+        hasInvalidWeights = true;
+        weightInput.style.borderColor = '#ff4444';
+      } else {
+        weightInput.style.borderColor = '';
+      }
+      
+      totalWeight += weight;
+    });
+    
+    // Check total weight
+    const isValidTotal = Math.abs(totalWeight - 100) < 0.01; // Allow small floating point differences
+    
+    // Update UI feedback
+    const portfolioFeedback = document.getElementById('portfolio-feedback') || this.createPortfolioFeedback();
+    
+    if (hasEmptySymbols) {
+      portfolioFeedback.textContent = '⚠️ Please fill in all symbol fields';
+      portfolioFeedback.className = 'portfolio-feedback error';
+    } else if (hasInvalidWeights) {
+      portfolioFeedback.textContent = '⚠️ Weights must be between 0.01 and 100';
+      portfolioFeedback.className = 'portfolio-feedback error';
+    } else if (!isValidTotal) {
+      portfolioFeedback.textContent = `⚠️ Total weight: ${totalWeight.toFixed(2)}% (must equal 100%)`;
+      portfolioFeedback.className = 'portfolio-feedback warning';
+    } else {
+      portfolioFeedback.textContent = `✅ Portfolio balanced: ${totalWeight.toFixed(2)}%`;
+      portfolioFeedback.className = 'portfolio-feedback success';
+    }
+    
+    return isValidTotal && !hasEmptySymbols && !hasInvalidWeights;
+  }
+  
+  createPortfolioFeedback() {
+    const feedback = document.createElement('div');
+    feedback.id = 'portfolio-feedback';
+    feedback.className = 'portfolio-feedback';
+    this.instrumentsWrap.parentNode.insertBefore(feedback, this.addInstrumentBtn);
+    return feedback;
+  }
 
   // FORM SUBMISSION
   async submitAccount(e) {
@@ -503,14 +928,14 @@ addInstrumentField(sym = "", wt = 0) {
 
       const data = {
         account_name: accountName,
-        strategy: this.strategySelect.value,
-        custom_portfolio: []
+        exchange: this.exchangeSelect.value,
+        account_type: this.accountTypeSelect.value
       };
 
       // Only include API credentials if not using same credentials
       if (!this.useSameCredentials) {
-        const apiKey = document.getElementById("binance-api-key").value.trim();
-        const apiSecret = document.getElementById("binance-api-secret").value.trim();
+        const apiKey = document.getElementById("exchange-api-key").value.trim();
+        const apiSecret = document.getElementById("exchange-api-secret").value.trim();
         
         if (!apiKey || !apiSecret) {
           window.showToast("API Key and Secret are required.", 'warning');
@@ -521,83 +946,6 @@ addInstrumentField(sym = "", wt = 0) {
         data.api_secret = apiSecret;
       }
 
-      // Handle strategy-specific data
-      if (data.strategy === "Top X Instruments of Vapaus") {
-        const topXCount = document.getElementById("top-x-count");
-        if (!topXCount || !topXCount.value) {
-          window.showToast("Please specify the number of top instruments.", 'warning');
-          topXCount?.focus();
-          return;
-        }
-        data.top_x_count = parseInt(topXCount.value);
-        if (data.top_x_count < 1 || data.top_x_count > 50) {
-          window.showToast("Number of top instruments must be between 1 and 50.", 'warning');
-          return;
-        }
-      } else if (data.strategy === "Custom Portfolio Rebalancing") {
-        const symbols = this.instrumentsWrap.querySelectorAll("input[name='symbol']");
-        const weights = this.instrumentsWrap.querySelectorAll("input[name='weight']");
-        
-        if (symbols.length === 0) {
-          window.showToast("Please add at least one instrument for custom portfolio.", 'warning');
-          return;
-        }
-
-        // Ensure symbols are loaded before validation
-        await this.loadBinanceSymbols();
-
-        // Validate and build portfolio
-        let totalWeight = 0;
-        const symbolSet = new Set(); // Check for duplicate symbols
-        
-        for (let i = 0; i < symbols.length; i++) {
-          const symbol = symbols[i].value.trim().toUpperCase();
-          const weight = parseFloat(weights[i].value);
-
-          if (!symbol) {
-            window.showToast("All symbols must be filled in.", 'warning');
-            symbols[i].focus();
-            return;
-          }
-
-          if (symbolSet.has(symbol)) {
-            window.showToast(`Duplicate symbol found: ${symbol}. Each symbol can only be used once.`, 'warning');
-            symbols[i].focus();
-            return;
-          }
-          symbolSet.add(symbol);
-
-          if (!symbol.endsWith('USDT')) {
-            window.showToast(`Symbol ${symbol} must end with USDT.`, 'warning');
-            symbols[i].focus();
-            return;
-          }
-
-          // ✅ UPDATED: Use market-data-service validation instead of direct Binance API
-          // Only validate if symbols were successfully loaded
-          if (this.binanceSymbols.length > 0 && !this.binanceSymbols.includes(symbol)) {
-            window.showToast(`Symbol ${symbol} does not exist or is not active on Binance SPOT.`, 'error');
-            symbols[i].focus();
-            return;
-          } else if (this.binanceSymbols.length === 0) {
-            console.warn(`⚠️ Symbol validation skipped for ${symbol} - market data service unavailable`);
-          }
-
-          if (isNaN(weight) || weight <= 0 || weight > 100) {
-            window.showToast(`Weight for ${symbol} must be between 0 and 100.`, 'warning');
-            weights[i].focus();
-            return;
-          }
-
-          totalWeight += weight;
-          data.custom_portfolio.push({ symbol, weight });
-        }
-
-        if (Math.abs(totalWeight - 100) > 0.01) {
-          window.showToast(`Portfolio weights must sum to 100%. Current total: ${totalWeight.toFixed(2)}%`, 'warning');
-          return;
-        }
-      }
 
       console.log("📤 Submitting account data:", data);
 
@@ -709,6 +1057,145 @@ addInstrumentField(sym = "", wt = 0) {
       // Always restore button state
       submitButton.disabled = false;
       submitButton.textContent = originalButtonText;
+    }
+  }
+
+  // STRATEGY ASSIGNMENT FUNCTIONS
+  async submitStrategyAssignment(e) {
+    e.preventDefault();
+    
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.showToast("You must be logged in to assign strategies.", 'error');
+      return;
+    }
+
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    
+    submitButton.disabled = true;
+    submitButton.textContent = "Assigning...";
+    
+    try {
+      const strategyId = this.strategySelect.value;
+      
+      if (!strategyId) {
+        window.showToast("Please select a strategy.", 'warning');
+        return;
+      }
+
+      // Build strategy assignment data
+      const data = {
+        strategy: strategyId
+      };
+
+      // Handle strategy parameters
+      if (this.currentStrategyConfig && this.currentStrategyConfig.parameters) {
+        const parameters = this.currentStrategyConfig.parameters;
+        
+        // Handle top_x_count parameter
+        if (parameters.top_x_count) {
+          const topXInput = document.getElementById("strategy-param-top_x_count");
+          if (topXInput) {
+            data.top_x_count = parseInt(topXInput.value) || 0;
+          }
+        }
+        
+        // Handle custom portfolio
+        if (parameters.custom_instruments) {
+          if (!this.validateStrategyPortfolio()) {
+            window.showToast("Please fix portfolio issues before saving.", 'warning');
+            return;
+          }
+
+          const portfolioRows = this.portfolioInstruments.querySelectorAll('.portfolio-instrument-field');
+          const customPortfolio = [];
+          
+          portfolioRows.forEach(row => {
+            const symbol = row.querySelector('.symbol-input').value.trim().toUpperCase();
+            const weight = parseFloat(row.querySelector('.weight-input').value);
+            
+            if (symbol && weight > 0) {
+              customPortfolio.push({ symbol, weight });
+            }
+          });
+          
+          data.custom_portfolio = customPortfolio;
+        }
+      }
+
+      console.log("📤 Submitting strategy assignment:", data);
+
+      const res = await fetch(`${this.API_BASE}/accounts/${this.currentStrategyAccountId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      window.showToast("✅ Strategy assigned successfully!", 'success');
+      this.closeStrategyModal();
+      if (window.loadAccounts) window.loadAccounts();
+      if (window.loadStrategiesOverview) window.loadStrategiesOverview();
+
+    } catch (err) {
+      console.error("❌ Strategy assignment error:", err);
+      window.showToast(`❌ Error assigning strategy: ${err.message}`, 'error');
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
+    }
+  }
+
+  async removeStrategyAssignment() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.showToast("You must be logged in to remove strategies.", 'error');
+      return;
+    }
+
+    if (!confirm("Are you sure you want to remove the strategy assignment from this account?")) {
+      return;
+    }
+
+    try {
+      const data = {
+        strategy: null,
+        custom_portfolio: [],
+        top_x_count: null
+      };
+
+      console.log("📤 Removing strategy assignment");
+
+      const res = await fetch(`${this.API_BASE}/accounts/${this.currentStrategyAccountId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      window.showToast("✅ Strategy removed successfully!", 'success');
+      this.closeStrategyModal();
+      if (window.loadAccounts) window.loadAccounts();
+      if (window.loadStrategiesOverview) window.loadStrategiesOverview();
+
+    } catch (err) {
+      console.error("❌ Strategy removal error:", err);
+      window.showToast(`❌ Error removing strategy: ${err.message}`, 'error');
     }
   }
 }

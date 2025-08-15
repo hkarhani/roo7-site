@@ -966,6 +966,349 @@ input:checked + .toggle-slider:before {
   color: #ccc;
 }
 
+/* STRATEGY MANAGEMENT SECTION */
+.strategy-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.strategy-summary {
+  display: flex;
+  gap: 20px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.dark-theme .strategy-summary {
+  background: #2a2a2a;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.summary-item .label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.dark-theme .summary-item .label {
+  color: #ccc;
+}
+
+.summary-item .value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0077cc;
+}
+
+.dark-theme .summary-item .value {
+  color: #4da6ff;
+}
+
+.strategy-list {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  min-height: 200px;
+  padding: 15px;
+  background: #fff;
+}
+
+.dark-theme .strategy-list {
+  border-color: #444;
+  background: #1e1e1e;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  color: #666;
+  font-style: italic;
+}
+
+.dark-theme .loading-state {
+  color: #ccc;
+}
+
+.strategy-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  background: #f9f9f9;
+  transition: all 0.2s ease;
+}
+
+.dark-theme .strategy-item {
+  border-color: #444;
+  background: #2a2a2a;
+}
+
+.strategy-item:hover {
+  border-color: #0077cc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.strategy-info {
+  flex: 1;
+}
+
+.strategy-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.dark-theme .strategy-name {
+  color: #e0e0e0;
+}
+
+.strategy-description {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.dark-theme .strategy-description {
+  color: #ccc;
+}
+
+.strategy-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.secondary-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #545b62;
+}
+
+.assign-strategy-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.assign-strategy-btn:hover {
+  background: #218838;
+}
+
+.assign-strategy-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Strategy Assignment Modal */
+.strategy-assignment-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.dark-theme .strategy-assignment-info {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.account-info-display {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.account-info-display:last-child {
+  margin-bottom: 0;
+}
+
+.account-info-display .label {
+  font-weight: 500;
+  color: #666;
+  font-size: 14px;
+}
+
+.dark-theme .account-info-display .label {
+  color: #ccc;
+}
+
+.account-info-display .value {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.dark-theme .account-info-display .value {
+  color: #e0e0e0;
+}
+
+.strategy-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.strategy-form select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dark-theme .strategy-form select {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+#strategy-customization {
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #f9f9f9;
+  margin-top: 15px;
+}
+
+.dark-theme #strategy-customization {
+  border-color: #444;
+  background: #2a2a2a;
+}
+
+#strategy-customization h4 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.dark-theme #strategy-customization h4 {
+  color: #e0e0e0;
+}
+
+#strategy-parameters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.remove-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+}
+
+.remove-button:hover {
+  background: #c82333;
+}
+
+/* Portfolio validation feedback in strategy modal */
+#portfolio-validation-feedback {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#portfolio-validation-feedback.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+#portfolio-validation-feedback.warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+#portfolio-validation-feedback.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.dark-theme #portfolio-validation-feedback.success {
+  background: #1d4e2a;
+  color: #a3d9a5;
+  border-color: #2d6930;
+}
+
+.dark-theme #portfolio-validation-feedback.warning {
+  background: #4d3a00;
+  color: #ffeb3b;
+  border-color: #665000;
+}
+
+.dark-theme #portfolio-validation-feedback.error {
+  background: #4d1f1f;
+  color: #ffcccb;
+  border-color: #662929;
+}
+
+/* Account Info Section */
+.account-info {
+  background: #e8f4f8;
+  border: 1px solid #bee5eb;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 15px 0;
+}
+
+.dark-theme .account-info {
+  background: #1e2a3a;
+  border-color: #3a4a5a;
+}
+
+.account-info .info-text {
+  margin: 0;
+  font-size: 14px;
+  color: #0c5460;
+  line-height: 1.4;
+}
+
+.dark-theme .account-info .info-text {
+  color: #60a5fa;
+}
+
 /* DESKTOP BREAKPOINTS */
 @media (min-width: 769px) {
   .dashboard-header {
@@ -997,7 +1340,7 @@ input:checked + .toggle-slider:before {
     grid-row: 1;
   }
 
-  #section-portfolio {
+  #section-strategy {
     grid-column: 1;
     grid-row: 2;
   }
@@ -1005,6 +1348,16 @@ input:checked + .toggle-slider:before {
   #section-analytics {
     grid-column: 2;
     grid-row: 2;
+  }
+
+  .strategy-summary {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .strategy-actions {
+    flex-direction: row;
+    justify-content: flex-start;
   }
 
   .dashboard-card {
@@ -1105,5 +1458,176 @@ input:checked + .toggle-slider:before {
 
   .dashboard-card {
     padding: 25px;
+  }
+}
+
+/* New styles for enhanced modal functionality */
+
+/* Exchange and Account Type Selection */
+.exchange-account-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.exchange-account-section select {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.dark-theme .exchange-account-section select {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+/* Strategy Parameters */
+#strategy-parameters {
+  margin-bottom: 15px;
+}
+
+.parameter-field {
+  margin-bottom: 15px;
+}
+
+.parameter-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.dark-theme .parameter-field label {
+  color: #ccc;
+}
+
+.parameter-field input,
+.parameter-field select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.dark-theme .parameter-field input,
+.dark-theme .parameter-field select {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+/* Portfolio Feedback */
+.portfolio-feedback {
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.portfolio-feedback.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.portfolio-feedback.warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.portfolio-feedback.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.dark-theme .portfolio-feedback.success {
+  background: #1d4e2a;
+  color: #a3d9a5;
+  border-color: #2d6930;
+}
+
+.dark-theme .portfolio-feedback.warning {
+  background: #4d3a00;
+  color: #ffeb3b;
+  border-color: #665000;
+}
+
+.dark-theme .portfolio-feedback.error {
+  background: #4d1f1f;
+  color: #ffcccb;
+  border-color: #662929;
+}
+
+/* Enhanced instrument fields */
+.instrument-field {
+  margin-bottom: 10px;
+}
+
+.instrument-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.instrument-row input[name="symbol"] {
+  flex: 2;
+  text-transform: uppercase;
+}
+
+.instrument-row input[name="weight"] {
+  flex: 1;
+}
+
+.remove-instrument {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-instrument:hover {
+  background: #c82333;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .exchange-account-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .instrument-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .instrument-row input[name="symbol"],
+  .instrument-row input[name="weight"] {
+    flex: none;
+    width: 100%;
+  }
+  
+  .remove-instrument {
+    align-self: flex-end;
+    margin-top: 5px;
   }
 }
