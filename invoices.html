@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Invoices</title>
   <link rel="stylesheet" href="dashboard.css?v=4.4" />
-  <link rel="stylesheet" href="invoices.css?v=1.0" />
+  <link rel="stylesheet" href="invoices.css?v=2.0" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -80,6 +80,46 @@
         
         <button id="apply-filters" class="filter-btn">Apply Filters</button>
         <button id="clear-filters" class="filter-btn secondary">Clear</button>
+      </div>
+    </section>
+
+    <!-- Subscription Activation Section -->
+    <section id="section-activation" class="dashboard-card" style="display: none;">
+      <h2>🚀 Activate Subscription</h2>
+      <div class="activation-content">
+        <div class="activation-message">
+          <p>You don't have an active subscription. Activate your subscription to start using the trading bot service.</p>
+        </div>
+        
+        <div class="portfolio-validation" id="portfolio-validation" style="display: none;">
+          <h4>📊 Portfolio Summary</h4>
+          <div id="portfolio-details"></div>
+        </div>
+        
+        <div class="pricing-info" id="pricing-info" style="display: none;">
+          <h4>💰 Pricing Details</h4>
+          <div id="pricing-details"></div>
+        </div>
+        
+        <div class="referral-section">
+          <h4>🎯 Referral Code (Optional)</h4>
+          <div class="referral-input-group">
+            <input type="text" id="activation-referral-code" placeholder="Enter referral code for discounts">
+            <button id="validate-referral-btn" class="validate-btn">Validate</button>
+          </div>
+          <div id="referral-message" class="referral-message"></div>
+        </div>
+        
+        <div class="activation-actions">
+          <button id="validate-portfolio-btn" class="action-btn primary">
+            <span class="btn-icon">🔍</span>
+            <span class="btn-text">Validate Portfolio</span>
+          </button>
+          <button id="activate-subscription-btn" class="action-btn success" style="display: none;">
+            <span class="btn-icon">🚀</span>
+            <span class="btn-text">Activate Subscription</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -186,6 +226,6 @@
 
   <!-- Scripts -->
   <script src="theme-manager.js?v=1"></script>
-  <script src="invoices.js?v=1.0"></script>
+  <script src="invoices.js?v=2.0"></script>
 </body>
 </html>

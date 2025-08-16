@@ -62,9 +62,23 @@ document.addEventListener("DOMContentLoaded", () => {
         loadInvoices()
       ]);
       updateSummaryStats();
+      checkSubscriptionStatus();
     } catch (error) {
       console.error('Failed to initialize page:', error);
       showToast('Failed to load invoice data', 'error');
+    }
+  }
+
+  // Check subscription status and show activation section if needed
+  function checkSubscriptionStatus() {
+    const activationSection = document.getElementById('section-activation');
+    
+    if (!userSubscription || userSubscription.status !== 'active') {
+      activationSection.style.display = 'block';
+      console.log('ℹ️ No active subscription - showing activation section');
+    } else {
+      activationSection.style.display = 'none';
+      console.log('✅ Active subscription found - hiding activation section');
     }
   }
 
@@ -434,6 +448,242 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // === SUBSCRIPTION ACTIVATION FUNCTIONS ===
+
+  // Validate portfolio for activation
+  async function validatePortfolio() {
+    try {
+      const validateBtn = document.getElementById('validate-portfolio-btn');
+      validateBtn.disabled = true;
+      validateBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Validating...</span>';
+
+      const response = await fetch(`${INVOICING_API_BASE}/subscriptions/validate-portfolio`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const validation = await response.json();
+      displayPortfolioValidation(validation);
+      
+      if (validation.is_valid) {
+        showToast('Portfolio validated successfully!', 'success');
+        document.getElementById('activate-subscription-btn').style.display = 'inline-block';
+      } else {
+        showToast('No active accounts found for activation', 'warning');
+      }
+
+    } catch (error) {
+      console.error('Error validating portfolio:', error);
+      showToast(`Portfolio validation failed: ${error.message}`, 'error');
+    } finally {
+      const validateBtn = document.getElementById('validate-portfolio-btn');
+      validateBtn.disabled = false;
+      validateBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Validate Portfolio</span>';
+    }
+  }
+
+  // Display portfolio validation results
+  function displayPortfolioValidation(validation) {
+    const portfolioSection = document.getElementById('portfolio-validation');
+    const portfolioDetails = document.getElementById('portfolio-details');
+    
+    portfolioDetails.innerHTML = `
+      <div class="validation-summary">
+        <div class="validation-item">
+          <span class="validation-label">Total Portfolio Value:</span>
+          <span class="validation-value"><strong>$${validation.total_value.toFixed(2)}</strong></span>
+        </div>
+        <div class="validation-item">
+          <span class="validation-label">Active Accounts:</span>
+          <span class="validation-value">${validation.active_accounts_count}</span>
+        </div>
+      </div>
+      <div class="accounts-list">
+        <h5>📊 Account Details</h5>
+        ${validation.accounts.map(account => `
+          <div class="account-item">
+            <span class="account-name">${account.account_name}</span>
+            <span class="account-value">$${account.current_value.toFixed(2)}</span>
+            <span class="account-strategy">${account.strategy}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    
+    portfolioSection.style.display = 'block';
+    
+    // Calculate and display pricing
+    calculateAndDisplayPricing(validation.total_value);
+  }
+
+  // Calculate and display pricing information
+  function calculateAndDisplayPricing(portfolioValue) {
+    const referralCode = document.getElementById('activation-referral-code').value.trim();
+    const hasReferral = referralCode.length > 0;
+    
+    let pricing = {
+      tier: '',
+      base_price: 0,
+      final_price: 0,
+      discount: 0,
+      referral_applied: false
+    };
+
+    if (portfolioValue < 10000) {
+      pricing.tier = 'Tier 1';
+      pricing.base_price = 1000;
+      pricing.final_price = hasReferral ? 500 : 1000;
+      pricing.discount = hasReferral ? 0.5 : 0;
+      pricing.referral_applied = hasReferral;
+    } else if (portfolioValue < 100000) {
+      pricing.tier = 'Tier 2';
+      pricing.base_price = hasReferral ? Math.round(portfolioValue * 0.10) : Math.round(portfolioValue * 0.08);
+      pricing.final_price = hasReferral ? Math.round(portfolioValue * 0.08) : Math.round(portfolioValue * 0.10);
+      pricing.discount = hasReferral ? 0.2 : 0;
+      pricing.referral_applied = hasReferral;
+    } else {
+      pricing.tier = 'Tier 3';
+      pricing.base_price = 0;
+      pricing.final_price = 0;
+      pricing.discount = 0;
+      pricing.referral_applied = false;
+    }
+
+    displayPricingInfo(pricing);
+  }
+
+  // Display pricing information
+  function displayPricingInfo(pricing) {
+    const pricingSection = document.getElementById('pricing-info');
+    const pricingDetails = document.getElementById('pricing-details');
+    
+    if (pricing.tier === 'Tier 3') {
+      pricingDetails.innerHTML = `
+        <div class="pricing-notice custom-pricing">
+          <h5>🎯 Custom Pricing Required</h5>
+          <p>Your portfolio value requires custom pricing. Please contact our support team for a personalized quote.</p>
+          <div class="contact-info">
+            <p>📧 Email: billing@roo7.site</p>
+            <p>💬 Live Chat: Available 24/7</p>
+          </div>
+        </div>
+      `;
+      document.getElementById('activate-subscription-btn').style.display = 'none';
+    } else {
+      pricingDetails.innerHTML = `
+        <div class="pricing-breakdown">
+          <div class="pricing-item">
+            <span class="pricing-label">Subscription Tier:</span>
+            <span class="pricing-value">${pricing.tier}</span>
+          </div>
+          ${pricing.discount > 0 ? `
+            <div class="pricing-item">
+              <span class="pricing-label">Base Price:</span>
+              <span class="pricing-value strikethrough">$${pricing.base_price.toFixed(2)}</span>
+            </div>
+            <div class="pricing-item discount">
+              <span class="pricing-label">Discount (${(pricing.discount * 100).toFixed(0)}%):</span>
+              <span class="pricing-value">-$${(pricing.base_price - pricing.final_price).toFixed(2)}</span>
+            </div>
+          ` : ''}
+          <div class="pricing-item final">
+            <span class="pricing-label">Final Price:</span>
+            <span class="pricing-value"><strong>$${pricing.final_price.toFixed(2)} USDT</strong></span>
+          </div>
+          ${pricing.referral_applied ? `
+            <div class="pricing-notice">
+              <span class="referral-success">🎉 Referral discount applied!</span>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+    
+    pricingSection.style.display = 'block';
+  }
+
+  // Activate subscription
+  async function activateSubscription() {
+    try {
+      const activateBtn = document.getElementById('activate-subscription-btn');
+      activateBtn.disabled = true;
+      activateBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Activating...</span>';
+
+      const referralCode = document.getElementById('activation-referral-code').value.trim();
+      
+      const activationData = {
+        referral_code: referralCode || null,
+        notes: 'Subscription activated via invoices page'
+      };
+
+      const response = await fetch(`${INVOICING_API_BASE}/subscriptions/activate`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(activationData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      showToast('🎉 Subscription activated successfully!', 'success', 6000);
+      
+      // Reload page data
+      await initializePage();
+      
+      // Show invoice details
+      if (result.invoice) {
+        setTimeout(() => {
+          showToast(`Invoice ${result.invoice.invoice_id} created for $${result.invoice.amount.toFixed(2)}`, 'info', 5000);
+        }, 1000);
+      }
+
+    } catch (error) {
+      console.error('Error activating subscription:', error);
+      showToast(`Activation failed: ${error.message}`, 'error');
+    } finally {
+      const activateBtn = document.getElementById('activate-subscription-btn');
+      activateBtn.disabled = false;
+      activateBtn.innerHTML = '<span class="btn-icon">🚀</span><span class="btn-text">Activate Subscription</span>';
+    }
+  }
+
+  // Validate referral code
+  async function validateReferralCode() {
+    const referralCode = document.getElementById('activation-referral-code').value.trim();
+    const referralMessage = document.getElementById('referral-message');
+    
+    if (!referralCode) {
+      referralMessage.innerHTML = '';
+      return;
+    }
+
+    // Simple client-side validation
+    if (referralCode.length < 6 || referralCode.length > 12) {
+      referralMessage.innerHTML = '<span class="referral-error">❌ Invalid referral code format</span>';
+      return;
+    }
+
+    referralMessage.innerHTML = '<span class="referral-info">✅ Referral code format valid</span>';
+    
+    // Recalculate pricing if portfolio is already validated
+    const portfolioSection = document.getElementById('portfolio-validation');
+    if (portfolioSection.style.display === 'block') {
+      const totalValueElement = document.querySelector('.validation-value strong');
+      if (totalValueElement) {
+        const portfolioValue = parseFloat(totalValueElement.textContent.replace('$', '').replace(',', ''));
+        calculateAndDisplayPricing(portfolioValue);
+      }
+    }
+  }
+
   // Event Listeners
   document.getElementById('back-to-dashboard').onclick = () => {
     window.location.href = '/dashboard.html';
@@ -455,6 +705,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('payment-help-btn').onclick = () => {
     document.getElementById('payment-help-modal').style.display = 'block';
   };
+
+  // Subscription activation event listeners
+  document.getElementById('validate-portfolio-btn').onclick = validatePortfolio;
+  document.getElementById('activate-subscription-btn').onclick = activateSubscription;
+  document.getElementById('validate-referral-btn').onclick = validateReferralCode;
+  
+  // Real-time referral code validation
+  document.getElementById('activation-referral-code').addEventListener('input', validateReferralCode);
 
   // Modal event listeners
   document.getElementById('close-invoice-modal').onclick = () => {
