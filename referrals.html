@@ -70,6 +70,58 @@
       </div>
     </section>
 
+    <!-- Wallet Management Section -->
+    <section id="section-wallet" class="dashboard-card">
+      <h2>💳 Payout Wallet Address</h2>
+      <div class="wallet-section">
+        <div id="wallet-display" class="wallet-display" style="display: none;">
+          <div class="wallet-info">
+            <label>Current Wallet Address:</label>
+            <div class="wallet-address-display">
+              <code id="current-wallet-address"></code>
+              <span id="wallet-type-badge" class="wallet-badge">TRC20</span>
+            </div>
+            <div class="wallet-status">
+              <span id="wallet-verified-status" class="status-badge">⏳ Unverified</span>
+              <span id="wallet-changes-remaining" class="changes-info"></span>
+            </div>
+          </div>
+          <button id="edit-wallet-btn" class="btn-edit">✏️ Edit Wallet</button>
+        </div>
+        
+        <div id="wallet-form" class="wallet-form">
+          <div class="form-group">
+            <label for="wallet-address-input">USDT (TRC20) Wallet Address:</label>
+            <input type="text" id="wallet-address-input" placeholder="Enter your USDT TRC20 wallet address" maxlength="34">
+            <div class="wallet-help">
+              <small>⚠️ <strong>Important:</strong> Double-check your address. Payments to wrong addresses cannot be recovered.</small>
+              <small>💡 TRC20 addresses start with 'T' and are 34 characters long.</small>
+            </div>
+          </div>
+          <div class="wallet-actions">
+            <button id="save-wallet-btn" class="btn-primary">💾 Save Wallet</button>
+            <button id="cancel-wallet-btn" class="btn-secondary" style="display: none;">❌ Cancel</button>
+          </div>
+          <div id="wallet-status-message" class="status-message" style="display: none;"></div>
+        </div>
+        
+        <div class="wallet-note">
+          <div class="info-card">
+            <div class="info-icon">📋</div>
+            <div class="info-content">
+              <h4>Payout Requirements</h4>
+              <ul>
+                <li>Minimum balance: <strong>$50 USDT</strong></li>
+                <li>Valid TRC20 wallet address required</li>
+                <li>Maximum 5 wallet changes per month</li>
+                <li>Payouts processed manually by admin</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Program Details Section -->
     <section id="section-details" class="dashboard-card">
       <h2>📋 Program Details</h2>

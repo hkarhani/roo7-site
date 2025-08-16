@@ -389,6 +389,181 @@ Best regards`);
 
     // Filter
     document.getElementById('filter-btn').onclick = filterReferrals;
+
+    // Load wallet information
+    loadWalletInfo();
+
+    // Setup wallet event listeners
+    setupWalletEventListeners();
+  }
+
+  // === WALLET MANAGEMENT FUNCTIONS ===
+
+  async function loadWalletInfo() {
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/wallet/info`, {
+        method: 'GET',
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const walletInfo = await response.json();
+        displayWalletInfo(walletInfo);
+      } else {
+        console.log('No wallet info found or error occurred');
+        showWalletForm();
+      }
+    } catch (error) {
+      console.error('Error loading wallet info:', error);
+      showWalletForm();
+    }
+  }
+
+  function displayWalletInfo(walletInfo) {
+    if (walletInfo.wallet_address) {
+      // Show wallet display, hide form
+      document.getElementById('wallet-display').style.display = 'block';
+      document.getElementById('wallet-form').style.display = 'none';
+
+      // Populate wallet info
+      document.getElementById('current-wallet-address').textContent = walletInfo.wallet_address;
+      document.getElementById('wallet-type-badge').textContent = walletInfo.wallet_type || 'TRC20';
+      
+      // Update verification status
+      const statusElement = document.getElementById('wallet-verified-status');
+      if (walletInfo.wallet_verified) {
+        statusElement.textContent = '✅ Verified';
+        statusElement.className = 'status-badge verified';
+      } else {
+        statusElement.textContent = '⏳ Unverified';
+        statusElement.className = 'status-badge unverified';
+      }
+
+      // Update changes remaining
+      const changesElement = document.getElementById('wallet-changes-remaining');
+      changesElement.textContent = `${walletInfo.changes_remaining || 0} changes remaining this month`;
+    } else {
+      showWalletForm();
+    }
+  }
+
+  function showWalletForm() {
+    document.getElementById('wallet-display').style.display = 'none';
+    document.getElementById('wallet-form').style.display = 'block';
+    document.getElementById('cancel-wallet-btn').style.display = 'none';
+  }
+
+  function showEditWalletForm() {
+    const currentAddress = document.getElementById('current-wallet-address').textContent;
+    document.getElementById('wallet-address-input').value = currentAddress;
+    document.getElementById('wallet-display').style.display = 'none';
+    document.getElementById('wallet-form').style.display = 'block';
+    document.getElementById('cancel-wallet-btn').style.display = 'inline-block';
+  }
+
+  function cancelWalletEdit() {
+    document.getElementById('wallet-address-input').value = '';
+    loadWalletInfo(); // Reload to show current info
+    hideStatusMessage();
+  }
+
+  async function saveWalletAddress() {
+    const walletAddress = document.getElementById('wallet-address-input').value.trim();
+    
+    if (!walletAddress) {
+      showStatusMessage('Wallet address is required', 'error');
+      return;
+    }
+
+    // Basic validation
+    if (walletAddress.length !== 34 || !walletAddress.startsWith('T')) {
+      showStatusMessage('Invalid TRC20 address format. Must start with "T" and be 34 characters long.', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/wallet/update`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          wallet_address: walletAddress,
+          wallet_type: 'TRC20'
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showStatusMessage('Wallet address saved successfully!', 'success');
+        setTimeout(() => {
+          loadWalletInfo();
+          hideStatusMessage();
+        }, 2000);
+      } else {
+        showStatusMessage(result.detail || 'Failed to save wallet address', 'error');
+      }
+    } catch (error) {
+      console.error('Error saving wallet:', error);
+      showStatusMessage('Network error. Please try again.', 'error');
+    }
+  }
+
+  function showStatusMessage(message, type) {
+    const statusElement = document.getElementById('wallet-status-message');
+    statusElement.textContent = message;
+    statusElement.className = `status-message ${type}`;
+    statusElement.style.display = 'block';
+  }
+
+  function hideStatusMessage() {
+    const statusElement = document.getElementById('wallet-status-message');
+    statusElement.style.display = 'none';
+  }
+
+  function validateTRC20Address(address) {
+    if (!address || address.length !== 34) return false;
+    if (!address.startsWith('T')) return false;
+    
+    // Basic base58 character check
+    const base58Regex = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
+    return base58Regex.test(address);
+  }
+
+  function setupWalletEventListeners() {
+    // Edit wallet button
+    const editWalletBtn = document.getElementById('edit-wallet-btn');
+    if (editWalletBtn) {
+      editWalletBtn.onclick = showEditWalletForm;
+    }
+
+    // Save wallet button
+    const saveWalletBtn = document.getElementById('save-wallet-btn');
+    if (saveWalletBtn) {
+      saveWalletBtn.onclick = saveWalletAddress;
+    }
+
+    // Cancel wallet button
+    const cancelWalletBtn = document.getElementById('cancel-wallet-btn');
+    if (cancelWalletBtn) {
+      cancelWalletBtn.onclick = cancelWalletEdit;
+    }
+
+    // Real-time address validation
+    const walletInput = document.getElementById('wallet-address-input');
+    if (walletInput) {
+      walletInput.addEventListener('input', function() {
+        const address = this.value.trim();
+        if (address.length > 0) {
+          if (validateTRC20Address(address)) {
+            this.style.borderColor = '#28a745';
+          } else {
+            this.style.borderColor = '#dc3545';
+          }
+        } else {
+          this.style.borderColor = '#ced4da';
+        }
+      });
+    }
   }
 
   // Initialize the page
