@@ -338,12 +338,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         ${invoice.referral_code ? `
           <div class="detail-item">
-            <span class="detail-label">Referral Code:</span>
+            <span class="detail-label">Referral Code Used:</span>
             <span class="detail-value">${invoice.referral_code}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Referral Commission:</span>
-            <span class="detail-value">$${invoice.referral_commission.toFixed(2)}</span>
           </div>
         ` : ''}
         ${invoice.payment_date ? `
