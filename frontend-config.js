@@ -218,7 +218,8 @@ export const TIER_CONFIG = {
             "Basic trading strategies",
             "24/7 automated trading",
             "Email support"
-        ]
+        ],
+        additionalInfo: "🔜 Low Risk / Low Returns strategy coming soon!"
     },
     tier2: {
         name: "Tier 2", 
