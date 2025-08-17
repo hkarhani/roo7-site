@@ -361,33 +361,117 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Create upgrade invoice
-  async function createUpgradeInvoice() {
+  function showSubscriptionDetails() {
     if (!userSubscription) {
-      showToast('You need an active subscription to request upgrades', 'warning');
+      showToast('No active subscription found', 'warning');
       return;
     }
 
-    try {
-      const response = await fetch(`${INVOICING_API_BASE}/invoices/create-upgrade`, {
-        method: 'POST',
-        headers: getAuthHeaders(token)
-      });
+    const subscriptionStart = new Date(userSubscription.subscription_start);
+    const subscriptionEnd = new Date(userSubscription.subscription_end);
+    const now = new Date();
+    const daysRemaining = Math.ceil((subscriptionEnd - now) / (1000 * 60 * 60 * 24));
+    
+    // Calculate term duration
+    const termDays = Math.ceil((subscriptionEnd - subscriptionStart) / (1000 * 60 * 60 * 24));
+    const termLabel = termDays <= 32 ? "Monthly" : termDays <= 366 ? "Annual" : "Custom";
+    
+    // Get tier information
+    const tierInfo = getTierInfo(userSubscription.current_tier, userSubscription.portfolio_value);
+    
+    let detailsHTML = `
+      <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; font-family: Arial, sans-serif;">
+        <h3 style="margin: 0 0 15px 0; color: #495057;">📋 Subscription Details</h3>
+        
+        <div style="display: grid; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+            <strong>Current Tier:</strong>
+            <span style="color: ${tierInfo.color};">${tierInfo.name}</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+            <strong>Status:</strong>
+            <span style="color: ${userSubscription.status === 'active' ? '#28a745' : '#6c757d'}; text-transform: capitalize;">${userSubscription.status}</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+            <strong>Term:</strong>
+            <span>${termLabel} (${termDays} days)</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+            <strong>Portfolio Value:</strong>
+            <span>$${userSubscription.portfolio_value.toLocaleString()}</span>
+          </div>
+          
+          ${tierInfo.limits ? `
+          <div style="background: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; padding: 10px; margin: 10px 0;">
+            <strong style="color: #0c5460;">💡 ${tierInfo.name} Limits:</strong>
+            <ul style="margin: 5px 0 0 20px; color: #0c5460;">
+              ${tierInfo.limits.map(limit => `<li>${limit}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+          
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+            <strong>Started:</strong>
+            <span>${subscriptionStart.toLocaleDateString()}</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+            <strong>Expires:</strong>
+            <span>${subscriptionEnd.toLocaleDateString()}</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+            <strong>Days Remaining:</strong>
+            <span style="color: ${daysRemaining > 30 ? '#28a745' : daysRemaining > 7 ? '#ffc107' : '#dc3545'};">${daysRemaining} days</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    showToast(detailsHTML, 'info', 10000);
+  }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      showToast('Upgrade invoice created successfully!', 'success');
-      
-      // Reload invoices to show the new one
-      await loadInvoices();
-      updateSummaryStats();
-      
-    } catch (error) {
-      console.error('Error creating upgrade invoice:', error);
-      showToast(`Failed to create upgrade invoice: ${error.message}`, 'error');
+  function getTierInfo(tier, portfolioValue) {
+    switch(tier) {
+      case 'tier1':
+        return {
+          name: 'Tier 1 - Starter',
+          color: '#007bff',
+          limits: [
+            'Maximum portfolio value: $10,000',
+            'Monthly fee: $99 (or discounted rates)',
+            'Basic trading strategies included'
+          ]
+        };
+      case 'tier2':
+        return {
+          name: 'Tier 2 - Professional',
+          color: '#28a745',
+          limits: [
+            'Portfolio value: $10,001 - $100,000',
+            'Monthly fee: Based on portfolio value',
+            'Advanced trading strategies included'
+          ]
+        };
+      case 'tier3':
+        return {
+          name: 'Tier 3 - Enterprise',
+          color: '#ffc107',
+          limits: [
+            'Portfolio value: $100,001+',
+            'Custom pricing required',
+            'Premium trading strategies included'
+          ]
+        };
+      default:
+        return {
+          name: 'Unknown Tier',
+          color: '#6c757d',
+          limits: null
+        };
     }
   }
 
@@ -687,16 +771,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById('apply-filters').onclick = applyFilters;
   document.getElementById('clear-filters').onclick = clearFilters;
-  document.getElementById('create-upgrade-btn').onclick = createUpgradeInvoice;
   document.getElementById('export-invoices-btn').onclick = exportInvoices;
 
-  document.getElementById('view-subscription-btn').onclick = () => {
-    if (userSubscription) {
-      showToast(`Subscription: ${getTierDisplayName(userSubscription.current_tier)} (${userSubscription.status})`, 'info', 5000);
-    } else {
-      showToast('No active subscription found', 'warning');
-    }
-  };
+  document.getElementById('view-subscription-btn').onclick = showSubscriptionDetails;
 
   document.getElementById('payment-help-btn').onclick = () => {
     document.getElementById('payment-help-modal').style.display = 'block';
