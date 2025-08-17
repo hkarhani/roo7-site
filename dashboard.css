@@ -1920,3 +1920,27 @@ input:checked + .toggle-slider:before {
     margin-top: 5px;
   }
 }
+
+/* Coming Soon Strategy Styling */
+select option[disabled] {
+  color: #ff8c00 !important;
+  font-style: italic !important;
+  background-color: #fff8f0 !important;
+}
+
+.dark-theme select option[disabled] {
+  color: #ff8c00 !important;
+  background-color: #2a2a2a !important;
+}
+
+/* Strategy select specific styling for coming soon items */
+#strategy-select option[disabled] {
+  color: #ff8c00 !important;
+  font-style: italic !important;
+  opacity: 0.8;
+}
+
+.dark-theme #strategy-select option[disabled] {
+  color: #ff8c00 !important;
+  opacity: 0.8;
+}

@@ -83,26 +83,36 @@ class ModalManager {
     const selectedExchange = this.exchangeSelect.value;
     const selectedAccountType = this.accountTypeSelect.value;
     
-    // Filter strategies based on selection
+    // Filter strategies based on selection - include coming soon strategies
     const filteredStrategies = this.availableStrategies.filter(strategy => 
       strategy.exchange === selectedExchange && 
       strategy.account_type === selectedAccountType &&
-      strategy.is_active === true
+      (strategy.is_active === true || strategy.coming_soon === true)
     );
     
     // Clear existing options
     this.strategySelect.innerHTML = '<option value="">Select Strategy...</option>';
     
-    // Add filtered strategies
+    // Add filtered strategies with styling for coming soon
     filteredStrategies.forEach(strategy => {
       const option = document.createElement('option');
       option.value = strategy.id;
-      option.textContent = strategy.name;
+      
+      // Add note for coming soon strategies
+      if (strategy.coming_soon === true) {
+        option.textContent = `${strategy.name} ${strategy.note || '🔜 Coming Soon'}`;
+        option.style.color = '#ff8c00'; // Orange color for coming soon
+        option.style.fontStyle = 'italic';
+        option.disabled = true; // Disable selection of coming soon strategies
+      } else {
+        option.textContent = strategy.name;
+      }
+      
       option.dataset.strategy = JSON.stringify(strategy);
       this.strategySelect.appendChild(option);
     });
     
-    console.log(`📊 Updated strategy options: ${filteredStrategies.length} strategies available`);
+    console.log(`📊 Updated strategy options: ${filteredStrategies.length} strategies available (including coming soon)`);
     
     // Clear strategy parameters when options change
     this.hideStrategyFields();
@@ -550,26 +560,36 @@ class ModalManager {
 
   // STRATEGY HANDLING
   updateStrategyOptionsForAccount(exchange, accountType) {
-    // Filter strategies based on exchange and account type
+    // Filter strategies based on exchange and account type - include coming soon
     const filteredStrategies = this.availableStrategies.filter(strategy => 
       strategy.exchange === exchange && 
       strategy.account_type === accountType &&
-      strategy.is_active === true
+      (strategy.is_active === true || strategy.coming_soon === true)
     );
     
     // Clear existing options
     this.strategySelect.innerHTML = '<option value="">Select Strategy...</option>';
     
-    // Add filtered strategies
+    // Add filtered strategies with styling for coming soon
     filteredStrategies.forEach(strategy => {
       const option = document.createElement('option');
       option.value = strategy.id;
-      option.textContent = strategy.name;
+      
+      // Add note for coming soon strategies
+      if (strategy.coming_soon === true) {
+        option.textContent = `${strategy.name} ${strategy.note || '🔜 Coming Soon'}`;
+        option.style.color = '#ff8c00'; // Orange color for coming soon
+        option.style.fontStyle = 'italic';
+        option.disabled = true; // Disable selection of coming soon strategies
+      } else {
+        option.textContent = strategy.name;
+      }
+      
       option.dataset.strategy = JSON.stringify(strategy);
       this.strategySelect.appendChild(option);
     });
     
-    console.log(`📊 Updated strategy options for ${exchange} ${accountType}: ${filteredStrategies.length} strategies available`);
+    console.log(`📊 Updated strategy options for ${exchange} ${accountType}: ${filteredStrategies.length} strategies available (including coming soon)`);
   }
 
   handleStrategySelectionChange() {
