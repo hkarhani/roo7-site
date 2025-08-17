@@ -88,9 +88,9 @@ export const DOMAIN_CONFIG = {
 // =============================================================================
 
 export const API_CONFIG = {
-    // Base URLs - auth-api handles authentication
-    baseUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,
-    authUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,
+    // Base URLs - original working configuration
+    baseUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}`,  // no port = 443
+    authUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}`,  // no port = 443
     invoicingUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.api}`,
     marketUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.market}`,
     
