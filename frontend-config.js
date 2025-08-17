@@ -76,9 +76,9 @@ export const DOMAIN_CONFIG = {
     
     // Port Configuration
     ports: {
-        api: "8003",
-        auth: "8002", 
-        market: "8001",
+        api: "8003",        // invoicing-api
+        auth: "443",        // auth-api  
+        market: "8002",     // market-data-service
         frontend: "443"
     }
 };
@@ -88,9 +88,10 @@ export const DOMAIN_CONFIG = {
 // =============================================================================
 
 export const API_CONFIG = {
-    // Base URLs
-    baseUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.api}`,
-    authUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.auth}`,
+    // Base URLs - auth-api handles authentication
+    baseUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,
+    authUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,
+    invoicingUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.api}`,
     marketUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.market}`,
     
     // Endpoints

@@ -2,7 +2,7 @@
 import CONFIG from './frontend-config.js';
 
 function initializeTroubleshootPage() {
-  const API_BASE = CONFIG.API_CONFIG.baseUrl;
+  const API_BASE = CONFIG.API_CONFIG.authUrl;      // auth endpoints (port 443)
   
   console.log("🔍 Troubleshoot page initialization started");
   

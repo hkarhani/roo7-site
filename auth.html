@@ -137,6 +137,11 @@
   <script type="module">
     import CONFIG from './frontend-config.js';
     
+    // Debug: Log the config to verify it's loaded
+    console.log('🔧 Config loaded:', CONFIG);
+    console.log('🔧 Auth URL:', CONFIG.API_CONFIG.authUrl);
+    console.log('🔧 Invoicing URL:', CONFIG.API_CONFIG.invoicingUrl);
+    
     // Update page title with brand config
     document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.auth;
     
@@ -278,7 +283,7 @@
       const formData = new FormData(magicLinkForm);
       
       try {
-        const response = await fetch(`${CONFIG.API_CONFIG.baseUrl}/magic-link`, {
+        const response = await fetch(`${CONFIG.API_CONFIG.authUrl}/magic-link`, {
           method: 'POST',
           headers: { 'Accept': 'application/json' },
           body: formData
@@ -314,7 +319,7 @@
       const formData = new FormData(resetForm);
       
       try {
-        const response = await fetch(`${CONFIG.API_CONFIG.baseUrl}/reset-password`, {
+        const response = await fetch(`${CONFIG.API_CONFIG.authUrl}/reset-password`, {
           method: 'POST',
           headers: { 'Accept': 'application/json' },
           body: formData
@@ -358,7 +363,7 @@
       const formData = new FormData(resetConfirmForm);
       
       try {
-        const response = await fetch(`${CONFIG.API_CONFIG.baseUrl}/reset-password-confirm`, {
+        const response = await fetch(`${CONFIG.API_CONFIG.authUrl}/reset-password-confirm`, {
           method: 'POST',
           headers: { 'Accept': 'application/json' },
           body: formData
@@ -408,7 +413,7 @@
       }, 1000);
       
       // Call the API to exchange token for access token
-      fetch(`${CONFIG.API_CONFIG.baseUrl}/magic-login`, {
+      fetch(`${CONFIG.API_CONFIG.authUrl}/magic-login`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -449,7 +454,7 @@
     // Check for reset token on page load
     if (resetToken) {
       // Validate the reset token
-      fetch(`${CONFIG.API_CONFIG.baseUrl}/validate-reset-token?token=${resetToken}`)
+      fetch(`${CONFIG.API_CONFIG.authUrl}/validate-reset-token?token=${resetToken}`)
         .then(response => response.json())
         .then(result => {
           if (result.valid) {
@@ -495,7 +500,7 @@
       try {
         console.log(`📤 Sending ${endpoint} request to API...`);
         
-        const response = await fetch(`${CONFIG.API_CONFIG.baseUrl}/${endpoint}`, {
+        const response = await fetch(`${CONFIG.API_CONFIG.authUrl}/${endpoint}`, {
           method: 'POST',
           headers: {
             'Accept': 'application/json',

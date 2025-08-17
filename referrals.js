@@ -2,8 +2,8 @@
 import CONFIG from './frontend-config.js';
 
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE = CONFIG.API_CONFIG.baseUrl;
-  const INVOICING_API_BASE = CONFIG.API_CONFIG.baseUrl;
+  const API_BASE = CONFIG.API_CONFIG.authUrl;      // auth endpoints (port 443)
+  const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;  // invoicing endpoints (port 8003)
 
   // Check authentication
   const token = localStorage.getItem("token");

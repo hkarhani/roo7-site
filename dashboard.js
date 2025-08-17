@@ -5,7 +5,7 @@ import CONFIG from './frontend-config.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   // Use centralized API configuration
-  const API_BASE = CONFIG.API_CONFIG.baseUrl.replace(':8003', '');
+  const API_BASE = CONFIG.API_CONFIG.authUrl;      // auth endpoints (port 443)
   const MARKET_DATA_API = CONFIG.API_CONFIG.marketUrl;
   
   // Update page title
