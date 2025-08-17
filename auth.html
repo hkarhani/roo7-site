@@ -5,7 +5,7 @@
   <title id="page-title">Auth Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="auth.css?v=3.0" />
-  <script type="module" src="frontend-config.js"></script>
+  <script type="module" src="frontend-config.js?v=2"></script>
 </head>
 <body class="auth-page">
   <div class="auth-container">
@@ -140,7 +140,9 @@
     // Debug: Log the config to verify it's loaded
     console.log('🔧 Config loaded:', CONFIG);
     console.log('🔧 Auth URL:', CONFIG.API_CONFIG.authUrl);
+    console.log('🔧 Base URL:', CONFIG.API_CONFIG.baseUrl);
     console.log('🔧 Invoicing URL:', CONFIG.API_CONFIG.invoicingUrl);
+    console.log('🔧 Market URL:', CONFIG.API_CONFIG.marketUrl);
     
     // Update page title with brand config
     document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.auth;
