@@ -12,7 +12,7 @@
  * - Legend with percentages
  * - Mobile-friendly touch interactions
  * 
- * @author ROO7 System
+ * @author System
  * @version 1.0.0
  */
 

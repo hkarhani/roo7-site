@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Invoices</title>
+  <title id="page-title">My Invoices</title>
+  <script type="module" src="frontend-config.js"></script>
   <link rel="stylesheet" href="dashboard.css?v=4.4" />
   <link rel="stylesheet" href="invoices.css?v=2.0" />
 </head>
@@ -201,9 +202,9 @@
           <h4>📞 Need Help?</h4>
           <p>For payment assistance, please contact our support team:</p>
           <ul>
-            <li>📧 Email: billing@roo7.site</li>
+            <li>📧 Email: <span id="billing-email">billing@roo7.site</span></li>
             <li>💬 Live Chat: Available 24/7</li>
-            <li>📱 Phone: +1-800-ROO7-HELP</li>
+            <li>📱 Phone: <span id="support-phone">+1-800-ROO7-HELP</span></li>
           </ul>
         </div>
         
@@ -221,6 +222,25 @@
 
   <!-- Scripts -->
   <script src="theme-manager.js?v=1"></script>
-  <script src="invoices.js?v=2.1"></script>
+  <script type="module">
+    import CONFIG from './frontend-config.js';
+    
+    // Update page title and support contact info
+    document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.invoices;
+    
+    // Update billing email when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const billingEmailEl = document.getElementById('billing-email');
+      const supportPhoneEl = document.getElementById('support-phone');
+      
+      if (billingEmailEl) {
+        billingEmailEl.textContent = CONFIG.EMAIL_CONFIG.support;
+      }
+      if (supportPhoneEl) {
+        supportPhoneEl.textContent = `+1-800-${CONFIG.BRAND_CONFIG.name}-HELP`;
+      }
+    });
+  </script>
+  <script type="module" src="invoices.js?v=2.1"></script>
 </body>
 </html>

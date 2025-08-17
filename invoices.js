@@ -1,8 +1,9 @@
 // invoices.js - Invoice Management Page Logic
+import CONFIG from './frontend-config.js';
 
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE = "https://api.roo7.site";
-  const INVOICING_API_BASE = "https://api.roo7.site:8003";
+  const API_BASE = CONFIG.API_CONFIG.baseUrl;
+  const INVOICING_API_BASE = CONFIG.API_CONFIG.baseUrl;
 
   // Check authentication
   const token = localStorage.getItem("token");
@@ -647,7 +648,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h5>🎯 Custom Pricing Required</h5>
           <p>Your portfolio value requires custom pricing. Please contact our support team for a personalized quote.</p>
           <div class="contact-info">
-            <p>📧 Email: billing@roo7.site</p>
+            <p>📧 Email: ${CONFIG.EMAIL_CONFIG.support}</p>
             <p>💬 Live Chat: Available 24/7</p>
           </div>
         </div>

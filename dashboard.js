@@ -1,8 +1,15 @@
 // dashboard.js - Main Dashboard Logic (Mobile Optimized)
 
+// Import centralized configuration
+import CONFIG from './frontend-config.js';
+
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE = "https://api.roo7.site";
-  const MARKET_DATA_API = "https://api.roo7.site:8002"; // Changed from BINANCE_API to MARKET_DATA_API
+  // Use centralized API configuration
+  const API_BASE = CONFIG.API_CONFIG.baseUrl.replace(':8003', '');
+  const MARKET_DATA_API = CONFIG.API_CONFIG.marketUrl;
+  
+  // Update page title
+  document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.dashboard;
 
   // Check authentication
   const token = localStorage.getItem("token");

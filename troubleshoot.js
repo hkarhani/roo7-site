@@ -1,6 +1,8 @@
 // Wait for both DOM and window to be fully loaded
+import CONFIG from './frontend-config.js';
+
 function initializeTroubleshootPage() {
-  const API_BASE = "https://api.roo7.site";
+  const API_BASE = CONFIG.API_CONFIG.baseUrl;
   
   console.log("🔍 Troubleshoot page initialization started");
   

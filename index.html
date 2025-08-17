@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>roo7.site | Coming Soon</title>
+  <title id="page-title">Coming Soon</title>
+  <script type="module" src="frontend-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * {
@@ -81,8 +82,18 @@
     <div class="coming">Stay tuned — we're launching soon.</div>
   </div>
 
-  <footer>
+  <footer id="footer-text">
     &copy; 2025 roo7.site. All rights reserved.
   </footer>
+
+  <script type="module">
+    // Initialize page with brand configuration
+    import CONFIG from './frontend-config.js';
+    
+    // Update page elements with brand info
+    document.getElementById('page-title').textContent = `${CONFIG.DOMAIN_CONFIG.primary} | Coming Soon`;
+    document.querySelector('.logo').textContent = CONFIG.DOMAIN_CONFIG.primary;
+    document.getElementById('footer-text').textContent = `© 2025 ${CONFIG.DOMAIN_CONFIG.primary}. All rights reserved.`;
+  </script>
 </body>
 </html>

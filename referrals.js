@@ -1,8 +1,9 @@
 // referrals.js - Referral Program Page Logic
+import CONFIG from './frontend-config.js';
 
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE = "https://api.roo7.site";
-  const INVOICING_API_BASE = "https://api.roo7.site:8003";
+  const API_BASE = CONFIG.API_CONFIG.baseUrl;
+  const INVOICING_API_BASE = CONFIG.API_CONFIG.baseUrl;
 
   // Check authentication
   const token = localStorage.getItem("token");
@@ -330,16 +331,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const subject = encodeURIComponent('ROO7 - Automated Trading Platform Referral');
+    const subject = encodeURIComponent(`${CONFIG.BRAND_CONFIG.name} - ${CONFIG.BRAND_CONFIG.tagline} Referral`);
     const body = encodeURIComponent(`Hi there!
 
-I've been using ROO7's automated trading platform and thought you might be interested. It's been great for managing my crypto portfolio with minimal effort.
+I've been using ${CONFIG.BRAND_CONFIG.name}'s automated trading platform and thought you might be interested. It's been great for managing my crypto portfolio with minimal effort.
 
 When you pay your first invoice, use my referral code: ${referralData.referral_code}
 
 This will give you access to professional automated trading strategies while I earn a small commission.
 
-Sign up at: https://www.roo7.site
+Sign up at: ${CONFIG.PAGE_CONFIG.pages.home}
 
 Best regards`);
     
