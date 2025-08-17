@@ -526,6 +526,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const strategyItem = document.createElement('div');
             strategyItem.className = 'strategy-item';
             
+            // Add coming soon styling if applicable
+            if (strategy.coming_soon === true) {
+              strategyItem.classList.add('coming-soon');
+            }
+            
             let description = 'Standard trading strategy';
             switch(strategy.name) {
               case 'High Risk / High Returns Long SPOT':
@@ -535,16 +540,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 description = 'Balanced growth with moderate risk';
                 break;
               case 'Low Risk / Low Returns Fixed Income':
-                description = 'Conservative strategy for stable returns';
+                description = strategy.coming_soon === true ? 
+                  `Conservative strategy for stable returns - ${strategy.note || '🔜 Coming Soon'}` :
+                  'Conservative strategy for stable returns';
                 break;
               case 'Custom Portfolio Rebalance':
                 description = 'Fully customizable asset allocation';
                 break;
             }
             
+            // Display strategy name with coming soon indicator
+            const displayName = strategy.coming_soon === true ? 
+              `${strategy.name} ${strategy.note || '🔜 Coming Soon'}` : 
+              strategy.name;
+            
             strategyItem.innerHTML = `
               <div class="strategy-info">
-                <div class="strategy-name">${strategy.name}</div>
+                <div class="strategy-name">${displayName}</div>
                 <div class="strategy-description">${description}</div>
               </div>
             `;

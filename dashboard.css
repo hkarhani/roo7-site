@@ -1944,3 +1944,29 @@ select option[disabled] {
   color: #ff8c00 !important;
   opacity: 0.8;
 }
+
+/* Strategy Management Section - Coming Soon Styling */
+.strategy-item.coming-soon {
+  border-left: 4px solid #ff8c00;
+  background-color: #fff8f0;
+  opacity: 0.8;
+}
+
+.dark-theme .strategy-item.coming-soon {
+  background-color: #2a2a2a;
+  border-left-color: #ff8c00;
+}
+
+.strategy-item.coming-soon .strategy-name {
+  color: #ff8c00 !important;
+  font-style: italic;
+}
+
+.strategy-item.coming-soon .strategy-description {
+  color: #cc7000;
+  font-style: italic;
+}
+
+.dark-theme .strategy-item.coming-soon .strategy-description {
+  color: #ff8c00;
+}
