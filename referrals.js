@@ -398,172 +398,280 @@ Best regards`);
     setupWalletEventListeners();
   }
 
-  // === WALLET MANAGEMENT FUNCTIONS ===
+  // === WEB3 WALLET MANAGEMENT FUNCTIONS ===
 
-  async function loadWalletInfo() {
+  // Web3 wallet state
+  let connectedWallet = {
+    address: null,
+    provider: null,
+    network: null,
+    connectedAt: null
+  };
+
+  // Check if wallet is already connected from localStorage
+  function loadStoredWalletInfo() {
     try {
-      const response = await fetch(`${INVOICING_API_BASE}/wallet/info`, {
-        method: 'GET',
-        headers: getAuthHeaders(token)
-      });
-
-      if (response.ok) {
-        const walletInfo = await response.json();
-        displayWalletInfo(walletInfo);
-      } else {
-        console.log('No wallet info found or error occurred');
-        showWalletForm();
+      const stored = localStorage.getItem('connectedWallet');
+      if (stored) {
+        connectedWallet = JSON.parse(stored);
+        if (connectedWallet.address) {
+          updateWalletDisplay();
+          showConnectedState();
+        }
       }
     } catch (error) {
-      console.error('Error loading wallet info:', error);
-      showWalletForm();
+      console.error('Error loading stored wallet info:', error);
     }
   }
 
-  function displayWalletInfo(walletInfo) {
-    if (walletInfo.wallet_address) {
-      // Show wallet display, hide form
-      document.getElementById('wallet-display').style.display = 'block';
-      document.getElementById('wallet-form').style.display = 'none';
+  // Store wallet info in localStorage
+  function storeWalletInfo() {
+    try {
+      localStorage.setItem('connectedWallet', JSON.stringify(connectedWallet));
+    } catch (error) {
+      console.error('Error storing wallet info:', error);
+    }
+  }
 
-      // Populate wallet info
-      document.getElementById('current-wallet-address').textContent = walletInfo.wallet_address;
-      document.getElementById('wallet-type-badge').textContent = walletInfo.wallet_type || 'TRC20';
+  // Check if MetaMask is available
+  function isMetaMaskAvailable() {
+    return typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask;
+  }
+
+  // Connect to MetaMask
+  async function connectMetaMask() {
+    if (!isMetaMaskAvailable()) {
+      showToast('MetaMask is not installed. Please install MetaMask browser extension.', 'error', 6000);
+      return;
+    }
+
+    try {
+      showToast('Connecting to MetaMask...', 'info', 3000);
       
-      // Update verification status
-      const statusElement = document.getElementById('wallet-verified-status');
-      if (walletInfo.wallet_verified) {
-        statusElement.textContent = '✅ Verified';
-        statusElement.className = 'status-badge verified';
-      } else {
-        statusElement.textContent = '⏳ Unverified';
-        statusElement.className = 'status-badge unverified';
+      // Request account access
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+      });
+
+      if (accounts.length === 0) {
+        showToast('No accounts found. Please unlock MetaMask.', 'warning');
+        return;
       }
 
-      // Update changes remaining
-      const changesElement = document.getElementById('wallet-changes-remaining');
-      changesElement.textContent = `${walletInfo.changes_remaining || 0} changes remaining this month`;
-    } else {
-      showWalletForm();
+      // Get network info
+      const chainId = await window.ethereum.request({
+        method: 'eth_chainId'
+      });
+
+      // Update wallet state
+      connectedWallet = {
+        address: accounts[0],
+        provider: 'MetaMask',
+        network: getNetworkName(chainId),
+        connectedAt: new Date().toISOString()
+      };
+
+      // Store and update UI
+      storeWalletInfo();
+      updateWalletDisplay();
+      showConnectedState();
+      
+      // Save to backend
+      await saveWalletToBackend();
+
+      showToast('Successfully connected to MetaMask!', 'success');
+
+    } catch (error) {
+      console.error('Error connecting to MetaMask:', error);
+      
+      if (error.code === 4001) {
+        showToast('Connection cancelled by user', 'warning');
+      } else if (error.code === -32002) {
+        showToast('MetaMask is already processing a connection request', 'warning');
+      } else {
+        showToast(`Failed to connect: ${error.message}`, 'error');
+      }
     }
   }
 
-  function showWalletForm() {
-    document.getElementById('wallet-display').style.display = 'none';
-    document.getElementById('wallet-form').style.display = 'block';
-    document.getElementById('cancel-wallet-btn').style.display = 'none';
+  // Connect to other wallets (generic WalletConnect or similar)
+  async function connectGenericWallet() {
+    showToast('Generic wallet connection not yet implemented. Please use MetaMask.', 'info', 4000);
+    // This would integrate with WalletConnect or other wallet providers
+    // For now, we'll just show a message
   }
 
-  function showEditWalletForm() {
-    const currentAddress = document.getElementById('current-wallet-address').textContent;
-    document.getElementById('wallet-address-input').value = currentAddress;
-    document.getElementById('wallet-display').style.display = 'none';
-    document.getElementById('wallet-form').style.display = 'block';
-    document.getElementById('cancel-wallet-btn').style.display = 'inline-block';
+  // Get network name from chain ID
+  function getNetworkName(chainId) {
+    const networks = {
+      '0x1': 'Ethereum',
+      '0x38': 'BSC',
+      '0x89': 'Polygon',
+      '0xa': 'Optimism',
+      '0xa4b1': 'Arbitrum'
+    };
+    return networks[chainId] || 'Unknown Network';
   }
 
-  function cancelWalletEdit() {
-    document.getElementById('wallet-address-input').value = '';
-    loadWalletInfo(); // Reload to show current info
-    hideStatusMessage();
+  // Format wallet address for display (first 3 + last 4 characters)
+  function formatWalletAddress(address) {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 
-  async function saveWalletAddress() {
-    const walletAddress = document.getElementById('wallet-address-input').value.trim();
-    
-    if (!walletAddress) {
-      showStatusMessage('Wallet address is required', 'error');
-      return;
+  // Update wallet display in UI
+  function updateWalletDisplay() {
+    if (!connectedWallet.address) return;
+
+    const addressElement = document.getElementById('connected-wallet-address');
+    const networkBadge = document.getElementById('wallet-network-badge');
+    const connectionTime = document.getElementById('connection-time');
+
+    if (addressElement) {
+      addressElement.textContent = formatWalletAddress(connectedWallet.address);
+      addressElement.title = connectedWallet.address; // Show full address on hover
     }
 
-    // Basic validation
-    if (walletAddress.length !== 34 || !walletAddress.startsWith('T')) {
-      showStatusMessage('Invalid TRC20 address format. Must start with "T" and be 34 characters long.', 'error');
-      return;
+    if (networkBadge) {
+      networkBadge.textContent = connectedWallet.network || 'Ethereum';
     }
+
+    if (connectionTime && connectedWallet.connectedAt) {
+      const date = new Date(connectedWallet.connectedAt);
+      connectionTime.textContent = `Connected ${date.toLocaleDateString()}`;
+    }
+  }
+
+  // Show connected state
+  function showConnectedState() {
+    const notConnected = document.getElementById('wallet-not-connected');
+    const connected = document.getElementById('wallet-connected');
+
+    if (notConnected) notConnected.style.display = 'none';
+    if (connected) connected.style.display = 'block';
+  }
+
+  // Show not connected state
+  function showNotConnectedState() {
+    const notConnected = document.getElementById('wallet-not-connected');
+    const connected = document.getElementById('wallet-connected');
+
+    if (notConnected) notConnected.style.display = 'block';
+    if (connected) connected.style.display = 'none';
+  }
+
+  // Disconnect wallet
+  function disconnectWallet() {
+    connectedWallet = {
+      address: null,
+      provider: null,
+      network: null,
+      connectedAt: null
+    };
+
+    // Remove from localStorage
+    localStorage.removeItem('connectedWallet');
+
+    // Update UI
+    showNotConnectedState();
+    showToast('Wallet disconnected', 'info');
+  }
+
+  // Change wallet (disconnect and reconnect)
+  async function changeWallet() {
+    disconnectWallet();
+    // Wait a moment then show connection options
+    setTimeout(() => {
+      showToast('Please connect a different wallet', 'info');
+    }, 500);
+  }
+
+  // Save wallet address to backend
+  async function saveWalletToBackend() {
+    if (!connectedWallet.address) return;
 
     try {
       const response = await fetch(`${INVOICING_API_BASE}/wallet/update`, {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          wallet_address: walletAddress,
-          wallet_type: 'TRC20'
+          wallet_address: connectedWallet.address,
+          wallet_type: 'Web3',
+          provider: connectedWallet.provider,
+          network: connectedWallet.network
         })
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        showStatusMessage('Wallet address saved successfully!', 'success');
-        setTimeout(() => {
-          loadWalletInfo();
-          hideStatusMessage();
-        }, 2000);
-      } else {
-        showStatusMessage(result.detail || 'Failed to save wallet address', 'error');
+      if (!response.ok) {
+        console.warn('Failed to save wallet to backend:', response.status);
+        // Don't show error to user as this is not critical for the UI
       }
     } catch (error) {
-      console.error('Error saving wallet:', error);
-      showStatusMessage('Network error. Please try again.', 'error');
+      console.error('Error saving wallet to backend:', error);
+      // Don't show error to user as this is not critical for the UI
     }
   }
 
-  function showStatusMessage(message, type) {
-    const statusElement = document.getElementById('wallet-status-message');
-    statusElement.textContent = message;
-    statusElement.className = `status-message ${type}`;
-    statusElement.style.display = 'block';
-  }
-
-  function hideStatusMessage() {
-    const statusElement = document.getElementById('wallet-status-message');
-    statusElement.style.display = 'none';
-  }
-
-  function validateTRC20Address(address) {
-    if (!address || address.length !== 34) return false;
-    if (!address.startsWith('T')) return false;
-    
-    // Basic base58 character check
-    const base58Regex = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
-    return base58Regex.test(address);
-  }
-
+  // Setup Web3 wallet event listeners
   function setupWalletEventListeners() {
-    // Edit wallet button
-    const editWalletBtn = document.getElementById('edit-wallet-btn');
-    if (editWalletBtn) {
-      editWalletBtn.onclick = showEditWalletForm;
+    // MetaMask connection button
+    const connectMetaMaskBtn = document.getElementById('connect-metamask');
+    if (connectMetaMaskBtn) {
+      connectMetaMaskBtn.onclick = connectMetaMask;
     }
 
-    // Save wallet button
-    const saveWalletBtn = document.getElementById('save-wallet-btn');
-    if (saveWalletBtn) {
-      saveWalletBtn.onclick = saveWalletAddress;
+    // Generic wallet connection button
+    const connectGenericBtn = document.getElementById('connect-wallet-generic');
+    if (connectGenericBtn) {
+      connectGenericBtn.onclick = connectGenericWallet;
     }
 
-    // Cancel wallet button
-    const cancelWalletBtn = document.getElementById('cancel-wallet-btn');
-    if (cancelWalletBtn) {
-      cancelWalletBtn.onclick = cancelWalletEdit;
+    // Disconnect button
+    const disconnectBtn = document.getElementById('disconnect-wallet-btn');
+    if (disconnectBtn) {
+      disconnectBtn.onclick = disconnectWallet;
     }
 
-    // Real-time address validation
-    const walletInput = document.getElementById('wallet-address-input');
-    if (walletInput) {
-      walletInput.addEventListener('input', function() {
-        const address = this.value.trim();
-        if (address.length > 0) {
-          if (validateTRC20Address(address)) {
-            this.style.borderColor = '#28a745';
-          } else {
-            this.style.borderColor = '#dc3545';
-          }
-        } else {
-          this.style.borderColor = '#ced4da';
+    // Change wallet button
+    const changeWalletBtn = document.getElementById('change-wallet-btn');
+    if (changeWalletBtn) {
+      changeWalletBtn.onclick = changeWallet;
+    }
+
+    // Listen for MetaMask account changes
+    if (isMetaMaskAvailable()) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length === 0) {
+          // User disconnected
+          disconnectWallet();
+        } else if (connectedWallet.address && accounts[0] !== connectedWallet.address) {
+          // User switched accounts
+          connectedWallet.address = accounts[0];
+          storeWalletInfo();
+          updateWalletDisplay();
+          saveWalletToBackend();
+          showToast('Wallet account changed', 'info');
         }
       });
+
+      window.ethereum.on('chainChanged', (chainId) => {
+        if (connectedWallet.address) {
+          connectedWallet.network = getNetworkName(chainId);
+          storeWalletInfo();
+          updateWalletDisplay();
+          showToast(`Network changed to ${connectedWallet.network}`, 'info');
+        }
+      });
+    }
+  }
+
+  // Load wallet info on page load
+  async function loadWalletInfo() {
+    loadStoredWalletInfo();
+    
+    // If no stored wallet, show not connected state
+    if (!connectedWallet.address) {
+      showNotConnectedState();
     }
   }
 
