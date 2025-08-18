@@ -208,6 +208,15 @@
   gap: 12px;
 }
 
+/* PROGRAM INFO GRID */
+.program-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
 .share-btn {
   display: flex;
   align-items: center;
@@ -835,5 +844,10 @@
 
   .earnings-stats {
     grid-template-columns: 1fr;
+  }
+
+  .program-info {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
   }
 }
