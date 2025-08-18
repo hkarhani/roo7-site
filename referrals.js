@@ -433,6 +433,11 @@ Best regards`);
     }
   }
 
+  // Check if we're on mobile device
+  function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
   // Check if MetaMask is available
   function isMetaMaskAvailable() {
     return typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask;
@@ -440,9 +445,29 @@ Best regards`);
 
   // Connect to MetaMask
   async function connectMetaMask() {
+    const isMobile = isMobileDevice();
+    
     if (!isMetaMaskAvailable()) {
-      showToast('MetaMask is not installed. Please install MetaMask browser extension.', 'error', 6000);
-      return;
+      if (isMobile) {
+        // On mobile, try to open MetaMask app
+        showToast('Opening MetaMask app...', 'info', 3000);
+        const metamaskAppUrl = `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`;
+        
+        // Try to open MetaMask app
+        window.location.href = metamaskAppUrl;
+        
+        // Fallback: show instructions after a delay
+        setTimeout(() => {
+          if (!connectedWallet.address) {
+            showToast('Please install MetaMask app or use MetaMask mobile browser.', 'warning', 8000);
+          }
+        }, 3000);
+        
+        return;
+      } else {
+        showToast('MetaMask is not installed. Please install MetaMask browser extension.', 'error', 6000);
+        return;
+      }
     }
 
     try {
@@ -496,9 +521,37 @@ Best regards`);
 
   // Connect to other wallets (generic WalletConnect or similar)
   async function connectGenericWallet() {
-    showToast('Generic wallet connection not yet implemented. Please use MetaMask.', 'info', 4000);
-    // This would integrate with WalletConnect or other wallet providers
-    // For now, we'll just show a message
+    const isMobile = isMobileDevice();
+    
+    if (isMobile) {
+      // On mobile, provide deep links to popular wallets
+      showToast('Choose your wallet app:', 'info', 2000);
+      
+      // Create wallet selection modal for mobile
+      const walletOptions = [
+        { name: 'Trust Wallet', url: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}` },
+        { name: 'Coinbase Wallet', url: `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}` },
+        { name: 'Rainbow', url: `https://rnbwapp.com/` },
+        { name: 'MetaMask', url: `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}` }
+      ];
+      
+      // Show wallet selection
+      let message = 'Select your wallet:\n\n';
+      walletOptions.forEach((wallet, index) => {
+        message += `${index + 1}. ${wallet.name}\n`;
+      });
+      
+      // For now, open Trust Wallet as default
+      setTimeout(() => {
+        window.location.href = walletOptions[0].url;
+      }, 1500);
+      
+      showToast('Opening Trust Wallet... If you have a different wallet, please open this page in your wallet\'s browser.', 'info', 6000);
+      
+    } else {
+      // On desktop, suggest WalletConnect (not implemented yet)
+      showToast('WalletConnect integration coming soon. Please use MetaMask browser extension for now.', 'info', 5000);
+    }
   }
 
   // Get network name from chain ID
