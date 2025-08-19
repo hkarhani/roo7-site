@@ -1,6 +1,6 @@
-// admin-dashboard.js - Admin Dashboard Logic v2.3
+// admin-dashboard.js - Admin Dashboard Logic v2.4
 
-console.log('🚀 Loading admin-dashboard.js v2.3 with payout fix and stronger cache busting');
+console.log('🚀 Loading admin-dashboard.js v2.4 with wallet verification and email reminders');
 
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
@@ -657,11 +657,35 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const referrerItems = data.referrers.map((referrer, index) => {
           console.log(`🔍 Processing referrer ${index}:`, referrer);
+          
+          // Determine wallet status and styling
+          const hasWallet = referrer.wallet_address && referrer.wallet_address.trim() !== '';
+          const isVerified = referrer.wallet_verified === true;
+          const walletDisplayClass = hasWallet ? (isVerified ? 'wallet-verified' : 'wallet-unverified') : 'wallet-missing';
+          const walletStatusText = hasWallet ? (isVerified ? '✅ Verified' : '⚠️ Unverified') : '❌ No Wallet';
+          const walletStatusColor = hasWallet ? (isVerified ? '#28a745' : '#ffc107') : '#dc3545';
+          
+          // Determine if payout is possible
+          const canPayout = hasWallet && isVerified;
+          const payoutButtonText = canPayout ? `💰 Pay Out $${(referrer.referral_balance || 0).toFixed(2)}` : '❌ Cannot Pay Out';
+          const payoutButtonClass = canPayout ? 'success-btn' : 'danger-btn';
+          const payoutButtonOnclick = canPayout ? 
+            `processReferralPayout('${referrer._id || referrer.id || 'unknown'}', '${referrer.username || 'unknown'}', ${referrer.referral_balance || 0})` :
+            `showWalletRequiredMessage('${referrer.username || 'User'}')`;
+          
           return `
-            <div class="referrer-item">
+            <div class="referrer-item ${walletDisplayClass}">
               <div class="referrer-info">
                 <div class="referrer-name">${referrer.full_name || referrer.username || 'Unknown User'}</div>
                 <div class="referrer-email">${referrer.email || 'No email'}</div>
+                <div class="referrer-wallet">
+                  <span class="wallet-label">Wallet:</span>
+                  ${hasWallet ? 
+                    `<span class="wallet-address" style="color: ${walletStatusColor};">${referrer.wallet_address}</span>` :
+                    `<span class="wallet-missing" style="color: ${walletStatusColor};">No wallet address provided</span>`
+                  }
+                  <span class="wallet-status" style="color: ${walletStatusColor}; font-weight: bold;">${walletStatusText}</span>
+                </div>
                 <div class="referrer-stats">
                   <span class="stat">Balance: $${(referrer.referral_balance || 0).toFixed(2)}</span>
                   <span class="stat">Referrals: ${referrer.referral_count || 0}</span>
@@ -669,9 +693,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
               <div class="referrer-actions">
-                <button class="success-btn" onclick="processReferralPayout('${referrer._id || referrer.id || 'unknown'}', '${referrer.username || 'unknown'}', ${referrer.referral_balance || 0})">
-                  💰 Pay Out $${(referrer.referral_balance || 0).toFixed(2)}
+                <button class="${payoutButtonClass}" onclick="${payoutButtonOnclick}">
+                  ${payoutButtonText}
                 </button>
+                ${!canPayout ? `
+                  <button class="primary-button admin" onclick="sendWalletReminder('${referrer._id || referrer.id || 'unknown'}', '${referrer.username || 'unknown'}', '${referrer.email || ''}')">
+                    📧 Send Wallet Reminder
+                  </button>
+                ` : ''}
               </div>
             </div>
           `;
@@ -719,6 +748,44 @@ document.addEventListener("DOMContentLoaded", () => {
     
     console.log('🔍 Container after innerHTML set:', container.innerHTML.length, 'chars');
   }
+
+  // Show wallet required message
+  window.showWalletRequiredMessage = function(username) {
+    showToast(`❌ Cannot process payout for ${username}: Verified wallet address required`, 'error', 6000);
+  };
+
+  // Send wallet verification reminder email
+  window.sendWalletReminder = async function(userId, username, email) {
+    if (!confirm(`Send wallet verification reminder email to ${username} (${email})?`)) {
+      return;
+    }
+    
+    try {
+      showToast(`📧 Sending wallet reminder to ${username}...`, 'info');
+      
+      const response = await fetch(`${INVOICING_API_BASE}/admin/referrals/${userId}/send-wallet-reminder`, {
+        method: 'POST',
+        headers: getAuthHeaders(token)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        showToast(`✅ Wallet reminder sent successfully to ${email}`, 'success');
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Wallet reminder failed:', response.status, errorText);
+        try {
+          const error = JSON.parse(errorText);
+          showToast(`Failed to send reminder: ${error.detail}`, 'error');
+        } catch (e) {
+          showToast(`Failed to send reminder: ${response.status} ${response.statusText}`, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error sending wallet reminder:', error);
+      showToast('Error sending wallet reminder', 'error');
+    }
+  };
 
   // Process referral payout
   window.processReferralPayout = async function(userId, username, amount) {

@@ -434,7 +434,69 @@
 
 .referrer-actions {
   display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+
+/* WALLET VERIFICATION STYLES */
+.referrer-wallet {
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.wallet-label {
+  font-weight: 600;
+  color: #333;
+  margin-right: 8px;
+}
+
+.dark-theme .wallet-label {
+  color: #e0e0e0;
+}
+
+.wallet-address {
+  font-family: monospace;
+  font-size: 11px;
+  background: rgba(0,0,0,0.05);
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-right: 8px;
+  word-break: break-all;
+}
+
+.dark-theme .wallet-address {
+  background: rgba(255,255,255,0.1);
+}
+
+.wallet-status {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.8);
+}
+
+.dark-theme .wallet-status {
+  background: rgba(0,0,0,0.3);
+}
+
+/* Wallet verification status styling */
+.referrer-item.wallet-verified {
+  border-left-color: #28a745;
+}
+
+.referrer-item.wallet-unverified {
+  border-left-color: #ffc107;
+}
+
+.referrer-item.wallet-missing {
+  border-left-color: #dc3545;
+}
+
+.wallet-missing {
+  font-style: italic;
+  font-size: 11px;
 }
 
 /* ACTIVITY LOG */
