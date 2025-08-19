@@ -54,7 +54,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return true;
     } catch (error) {
       console.error("Error verifying admin access:", error);
-      showToast("Authentication error. Redirecting...", 'error');
+      // showToast may not be defined yet, so use alert as fallback
+      if (typeof showToast === 'function') {
+        showToast("Authentication error. Redirecting...", 'error');
+      } else {
+        alert("Authentication error. Redirecting to login...");
+      }
       setTimeout(() => {
         window.location.href = "/auth.html";
       }, 2000);
