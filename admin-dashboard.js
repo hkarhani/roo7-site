@@ -1,4 +1,6 @@
-// admin-dashboard.js - Admin Dashboard Logic
+// admin-dashboard.js - Admin Dashboard Logic v2.1
+
+console.log('🚀 Loading admin-dashboard.js v2.1 with enhanced referrals debugging');
 
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
@@ -601,7 +603,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // === REFERRALS FUNCTIONS ===
   async function loadReferrals() {
     try {
-      console.log('🎯 Loading referrals...');
+      console.log('🎯 Loading referrals... (v2.1 with enhanced debugging)');
       const response = await fetch(`${INVOICING_API_BASE}/admin/referrals`, {
         headers: getAuthHeaders(token)
       });
