@@ -645,6 +645,14 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="value">${data.total_referrals || 0}</span>
           <span class="label">Total Referrals</span>
         </div>
+        <div class="referral-stat">
+          <span class="value">$${(data.total_paid_amount || 0).toFixed(2)}</span>
+          <span class="label">Total Paid Out</span>
+        </div>
+        <div class="referral-stat">
+          <span class="value">${data.total_payouts_count || 0}</span>
+          <span class="label">Total Payouts</span>
+        </div>
       </div>
     `;
     
@@ -740,11 +748,36 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
     
+    // Show paid per user section if available
+    let paidPerUserHtml = '';
+    if (data.paid_per_user && data.paid_per_user.length > 0) {
+      paidPerUserHtml = `
+        <div class="paid-per-user-section" style="margin-top: 20px;">
+          <h4>🏆 Top Paid Out Users</h4>
+          <div class="paid-per-user-list">
+            ${data.paid_per_user.map(user => `
+              <div class="paid-user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; margin: 8px 0; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #28a745;">
+                <div class="user-info">
+                  <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${user.username || 'Unknown User'}</div>
+                  <div style="font-size: 12px; color: #666;">${user.email || 'No email'}</div>
+                </div>
+                <div class="payout-stats" style="text-align: right;">
+                  <div style="font-size: 16px; font-weight: 700; color: #28a745;">$${(user.total_paid_amount || 0).toFixed(2)}</div>
+                  <div style="font-size: 11px; color: #666;">${user.payout_count || 0} payout${user.payout_count === 1 ? '' : 's'}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+    
     console.log('🔍 Final summaryHtml length:', summaryHtml.length);
     console.log('🔍 Final referrersHtml length:', referrersHtml.length);
-    console.log('🔍 Final combined HTML length:', (summaryHtml + referrersHtml).length);
+    console.log('🔍 Final paidPerUserHtml length:', paidPerUserHtml.length);
+    console.log('🔍 Final combined HTML length:', (summaryHtml + referrersHtml + paidPerUserHtml).length);
     
-    container.innerHTML = summaryHtml + referrersHtml;
+    container.innerHTML = summaryHtml + referrersHtml + paidPerUserHtml;
     
     console.log('🔍 Container after innerHTML set:', container.innerHTML.length, 'chars');
   }
