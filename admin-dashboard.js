@@ -622,6 +622,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function displayReferrals(data) {
     const container = document.getElementById('referrals-overview');
     
+    // Debug logging to see what data we're getting
+    console.log('🔍 Referrals data received:', data);
+    console.log('🔍 Referrers array:', data.referrers);
+    console.log('🔍 Referrers length:', data.referrers ? data.referrers.length : 'undefined');
+    console.log('🔍 First referrer details:', data.referrers && data.referrers[0] ? data.referrers[0] : 'no first referrer');
+    console.log('🔍 Data type check - is array?', Array.isArray(data.referrers));
+    
     const summaryHtml = `
       <div class="referrals-summary">
         <div class="referral-stat">
@@ -642,14 +649,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show detailed referrers list if available
     let referrersHtml = '';
     if (data.referrers && data.referrers.length > 0) {
-      referrersHtml = `
-        <div class="referrers-list" style="margin-top: 20px;">
-          <h4>Pending Payouts</h4>
-          ${data.referrers.map(referrer => `
+      console.log('✅ Showing referrers list with', data.referrers.length, 'referrers');
+      console.log('🔍 About to generate HTML for referrers:', data.referrers);
+      
+      try {
+        const referrerItems = data.referrers.map((referrer, index) => {
+          console.log(`🔍 Processing referrer ${index}:`, referrer);
+          return `
             <div class="referrer-item">
               <div class="referrer-info">
-                <div class="referrer-name">${referrer.full_name || referrer.username}</div>
-                <div class="referrer-email">${referrer.email}</div>
+                <div class="referrer-name">${referrer.full_name || referrer.username || 'Unknown User'}</div>
+                <div class="referrer-email">${referrer.email || 'No email'}</div>
                 <div class="referrer-stats">
                   <span class="stat">Balance: $${(referrer.referral_balance || 0).toFixed(2)}</span>
                   <span class="stat">Referrals: ${referrer.referral_count || 0}</span>
@@ -657,24 +667,55 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
               <div class="referrer-actions">
-                <button class="success-btn" onclick="processReferralPayout('${referrer._id}', '${referrer.username}', ${referrer.referral_balance})">
+                <button class="success-btn" onclick="processReferralPayout('${referrer._id || referrer.id || 'unknown'}', '${referrer.username || 'unknown'}', ${referrer.referral_balance || 0})">
                   💰 Pay Out $${(referrer.referral_balance || 0).toFixed(2)}
                 </button>
               </div>
             </div>
-          `).join('')}
-        </div>
-      `;
+          `;
+        });
+        
+        referrersHtml = `
+          <div class="referrers-list" style="margin-top: 20px;">
+            <h4>Pending Payouts</h4>
+            ${referrerItems.join('')}
+          </div>
+        `;
+        console.log('🔍 Generated referrers HTML length:', referrersHtml.length);
+      } catch (error) {
+        console.error('❌ Error generating referrers HTML:', error);
+        referrersHtml = `
+          <div class="empty-state admin" style="margin-top: 20px;">
+            <h4>Error Displaying Referrers</h4>
+            <p>Failed to render referrers list: ${error.message}</p>
+          </div>
+        `;
+      }
     } else if (data.total_referrers > 0) {
+      console.log('ℹ️ No referrers with pending payouts, but total_referrers > 0');
       referrersHtml = `
         <div class="empty-state admin" style="margin-top: 20px;">
           <h4>No Pending Payouts</h4>
           <p>All referral commissions have been paid out.</p>
         </div>
       `;
+    } else {
+      console.log('ℹ️ No referrers data at all');
+      referrersHtml = `
+        <div class="empty-state admin" style="margin-top: 20px;">
+          <h4>No Referrals Data</h4>
+          <p>No referral activity found.</p>
+        </div>
+      `;
     }
     
+    console.log('🔍 Final summaryHtml length:', summaryHtml.length);
+    console.log('🔍 Final referrersHtml length:', referrersHtml.length);
+    console.log('🔍 Final combined HTML length:', (summaryHtml + referrersHtml).length);
+    
     container.innerHTML = summaryHtml + referrersHtml;
+    
+    console.log('🔍 Container after innerHTML set:', container.innerHTML.length, 'chars');
   }
 
   // Process referral payout
