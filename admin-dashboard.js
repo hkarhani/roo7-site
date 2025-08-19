@@ -6,6 +6,7 @@ import CONFIG from './frontend-config.js';
 document.addEventListener("DOMContentLoaded", () => {
   // Use centralized API configuration  
   const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
+  const AUTH_API_BASE = CONFIG.API_CONFIG.authUrl;
   
   // Check authentication
   const token = localStorage.getItem("token");
@@ -16,6 +17,152 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2000);
     return;
   }
+
+  // 🔒 SECURITY: Verify admin access before loading dashboard
+  async function verifyAdminAccess() {
+    try {
+      // Get current user info to verify admin status
+      const response = await fetch(`${AUTH_API_BASE}/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const userData = await response.json();
+      
+      // Check if user is admin
+      if (!userData.is_admin) {
+        // 🚨 SECURITY VIOLATION: Non-admin user trying to access admin dashboard
+        console.error("🚨 SECURITY VIOLATION: Unauthorized admin dashboard access attempt");
+        
+        // Log the unauthorized access attempt
+        await logUnauthorizedAccess(userData, token);
+        
+        // Show security warning and redirect
+        showSecurityViolationMessage();
+        setTimeout(() => {
+          window.location.href = "/dashboard.html";
+        }, 5000);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error verifying admin access:", error);
+      showToast("Authentication error. Redirecting...", 'error');
+      setTimeout(() => {
+        window.location.href = "/auth.html";
+      }, 2000);
+      return false;
+    }
+  }
+
+  // Log unauthorized access attempt to backend
+  async function logUnauthorizedAccess(userData, token) {
+    try {
+      const accessLog = {
+        user_id: userData._id || userData.id,
+        username: userData.username,
+        email: userData.email,
+        full_name: userData.full_name || 'Unknown',
+        attempted_resource: 'admin-dashboard',
+        timestamp: new Date().toISOString(),
+        ip_address: await getClientIP(),
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || 'direct',
+        session_token: token.substring(0, 20) + '...' // Log partial token for tracking
+      };
+
+      // Send to backend for logging and email notification
+      await fetch(`${INVOICING_API_BASE}/admin/security/unauthorized-access`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(accessLog)
+      });
+    } catch (error) {
+      console.error("Failed to log unauthorized access:", error);
+    }
+  }
+
+  // Get client IP for logging
+  async function getClientIP() {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch {
+      return 'unknown';
+    }
+  }
+
+  // Show security violation message
+  function showSecurityViolationMessage() {
+    document.body.innerHTML = `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #f8f9fa;
+        color: #721c24;
+        text-align: center;
+        padding: 20px;
+        font-family: 'Segoe UI', sans-serif;
+      ">
+        <div style="
+          background: #f8d7da;
+          border: 1px solid #f5c6cb;
+          border-radius: 8px;
+          padding: 40px;
+          max-width: 600px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        ">
+          <h1 style="margin-bottom: 20px; color: #721c24;">🚨 Access Denied</h1>
+          <h2 style="margin-bottom: 20px; color: #856404;">Unauthorized Access Detected</h2>
+          <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+            You do not have administrative privileges to access this resource.
+            This incident has been logged and security has been notified.
+          </p>
+          <p style="font-size: 14px; color: #6c757d; margin-bottom: 30px;">
+            If you believe this is an error, please contact support immediately.
+          </p>
+          <p style="font-size: 14px; color: #495057;">
+            Redirecting to dashboard in <span id="countdown">5</span> seconds...
+          </p>
+        </div>
+      </div>
+    `;
+    
+    // Countdown timer
+    let seconds = 5;
+    const countdownElement = document.getElementById('countdown');
+    const interval = setInterval(() => {
+      seconds--;
+      if (countdownElement) {
+        countdownElement.textContent = seconds;
+      }
+      if (seconds <= 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+  }
+
+  // Only proceed with admin dashboard if access is verified
+  verifyAdminAccess().then(isAuthorized => {
+    if (!isAuthorized) {
+      return; // Stop execution if not authorized
+    }
+
+    // Continue with normal admin dashboard initialization...
 
   // Auth headers helper
   function getAuthHeaders(token) {
@@ -574,4 +721,6 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTierUpgrades();
   loadReferrals();
   loadActivity();
+  
+  }); // End of authorization check
 });
