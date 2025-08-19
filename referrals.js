@@ -691,6 +691,12 @@ Best regards`);
       changeWalletBtn.onclick = changeWallet;
     }
 
+    // Request verification button
+    const requestVerificationBtn = document.getElementById('request-verification-btn');
+    if (requestVerificationBtn) {
+      requestVerificationBtn.onclick = requestWalletVerification;
+    }
+
     // Listen for MetaMask account changes
     if (isMetaMaskAvailable()) {
       window.ethereum.on('accountsChanged', (accounts) => {
@@ -725,6 +731,103 @@ Best regards`);
     // If no stored wallet, show not connected state
     if (!connectedWallet.address) {
       showNotConnectedState();
+    }
+    
+    // Load backend wallet verification status
+    await loadBackendWalletInfo();
+  }
+
+  // Load wallet verification status from backend
+  async function loadBackendWalletInfo() {
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/wallet/info`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const walletInfo = await response.json();
+        updateVerificationStatus(walletInfo);
+      }
+    } catch (error) {
+      console.error('Error loading backend wallet info:', error);
+    }
+  }
+
+  // Update verification status display
+  function updateVerificationStatus(walletInfo) {
+    if (!walletInfo || !connectedWallet.address) return;
+
+    const statusElement = document.getElementById('wallet-verified-status');
+    const connectionTime = document.getElementById('connection-time');
+    const requestButton = document.getElementById('request-verification-btn');
+
+    if (!statusElement) return;
+
+    if (walletInfo.wallet_verified) {
+      // Wallet is verified
+      statusElement.textContent = '✅ Verified';
+      statusElement.className = 'status-badge verified';
+      if (requestButton) requestButton.style.display = 'none';
+      
+      if (connectionTime && walletInfo.verified_at) {
+        const date = new Date(walletInfo.verified_at);
+        connectionTime.textContent = `Verified ${date.toLocaleDateString()}`;
+      }
+    } else if (walletInfo.verification_requested) {
+      // Verification requested but pending
+      statusElement.textContent = '📋 Verification Requested';
+      statusElement.className = 'status-badge verification-requested';
+      if (requestButton) {
+        requestButton.textContent = '⏳ Verification Pending';
+        requestButton.disabled = true;
+      }
+      
+      if (connectionTime && walletInfo.verification_requested_at) {
+        const date = new Date(walletInfo.verification_requested_at);
+        connectionTime.textContent = `Verification requested ${date.toLocaleDateString()}`;
+      }
+    } else {
+      // Connected but not verified
+      statusElement.textContent = '⏳ Unverified';
+      statusElement.className = 'status-badge unverified';
+      if (requestButton) {
+        requestButton.style.display = 'inline-flex';
+        requestButton.disabled = false;
+        requestButton.textContent = '🔍 Request Verification';
+      }
+    }
+  }
+
+  // Request wallet verification from backend
+  async function requestWalletVerification() {
+    const requestButton = document.getElementById('request-verification-btn');
+    const originalText = requestButton.textContent;
+    
+    requestButton.disabled = true;
+    requestButton.textContent = 'Requesting...';
+    
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/wallet/request-verification`, {
+        method: 'POST',
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        showToast(result.message, 'success');
+        
+        // Reload wallet info to update status
+        await loadBackendWalletInfo();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to request verification: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error requesting wallet verification:', error);
+      showToast('Failed to request verification. Please try again.', 'error');
+    } finally {
+      requestButton.disabled = false;
+      requestButton.textContent = originalText;
     }
   }
 

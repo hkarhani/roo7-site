@@ -681,9 +681,39 @@
   color: white;
 }
 
+.status-badge.verified {
+  background: #28a745;
+  color: white;
+}
+
+.status-badge.unverified {
+  background: #ffc107;
+  color: #212529;
+}
+
+.status-badge.verification-requested {
+  background: #17a2b8;
+  color: white;
+}
+
 .dark-theme .status-badge {
   background: #34ce57;
   color: #1d4e20;
+}
+
+.dark-theme .status-badge.verified {
+  background: #34ce57;
+  color: #1d4e20;
+}
+
+.dark-theme .status-badge.unverified {
+  background: #fbbf24;
+  color: #1f2937;
+}
+
+.dark-theme .status-badge.verification-requested {
+  background: #0ea5e9;
+  color: #1e293b;
 }
 
 .connection-info {
@@ -703,7 +733,8 @@
 }
 
 .btn-secondary,
-.btn-edit {
+.btn-edit,
+.btn-verification {
   background: #6c757d;
   color: white;
   border: none;
@@ -719,6 +750,32 @@
   gap: 6px;
 }
 
+.btn-verification {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-verification:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+.btn-verification:disabled {
+  background: #6c757d;
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dark-theme .btn-verification {
+  background: #0ea5e9;
+  color: white;
+}
+
+.dark-theme .btn-verification:hover {
+  background: #0284c7;
+}
+
 .btn-secondary:hover,
 .btn-edit:hover {
   background: #5a6268;
@@ -726,7 +783,8 @@
 }
 
 .btn-secondary:active,
-.btn-edit:active {
+.btn-edit:active,
+.btn-verification:active {
   transform: translateY(0);
 }
 
@@ -912,7 +970,8 @@
   }
 
   .btn-secondary,
-  .btn-edit {
+  .btn-edit,
+  .btn-verification {
     padding: 12px 16px;
     justify-content: center;
     width: 100%;
