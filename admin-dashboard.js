@@ -1,0 +1,577 @@
+// admin-dashboard.js - Admin Dashboard Logic
+
+// Import centralized configuration
+import CONFIG from './frontend-config.js';
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Use centralized API configuration  
+  const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
+  
+  // Check authentication
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.log("❌ No token found, redirecting to auth...");
+    setTimeout(() => {
+      window.location.href = "/auth.html";
+    }, 2000);
+    return;
+  }
+
+  // Auth headers helper
+  function getAuthHeaders(token) {
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  // Toast notification system
+  window.showToast = function(message, type = 'info', duration = 4000) {
+    const existingToasts = document.querySelectorAll('.toast');
+    existingToasts.forEach(toast => toast.remove());
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+      <div class="toast-content">
+        <span class="toast-message">${message}</span>
+        <button class="toast-close">&times;</button>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('toast-show'), 100);
+
+    const autoHide = setTimeout(() => {
+      toast.classList.remove('toast-show');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+      clearTimeout(autoHide);
+      toast.classList.remove('toast-show');
+      setTimeout(() => toast.remove(), 300);
+    });
+  };
+
+  // Global variables for modal management
+  let currentWalletVerification = null;
+  let currentUpgrade = null;
+  let currentInvoice = null;
+
+  // === SYSTEM OVERVIEW FUNCTIONS ===
+  async function loadSystemOverview() {
+    try {
+      console.log('📊 Loading system overview...');
+      const response = await fetch(`${INVOICING_API_BASE}/admin/dashboard/summary`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        displaySystemOverview(data.summary);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading system overview:', error);
+      document.getElementById('overview-stats').innerHTML = 
+        '<div class="empty-state admin"><h4>Failed to Load Overview</h4><p>Please check your admin permissions.</p></div>';
+    }
+  }
+
+  function displaySystemOverview(summary) {
+    const container = document.getElementById('overview-stats');
+    
+    container.innerHTML = `
+      <div class="stat-card admin">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">${summary.users?.total || 0}</div>
+      </div>
+      <div class="stat-card admin">
+        <div class="stat-icon">✅</div>
+        <div class="stat-label">Verified Users</div>
+        <div class="stat-value">${summary.users?.verified || 0}</div>
+      </div>
+      <div class="stat-card admin">
+        <div class="stat-icon">🔄</div>
+        <div class="stat-label">Active Subs</div>
+        <div class="stat-value">${summary.subscriptions?.active || 0}</div>
+      </div>
+      <div class="stat-card admin">
+        <div class="stat-icon">📄</div>
+        <div class="stat-label">Pending Invoices</div>
+        <div class="stat-value">${summary.invoices?.pending || 0}</div>
+      </div>
+      <div class="stat-card admin">
+        <div class="stat-icon">💰</div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">$${(summary.invoices?.total_revenue || 0).toLocaleString()}</div>
+      </div>
+      <div class="stat-card admin">
+        <div class="stat-icon">📈</div>
+        <div class="stat-label">Portfolio Value</div>
+        <div class="stat-value">$${(summary.portfolio?.total_value || 0).toLocaleString()}</div>
+      </div>
+    `;
+  }
+
+  // === WALLET VERIFICATION FUNCTIONS ===
+  async function loadWalletVerifications() {
+    try {
+      console.log('💳 Loading wallet verifications...');
+      const response = await fetch(`${INVOICING_API_BASE}/admin/wallet/pending-verifications`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        displayWalletVerifications(data.pending_verifications);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading wallet verifications:', error);
+      document.getElementById('pending-verifications').innerHTML = 
+        '<div class="empty-state admin"><h4>Failed to Load</h4><p>Could not load wallet verifications.</p></div>';
+    }
+  }
+
+  function displayWalletVerifications(verifications) {
+    const container = document.getElementById('pending-verifications');
+    
+    if (verifications.length === 0) {
+      container.innerHTML = '<div class="empty-state admin"><h4>No Pending Verifications</h4><p>All wallet verifications are up to date.</p></div>';
+      return;
+    }
+
+    container.innerHTML = verifications.map(verification => `
+      <div class="wallet-verification-item">
+        <div class="wallet-info">
+          <div class="user-name">${verification.full_name || verification.username}</div>
+          <div class="wallet-address">${verification.wallet_address}</div>
+          <div class="request-date">Requested: ${new Date(verification.requested_at).toLocaleDateString()}</div>
+        </div>
+        <div class="wallet-actions">
+          <button class="success-btn" onclick="openWalletModal('${verification.user_id}', '${verification.wallet_address}', '${verification.username}')">
+            ✅ Review
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Make function global for onclick
+  window.openWalletModal = function(userId, address, username) {
+    currentWalletVerification = { userId, address, username };
+    
+    document.getElementById('wallet-verification-details').innerHTML = `
+      <div class="detail-row">
+        <span class="detail-label">User:</span>
+        <span class="detail-value">${username}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Wallet Address:</span>
+        <span class="detail-value" style="font-family: monospace;">${address}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Wallet Type:</span>
+        <span class="detail-value">Web3 Wallet</span>
+      </div>
+    `;
+    
+    document.getElementById('wallet-verification-modal').style.display = 'block';
+  };
+
+  async function verifyWallet() {
+    if (!currentWalletVerification) return;
+    
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/admin/wallet/verify/${currentWalletVerification.userId}`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          verification_method: 'manual_admin'
+        })
+      });
+
+      if (response.ok) {
+        showToast('Wallet verified successfully!', 'success');
+        document.getElementById('wallet-verification-modal').style.display = 'none';
+        loadWalletVerifications();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to verify wallet: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error verifying wallet:', error);
+      showToast('Error verifying wallet', 'error');
+    }
+  }
+
+  async function rejectWallet() {
+    if (!currentWalletVerification) return;
+    
+    const reason = prompt('Reason for rejection:') || 'Invalid wallet address';
+    
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/admin/wallet/reject/${currentWalletVerification.userId}`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          reason: reason
+        })
+      });
+
+      if (response.ok) {
+        showToast('Wallet verification rejected', 'success');
+        document.getElementById('wallet-verification-modal').style.display = 'none';
+        loadWalletVerifications();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to reject wallet: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error rejecting wallet:', error);
+      showToast('Error rejecting wallet', 'error');
+    }
+  }
+
+  // === INVOICE MANAGEMENT FUNCTIONS ===
+  async function loadInvoices(status = '') {
+    try {
+      console.log('📄 Loading invoices...');
+      let url = `${INVOICING_API_BASE}/admin/invoices`;
+      if (status) url += `?status=${status}`;
+
+      const response = await fetch(url, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const invoices = await response.json();
+        displayInvoices(invoices);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading invoices:', error);
+      document.querySelector('#admin-invoices-table tbody').innerHTML = 
+        '<tr><td colspan="6" class="loading-message">Failed to load invoices</td></tr>';
+    }
+  }
+
+  function displayInvoices(invoices) {
+    const tbody = document.querySelector('#admin-invoices-table tbody');
+    
+    if (invoices.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No invoices found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = invoices.map(invoice => `
+      <tr>
+        <td>${invoice.invoice_id}</td>
+        <td>${invoice.user_email || 'N/A'}</td>
+        <td>$${invoice.amount.toFixed(2)}</td>
+        <td><span class="status-badge status-${invoice.status}">${invoice.status}</span></td>
+        <td>${new Date(invoice.created_at).toLocaleDateString()}</td>
+        <td>
+          ${invoice.status === 'pending' ? 
+            `<button class="success-btn" onclick="approveInvoice('${invoice._id}')">✅ Approve</button>` : 
+            '<span class="text-muted">No actions</span>'
+          }
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Make function global for onclick
+  window.approveInvoice = async function(invoiceId) {
+    if (!confirm('Are you sure you want to approve this invoice?')) return;
+    
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/approve`, {
+        method: 'POST',
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        showToast('Invoice approved successfully!', 'success');
+        loadInvoices();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to approve invoice: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error approving invoice:', error);
+      showToast('Error approving invoice', 'error');
+    }
+  };
+
+  // === TIER UPGRADES FUNCTIONS ===
+  async function loadTierUpgrades() {
+    try {
+      console.log('⬆️ Loading tier upgrades...');
+      const response = await fetch(`${INVOICING_API_BASE}/admin/tier-upgrades/pending`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        displayTierUpgrades(data.pending_upgrades);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading tier upgrades:', error);
+      document.getElementById('pending-upgrades').innerHTML = 
+        '<div class="empty-state admin"><h4>Failed to Load</h4><p>Could not load tier upgrades.</p></div>';
+    }
+  }
+
+  function displayTierUpgrades(upgrades) {
+    const container = document.getElementById('pending-upgrades');
+    
+    if (upgrades.length === 0) {
+      container.innerHTML = '<div class="empty-state admin"><h4>No Pending Upgrades</h4><p>All tier upgrades are up to date.</p></div>';
+      return;
+    }
+
+    container.innerHTML = upgrades.map(upgrade => `
+      <div class="upgrade-item">
+        <div class="upgrade-info">
+          <div class="user-name">${upgrade.user_name}</div>
+          <div class="tier-change">${upgrade.current_tier} → ${upgrade.suggested_tier}</div>
+          <div class="portfolio-value">Portfolio: $${upgrade.portfolio_value.toLocaleString()}</div>
+        </div>
+        <div class="wallet-actions">
+          <button class="success-btn" onclick="approveUpgrade('${upgrade.upgrade_id}')">✅ Approve</button>
+          <button class="danger-btn" onclick="rejectUpgrade('${upgrade.upgrade_id}')">❌ Reject</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Make functions global for onclick
+  window.approveUpgrade = async function(upgradeId) {
+    if (!confirm('Are you sure you want to approve this tier upgrade?')) return;
+    
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/admin/tier-upgrades/${upgradeId}/review`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          action: 'approve',
+          notes: 'Approved via admin dashboard'
+        })
+      });
+
+      if (response.ok) {
+        showToast('Tier upgrade approved successfully!', 'success');
+        loadTierUpgrades();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to approve upgrade: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error approving upgrade:', error);
+      showToast('Error approving upgrade', 'error');
+    }
+  };
+
+  window.rejectUpgrade = async function(upgradeId) {
+    const reason = prompt('Reason for rejection:') || 'Rejected by admin';
+    
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/admin/tier-upgrades/${upgradeId}/review`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          action: 'reject',
+          notes: reason
+        })
+      });
+
+      if (response.ok) {
+        showToast('Tier upgrade rejected', 'success');
+        loadTierUpgrades();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to reject upgrade: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error rejecting upgrade:', error);
+      showToast('Error rejecting upgrade', 'error');
+    }
+  };
+
+  async function scanUpgrades() {
+    try {
+      showToast('Scanning for tier upgrades...', 'info');
+      const response = await fetch(`${INVOICING_API_BASE}/admin/tier-upgrades/scan`, {
+        method: 'POST',
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        showToast(`Scan completed. ${result.detected_upgrades} upgrades detected.`, 'success');
+        loadTierUpgrades();
+      } else {
+        const error = await response.json();
+        showToast(`Scan failed: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error scanning upgrades:', error);
+      showToast('Error scanning for upgrades', 'error');
+    }
+  }
+
+  // === REFERRALS FUNCTIONS ===
+  async function loadReferrals() {
+    try {
+      console.log('🎯 Loading referrals...');
+      const response = await fetch(`${INVOICING_API_BASE}/admin/referrals`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        displayReferrals(data);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading referrals:', error);
+      document.getElementById('referrals-overview').innerHTML = 
+        '<div class="empty-state admin"><h4>Failed to Load</h4><p>Could not load referrals data.</p></div>';
+    }
+  }
+
+  function displayReferrals(data) {
+    const container = document.getElementById('referrals-overview');
+    
+    container.innerHTML = `
+      <div class="referrals-summary">
+        <div class="referral-stat">
+          <span class="value">${data.total_referrers || 0}</span>
+          <span class="label">Total Referrers</span>
+        </div>
+        <div class="referral-stat">
+          <span class="value">$${(data.total_pending || 0).toFixed(2)}</span>
+          <span class="label">Pending Payouts</span>
+        </div>
+        <div class="referral-stat">
+          <span class="value">${data.total_referrals || 0}</span>
+          <span class="label">Total Referrals</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // === ACTIVITY LOG FUNCTIONS ===
+  async function loadActivity() {
+    try {
+      console.log('📋 Loading activity...');
+      const response = await fetch(`${INVOICING_API_BASE}/admin/dashboard/activity`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        displayActivity(data.recent_activity);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading activity:', error);
+      document.getElementById('activity-log').innerHTML = 
+        '<div class="empty-state admin"><h4>Failed to Load</h4><p>Could not load recent activity.</p></div>';
+    }
+  }
+
+  function displayActivity(activity) {
+    const container = document.getElementById('activity-log');
+    
+    const allActivity = [
+      ...activity.invoices.map(inv => ({
+        type: 'Invoice',
+        description: `${inv.invoice_id} - $${inv.amount}`,
+        time: inv.created_at
+      })),
+      ...activity.subscriptions.map(sub => ({
+        type: 'Subscription',
+        description: `New ${sub.tier} subscription`,
+        time: sub.created_at
+      }))
+    ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
+
+    if (allActivity.length === 0) {
+      container.innerHTML = '<div class="empty-state admin"><h4>No Recent Activity</h4></div>';
+      return;
+    }
+
+    container.innerHTML = allActivity.map(item => `
+      <div class="activity-item">
+        <div class="activity-type">${item.type}</div>
+        <div class="activity-description">${item.description}</div>
+        <div class="activity-time">${new Date(item.time).toLocaleDateString()}</div>
+      </div>
+    `).join('');
+  }
+
+  // === EVENT LISTENERS ===
+  
+  // Navigation
+  document.getElementById('back-to-dashboard').onclick = () => {
+    window.location.href = '/dashboard.html';
+  };
+
+  // Logout
+  document.getElementById('logout-btn').onclick = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/auth.html";
+  };
+
+  // Refresh buttons
+  document.getElementById('refresh-overview').onclick = loadSystemOverview;
+  document.getElementById('refresh-wallets').onclick = loadWalletVerifications;
+  document.getElementById('refresh-referrals').onclick = loadReferrals;
+  document.getElementById('refresh-activity').onclick = loadActivity;
+  document.getElementById('scan-upgrades').onclick = scanUpgrades;
+
+  // Filter invoices
+  document.getElementById('filter-invoices').onclick = () => {
+    const status = document.getElementById('invoice-status-filter').value;
+    loadInvoices(status);
+  };
+
+  // Modal event listeners
+  document.getElementById('wallet-modal-close').onclick = () => {
+    document.getElementById('wallet-verification-modal').style.display = 'none';
+  };
+
+  document.getElementById('verify-wallet-btn').onclick = verifyWallet;
+  document.getElementById('reject-wallet-btn').onclick = rejectWallet;
+
+  // Close modals when clicking outside
+  window.onclick = (event) => {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  };
+
+  // Initialize dashboard
+  console.log('🚀 Initializing admin dashboard...');
+  loadSystemOverview();
+  loadWalletVerifications();
+  loadInvoices();
+  loadTierUpgrades();
+  loadReferrals();
+  loadActivity();
+});

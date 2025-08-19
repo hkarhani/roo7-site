@@ -1,0 +1,629 @@
+/* admin-dashboard.css - Admin Dashboard Specific Styles */
+
+/* ADMIN GRID LAYOUT */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 20px;
+  padding: 0 20px 40px;
+}
+
+/* Grid positioning for admin sections */
+#section-overview {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+#section-wallets {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+#section-invoices {
+  grid-column: 2 / -1;
+  grid-row: 2;
+}
+
+#section-upgrades {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+#section-referrals {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+#section-activity {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+/* ADMIN OVERVIEW STATS */
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.stat-card.admin {
+  background: linear-gradient(135deg, #e3f2fd, #ffffff);
+  border-left: 4px solid #1976d2;
+  padding: 18px;
+}
+
+.dark-theme .stat-card.admin {
+  background: linear-gradient(135deg, #1e3a5f, #1a1a1a);
+  border-left-color: #60a5fa;
+}
+
+.stat-card.admin .stat-icon {
+  font-size: 24px;
+  color: #1976d2;
+  margin-bottom: 8px;
+}
+
+.dark-theme .stat-card.admin .stat-icon {
+  color: #60a5fa;
+}
+
+.stat-card.admin .stat-label {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.dark-theme .stat-card.admin .stat-label {
+  color: #ccc;
+}
+
+.stat-card.admin .stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.dark-theme .stat-card.admin .stat-value {
+  color: #60a5fa;
+}
+
+/* WALLET VERIFICATIONS */
+.pending-verifications {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.wallet-verification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin: 10px 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+.dark-theme .wallet-verification-item {
+  background: #2a2a2a;
+}
+
+.wallet-info {
+  flex: 1;
+}
+
+.wallet-info .user-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.dark-theme .wallet-info .user-name {
+  color: #e0e0e0;
+}
+
+.wallet-info .wallet-address {
+  font-family: monospace;
+  font-size: 13px;
+  color: #666;
+  background: rgba(0,0,0,0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.dark-theme .wallet-info .wallet-address {
+  color: #ccc;
+  background: rgba(255,255,255,0.1);
+}
+
+.wallet-info .request-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.dark-theme .wallet-info .request-date {
+  color: #ccc;
+}
+
+.wallet-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ADMIN BUTTONS */
+.success-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.success-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.danger-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.danger-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.primary-button.admin {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.primary-button.admin:hover {
+  background: #1565c0;
+  transform: translateY(-1px);
+}
+
+/* ADMIN TABLES */
+#admin-invoices-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#admin-invoices-table th {
+  background: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 12px;
+}
+
+.dark-theme #admin-invoices-table th {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-bottom-color: #444;
+}
+
+#admin-invoices-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: middle;
+}
+
+.dark-theme #admin-invoices-table td {
+  border-bottom-color: #333;
+}
+
+#admin-invoices-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.dark-theme #admin-invoices-table tbody tr:hover {
+  background: #2a2a2a;
+}
+
+/* FILTER CONTROLS */
+.filter-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#invoice-status-filter {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+}
+
+.dark-theme #invoice-status-filter {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+/* PENDING UPGRADES */
+.pending-upgrades {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.upgrade-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin: 10px 0;
+  background: #e8f5e8;
+  border-radius: 8px;
+  border-left: 4px solid #28a745;
+}
+
+.dark-theme .upgrade-item {
+  background: #1e3a1e;
+}
+
+.upgrade-info {
+  flex: 1;
+}
+
+.upgrade-info .user-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.dark-theme .upgrade-info .user-name {
+  color: #e0e0e0;
+}
+
+.upgrade-info .tier-change {
+  font-size: 14px;
+  color: #28a745;
+  font-weight: 600;
+}
+
+.upgrade-info .portfolio-value {
+  font-size: 13px;
+  color: #666;
+  margin: 4px 0;
+}
+
+.dark-theme .upgrade-info .portfolio-value {
+  color: #ccc;
+}
+
+/* REFERRALS OVERVIEW */
+.referrals-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.referral-stat {
+  text-align: center;
+  padding: 15px;
+  background: #fff3cd;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+}
+
+.dark-theme .referral-stat {
+  background: #3a3520;
+  border-color: #4a4228;
+}
+
+.referral-stat .value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #856404;
+  display: block;
+}
+
+.dark-theme .referral-stat .value {
+  color: #fbbf24;
+}
+
+.referral-stat .label {
+  font-size: 12px;
+  color: #856404;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dark-theme .referral-stat .label {
+  color: #fbbf24;
+}
+
+/* ACTIVITY LOG */
+.activity-log {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  padding: 12px;
+  margin: 8px 0;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #17a2b8;
+}
+
+.dark-theme .activity-item {
+  background: #2a2a2a;
+}
+
+.activity-item .activity-type {
+  font-weight: 600;
+  color: #17a2b8;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.activity-item .activity-description {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.dark-theme .activity-item .activity-description {
+  color: #ccc;
+}
+
+.activity-item .activity-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.dark-theme .activity-item .activity-time {
+  color: #666;
+}
+
+/* ADMIN MODALS */
+.modal-content.admin {
+  max-width: 600px;
+}
+
+#wallet-verification-details,
+#upgrade-details,
+#invoice-details {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.dark-theme #wallet-verification-details,
+.dark-theme #upgrade-details,
+.dark-theme #invoice-details {
+  background: #2a2a2a;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.dark-theme .detail-row {
+  border-bottom-color: #444;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.dark-theme .detail-label {
+  color: #e0e0e0;
+}
+
+.detail-value {
+  color: #666;
+}
+
+.dark-theme .detail-value {
+  color: #ccc;
+}
+
+/* EMPTY STATES */
+.empty-state.admin {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.dark-theme .empty-state.admin {
+  color: #ccc;
+}
+
+.empty-state.admin h4 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.dark-theme .empty-state.admin h4 {
+  color: #e0e0e0;
+}
+
+.empty-state.admin p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* LOADING STATES */
+.loading-state {
+  text-align: center;
+  padding: 30px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.dark-theme .loading-state {
+  color: #ccc;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+  .admin-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #section-overview {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  #section-wallets {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #section-invoices {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  #section-upgrades {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  #section-referrals {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  #section-activity {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 15px 30px;
+  }
+
+  .admin-grid section {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .overview-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .wallet-verification-item,
+  .upgrade-item,
+  .activity-item {
+    padding: 12px;
+  }
+
+  .wallet-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .success-btn,
+  .danger-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  #invoice-status-filter {
+    width: 100%;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  #admin-invoices-table {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .referrals-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-card.admin {
+    padding: 15px;
+  }
+
+  .stat-card.admin .stat-value {
+    font-size: 20px;
+  }
+
+  .dashboard-header {
+    padding: 15px 20px;
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .dashboard-header h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .actions button {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}

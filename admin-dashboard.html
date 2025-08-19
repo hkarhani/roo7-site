@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Admin Dashboard</title>
+  <script type="module" src="frontend-config.js"></script>
+  <link rel="stylesheet" href="dashboard.css?v=1.0" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=1.0" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>🔧 Admin Dashboard</h1>
+    <div class="actions">
+      <button id="back-to-dashboard">← Dashboard</button>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <main class="dashboard-grid admin-grid">
+    <!-- System Overview -->
+    <section id="section-overview" class="dashboard-card">
+      <div class="section-header">
+        <h2>📊 System Overview</h2>
+        <button id="refresh-overview" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="overview-stats" id="overview-stats">
+        <div class="loading-state">
+          <p>Loading system overview...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wallet Verifications -->
+    <section id="section-wallets" class="dashboard-card">
+      <div class="section-header">
+        <h2>💳 Wallet Verifications</h2>
+        <button id="refresh-wallets" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="pending-verifications" id="pending-verifications">
+        <div class="loading-state">
+          <p>Loading pending verifications...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Invoice Management -->
+    <section id="section-invoices" class="dashboard-card">
+      <div class="section-header">
+        <h2>📄 Invoice Management</h2>
+        <div class="filter-controls">
+          <select id="invoice-status-filter">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="overdue">Overdue</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button id="filter-invoices" class="secondary-button">Filter</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="admin-invoices-table">
+          <thead>
+            <tr>
+              <th>Invoice ID</th>
+              <th>User</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" class="loading-message">Loading invoices...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tier Upgrades -->
+    <section id="section-upgrades" class="dashboard-card">
+      <div class="section-header">
+        <h2>⬆️ Tier Upgrades</h2>
+        <button id="scan-upgrades" class="primary-button">🔍 Scan Upgrades</button>
+      </div>
+      <div class="pending-upgrades" id="pending-upgrades">
+        <div class="loading-state">
+          <p>Loading pending upgrades...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Referrals Management -->
+    <section id="section-referrals" class="dashboard-card">
+      <div class="section-header">
+        <h2>🎯 Referrals Management</h2>
+        <button id="refresh-referrals" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="referrals-overview" id="referrals-overview">
+        <div class="loading-state">
+          <p>Loading referrals data...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section id="section-activity" class="dashboard-card">
+      <div class="section-header">
+        <h2>📋 Recent Activity</h2>
+        <button id="refresh-activity" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="activity-log" id="activity-log">
+        <div class="loading-state">
+          <p>Loading recent activity...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Wallet Verification Modal -->
+  <div id="wallet-verification-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="wallet-modal-close">&times;</span>
+      <h3>Wallet Verification</h3>
+      <div id="wallet-verification-details"></div>
+      <div class="modal-actions">
+        <button id="verify-wallet-btn" class="success-btn">✅ Verify</button>
+        <button id="reject-wallet-btn" class="danger-btn">❌ Reject</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tier Upgrade Modal -->
+  <div id="upgrade-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="upgrade-modal-close">&times;</span>
+      <h3>Tier Upgrade Review</h3>
+      <div id="upgrade-details"></div>
+      <div class="modal-actions">
+        <button id="approve-upgrade-btn" class="success-btn">✅ Approve</button>
+        <button id="reject-upgrade-btn" class="danger-btn">❌ Reject</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invoice Action Modal -->
+  <div id="invoice-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="invoice-modal-close">&times;</span>
+      <h3>Invoice Management</h3>
+      <div id="invoice-details"></div>
+      <div class="modal-actions">
+        <button id="approve-invoice-btn" class="success-btn">✅ Approve</button>
+        <button id="cancel-invoice-btn" class="danger-btn">❌ Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="theme-manager.js?v=1"></script>
+  <script type="module" src="admin-dashboard.js?v=1.0"></script>
+</body>
+</html>

@@ -59,6 +59,31 @@ body {
   background: #138496 !important;
 }
 
+/* Admin Button Styling */
+.admin-button {
+  background: #dc3545 !important;
+  color: white !important;
+  font-weight: 600;
+  position: relative;
+}
+
+.admin-button:hover {
+  background: #c82333 !important;
+  transform: translateY(-1px);
+}
+
+.admin-button::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #ffc107;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
 /* GRID LAYOUT - Mobile First Approach */
 .dashboard-grid {
   display: grid;

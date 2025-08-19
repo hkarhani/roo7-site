@@ -417,6 +417,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res.ok) {
         const data = await res.json();
         document.getElementById("user-fullname").textContent = data.full_name || data.username || "User";
+        
+        // Check if user is admin and show admin button
+        if (data.is_admin) {
+          const adminBtn = document.getElementById("admin-btn");
+          if (adminBtn) {
+            adminBtn.style.display = "inline-block";
+          }
+        }
       } else if (res.status !== 404) {
         localStorage.removeItem("token");
         setTimeout(() => window.location.href = "/auth.html", 2000);
@@ -480,6 +488,15 @@ document.addEventListener("DOMContentLoaded", () => {
       referralsBtn.onclick = () => {
         console.log("🎯 REFERRALS clicked");
         window.location.href = "/referrals.html";
+      };
+    }
+
+    // Admin button handler
+    const adminBtn = document.getElementById("admin-btn");
+    if (adminBtn) {
+      adminBtn.onclick = () => {
+        console.log("🔧 ADMIN clicked");
+        window.location.href = "/admin-dashboard.html";
       };
     }
 
