@@ -59,10 +59,18 @@ document.addEventListener("DOMContentLoaded", () => {
   async function checkServiceStatus() {
     try {
       console.log('🔍 Checking invoicing service status...');
+      
+      // Set a shorter timeout for the health check
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
       const response = await fetch(`${INVOICING_API_BASE}/health`, {
         method: 'GET',
-        headers: {'Content-Type': 'application/json'}
+        headers: {'Content-Type': 'application/json'},
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
@@ -73,7 +81,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return false;
       }
     } catch (error) {
-      console.error('❌ Invoicing service is unreachable:', error);
+      if (error.name === 'AbortError') {
+        console.warn('⚠️ Invoicing service health check timed out after 5 seconds');
+      } else {
+        console.warn('⚠️ Invoicing service health check failed:', error.message);
+      }
       return false;
     }
   }
@@ -81,20 +93,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load initial data
   async function initializePage() {
     try {
-      // Check service status first
-      const serviceAvailable = await checkServiceStatus();
+      // Check service status first (but don't let it block the page)
+      checkServiceStatus().then(serviceAvailable => {
+        if (!serviceAvailable) {
+          console.warn('⚠️ Health check failed, but continuing to load referral data...');
+          // Don't show a warning toast immediately, let the data load first
+        }
+      }).catch(error => {
+        console.warn('⚠️ Health check error:', error);
+      });
       
-      if (!serviceAvailable) {
-        showToast('⚠️ Referral service is currently unavailable. Some features may not work.', 'warning', 8000);
-        // Still try to load data in case it's just the health endpoint
-      }
-      
+      // Always try to load referral data regardless of health check
       await loadReferralData();
       updateUI();
       setupEventListeners();
     } catch (error) {
       console.error('Failed to initialize page:', error);
-      showToast('Failed to load referral data', 'error');
+      showToast('Failed to load referral data. Please check if the service is running.', 'error');
     }
   }
 
