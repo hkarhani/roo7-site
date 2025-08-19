@@ -1,6 +1,6 @@
-// admin-dashboard.js - Admin Dashboard Logic v2.2
+// admin-dashboard.js - Admin Dashboard Logic v2.3
 
-console.log('🚀 Loading admin-dashboard.js v2.2 with payout fix');
+console.log('🚀 Loading admin-dashboard.js v2.3 with payout fix and stronger cache busting');
 
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
