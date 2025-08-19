@@ -221,7 +221,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         const data = await response.json();
-        displaySystemOverview(data.summary);
+        // Handle different possible response structures
+        const summary = data.summary || data || {};
+        displaySystemOverview(summary);
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -235,36 +237,42 @@ document.addEventListener("DOMContentLoaded", () => {
   function displaySystemOverview(summary) {
     const container = document.getElementById('overview-stats');
     
+    // Safely extract data with fallbacks
+    const users = summary.users || summary.user_stats || {};
+    const subscriptions = summary.subscriptions || summary.subscription_stats || {};
+    const invoices = summary.invoices || summary.invoice_stats || {};
+    const portfolio = summary.portfolio || summary.portfolio_stats || {};
+    
     container.innerHTML = `
       <div class="stat-card admin">
         <div class="stat-icon">👥</div>
         <div class="stat-label">Total Users</div>
-        <div class="stat-value">${summary.users?.total || 0}</div>
+        <div class="stat-value">${users.total || users.count || 0}</div>
       </div>
       <div class="stat-card admin">
         <div class="stat-icon">✅</div>
         <div class="stat-label">Verified Users</div>
-        <div class="stat-value">${summary.users?.verified || 0}</div>
+        <div class="stat-value">${users.verified || users.verified_count || 0}</div>
       </div>
       <div class="stat-card admin">
         <div class="stat-icon">🔄</div>
         <div class="stat-label">Active Subs</div>
-        <div class="stat-value">${summary.subscriptions?.active || 0}</div>
+        <div class="stat-value">${subscriptions.active || subscriptions.active_count || 0}</div>
       </div>
       <div class="stat-card admin">
         <div class="stat-icon">📄</div>
         <div class="stat-label">Pending Invoices</div>
-        <div class="stat-value">${summary.invoices?.pending || 0}</div>
+        <div class="stat-value">${invoices.pending || invoices.pending_count || 0}</div>
       </div>
       <div class="stat-card admin">
         <div class="stat-icon">💰</div>
         <div class="stat-label">Total Revenue</div>
-        <div class="stat-value">$${(summary.invoices?.total_revenue || 0).toLocaleString()}</div>
+        <div class="stat-value">$${(invoices.total_revenue || invoices.revenue || 0).toLocaleString()}</div>
       </div>
       <div class="stat-card admin">
         <div class="stat-icon">📈</div>
         <div class="stat-label">Portfolio Value</div>
-        <div class="stat-value">$${(summary.portfolio?.total_value || 0).toLocaleString()}</div>
+        <div class="stat-value">$${(portfolio.total_value || portfolio.value || 0).toLocaleString()}</div>
       </div>
     `;
   }
@@ -402,7 +410,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        const invoices = await response.json();
+        const data = await response.json();
+        // Handle different possible response structures
+        const invoices = data.invoices || data || [];
         displayInvoices(invoices);
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -416,6 +426,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function displayInvoices(invoices) {
     const tbody = document.querySelector('#admin-invoices-table tbody');
+    
+    // Ensure invoices is an array
+    if (!Array.isArray(invoices)) {
+      console.error('Invoices data is not an array:', invoices);
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-message">Invalid invoice data format</td></tr>';
+      return;
+    }
     
     if (invoices.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No invoices found</td></tr>';
@@ -633,7 +650,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         const data = await response.json();
-        displayActivity(data.recent_activity);
+        // Handle different possible response structures
+        const activity = data.recent_activity || data.activity || data || {};
+        displayActivity(activity);
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -647,16 +666,20 @@ document.addEventListener("DOMContentLoaded", () => {
   function displayActivity(activity) {
     const container = document.getElementById('activity-log');
     
+    // Safely extract activity data with fallbacks
+    const invoices = activity.invoices || [];
+    const subscriptions = activity.subscriptions || [];
+    
     const allActivity = [
-      ...activity.invoices.map(inv => ({
+      ...invoices.map(inv => ({
         type: 'Invoice',
-        description: `${inv.invoice_id} - $${inv.amount}`,
-        time: inv.created_at
+        description: `${inv.invoice_id || 'Unknown'} - $${inv.amount || 0}`,
+        time: inv.created_at || new Date().toISOString()
       })),
-      ...activity.subscriptions.map(sub => ({
+      ...subscriptions.map(sub => ({
         type: 'Subscription',
-        description: `New ${sub.tier} subscription`,
-        time: sub.created_at
+        description: `New ${sub.tier || 'Unknown'} subscription`,
+        time: sub.created_at || new Date().toISOString()
       }))
     ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
 
