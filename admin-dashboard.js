@@ -622,7 +622,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function displayReferrals(data) {
     const container = document.getElementById('referrals-overview');
     
-    container.innerHTML = `
+    const summaryHtml = `
       <div class="referrals-summary">
         <div class="referral-stat">
           <span class="value">${data.total_referrers || 0}</span>
@@ -638,7 +638,79 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
+    
+    // Show detailed referrers list if available
+    let referrersHtml = '';
+    if (data.referrers && data.referrers.length > 0) {
+      referrersHtml = `
+        <div class="referrers-list" style="margin-top: 20px;">
+          <h4>Pending Payouts</h4>
+          ${data.referrers.map(referrer => `
+            <div class="referrer-item">
+              <div class="referrer-info">
+                <div class="referrer-name">${referrer.full_name || referrer.username}</div>
+                <div class="referrer-email">${referrer.email}</div>
+                <div class="referrer-stats">
+                  <span class="stat">Balance: $${(referrer.referral_balance || 0).toFixed(2)}</span>
+                  <span class="stat">Referrals: ${referrer.referral_count || 0}</span>
+                  <span class="stat">Unpaid: ${referrer.unpaid_referrals || 0}</span>
+                </div>
+              </div>
+              <div class="referrer-actions">
+                <button class="success-btn" onclick="processReferralPayout('${referrer._id}', '${referrer.username}', ${referrer.referral_balance})">
+                  💰 Pay Out $${(referrer.referral_balance || 0).toFixed(2)}
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else if (data.total_referrers > 0) {
+      referrersHtml = `
+        <div class="empty-state admin" style="margin-top: 20px;">
+          <h4>No Pending Payouts</h4>
+          <p>All referral commissions have been paid out.</p>
+        </div>
+      `;
+    }
+    
+    container.innerHTML = summaryHtml + referrersHtml;
   }
+
+  // Process referral payout
+  window.processReferralPayout = async function(userId, username, amount) {
+    if (!confirm(`Are you sure you want to pay out $${amount.toFixed(2)} to ${username}?`)) {
+      return;
+    }
+    
+    try {
+      showToast(`Processing payout for ${username}...`, 'info');
+      
+      const response = await fetch(`${INVOICING_API_BASE}/admin/referrals/${userId}/payout`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          amount: amount,
+          payment_method: 'manual',
+          notes: `Manual payout processed by admin via dashboard`
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        showToast(`✅ Successfully paid out $${amount.toFixed(2)} to ${username}`, 'success');
+        
+        // Reload referrals data to update the display
+        loadReferrals();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to process payout: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error processing payout:', error);
+      showToast('Error processing payout', 'error');
+    }
+  };
 
   // === ACTIVITY LOG FUNCTIONS ===
   async function loadActivity() {
