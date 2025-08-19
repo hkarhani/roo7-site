@@ -1,6 +1,6 @@
-// admin-dashboard.js - Admin Dashboard Logic v2.1
+// admin-dashboard.js - Admin Dashboard Logic v2.2
 
-console.log('🚀 Loading admin-dashboard.js v2.1 with enhanced referrals debugging');
+console.log('🚀 Loading admin-dashboard.js v2.2 with payout fix');
 
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
@@ -729,25 +729,36 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       showToast(`Processing payout for ${username}...`, 'info');
       
+      console.log('📤 Sending payout request for user:', userId, 'amount:', amount);
+      
       const response = await fetch(`${INVOICING_API_BASE}/admin/referrals/${userId}/payout`, {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          amount: amount,
-          payment_method: 'manual',
+          admin_user_id: "admin-dashboard", // Required by model, but backend uses current_user
+          payout_method: 'manual',
           notes: `Manual payout processed by admin via dashboard`
         })
       });
       
+      console.log('📥 Payout response status:', response.status, response.statusText);
+      
       if (response.ok) {
         const result = await response.json();
+        console.log('✅ Payout successful:', result);
         showToast(`✅ Successfully paid out $${amount.toFixed(2)} to ${username}`, 'success');
         
         // Reload referrals data to update the display
         loadReferrals();
       } else {
-        const error = await response.json();
-        showToast(`Failed to process payout: ${error.detail}`, 'error');
+        const errorText = await response.text();
+        console.error('❌ Payout failed:', response.status, errorText);
+        try {
+          const error = JSON.parse(errorText);
+          showToast(`Failed to process payout: ${error.detail}`, 'error');
+        } catch (e) {
+          showToast(`Failed to process payout: ${response.status} ${response.statusText}`, 'error');
+        }
       }
     } catch (error) {
       console.error('Error processing payout:', error);
