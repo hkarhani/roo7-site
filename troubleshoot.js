@@ -517,7 +517,14 @@ function initializeTroubleshootPage() {
     
     const activePositions = positions.filter(pos => {
       const posAmt = parseFloat(pos.position_amt || pos.positionAmt || 0);
-      return posAmt !== 0;
+      const isActive = posAmt !== 0;
+      
+      // Debug specific instruments
+      if (pos.symbol && pos.symbol.includes('BTC')) {
+        console.log(`🔍 Position ${pos.symbol}: posAmt=${posAmt}, isActive=${isActive}, rawField=${pos.position_amt || pos.positionAmt}`);
+      }
+      
+      return isActive;
     });
     
     console.log(`🔍 Total ${futuresType} positions: ${positions.length}, Active: ${activePositions.length}`);
@@ -629,6 +636,32 @@ function initializeTroubleshootPage() {
       futures_coinm_positions: snapshot.futures_coinm_positions?.length || 0
     });
     
+    // Special debugging for BTCUSDT_250926 and similar instruments
+    const findBTCInstruments = (positions, type) => {
+      if (!positions) return [];
+      return positions.filter(p => p.symbol && (p.symbol.includes('BTC') || p.symbol.includes('250926')));
+    };
+    
+    const usdtmBTC = findBTCInstruments(snapshot.futures_usdtm_positions, 'USDⓈ-M');
+    const coinmBTC = findBTCInstruments(snapshot.futures_coinm_positions, 'Coin-M');
+    
+    console.log('🔍 BTC instruments found:', {
+      'USDⓈ-M BTC positions': usdtmBTC.map(p => ({
+        symbol: p.symbol,
+        position_amt: p.position_amt,
+        positionAmt: p.positionAmt,
+        size: parseFloat(p.position_amt || p.positionAmt || 0),
+        fields: Object.keys(p)
+      })),
+      'Coin-M BTC positions': coinmBTC.map(p => ({
+        symbol: p.symbol,
+        position_amt: p.position_amt,
+        positionAmt: p.positionAmt, 
+        size: parseFloat(p.position_amt || p.positionAmt || 0),
+        fields: Object.keys(p)
+      }))
+    });
+    
     // Check what FUTURES data is available - be more flexible with filtering
     const usdtmAssets = snapshot.futures_usdtm_assets || [];
     const coinmAssets = snapshot.futures_coinm_assets || [];
@@ -646,13 +679,35 @@ function initializeTroubleshootPage() {
       const balance = parseFloat(asset.total || asset.wallet_balance || asset.balance || 0);
       return balance > 0;
     });
+    // Enhanced debugging for positions
+    console.log('🔍 All USDⓈ-M positions before filtering:', usdtmPositions.map(p => ({
+      symbol: p.symbol,
+      position_amt: p.position_amt || p.positionAmt,
+      size: parseFloat(p.position_amt || p.positionAmt || 0)
+    })));
+    
+    console.log('🔍 All Coin-M positions before filtering:', coinmPositions.map(p => ({
+      symbol: p.symbol, 
+      position_amt: p.position_amt || p.positionAmt,
+      size: parseFloat(p.position_amt || p.positionAmt || 0)
+    })));
+    
     const filteredUsdtmPositions = usdtmPositions.filter(pos => {
       const posAmt = parseFloat(pos.position_amt || pos.positionAmt || 0);
-      return posAmt !== 0;
+      const isActive = posAmt !== 0;
+      if (!isActive && pos.symbol && pos.symbol.includes('BTC')) {
+        console.log(`⚠️ Filtering out ${pos.symbol}: position_amt = ${posAmt}`);
+      }
+      return isActive;
     });
+    
     const filteredCoinmPositions = coinmPositions.filter(pos => {
       const posAmt = parseFloat(pos.position_amt || pos.positionAmt || 0);
-      return posAmt !== 0;
+      const isActive = posAmt !== 0;
+      if (!isActive && pos.symbol && pos.symbol.includes('BTC')) {
+        console.log(`⚠️ Filtering out ${pos.symbol}: position_amt = ${posAmt}`);
+      }
+      return isActive;
     });
     
     console.log('📊 FUTURES data summary (before filtering):', {
