@@ -247,10 +247,11 @@ document.addEventListener("DOMContentLoaded", () => {
     
     container.innerHTML = `
       <div class="overview-summary">
-        <div class="stat-card admin">
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
           <div class="stat-icon">👥</div>
           <div class="stat-label">Total Users</div>
           <div class="stat-value">${users.total || users.count || 0}</div>
+          <div class="stat-action">Click to manage →</div>
         </div>
         <div class="stat-card admin">
           <div class="stat-icon">✅</div>
@@ -279,40 +280,26 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
       
-      <div class="users-management-section">
-        <h3>User Management</h3>
-        <div class="user-search-controls">
-          <input type="text" id="user-search" placeholder="Search users by name, email, or username..." />
-          <button id="search-users-btn" class="primary-button admin">Search</button>
-          <button id="load-all-users-btn" class="secondary-button">Load All Users</button>
-        </div>
-        <div id="users-table-container" class="table-container">
-          <table id="admin-users-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Full Name</th>
-                <th>Accounts</th>
-                <th>Strategies</th>
-                <th>Active Funds</th>
-                <th>Tier</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="9" class="loading-message">Click "Load All Users" or search to view users</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="users-management-link-section">
+        <div class="management-link-card">
+          <div class="link-icon">👥</div>
+          <div class="link-content">
+            <h3>User Management</h3>
+            <p>Comprehensive user management with search, filtering, disable/enable, and delete capabilities.</p>
+            <div class="link-stats">
+              <span>Total: ${users.total || 0} users</span>
+              <span>Active: ${(users.total || 0) - (users.disabled || 0)} users</span>
+              <span>Disabled: ${users.disabled || 0} users</span>
+            </div>
+          </div>
+          <div class="link-action">
+            <button class="primary-button admin" onclick="window.location.href='/admin-users.html'">
+              Manage Users →
+            </button>
+          </div>
         </div>
       </div>
     `;
-    
-    // Add event listeners for user management
-    setupUserManagementEventListeners();
   }
 
   // === WALLET VERIFICATION FUNCTIONS ===
@@ -1003,153 +990,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  // === USER MANAGEMENT FUNCTIONS ===
-  function setupUserManagementEventListeners() {
-    document.getElementById('search-users-btn').onclick = searchUsers;
-    document.getElementById('load-all-users-btn').onclick = () => loadUsers();
-    document.getElementById('user-search').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') searchUsers();
-    });
-  }
-  
-  async function searchUsers() {
-    const searchTerm = document.getElementById('user-search').value.trim();
-    if (!searchTerm) {
-      showToast('Please enter a search term', 'warning');
-      return;
-    }
-    await loadUsers(searchTerm);
-  }
-  
-  async function loadUsers(searchTerm = '') {
-    try {
-      console.log('👥 Loading users...', searchTerm ? `Search: ${searchTerm}` : 'All users');
-      
-      let url = `${INVOICING_API_BASE}/admin/users`;
-      if (searchTerm) {
-        url += `/search?q=${encodeURIComponent(searchTerm)}`;
-      }
-      
-      const response = await fetch(url, {
-        headers: getAuthHeaders(token)
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        displayUsers(data.users || data || []);
-      } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('Error loading users:', error);
-      document.querySelector('#admin-users-table tbody').innerHTML = 
-        '<tr><td colspan="9" class="loading-message">Failed to load users</td></tr>';
-    }
-  }
-  
-  function displayUsers(users) {
-    const tbody = document.querySelector('#admin-users-table tbody');
-    
-    if (!Array.isArray(users) || users.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="loading-message">No users found</td></tr>';
-      return;
-    }
-    
-    tbody.innerHTML = users.map(user => {
-      const isDisabled = user.is_disabled || false;
-      const statusBadge = isDisabled ? 
-        '<span class="status-badge status-disabled">Disabled</span>' : 
-        '<span class="status-badge status-active">Active</span>';
-      
-      const actionButton = isDisabled ? 
-        `<button class="success-btn" onclick="enableUser('${user._id}', '${user.username}')">✅ Enable</button>` :
-        `<button class="danger-btn" onclick="disableUser('${user._id}', '${user.username}')">❌ Disable</button>`;
-      
-      return `
-        <tr class="${isDisabled ? 'user-disabled' : ''}">
-          <td>${user.username || 'N/A'}</td>
-          <td>${user.email || 'N/A'}</td>
-          <td>${user.full_name || 'N/A'}</td>
-          <td>${user.total_accounts || 0}</td>
-          <td>${user.strategies_assigned || 0}</td>
-          <td>$${(user.active_funds || 0).toLocaleString()}</td>
-          <td>${user.current_tier || 'Free'}</td>
-          <td>${statusBadge}</td>
-          <td>${actionButton}</td>
-        </tr>
-      `;
-    }).join('');
-  }
-  
-  // Make functions global for onclick
-  window.disableUser = async function(userId, username) {
-    const reason = prompt(`Please enter a reason for disabling user "${username}":`);
-    if (!reason || reason.trim() === '') {
-      showToast('Disable operation cancelled - reason is required', 'warning');
-      return;
-    }
-    
-    if (!confirm(`Are you sure you want to disable user "${username}"?\n\nReason: ${reason}`)) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${INVOICING_API_BASE}/admin/users/${userId}/disable`, {
-        method: 'POST',
-        headers: getAuthHeaders(token),
-        body: JSON.stringify({
-          reason: reason.trim()
-        })
-      });
-      
-      if (response.ok) {
-        showToast(`User "${username}" has been disabled`, 'success');
-        // Reload the current view
-        const searchTerm = document.getElementById('user-search').value.trim();
-        if (searchTerm) {
-          await loadUsers(searchTerm);
-        } else {
-          await loadUsers();
-        }
-      } else {
-        const error = await response.json();
-        showToast(`Failed to disable user: ${error.detail}`, 'error');
-      }
-    } catch (error) {
-      console.error('Error disabling user:', error);
-      showToast('Error disabling user', 'error');
-    }
-  };
-  
-  window.enableUser = async function(userId, username) {
-    if (!confirm(`Are you sure you want to enable user "${username}"?`)) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${INVOICING_API_BASE}/admin/users/${userId}/enable`, {
-        method: 'POST',
-        headers: getAuthHeaders(token)
-      });
-      
-      if (response.ok) {
-        showToast(`User "${username}" has been enabled`, 'success');
-        // Reload the current view
-        const searchTerm = document.getElementById('user-search').value.trim();
-        if (searchTerm) {
-          await loadUsers(searchTerm);
-        } else {
-          await loadUsers();
-        }
-      } else {
-        const error = await response.json();
-        showToast(`Failed to enable user: ${error.detail}`, 'error');
-      }
-    } catch (error) {
-      console.error('Error enabling user:', error);
-      showToast('Error enabling user', 'error');
-    }
-  };
 
   // Initialize dashboard
   console.log('🚀 Initializing admin dashboard...');

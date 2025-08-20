@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Admin - User Management</title>
+  <script type="module" src="frontend-config.js"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-users.css?v=1.0" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>👥 User Management</h1>
+    <div class="actions">
+      <button id="back-to-admin">← Admin Dashboard</button>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <main class="users-management-container">
+    <!-- Search and Filter Controls -->
+    <section class="search-controls-section">
+      <div class="search-filters">
+        <div class="search-input-group">
+          <input type="text" id="user-search" placeholder="Search users by name, email, or username..." />
+          <button id="search-users-btn" class="primary-button">Search</button>
+          <button id="clear-search-btn" class="secondary-button">Clear</button>
+        </div>
+        
+        <div class="filter-controls">
+          <select id="status-filter">
+            <option value="">All Users</option>
+            <option value="active">Active Users</option>
+            <option value="disabled">Disabled Users</option>
+            <option value="admin">Admin Users</option>
+            <option value="unverified">Unverified Email</option>
+          </select>
+          
+          <select id="tier-filter">
+            <option value="">All Tiers</option>
+            <option value="Free">Free Tier</option>
+            <option value="tier1">Tier 1</option>
+            <option value="tier2">Tier 2</option>
+            <option value="tier3">Tier 3</option>
+          </select>
+          
+          <button id="apply-filters-btn" class="secondary-button">Apply Filters</button>
+          <button id="load-all-users-btn" class="primary-button">Load All Users</button>
+        </div>
+      </div>
+      
+      <div class="user-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total Users:</span>
+          <span id="total-users-count" class="stat-value">-</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing:</span>
+          <span id="showing-count" class="stat-value">-</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Active:</span>
+          <span id="active-users-count" class="stat-value">-</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Disabled:</span>
+          <span id="disabled-users-count" class="stat-value">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users Table -->
+    <section class="users-table-section">
+      <div class="table-container">
+        <table id="admin-users-table">
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" id="select-all-users" />
+              </th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Full Name</th>
+              <th>Accounts</th>
+              <th>Strategies</th>
+              <th>Active Funds</th>
+              <th>Tier</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="11" class="loading-message">Click "Load All Users" or search to view users</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination Controls -->
+      <div class="pagination-controls">
+        <button id="prev-page-btn" class="secondary-button" disabled>Previous</button>
+        <span id="page-info">Page 1 of 1</span>
+        <button id="next-page-btn" class="secondary-button" disabled>Next</button>
+        
+        <div class="page-size-control">
+          <label for="page-size">Show:</label>
+          <select id="page-size">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+          </select>
+          <span>per page</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bulk Actions -->
+    <section class="bulk-actions-section" style="display: none;">
+      <div class="bulk-actions-container">
+        <span class="selected-count">0 users selected</span>
+        <div class="bulk-buttons">
+          <button id="bulk-disable-btn" class="danger-btn">Disable Selected</button>
+          <button id="bulk-enable-btn" class="success-btn">Enable Selected</button>
+          <button id="bulk-delete-btn" class="danger-btn">Delete Selected</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- User Detail Modal -->
+  <div id="user-detail-modal" class="modal">
+    <div class="modal-content user-detail-modal-content">
+      <span class="close" id="user-detail-modal-close">&times;</span>
+      <h3 id="user-detail-title">User Details</h3>
+      <div id="user-detail-content"></div>
+      <div class="modal-actions">
+        <button id="edit-user-btn" class="primary-button">Edit User</button>
+        <button id="view-accounts-btn" class="secondary-button">View Accounts</button>
+        <button id="close-detail-btn" class="secondary-button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disable User Modal -->
+  <div id="disable-user-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="disable-modal-close">&times;</span>
+      <h3>Disable User</h3>
+      <div id="disable-user-info"></div>
+      <div class="form-group">
+        <label for="disable-reason">Reason for disabling (required):</label>
+        <textarea id="disable-reason" placeholder="Enter the reason for disabling this user..." required></textarea>
+      </div>
+      <div class="modal-actions">
+        <button id="confirm-disable-btn" class="danger-btn">Disable User</button>
+        <button id="cancel-disable-btn" class="secondary-button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete User Modal -->
+  <div id="delete-user-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="delete-modal-close">&times;</span>
+      <h3>⚠️ Delete User</h3>
+      <div id="delete-user-info"></div>
+      <div class="warning-box">
+        <p><strong>⚠️ WARNING:</strong> This action cannot be undone!</p>
+        <p>Deleting a user will:</p>
+        <ul>
+          <li>Permanently remove the user account</li>
+          <li>Delete all associated trading accounts</li>
+          <li>Remove all referral data</li>
+          <li>Cancel active subscriptions</li>
+        </ul>
+      </div>
+      <div class="form-group">
+        <label for="delete-confirmation">Type "DELETE" to confirm:</label>
+        <input type="text" id="delete-confirmation" placeholder="Type DELETE to confirm" />
+      </div>
+      <div class="modal-actions">
+        <button id="confirm-delete-btn" class="danger-btn" disabled>Delete User</button>
+        <button id="cancel-delete-btn" class="secondary-button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="theme-manager.js?v=1"></script>
+  <script type="module" src="admin-users.js?v=1.0"></script>
+</body>
+</html>
