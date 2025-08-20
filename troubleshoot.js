@@ -219,6 +219,14 @@ function initializeTroubleshootPage() {
         'hedge-percent': account.hedge_percent !== undefined && account.hedge_percent !== null ? `${account.hedge_percent}%` : 'N/A'
       };
 
+      // Set account type badge
+      const accountTypeElement = document.getElementById('account-type');
+      const accountType = account.account_type || 'SPOT';
+      if (accountTypeElement) {
+        accountTypeElement.textContent = accountType;
+        accountTypeElement.className = `account-type-badge ${accountType.toLowerCase()}`;
+      }
+
       document.getElementById('api-key-status').textContent = '✅ Configured'
 
       let updateCount = 0;
@@ -268,10 +276,33 @@ function initializeTroubleshootPage() {
     }
   }
 
+  // Initialize FUTURES tabs functionality
+  function initializeTabs() {
+    document.querySelectorAll('.futures-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const tabType = this.dataset.tab;
+        const parentContainer = this.closest('.portfolio-content');
+        
+        // Update tab states
+        parentContainer.querySelectorAll('.futures-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Update content visibility
+        parentContainer.querySelectorAll('.futures-tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        
+        const targetContent = document.getElementById(`${tabType}-content`);
+        if (targetContent) {
+          targetContent.classList.add('active');
+        }
+      });
+    });
+  }
+
   // Enhanced Binance connection test with reorganized display
   async function testBinanceConnection() {
     const testBtn = document.getElementById('test-connection');
-    const portfolioSection = document.getElementById('portfolio-section');
     const diagnosticInfo = document.getElementById('diagnostic-info');
 
     if (!window.currentAccount) {
@@ -286,8 +317,10 @@ function initializeTroubleshootPage() {
     // Update connection status
     updateAPIConnectionStatus('testing');
     
-    // Hide portfolio section and clear diagnostics
-    portfolioSection.style.display = 'none';
+    // Hide all portfolio sections and clear diagnostics
+    document.getElementById('spot-portfolio-section').style.display = 'none';
+    document.getElementById('futures-positions-section').style.display = 'none';
+    document.getElementById('open-orders-section').style.display = 'none';
     diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
     
     // Show loading toast
@@ -334,8 +367,8 @@ function initializeTroubleshootPage() {
       const currentStatus = testResults.innerHTML;
       testResults.innerHTML = currentStatus + summaryHtml;
       
-      // Display portfolio section if balances are available
-      displayPortfolioSection(results);
+      // Display portfolio sections based on account type and available data
+      displayEnhancedPortfolioSections(results);
       
       // Display detailed diagnostics
       displayDetailedDiagnostics(results, diagnosticInfo);
@@ -365,57 +398,255 @@ function initializeTroubleshootPage() {
     }
   }
 
-  function displayPortfolioSection(results) {
-    const portfolioSection = document.getElementById('portfolio-section');
-    const portfolioTable = document.querySelector('#portfolio-table tbody');
+  // Enhanced portfolio display function for both SPOT and FUTURES accounts
+  function displayEnhancedPortfolioSections(results) {
+    const accountType = results.account_type || 'SPOT';
     
+    // Use detailed snapshot data if available, otherwise fall back to basic balances
+    if (results.detailed_snapshot) {
+      displayDetailedSnapshot(results.detailed_snapshot, accountType);
+    } else {
+      // Legacy fallback for SPOT accounts or incomplete data
+      displayBasicPortfolio(results, accountType);
+    }
+  }
+
+  function displayDetailedSnapshot(snapshot, accountType) {
+    // Display SPOT assets if available
+    if (snapshot.spot_assets && snapshot.spot_assets.length > 0) {
+      displaySpotAssets(snapshot.spot_assets);
+    }
+    
+    // Display FUTURES positions if available
+    const hasUSDTMPositions = snapshot.futures_usdtm_positions && snapshot.futures_usdtm_positions.length > 0;
+    const hasCoinMPositions = snapshot.futures_coinm_positions && snapshot.futures_coinm_positions.length > 0;
+    
+    if (hasUSDTMPositions || hasCoinMPositions) {
+      displayFuturesPositions(snapshot.futures_usdtm_positions || [], snapshot.futures_coinm_positions || []);
+    }
+    
+    // Display open orders if available
+    const hasSpotOrders = snapshot.open_orders_spot && snapshot.open_orders_spot.length > 0;
+    const hasUSDTMOrders = snapshot.open_orders_futures_usdtm && snapshot.open_orders_futures_usdtm.length > 0;
+    const hasCoinMOrders = snapshot.open_orders_futures_coinm && snapshot.open_orders_futures_coinm.length > 0;
+    
+    if (hasSpotOrders || hasUSDTMOrders || hasCoinMOrders) {
+      displayOpenOrders(
+        snapshot.open_orders_spot || [],
+        snapshot.open_orders_futures_usdtm || [],
+        snapshot.open_orders_futures_coinm || []
+      );
+    }
+  }
+
+  function displayBasicPortfolio(results, accountType) {
     if (!results.balances || results.balances.length === 0) {
-      portfolioSection.style.display = 'none';
       return;
     }
-
-    const nonZeroBalances = results.balances.filter(b => b.total > 0 && b.percentage > 0);
     
+    const nonZeroBalances = results.balances.filter(b => b.total > 0);
     if (nonZeroBalances.length === 0) {
-      portfolioSection.style.display = 'none';
       return;
     }
-
-    // Show the portfolio section
-    portfolioSection.style.display = 'block';
     
-    // Add chart title if it doesn't exist
-    let chartContainer = document.querySelector('#portfolio-section .portfolio-chart-container');
-    if (chartContainer && !chartContainer.querySelector('.portfolio-chart-title')) {
-      const chartTitle = document.createElement('div');
-      chartTitle.className = 'portfolio-chart-title';
-      chartTitle.textContent = 'Asset Distribution';
-      chartContainer.insertBefore(chartTitle, chartContainer.firstChild);
+    // For basic portfolio, show in SPOT section regardless of account type
+    displaySpotAssets(nonZeroBalances);
+  }
+
+  function displaySpotAssets(assets) {
+    const section = document.getElementById('spot-portfolio-section');
+    const tableBody = document.querySelector('#spot-portfolio-table tbody');
+    
+    if (!assets || assets.length === 0) {
+      section.style.display = 'none';
+      return;
     }
     
-    // Clear and populate the table
-    portfolioTable.innerHTML = '';
+    const nonZeroAssets = assets.filter(asset => asset.total > 0);
+    if (nonZeroAssets.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
     
-    nonZeroBalances.forEach(balance => {
-      const usdtValue = balance.usdt_value ? parseFloat(balance.usdt_value).toFixed(2) : 'N/A';
-      const total = parseFloat(balance.total);
+    section.style.display = 'block';
+    tableBody.innerHTML = '';
+    
+    nonZeroAssets.forEach(asset => {
+      const free = parseFloat(asset.free || 0).toFixed(6);
+      const locked = parseFloat(asset.locked || 0).toFixed(6);
+      const total = parseFloat(asset.total || 0);
       const displayTotal = total < 0.001 ? total.toExponential(3) : total.toFixed(6);
+      const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
+      const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
       
-      const row = portfolioTable.insertRow();
+      const row = tableBody.insertRow();
       row.innerHTML = `
-        <td><strong>${balance.asset}</strong></td>
+        <td><strong>${asset.asset}</strong></td>
+        <td>${free}</td>
+        <td>${locked}</td>
         <td>${displayTotal}</td>
         <td>${usdtValue}</td>
-        <td><span class="percentage-badge">${balance.percentage}%</span></td>
+        <td><span class="percentage-badge">${percentage}%</span></td>
       `;
     });
     
-    // Initialize pie chart with a longer delay to ensure DOM is ready
+    // Initialize pie chart for SPOT assets
     setTimeout(() => {
-      initializePortfolioPieChart(nonZeroBalances);
+      initializeSpotPieChart(nonZeroAssets);
     }, 300);
   }
 
+  function displayFuturesPositions(usdtmPositions, coinmPositions) {
+    const section = document.getElementById('futures-positions-section');
+    
+    if ((!usdtmPositions || usdtmPositions.length === 0) && 
+        (!coinmPositions || coinmPositions.length === 0)) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    section.style.display = 'block';
+    
+    // Display USDⓈ-M positions
+    displayPositionsInTable('futures-usdtm-table', usdtmPositions);
+    
+    // Display Coin-M positions
+    displayPositionsInTable('futures-coinm-table', coinmPositions);
+  }
+
+  function displayPositionsInTable(tableId, positions) {
+    const tableBody = document.querySelector(`#${tableId} tbody`);
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    if (!positions || positions.length === 0) {
+      const row = tableBody.insertRow();
+      row.innerHTML = '<td colspan="8" class="empty-portfolio-message">No active positions</td>';
+      return;
+    }
+    
+    positions.forEach(position => {
+      const positionAmt = parseFloat(position.position_amt);
+      const isLong = positionAmt > 0;
+      const direction = isLong ? 'long' : 'short';
+      const directionText = isLong ? 'LONG' : 'SHORT';
+      
+      const entryPrice = parseFloat(position.entry_price).toFixed(4);
+      const markPrice = parseFloat(position.mark_price).toFixed(4);
+      const unrealizedPnl = parseFloat(position.unrealized_pnl);
+      const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+      const usdtValue = position.usdt_value ? parseFloat(position.usdt_value).toFixed(2) : 'N/A';
+      const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${position.symbol}</strong></td>
+        <td><span class="position-direction ${direction}">${directionText}</span></td>
+        <td>${Math.abs(positionAmt).toFixed(6)}</td>
+        <td>${entryPrice}</td>
+        <td>${markPrice}</td>
+        <td class="${pnlClass}">${unrealizedPnl.toFixed(4)}</td>
+        <td>${usdtValue}</td>
+        <td><span class="percentage-badge">${percentage}%</span></td>
+      `;
+    });
+  }
+
+  function displayOpenOrders(spotOrders, usdtmOrders, coinmOrders) {
+    const section = document.getElementById('open-orders-section');
+    
+    if ((!spotOrders || spotOrders.length === 0) &&
+        (!usdtmOrders || usdtmOrders.length === 0) &&
+        (!coinmOrders || coinmOrders.length === 0)) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    section.style.display = 'block';
+    
+    // Display orders in respective tables
+    displayOrdersInTable('spot-orders-table', spotOrders);
+    displayOrdersInTable('usdtm-orders-table', usdtmOrders);
+    displayOrdersInTable('coinm-orders-table', coinmOrders);
+  }
+
+  function displayOrdersInTable(tableId, orders) {
+    const tableBody = document.querySelector(`#${tableId} tbody`);
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    if (!orders || orders.length === 0) {
+      const row = tableBody.insertRow();
+      row.innerHTML = '<td colspan="8" class="empty-portfolio-message">No open orders</td>';
+      return;
+    }
+    
+    orders.forEach(order => {
+      const side = order.side.toLowerCase();
+      const originalQty = parseFloat(order.original_qty).toFixed(6);
+      const executedQty = parseFloat(order.executed_qty).toFixed(6);
+      const price = parseFloat(order.price).toFixed(6);
+      const usdtValue = order.usdt_value ? parseFloat(order.usdt_value).toFixed(2) : 'N/A';
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${order.symbol}</strong></td>
+        <td><span class="order-side ${side}">${order.side}</span></td>
+        <td>${order.type}</td>
+        <td>${originalQty}</td>
+        <td>${executedQty}</td>
+        <td>${price}</td>
+        <td>${order.status}</td>
+        <td>${usdtValue}</td>
+      `;
+    });
+  }
+
+  function initializeSpotPieChart(assets) {
+    const chartContainer = document.getElementById('spot-portfolio-pie-chart');
+    if (!chartContainer || typeof PieChart === 'undefined') {
+      return;
+    }
+    
+    chartContainer.innerHTML = '';
+    
+    if (!assets || assets.length === 0) {
+      return;
+    }
+    
+    const chartData = assets.slice(0, 10).map(asset => ({
+      label: asset.asset,
+      value: parseFloat(asset.usdt_value) || 0.01,
+      percentage: parseFloat(asset.percentage_of_total) || 0.01
+    }));
+    
+    try {
+      const pieChart = new PieChart('spot-portfolio-pie-chart', {
+        width: 280,
+        height: 280,
+        radius: 100,
+        showLegend: false,
+        showTooltip: true,
+        title: null,
+        minSlicePercentage: 0.1,
+        showPercentages: true,
+        colors: [
+          '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+          '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+        ]
+      });
+      
+      pieChart.setData(chartData);
+      window.currentSpotPieChart = pieChart;
+    } catch (error) {
+      console.error('Error creating SPOT pie chart:', error);
+      chartContainer.innerHTML = '<div class="chart-error">Chart loading failed</div>';
+    }
+  }
+
+  // Legacy function name for compatibility
   function initializePortfolioPieChart(balances) {
     const chartContainer = document.getElementById('portfolio-pie-chart');
     if (!chartContainer) {
@@ -606,6 +837,9 @@ function initializeTroubleshootPage() {
     }
     
   }
+
+  // Initialize tab functionality
+  initializeTabs();
 
   // Initialize alignment fix
   fixSectionAlignment();

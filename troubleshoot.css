@@ -632,3 +632,260 @@
     padding: 12px;
   }
 }
+
+/* =========================
+   FUTURES-SPECIFIC STYLES
+   ========================= */
+
+/* Account Type Badge */
+.account-type-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.account-type-badge.spot {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+}
+
+.account-type-badge.futures {
+  background: linear-gradient(135deg, #007bff, #6610f2);
+  color: white;
+}
+
+/* FUTURES Tabs */
+.futures-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.futures-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: #f8f9fa;
+  color: #6c757d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.futures-tab:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.futures-tab.active {
+  background: white;
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.dark-theme .futures-tabs {
+  border-bottom-color: #444;
+}
+
+.dark-theme .futures-tab {
+  background: #2a2a2a;
+  color: #adb5bd;
+}
+
+.dark-theme .futures-tab:hover {
+  background: #3a3a3a;
+  color: #dee2e6;
+}
+
+.dark-theme .futures-tab.active {
+  background: #1a1a1a;
+  color: #0d6efd;
+}
+
+/* Tab Content */
+.futures-tab-content {
+  display: none;
+}
+
+.futures-tab-content.active {
+  display: block;
+}
+
+/* FUTURES Position Direction Badges */
+.position-direction {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.position-direction.long {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.position-direction.short {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.position-direction::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Order Side Badges */
+.order-side {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.order-side.buy {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.order-side.sell {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.order-side::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* PnL Styling */
+.pnl-positive {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.pnl-negative {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.dark-theme .pnl-positive {
+  color: #4ade80;
+}
+
+.dark-theme .pnl-negative {
+  color: #f87171;
+}
+
+/* FUTURES Tables */
+.futures-table th {
+  font-size: 12px;
+  padding: 10px 8px;
+}
+
+.futures-table td {
+  font-size: 13px;
+  padding: 12px 8px;
+}
+
+/* Grid Layout Updates for Multiple Sections */
+.troubleshoot-grid {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 20px;
+}
+
+/* Portfolio sections - full width on second row */
+.troubleshoot-grid > #spot-portfolio-section,
+.troubleshoot-grid > #futures-positions-section,
+.troubleshoot-grid > #open-orders-section {
+  grid-column: 1 / -1;
+  grid-row: auto;
+}
+
+/* Diagnostics - full width on bottom */
+.troubleshoot-grid > #section-diagnostics {
+  grid-column: 1 / -1;
+  grid-row: auto;
+}
+
+/* Enhanced Portfolio Section for FUTURES */
+.portfolio-section {
+  min-height: 300px;
+}
+
+.portfolio-section .portfolio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Empty state messages */
+.empty-portfolio-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.dark-theme .empty-portfolio-message {
+  color: #adb5bd;
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+  .troubleshoot-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(auto-fit, auto);
+    gap: 20px;
+    padding: 0 10px 20px;
+  }
+  
+  .troubleshoot-grid > * {
+    grid-column: 1 !important;
+  }
+  
+  .futures-tabs {
+    flex-direction: column;
+  }
+  
+  .futures-tab {
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 0;
+  }
+  
+  .futures-table {
+    font-size: 11px;
+  }
+  
+  .futures-table th,
+  .futures-table td {
+    padding: 8px 4px;
+  }
+}

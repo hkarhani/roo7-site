@@ -26,6 +26,10 @@
           <span id="account-name"></span>
         </div>
         <div class="info-row">
+          <label>Account Type:</label>
+          <span id="account-type" class="account-type-badge"></span>
+        </div>
+        <div class="info-row">
           <label>Strategy:</label>
           <span id="strategy"></span>
         </div>
@@ -53,21 +57,94 @@
       </div>
     </section>
 
-    <!-- Portfolio Assets Section -->
-    <section id="portfolio-section" class="dashboard-card portfolio-section" style="display: none;">
-      <h2>💰 Portfolio Assets</h2>
-      <div id="portfolio-content" class="portfolio-content">
+    <!-- SPOT Portfolio Assets Section -->
+    <section id="spot-portfolio-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>💰 SPOT Assets</h2>
+      <div id="spot-portfolio-content" class="portfolio-content">
         <div class="portfolio-table-wrapper">
-          <table id="portfolio-table" class="portfolio-table">
+          <table id="spot-portfolio-table" class="portfolio-table">
             <thead>
-              <tr><th>Asset</th><th>Amount</th><th>Value (USDT)</th><th>%</th></tr>
+              <tr><th>Asset</th><th>Free</th><th>Locked</th><th>Total</th><th>Value (USDT)</th><th>%</th></tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="portfolio-chart-wrapper">
-          <div class="portfolio-chart-title">Asset Distribution</div>
-          <div id="portfolio-pie-chart" class="portfolio-pie-chart"></div>
+          <div class="portfolio-chart-title">SPOT Asset Distribution</div>
+          <div id="spot-portfolio-pie-chart" class="portfolio-pie-chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FUTURES Positions Section -->
+    <section id="futures-positions-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>🔮 FUTURES Positions</h2>
+      <div id="futures-positions-content" class="portfolio-content">
+        <div class="futures-tabs">
+          <button class="futures-tab active" data-tab="usdtm">USDⓈ-M Futures</button>
+          <button class="futures-tab" data-tab="coinm">Coin-M Futures</button>
+        </div>
+        <div id="futures-usdtm-content" class="futures-tab-content active">
+          <div class="portfolio-table-wrapper">
+            <table id="futures-usdtm-table" class="portfolio-table futures-table">
+              <thead>
+                <tr><th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="futures-coinm-content" class="futures-tab-content">
+          <div class="portfolio-table-wrapper">
+            <table id="futures-coinm-table" class="portfolio-table futures-table">
+              <thead>
+                <tr><th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open Orders Section -->
+    <section id="open-orders-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>📋 Open Orders</h2>
+      <div id="open-orders-content" class="portfolio-content">
+        <div class="futures-tabs">
+          <button class="futures-tab active" data-tab="spot-orders">SPOT Orders</button>
+          <button class="futures-tab" data-tab="usdtm-orders">USDⓈ-M Orders</button>
+          <button class="futures-tab" data-tab="coinm-orders">Coin-M Orders</button>
+        </div>
+        <div id="spot-orders-content" class="futures-tab-content active">
+          <div class="portfolio-table-wrapper">
+            <table id="spot-orders-table" class="portfolio-table orders-table">
+              <thead>
+                <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Amount</th><th>Executed</th><th>Price</th><th>Status</th><th>Value</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="usdtm-orders-content" class="futures-tab-content">
+          <div class="portfolio-table-wrapper">
+            <table id="usdtm-orders-table" class="portfolio-table orders-table">
+              <thead>
+                <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Amount</th><th>Executed</th><th>Price</th><th>Status</th><th>Value</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="coinm-orders-content" class="futures-tab-content">
+          <div class="portfolio-table-wrapper">
+            <table id="coinm-orders-table" class="portfolio-table orders-table">
+              <thead>
+                <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Amount</th><th>Executed</th><th>Price</th><th>Status</th><th>Value</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
