@@ -1108,6 +1108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${formatDate(account.created_at)}</td>
         <td>
           <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
+          <button class="verify-source-btn action-btn success" data-id="${account.id}">🔍 Verify</button>
           <button class="delete-source-btn action-btn danger" data-id="${account.id}">🗑️ Delete</button>
         </td>
       </tr>
@@ -1116,6 +1117,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add event listeners to action buttons
     document.querySelectorAll('.edit-source-btn').forEach(btn => {
       btn.onclick = () => editSourceAccount(btn.dataset.id);
+    });
+
+    document.querySelectorAll('.verify-source-btn').forEach(btn => {
+      btn.onclick = () => verifySourceAccount(btn.dataset.id);
     });
 
     document.querySelectorAll('.delete-source-btn').forEach(btn => {
@@ -1284,6 +1289,147 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error('❌ Error deleting source account:', error);
       showNotification('Error deleting source account', 'error');
     }
+  }
+
+  // Verify source account
+  async function verifySourceAccount(accountId) {
+    try {
+      showNotification('Starting comprehensive account verification...', 'info');
+      
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        showVerificationResults(data);
+        showNotification('Account verification completed successfully', 'success');
+      } else {
+        console.error('❌ Failed to verify source account:', data.detail);
+        showNotification('Failed to verify source account', 'error');
+      }
+    } catch (error) {
+      console.error('❌ Error verifying source account:', error);
+      showNotification('Error verifying source account', 'error');
+    }
+  }
+
+  // Show verification results in a modal
+  function showVerificationResults(data) {
+    const modal = document.createElement('div');
+    modal.className = 'modal verification-modal';
+    modal.style.display = 'block';
+    
+    const content = `
+      <div class="modal-content verification-content">
+        <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+        <h3>🔍 Source Account Verification Results</h3>
+        
+        <div class="verification-summary">
+          <h4>${data.account_name} (${data.account_type})</h4>
+          <div class="status-grid">
+            <div class="status-item ${data.verification_success ? 'success' : 'error'}">
+              <span class="label">Overall Status:</span>
+              <span class="value">${data.verification_success ? '✅ Success' : '❌ Failed'}</span>
+            </div>
+            <div class="status-item ${data.api_key_valid ? 'success' : 'error'}">
+              <span class="label">API Key:</span>
+              <span class="value">${data.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span>
+            </div>
+            <div class="status-item ${data.ip_whitelisted ? 'success' : 'warning'}">
+              <span class="label">IP Whitelist:</span>
+              <span class="value">${data.ip_whitelisted ? '✅ Whitelisted' : '⚠️ Not Whitelisted'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="verification-values">
+          <div class="value-card">
+            <h5>💰 Total Portfolio Value</h5>
+            <div class="value-large">$${data.total_usdt_value.toLocaleString()}</div>
+          </div>
+          ${data.account_type === 'FUTURES' ? `
+            <div class="value-card">
+              <h5>🔸 SPOT Value</h5>
+              <div class="value-medium">$${data.spot_value.toLocaleString()}</div>
+            </div>
+            <div class="value-card">
+              <h5>🔹 FUTURES Value</h5>
+              <div class="value-medium">$${data.futures_value.toLocaleString()}</div>
+            </div>
+            <div class="value-card">
+              <h5>📊 Unrealized PnL</h5>
+              <div class="value-medium ${data.total_unrealized_pnl >= 0 ? 'positive' : 'negative'}">
+                $${data.total_unrealized_pnl.toLocaleString()}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+
+        ${data.futures_positions && data.futures_positions.length > 0 ? `
+          <div class="verification-section">
+            <h5>📈 Active Positions (${data.futures_positions.length})</h5>
+            <div class="positions-list">
+              ${data.futures_positions.map(pos => `
+                <div class="position-item">
+                  <span class="symbol">${pos.symbol}</span>
+                  <span class="side">${pos.position_side}</span>
+                  <span class="amount">${pos.position_amt}</span>
+                  <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
+                    $${pos.unrealized_pnl.toFixed(2)}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${data.open_orders && data.open_orders.length > 0 ? `
+          <div class="verification-section">
+            <h5>📋 Open Orders (${data.open_orders.length})</h5>
+            <div class="orders-list">
+              ${data.open_orders.slice(0, 5).map(order => `
+                <div class="order-item">
+                  <span class="symbol">${order.symbol}</span>
+                  <span class="side">${order.side}</span>
+                  <span class="type">${order.type}</span>
+                  <span class="qty">${order.original_qty}</span>
+                  <span class="price">$${order.price}</span>
+                </div>
+              `).join('')}
+              ${data.open_orders.length > 5 ? `<div class="more-orders">... and ${data.open_orders.length - 5} more</div>` : ''}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="verification-section">
+          <h5>🔧 Test Results</h5>
+          <div class="test-results">
+            ${data.test_results.map(test => `
+              <div class="test-item ${test.success ? 'success' : 'error'}">
+                <span class="status">${test.success ? '✅' : '❌'}</span>
+                <span class="stage">${test.stage.replace(/_/g, ' ')}</span>
+                <span class="message">${test.message}</span>
+                ${test.latency_ms ? `<span class="latency">${test.latency_ms}ms</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="verification-footer">
+          <small>Verified on ${new Date(data.verified_at).toLocaleString()} by ${data.verified_by}</small>
+          <small>Execution time: ${data.execution_time_ms.toFixed(0)}ms</small>
+        </div>
+      </div>
+    `;
+    
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
   }
 
   // Handle source account form submission

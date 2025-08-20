@@ -1023,6 +1023,14 @@
   background-color: #c82333;
 }
 
+.action-btn.success {
+  background-color: #28a745;
+}
+
+.action-btn.success:hover {
+  background-color: #218838;
+}
+
 /* Delete confirmation modal styling */
 #source-account-delete-modal .account-info {
   background-color: var(--hover-bg);
@@ -1051,5 +1059,218 @@
   .action-btn {
     font-size: 10px;
     padding: 4px 6px;
+  }
+}
+
+/* === VERIFICATION MODAL STYLES === */
+
+.verification-modal .modal-content {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.verification-content h3 {
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.verification-summary h4 {
+  color: var(--text-color);
+  margin-bottom: 15px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 4px solid;
+}
+
+.status-item.success {
+  background-color: #d4edda;
+  border-left-color: #28a745;
+}
+
+.status-item.error {
+  background-color: #f8d7da;
+  border-left-color: #dc3545;
+}
+
+.status-item.warning {
+  background-color: #fff3cd;
+  border-left-color: #ffc107;
+}
+
+.verification-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.value-card {
+  text-align: center;
+  padding: 15px;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.value-card h5 {
+  margin: 0 0 10px 0;
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.value-large {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.value-medium {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.value-medium.positive {
+  color: #28a745;
+}
+
+.value-medium.negative {
+  color: #dc3545;
+}
+
+.verification-section {
+  margin-bottom: 20px;
+}
+
+.verification-section h5 {
+  color: var(--text-color);
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.positions-list, .orders-list {
+  background-color: var(--hover-bg);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.position-item, .order-item {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 5px;
+  background-color: var(--card-bg);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.position-item .symbol, .order-item .symbol {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.position-item .pnl.positive, .order-item .side {
+  color: #28a745;
+}
+
+.position-item .pnl.negative {
+  color: #dc3545;
+}
+
+.test-results {
+  background-color: var(--hover-bg);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.test-item {
+  display: grid;
+  grid-template-columns: 30px 1fr 2fr auto;
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 5px;
+  background-color: var(--card-bg);
+  border-radius: 4px;
+  font-size: 12px;
+  align-items: center;
+}
+
+.test-item.success {
+  border-left: 3px solid #28a745;
+}
+
+.test-item.error {
+  border-left: 3px solid #dc3545;
+}
+
+.test-item .stage {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.test-item .latency {
+  color: #666;
+  font-size: 11px;
+}
+
+.verification-footer {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #666;
+}
+
+.more-orders {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .verification-modal .modal-content {
+    max-width: 95%;
+    margin: 20px auto;
+  }
+  
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .verification-values {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .position-item, .order-item {
+    grid-template-columns: 1fr 1fr;
+    font-size: 11px;
+  }
+  
+  .test-item {
+    grid-template-columns: 30px 1fr;
+    font-size: 11px;
+  }
+  
+  .verification-footer {
+    flex-direction: column;
+    gap: 5px;
   }
 }
