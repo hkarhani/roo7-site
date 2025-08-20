@@ -432,9 +432,31 @@ function initializeTroubleshootPage() {
   }
 
   function displayDetailedSnapshot(snapshot, accountType) {
-    // Display SPOT assets if available
+    console.log('📊 Processing detailed snapshot:', snapshot);
+    
+    // Always display SPOT assets if available
     if (snapshot.spot_assets && snapshot.spot_assets.length > 0) {
-      displaySpotAssets(snapshot.spot_assets);
+      const nonZeroSpotAssets = snapshot.spot_assets.filter(asset => parseFloat(asset.total) > 0);
+      if (nonZeroSpotAssets.length > 0) {
+        console.log('💰 Displaying SPOT assets:', nonZeroSpotAssets.length);
+        displaySpotAssets(nonZeroSpotAssets);
+      }
+    }
+    
+    // Display FUTURES assets (USDⓈ-M and Coin-M wallet balances)
+    const hasUSDTMAssets = snapshot.futures_usdtm_assets && snapshot.futures_usdtm_assets.length > 0;
+    const hasCoinMAssets = snapshot.futures_coinm_assets && snapshot.futures_coinm_assets.length > 0;
+    
+    if (hasUSDTMAssets || hasCoinMAssets) {
+      const nonZeroUSDTMAssets = hasUSDTMAssets ? 
+        snapshot.futures_usdtm_assets.filter(asset => parseFloat(asset.total) > 0) : [];
+      const nonZeroCoinMAssets = hasCoinMAssets ? 
+        snapshot.futures_coinm_assets.filter(asset => parseFloat(asset.total) > 0) : [];
+      
+      if (nonZeroUSDTMAssets.length > 0 || nonZeroCoinMAssets.length > 0) {
+        console.log('🔮 Displaying FUTURES assets - USDⓈ-M:', nonZeroUSDTMAssets.length, 'Coin-M:', nonZeroCoinMAssets.length);
+        displayFuturesAssets(nonZeroUSDTMAssets, nonZeroCoinMAssets);
+      }
     }
     
     // Display FUTURES positions if available
@@ -442,7 +464,15 @@ function initializeTroubleshootPage() {
     const hasCoinMPositions = snapshot.futures_coinm_positions && snapshot.futures_coinm_positions.length > 0;
     
     if (hasUSDTMPositions || hasCoinMPositions) {
-      displayFuturesPositions(snapshot.futures_usdtm_positions || [], snapshot.futures_coinm_positions || []);
+      const activeUSDTMPositions = hasUSDTMPositions ? 
+        snapshot.futures_usdtm_positions.filter(pos => parseFloat(pos.position_amt) !== 0) : [];
+      const activeCoinMPositions = hasCoinMPositions ? 
+        snapshot.futures_coinm_positions.filter(pos => parseFloat(pos.position_amt) !== 0) : [];
+      
+      if (activeUSDTMPositions.length > 0 || activeCoinMPositions.length > 0) {
+        console.log('📈 Displaying FUTURES positions - USDⓈ-M:', activeUSDTMPositions.length, 'Coin-M:', activeCoinMPositions.length);
+        displayFuturesPositions(activeUSDTMPositions, activeCoinMPositions);
+      }
     }
     
     // Display open orders if available
@@ -451,12 +481,15 @@ function initializeTroubleshootPage() {
     const hasCoinMOrders = snapshot.open_orders_futures_coinm && snapshot.open_orders_futures_coinm.length > 0;
     
     if (hasSpotOrders || hasUSDTMOrders || hasCoinMOrders) {
+      console.log('📋 Displaying orders - SPOT:', hasSpotOrders, 'USDⓈ-M:', hasUSDTMOrders, 'Coin-M:', hasCoinMOrders);
       displayOpenOrders(
         snapshot.open_orders_spot || [],
         snapshot.open_orders_futures_usdtm || [],
         snapshot.open_orders_futures_coinm || []
       );
     }
+    
+    console.log('✅ Detailed snapshot processing complete');
   }
 
   function displayBasicPortfolio(results, accountType) {
@@ -514,6 +547,130 @@ function initializeTroubleshootPage() {
     setTimeout(() => {
       initializeSpotPieChart(nonZeroAssets);
     }, 300);
+  }
+
+  function displayFuturesAssets(usdtmAssets, coinmAssets) {
+    // First add a FUTURES Assets section to the HTML if it doesn't exist
+    addFuturesAssetsSection();
+    
+    const section = document.getElementById('futures-assets-section');
+    if (!section) {
+      console.error('❌ FUTURES assets section not found');
+      return;
+    }
+
+    const hasUSDTMAssets = usdtmAssets && usdtmAssets.length > 0;
+    const hasCoinMAssets = coinmAssets && coinmAssets.length > 0;
+
+    if (!hasUSDTMAssets && !hasCoinMAssets) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+
+    // Display USDⓈ-M assets
+    displayAssetsInTable('futures-usdtm-assets-table', usdtmAssets);
+
+    // Display Coin-M assets
+    displayAssetsInTable('futures-coinm-assets-table', coinmAssets);
+  }
+
+  function addFuturesAssetsSection() {
+    if (document.getElementById('futures-assets-section')) {
+      return; // Already exists
+    }
+
+    // Create the FUTURES assets section
+    const futuresAssetsHtml = `
+    <section id="futures-assets-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>🔮 FUTURES Assets</h2>
+      <div id="futures-assets-content" class="portfolio-content">
+        <div class="futures-tabs">
+          <button class="futures-tab active" data-tab="usdtm-assets">USDⓈ-M Assets</button>
+          <button class="futures-tab" data-tab="coinm-assets">Coin-M Assets</button>
+        </div>
+        <div id="usdtm-assets-content" class="futures-tab-content active">
+          <div class="portfolio-table-wrapper">
+            <table id="futures-usdtm-assets-table" class="portfolio-table">
+              <thead>
+                <tr><th>Asset</th><th>Wallet Balance</th><th>Unrealized PnL</th><th>Margin Balance</th><th>Available</th><th>Value (USDT)</th><th>%</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="coinm-assets-content" class="futures-tab-content">
+          <div class="portfolio-table-wrapper">
+            <table id="futures-coinm-assets-table" class="portfolio-table">
+              <thead>
+                <tr><th>Asset</th><th>Wallet Balance</th><th>Unrealized PnL</th><th>Margin Balance</th><th>Available</th><th>Value (USDT)</th><th>%</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>`;
+
+    // Insert the FUTURES assets section after SPOT assets
+    const spotSection = document.getElementById('spot-portfolio-section');
+    if (spotSection) {
+      spotSection.insertAdjacentHTML('afterend', futuresAssetsHtml);
+      
+      // Re-initialize tabs for the new section
+      setTimeout(() => {
+        initializeTabs();
+      }, 100);
+    }
+  }
+
+  function displayAssetsInTable(tableId, assets) {
+    const tableBody = document.querySelector(`#${tableId} tbody`);
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    if (!assets || assets.length === 0) {
+      const row = tableBody.insertRow();
+      row.innerHTML = '<td colspan="7" class="empty-portfolio-message">No assets available</td>';
+      return;
+    }
+
+    assets.forEach(asset => {
+      // Handle different asset formats - check if it has wallet_balance or just balance data
+      const walletBalance = asset.wallet_balance !== undefined ? 
+        parseFloat(asset.wallet_balance).toFixed(6) : 
+        parseFloat(asset.free || 0).toFixed(6);
+      
+      const unrealizedPnl = asset.unrealized_pnl !== undefined ? 
+        parseFloat(asset.unrealized_pnl).toFixed(4) : 'N/A';
+      
+      const marginBalance = asset.margin_balance !== undefined ? 
+        parseFloat(asset.margin_balance).toFixed(6) : 
+        parseFloat(asset.total || 0).toFixed(6);
+      
+      const availableBalance = asset.available_balance !== undefined ? 
+        parseFloat(asset.available_balance).toFixed(6) : 
+        parseFloat(asset.free || 0).toFixed(6);
+      
+      const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
+      const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
+      
+      // PnL styling
+      const pnlClass = unrealizedPnl !== 'N/A' && parseFloat(unrealizedPnl) >= 0 ? 'pnl-positive' : 'pnl-negative';
+
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${asset.asset}</strong></td>
+        <td>${walletBalance}</td>
+        <td class="${pnlClass}">${unrealizedPnl}</td>
+        <td>${marginBalance}</td>
+        <td>${availableBalance}</td>
+        <td>${usdtValue}</td>
+        <td><span class="percentage-badge">${percentage}%</span></td>
+      `;
+    });
   }
 
   function displayFuturesPositions(usdtmPositions, coinmPositions) {
