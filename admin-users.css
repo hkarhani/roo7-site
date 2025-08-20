@@ -141,7 +141,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  min-width: 1600px; /* Increased for new columns */
+  min-width: 1200px; /* Reduced width for optimized table */
 }
 
 #admin-users-table th {
@@ -294,6 +294,24 @@
 .dark-theme .referral-count.successful {
   background: #1e3a1e;
   color: #4caf50;
+}
+
+/* ===== REFERRAL EARNINGS ===== */
+.referral-earnings {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 50px;
+  background: #fff3cd;
+  color: #856404;
+}
+
+.dark-theme .referral-earnings {
+  background: #3a3520;
+  color: #ffc107;
 }
 
 /* ===== SUBSCRIPTION PERIOD ===== */
@@ -817,7 +835,7 @@
   }
   
   #admin-users-table {
-    min-width: 1000px; /* Increased for new columns */
+    min-width: 900px; /* Reduced for optimized table */
   }
   
   /* Make subscription period more readable on mobile */

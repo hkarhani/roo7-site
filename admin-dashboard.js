@@ -639,11 +639,14 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log('🔍 First referrer details:', data.referrers && data.referrers[0] ? data.referrers[0] : 'no first referrer');
     console.log('🔍 Data type check - is array?', Array.isArray(data.referrers));
     
+    // Use the actual referrers array length for accurate count
+    const actualReferrersCount = (data.referrers && Array.isArray(data.referrers)) ? data.referrers.length : 0;
+    
     const summaryHtml = `
       <div class="referrals-summary">
         <div class="referral-stat">
-          <span class="value">${data.total_referrers || 0}</span>
-          <span class="label">Total Referrers</span>
+          <span class="value">${actualReferrersCount}</span>
+          <span class="label">Active Referrers</span>
         </div>
         <div class="referral-stat">
           <span class="value">$${(data.total_pending || 0).toFixed(2)}</span>

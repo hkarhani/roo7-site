@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Show loading indicator during auth check
       const tbody = document.querySelector('#admin-users-table tbody');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="16" class="loading-message">🔐 Verifying admin access...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="loading-message">🔐 Verifying admin access...</td></tr>';
       }
       
       const response = await fetch(`${AUTH_API_BASE}/me`, {
@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const tbody = document.querySelector('#admin-users-table tbody');
       tbody.innerHTML = `
         <tr>
-          <td colspan="16" class="loading-message">
+          <td colspan="11" class="loading-message">
             <div class="loading-spinner">🔄</div>
             <div class="loading-text">Loading users...</div>
             <div class="loading-progress">Please wait...</div>
@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error('❌ Error loading users:', error);
       document.querySelector('#admin-users-table tbody').innerHTML = 
-        '<tr><td colspan="16" class="loading-message">❌ Failed to load users. Please try again.</td></tr>';
+        '<tr><td colspan="11" class="loading-message">❌ Failed to load users. Please try again.</td></tr>';
       showToast('Failed to load users. Please try again.', 'error');
     } finally {
       isLoading = false;
@@ -311,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.querySelector('#admin-users-table tbody');
     
     if (!Array.isArray(users) || users.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="16" class="loading-message">No users found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="loading-message">No users found</td></tr>';
       return;
     }
     
@@ -334,15 +334,17 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A';
       
-      // Format subscription period
-      let subscriptionPeriod = 'N/A';
+      // Format subscription period - fix N/A display issue
+      let subscriptionPeriod = 'No Subscription';
       if (user.subscription_start && user.subscription_end) {
         const startDate = new Date(user.subscription_start).toLocaleDateString();
         const endDate = new Date(user.subscription_end).toLocaleDateString();
         subscriptionPeriod = `${startDate} - ${endDate}`;
       } else if (user.subscription_start) {
         const startDate = new Date(user.subscription_start).toLocaleDateString();
-        subscriptionPeriod = `${startDate} - Ongoing`;
+        subscriptionPeriod = `${startDate} - Active`;
+      } else if (user.is_paying_customer) {
+        subscriptionPeriod = 'Active (No Dates)';
       }
       
       // Determine row class for paying customer highlighting
@@ -361,24 +363,19 @@ document.addEventListener("DOMContentLoaded", () => {
           </td>
           <td>
             <div class="user-info">
-              <span class="username" onclick="viewUserDetails('${user._id}')">${user.username || 'N/A'}</span>
+              <span class="username" onclick="viewUserDetails('${user._id}')">${user.email || 'N/A'}</span>
               ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
               ${isPayingCustomer ? '<span class="paying-badge">PAYING</span>' : ''}
             </div>
           </td>
-          <td>${user.email || 'N/A'}</td>
-          <td>${user.full_name || 'N/A'}</td>
+          <td>${user.full_name || user.username || 'N/A'}</td>
           <td>${user.total_accounts || 0}</td>
-          <td>${user.strategies_assigned || 0}</td>
           <td>$${(user.active_funds || 0).toLocaleString()}</td>
           <td><span class="tier-badge tier-${user.current_tier}">${user.current_tier || 'Free'}</span></td>
           <td><span class="invoice-count paid">${user.paid_invoices || 0}</span></td>
-          <td><span class="invoice-count unpaid">${user.unpaid_invoices || 0}</span></td>
-          <td><span class="referral-count">${user.total_referrals || 0}</span></td>
-          <td><span class="referral-count successful">${user.successful_referrals || 0}</span></td>
+          <td><span class="referral-earnings">$${(user.lifetime_referral_earnings || 0).toFixed(2)}</span></td>
           <td><span class="subscription-period" title="${subscriptionPeriod}">${subscriptionPeriod}</span></td>
           <td>${statusBadge}</td>
-          <td>${createdDate}</td>
           <td>
             <div class="action-buttons">
               <button class="small-btn info-btn" onclick="viewUserDetails('${user._id}')" title="View Details">
@@ -386,10 +383,10 @@ document.addEventListener("DOMContentLoaded", () => {
               </button>
               ${!isAdmin ? `
                 ${isDisabled ? 
-                  `<button class="small-btn success-btn" onclick="enableUser('${user._id}', '${user.username}')" title="Enable User">✅</button>` :
-                  `<button class="small-btn warning-btn" onclick="disableUser('${user._id}', '${user.username}')" title="Disable User">❌</button>`
+                  `<button class="small-btn success-btn" onclick="enableUser('${user._id}', '${user.username || user.email}')" title="Enable User">✅</button>` :
+                  `<button class="small-btn warning-btn" onclick="disableUser('${user._id}', '${user.username || user.email}')" title="Disable User">❌</button>`
                 }
-                <button class="small-btn danger-btn" onclick="deleteUser('${user._id}', '${user.username}')" title="Delete User">🗑️</button>
+                <button class="small-btn danger-btn" onclick="deleteUser('${user._id}', '${user.username || user.email}')" title="Delete User">🗑️</button>
               ` : ''}
             </div>
           </td>
@@ -488,7 +485,26 @@ document.addEventListener("DOMContentLoaded", () => {
       const title = document.getElementById('user-detail-title');
       const content = document.getElementById('user-detail-content');
       
-      title.textContent = `User Details - ${user.username}`;
+      title.textContent = `User Details - ${user.username || user.email || 'Unknown User'}`;
+      
+      // Calculate subscription period for modal
+      let subscriptionInfo = 'No Active Subscription';
+      let subscriptionDuration = 'N/A';
+      if (user.subscription_start && user.subscription_end) {
+        const start = new Date(user.subscription_start);
+        const end = new Date(user.subscription_end);
+        subscriptionInfo = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        subscriptionDuration = `${diffDays} days`;
+      } else if (user.subscription_start) {
+        subscriptionInfo = `${new Date(user.subscription_start).toLocaleDateString()} - Active`;
+        const start = new Date(user.subscription_start);
+        const now = new Date();
+        const diffTime = Math.abs(now - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        subscriptionDuration = `${diffDays} days (ongoing)`;
+      }
       
       content.innerHTML = `
         <div class="user-detail-grid">
@@ -517,7 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           
           <div class="detail-section">
-            <h4>Account Statistics</h4>
+            <h4>Account & Trading Statistics</h4>
             <div class="detail-row">
               <span class="detail-label">Current Tier:</span>
               <span class="detail-value tier-${user.current_tier}">${user.current_tier || 'Free'}</span>
@@ -541,32 +557,64 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           
           <div class="detail-section">
-            <h4>Invoice & Referral Statistics</h4>
+            <h4>Invoice Statistics</h4>
             <div class="detail-row">
               <span class="detail-label">Paid Invoices:</span>
-              <span class="detail-value">${user.paid_invoices || 0}</span>
+              <span class="detail-value invoice-count paid">${user.paid_invoices || 0}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Unpaid Invoices:</span>
-              <span class="detail-value">${user.unpaid_invoices || 0}</span>
+              <span class="detail-value invoice-count unpaid">${user.unpaid_invoices || 0}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">Total Referrals:</span>
+              <span class="detail-label">Total Invoices:</span>
+              <span class="detail-value">${(user.paid_invoices || 0) + (user.unpaid_invoices || 0)}</span>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Referral Statistics</h4>
+            <div class="detail-row">
+              <span class="detail-label">Total Referrals Made:</span>
               <span class="detail-value">${user.total_referrals || 0}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Successful Referrals:</span>
-              <span class="detail-value">${user.successful_referrals || 0}</span>
+              <span class="detail-value referral-count successful">${user.successful_referrals || 0}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Lifetime Referral Earnings:</span>
+              <span class="detail-value referral-earnings">$${(user.lifetime_referral_earnings || 0).toFixed(2)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Paid Referral Earnings:</span>
+              <span class="detail-value referral-earnings">$${(user.paid_referral_earnings || 0).toFixed(2)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Pending Referral Earnings:</span>
+              <span class="detail-value referral-earnings">$${((user.lifetime_referral_earnings || 0) - (user.paid_referral_earnings || 0)).toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Subscription Information</h4>
+            <div class="detail-row">
+              <span class="detail-label">Subscription Period:</span>
+              <span class="detail-value">${subscriptionInfo}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Subscription Duration:</span>
+              <span class="detail-value">${subscriptionDuration}</span>
             </div>
             ${user.subscription_start ? `
               <div class="detail-row">
-                <span class="detail-label">Subscription Start:</span>
+                <span class="detail-label">Start Date:</span>
                 <span class="detail-value">${new Date(user.subscription_start).toLocaleDateString()}</span>
               </div>
             ` : ''}
             ${user.subscription_end ? `
               <div class="detail-row">
-                <span class="detail-label">Subscription End:</span>
+                <span class="detail-label">End Date:</span>
                 <span class="detail-value">${new Date(user.subscription_end).toLocaleDateString()}</span>
               </div>
             ` : ''}
