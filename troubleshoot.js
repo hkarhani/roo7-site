@@ -266,6 +266,13 @@ function initializeTroubleshootPage() {
         'api-key-status': 'Failed to load'
       };
 
+      // Reset account type to unknown
+      const accountTypeElement = document.getElementById('account-type');
+      if (accountTypeElement) {
+        accountTypeElement.textContent = 'UNKNOWN';
+        accountTypeElement.className = 'account-type-badge';
+      }
+
       for (const [elementId, value] of Object.entries(errorUpdates)) {
         const element = document.getElementById(elementId);
         if (element) {
@@ -318,10 +325,17 @@ function initializeTroubleshootPage() {
     updateAPIConnectionStatus('testing');
     
     // Hide all portfolio sections and clear diagnostics
-    document.getElementById('spot-portfolio-section').style.display = 'none';
-    document.getElementById('futures-positions-section').style.display = 'none';
-    document.getElementById('open-orders-section').style.display = 'none';
-    diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
+    const spotSection = document.getElementById('spot-portfolio-section');
+    const futuresSection = document.getElementById('futures-positions-section');
+    const ordersSection = document.getElementById('open-orders-section');
+    
+    if (spotSection) spotSection.style.display = 'none';
+    if (futuresSection) futuresSection.style.display = 'none';
+    if (ordersSection) ordersSection.style.display = 'none';
+    
+    if (diagnosticInfo) {
+      diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
+    }
     
     // Show loading toast
     showToast('Testing Binance connection...', 'info', 3000);
@@ -371,7 +385,9 @@ function initializeTroubleshootPage() {
       displayEnhancedPortfolioSections(results);
       
       // Display detailed diagnostics
-      displayDetailedDiagnostics(results, diagnosticInfo);
+      if (diagnosticInfo) {
+        displayDetailedDiagnostics(results, diagnosticInfo);
+      }
       
       // Show completion toast
       if (results.success) {
@@ -386,11 +402,15 @@ function initializeTroubleshootPage() {
       if (error.name === 'AbortError') {
         showToast('Test timed out. This may indicate network connectivity issues.', 'error');
         updateAPIConnectionStatus('failed', 'Connection Timeout');
-        diagnosticInfo.innerHTML = getTimeoutDiagnostics();
+        if (diagnosticInfo) {
+          diagnosticInfo.innerHTML = getTimeoutDiagnostics();
+        }
       } else {
         showToast(`Test failed: ${error.message}`, 'error');
         updateAPIConnectionStatus('failed', error.message);
-        diagnosticInfo.innerHTML = getErrorDiagnostics(error);
+        if (diagnosticInfo) {
+          diagnosticInfo.innerHTML = getErrorDiagnostics(error);
+        }
       }
     } finally {
       testBtn.disabled = false;
