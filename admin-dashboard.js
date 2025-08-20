@@ -1489,44 +1489,66 @@ document.addEventListener("DOMContentLoaded", () => {
 
           ${data.detailed_breakdown.position_details?.coinm_positions_with_percentages?.length > 0 ? `
             <div class="verification-section">
-              <h5>📈 Coin-M FUTURES Positions</h5>
+              <h5>📈 Coin-M FUTURES Positions (${data.detailed_breakdown.position_details.coinm_positions_with_percentages.length})</h5>
               <div class="positions-list">
                 ${data.detailed_breakdown.position_details.coinm_positions_with_percentages
                   .sort((a, b) => b.usdt_value - a.usdt_value)
-                  .map(pos => `
-                    <div class="position-item">
-                      <span class="symbol">${pos.symbol}</span>
-                      <span class="side">${pos.position_side}</span>
-                      <span class="amount">${pos.position_amt.toFixed(4)}</span>
-                      <span class="value">${formatCurrency(pos.usdt_value)}</span>
-                      <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
-                      <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
-                        ${formatCurrency(pos.unrealized_pnl)}
-                      </span>
-                    </div>
-                  `).join('')}
+                  .map(pos => {
+                    // Determine if position is LONG or SHORT
+                    const isLong = pos.position_amt > 0;
+                    const isShort = pos.position_amt < 0;
+                    const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
+                    const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
+                    const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
+                    
+                    return `
+                      <div class="position-item ${directionClass}">
+                        <span class="symbol">${pos.symbol}</span>
+                        <span class="direction ${directionClass}">
+                          ${directionIcon} ${directionLabel}
+                        </span>
+                        <span class="amount">${Math.abs(pos.position_amt).toFixed(4)}</span>
+                        <span class="value">${formatCurrency(pos.usdt_value)}</span>
+                        <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
+                        <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
+                          ${pos.unrealized_pnl >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl)}
+                        </span>
+                      </div>
+                    `;
+                  }).join('')}
               </div>
             </div>
           ` : ''}
 
           ${data.detailed_breakdown.position_details?.usdtm_positions_with_percentages?.length > 0 ? `
             <div class="verification-section">
-              <h5>📊 USDⓈ-M FUTURES Positions</h5>
+              <h5>📊 USDⓈ-M FUTURES Positions (${data.detailed_breakdown.position_details.usdtm_positions_with_percentages.length})</h5>
               <div class="positions-list">
                 ${data.detailed_breakdown.position_details.usdtm_positions_with_percentages
                   .sort((a, b) => b.usdt_value - a.usdt_value)
-                  .map(pos => `
-                    <div class="position-item">
-                      <span class="symbol">${pos.symbol}</span>
-                      <span class="side">${pos.position_side}</span>
-                      <span class="amount">${pos.position_amt.toFixed(4)}</span>
-                      <span class="value">${formatCurrency(pos.usdt_value)}</span>
-                      <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
-                      <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
-                        ${formatCurrency(pos.unrealized_pnl)}
-                      </span>
-                    </div>
-                  `).join('')}
+                  .map(pos => {
+                    // Determine if position is LONG or SHORT
+                    const isLong = pos.position_amt > 0;
+                    const isShort = pos.position_amt < 0;
+                    const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
+                    const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
+                    const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
+                    
+                    return `
+                      <div class="position-item ${directionClass}">
+                        <span class="symbol">${pos.symbol}</span>
+                        <span class="direction ${directionClass}">
+                          ${directionIcon} ${directionLabel}
+                        </span>
+                        <span class="amount">${Math.abs(pos.position_amt).toFixed(4)}</span>
+                        <span class="value">${formatCurrency(pos.usdt_value)}</span>
+                        <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
+                        <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
+                          ${pos.unrealized_pnl >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl)}
+                        </span>
+                      </div>
+                    `;
+                  }).join('')}
               </div>
             </div>
           ` : ''}
@@ -1536,16 +1558,26 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="verification-section">
             <h5>📋 Open Orders (${data.open_orders.length})</h5>
             <div class="orders-list">
-              ${data.open_orders.slice(0, 5).map(order => `
-                <div class="order-item">
-                  <span class="symbol">${order.symbol}</span>
-                  <span class="side">${order.side}</span>
-                  <span class="type">${order.type}</span>
-                  <span class="qty">${order.original_qty}</span>
-                  <span class="price">${formatCurrency(order.price)}</span>
-                </div>
-              `).join('')}
-              ${data.open_orders.length > 5 ? `<div class="more-orders">... and ${data.open_orders.length - 5} more</div>` : ''}
+              ${data.open_orders.slice(0, 8).map(order => {
+                const isBuy = order.side === 'BUY';
+                const isSell = order.side === 'SELL';
+                const sideClass = isBuy ? 'buy-order' : isSell ? 'sell-order' : 'neutral-order';
+                const sideIcon = isBuy ? '📈' : isSell ? '📉' : '➖';
+                
+                return `
+                  <div class="order-item ${sideClass}">
+                    <span class="symbol">${order.symbol}</span>
+                    <span class="side ${sideClass}">
+                      ${sideIcon} ${order.side}
+                    </span>
+                    <span class="type">${order.type}</span>
+                    <span class="qty">${order.original_qty}</span>
+                    <span class="price">${formatCurrency(order.price)}</span>
+                    <span class="status">${order.status}</span>
+                  </div>
+                `;
+              }).join('')}
+              ${data.open_orders.length > 8 ? `<div class="more-orders">... and ${data.open_orders.length - 8} more orders</div>` : ''}
             </div>
           </div>
         ` : ''}

@@ -1426,6 +1426,173 @@
   font-size: 12px;
 }
 
+/* === POSITION DIRECTION STYLING === */
+
+/* Long Position Styling (Green Theme) */
+.position-item.long-position {
+  border-left-color: #28a745;
+  background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, var(--card-bg) 100%);
+}
+
+.position-item.long-position .direction.long-position {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 11px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+/* Short Position Styling (Blue Theme) */
+.position-item.short-position {
+  border-left-color: #007bff;
+  background: linear-gradient(90deg, rgba(0, 123, 255, 0.05) 0%, var(--card-bg) 100%);
+}
+
+.position-item.short-position .direction.short-position {
+  background: linear-gradient(135deg, #007bff, #6610f2);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 11px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+/* Neutral Position Styling */
+.position-item.neutral-position {
+  border-left-color: #6c757d;
+}
+
+.position-item.neutral-position .direction.neutral-position {
+  background: #6c757d;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* === ORDER DIRECTION STYLING === */
+
+/* Buy Order Styling (Green Theme) */
+.order-item.buy-order {
+  border-left-color: #28a745;
+  background: linear-gradient(90deg, rgba(40, 167, 69, 0.03) 0%, var(--card-bg) 100%);
+}
+
+.order-item.buy-order .side.buy-order {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 10px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
+}
+
+/* Sell Order Styling (Red Theme) */
+.order-item.sell-order {
+  border-left-color: #dc3545;
+  background: linear-gradient(90deg, rgba(220, 53, 69, 0.03) 0%, var(--card-bg) 100%);
+}
+
+.order-item.sell-order .side.sell-order {
+  background: linear-gradient(135deg, #dc3545, #e74c3c);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 10px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(220, 53, 69, 0.3);
+}
+
+/* Neutral Order Styling */
+.order-item.neutral-order {
+  border-left-color: #6c757d;
+}
+
+.order-item.neutral-order .side.neutral-order {
+  background: #6c757d;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 10px;
+  text-align: center;
+}
+
+/* === UPDATED POSITION ITEM GRID === */
+
+.position-item {
+  display: grid;
+  grid-template-columns: 100px 80px 1fr 100px 70px 100px;
+  gap: 12px;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  font-size: 12px;
+  align-items: center;
+  border-left: 4px solid var(--primary-color);
+  transition: all 0.2s ease;
+}
+
+.position-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* === ORDER ITEM GRID === */
+
+.order-item {
+  display: grid;
+  grid-template-columns: 100px 70px 60px 80px 100px 80px;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background-color: var(--card-bg);
+  border-radius: 6px;
+  font-size: 11px;
+  align-items: center;
+  border-left: 3px solid var(--primary-color);
+  transition: all 0.2s ease;
+}
+
+.order-item:hover {
+  transform: translateX(1px);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+.order-item .status {
+  font-size: 10px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Dark theme adjustments */
+.dark-theme .position-item.long-position {
+  background: linear-gradient(90deg, rgba(40, 167, 69, 0.08) 0%, var(--card-bg) 100%);
+}
+
+.dark-theme .position-item.short-position {
+  background: linear-gradient(90deg, rgba(0, 123, 255, 0.08) 0%, var(--card-bg) 100%);
+}
+
+.dark-theme .order-item.buy-order {
+  background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, var(--card-bg) 100%);
+}
+
+.dark-theme .order-item.sell-order {
+  background: linear-gradient(90deg, rgba(220, 53, 69, 0.05) 0%, var(--card-bg) 100%);
+}
+
 /* Enhanced verification modal responsiveness */
 @media (max-width: 768px) {
   .distribution-grid {
@@ -1444,14 +1611,25 @@
   }
   
   .position-item {
-    grid-template-columns: 80px 1fr 80px;
+    grid-template-columns: 80px 80px 1fr 80px;
     font-size: 10px;
-    gap: 8px;
+    gap: 6px;
+    padding: 8px 10px;
   }
   
-  .position-item .side, 
-  .position-item .amount,
-  .position-item .percent {
+  .position-item .amount {
+    display: none;
+  }
+  
+  .order-item {
+    grid-template-columns: 80px 60px 1fr 80px;
+    font-size: 10px;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  
+  .order-item .type,
+  .order-item .qty {
     display: none;
   }
 }
