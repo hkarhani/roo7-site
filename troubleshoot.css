@@ -821,23 +821,23 @@
   gap: 15px;
 }
 
-/* Portfolio sections - SPOT in column 1, Coin-M stacked in column 2, Orders in column 3 */
+/* Portfolio sections - SPOT in column 1, FUTURES stacked in column 2, Orders in column 3 */
 .troubleshoot-grid > #spot-portfolio-section {
   grid-column: 1;
   grid-row: 3 / 5;
 }
 
-.troubleshoot-grid > #coinm-assets-section {
+.troubleshoot-grid > #futures-assets-section {
   grid-column: 2;
   grid-row: 3;
 }
 
-.troubleshoot-grid > #coinm-positions-section {
+.troubleshoot-grid > #futures-positions-section {
   grid-column: 2;
   grid-row: 4;
 }
 
-.troubleshoot-grid > #coinm-orders-section {
+.troubleshoot-grid > #futures-orders-section {
   grid-column: 3;
   grid-row: 3 / 5;
 }
@@ -848,17 +848,17 @@
   grid-row: 5;
 }
 
-/* Narrow Coin-M sections styling */
-.coinm-narrow {
+/* Narrow FUTURES sections styling */
+.futures-narrow {
   padding: 15px !important;
 }
 
-.coinm-narrow h2 {
+.futures-narrow h2 {
   font-size: 16px !important;
   margin-bottom: 10px !important;
 }
 
-.coinm-narrow .portfolio-table-wrapper {
+.futures-narrow .portfolio-table-wrapper {
   padding: 10px !important;
 }
 
