@@ -1109,7 +1109,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>
           <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
           <button class="verify-source-btn action-btn success" data-id="${account.id}">🔍 Verify</button>
-          <button class="reencrypt-source-btn action-btn warning" data-id="${account.id}">🔐 Re-encrypt</button>
           <button class="delete-source-btn action-btn danger" data-id="${account.id}">🗑️ Delete</button>
         </td>
       </tr>
@@ -1124,9 +1123,6 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.onclick = () => verifySourceAccount(btn.dataset.id);
     });
 
-    document.querySelectorAll('.reencrypt-source-btn').forEach(btn => {
-      btn.onclick = () => showReEncryptModal(btn.dataset.id);
-    });
 
     document.querySelectorAll('.delete-source-btn').forEach(btn => {
       btn.onclick = () => deleteSourceAccount(btn.dataset.id);
@@ -1437,102 +1433,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(modal);
   }
 
-  // Show re-encrypt credentials modal
-  async function showReEncryptModal(accountId) {
-    try {
-      // Get account details first
-      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const account = await response.json();
-      
-      if (response.ok) {
-        const modal = document.createElement('div');
-        modal.className = 'modal re-encrypt-modal';
-        modal.style.display = 'block';
-        
-        const content = `
-          <div class="modal-content">
-            <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
-            <h3>🔐 Re-encrypt Source Account Credentials</h3>
-            
-            <div class="warning-section">
-              <div class="warning-box">
-                <h4>⚠️ Important: Credential Migration</h4>
-                <p>This account's credentials were encrypted with a temporary key and cannot be decrypted. 
-                You need to provide the original API credentials to re-encrypt them with the new persistent key.</p>
-                <p><strong>Account:</strong> ${account.account_name}</p>
-                <p><strong>Exchange:</strong> ${account.exchange}</p>
-                <p><strong>Type:</strong> ${account.account_type}</p>
-              </div>
-            </div>
-
-            <form id="re-encrypt-form">
-              <div class="form-group">
-                <label for="reencrypt-api-key">API Key:</label>
-                <input type="text" id="reencrypt-api-key" name="api_key" 
-                       placeholder="Enter the original API Key" required />
-              </div>
-              
-              <div class="form-group">
-                <label for="reencrypt-api-secret">API Secret:</label>
-                <input type="password" id="reencrypt-api-secret" name="api_secret" 
-                       placeholder="Enter the original API Secret" required />
-              </div>
-
-              <div class="modal-actions">
-                <button type="submit" class="primary-button">🔐 Re-encrypt Credentials</button>
-                <button type="button" class="secondary-button" onclick="this.closest('.modal').remove()">Cancel</button>
-              </div>
-            </form>
-          </div>
-        `;
-        
-        modal.innerHTML = content;
-        document.body.appendChild(modal);
-        
-        // Add form submit handler
-        document.getElementById('re-encrypt-form').onsubmit = async (event) => {
-          event.preventDefault();
-          
-          const formData = new FormData(event.target);
-          
-          try {
-            showNotification('Re-encrypting credentials...', 'info');
-            
-            const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}/re-encrypt`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`
-              },
-              body: formData
-            });
-
-            const data = await response.json();
-            
-            if (response.ok) {
-              showNotification('Credentials re-encrypted successfully!', 'success');
-              modal.remove();
-              loadSourceAccounts(); // Reload the list
-            } else {
-              console.error('❌ Failed to re-encrypt credentials:', data.detail);
-              showNotification('Failed to re-encrypt credentials', 'error');
-            }
-          } catch (error) {
-            console.error('❌ Error re-encrypting credentials:', error);
-            showNotification('Error re-encrypting credentials', 'error');
-          }
-        };
-      }
-    } catch (error) {
-      console.error('❌ Error loading source account for re-encryption:', error);
-      showNotification('Error loading source account', 'error');
-    }
-  }
 
   // Handle source account form submission
   async function handleSourceAccountSubmit(event) {
