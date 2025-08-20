@@ -816,12 +816,12 @@
 
 /* Grid Layout Updates for Multiple Sections */
 .troubleshoot-grid {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto auto auto auto;
-  gap: 20px;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 15px;
 }
 
-/* Portfolio sections - arrange in 2x2 grid */
+/* Portfolio sections - SPOT on left, Coin-M sections on right */
 .troubleshoot-grid > #spot-portfolio-section {
   grid-column: 1;
   grid-row: 3;
@@ -833,14 +833,59 @@
 }
 
 .troubleshoot-grid > #coinm-positions-section {
-  grid-column: 1;
-  grid-row: 4;
+  grid-column: 3;
+  grid-row: 3;
+}
+
+.troubleshoot-grid > #coinm-orders-section {
+  grid-column: 4;
+  grid-row: 3;
 }
 
 /* Diagnostics - full width on bottom */
 .troubleshoot-grid > #section-diagnostics {
   grid-column: 1 / -1;
-  grid-row: 5;
+  grid-row: 4;
+}
+
+/* Narrow Coin-M sections styling */
+.coinm-narrow {
+  padding: 15px !important;
+}
+
+.coinm-narrow h2 {
+  font-size: 16px !important;
+  margin-bottom: 10px !important;
+}
+
+.coinm-narrow .portfolio-table-wrapper {
+  padding: 10px !important;
+}
+
+.narrow-table {
+  font-size: 12px !important;
+}
+
+.narrow-table th {
+  padding: 8px 6px !important;
+  font-size: 11px !important;
+}
+
+.narrow-table td {
+  padding: 8px 6px !important;
+  font-size: 12px !important;
+}
+
+.narrow-table .position-direction,
+.narrow-table .order-side {
+  font-size: 9px !important;
+  padding: 2px 6px !important;
+}
+
+.narrow-table .percentage-badge {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  min-width: 35px !important;
 }
 
 /* Enhanced Diagnostics Styling */

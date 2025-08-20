@@ -5,7 +5,7 @@ while <!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Account Troubleshoot</title>
   <link rel="stylesheet" href="dashboard.css" />
-  <link rel="stylesheet" href="troubleshoot.css?v=4.5" />
+  <link rel="stylesheet" href="troubleshoot.css?v=4.6" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -77,13 +77,13 @@ while <!DOCTYPE html>
     </section>
 
     <!-- Coin-M Assets Section -->
-    <section id="coinm-assets-section" class="dashboard-card portfolio-section" style="display: none;">
-      <h2>💰 Coin-M Assets</h2>
+    <section id="coinm-assets-section" class="dashboard-card portfolio-section coinm-narrow" style="display: none;">
+      <h2>💰 Assets</h2>
       <div id="coinm-assets-content" class="portfolio-content">
         <div class="portfolio-table-wrapper">
-          <table id="coinm-assets-table" class="portfolio-table">
+          <table id="coinm-assets-table" class="portfolio-table narrow-table">
             <thead>
-              <tr><th>Asset</th><th>Wallet Balance</th><th>Margin Balance</th><th>Available</th><th>Value (USDT)</th><th>%</th></tr>
+              <tr><th>Asset</th><th>Wallet</th><th>Margin</th><th>Available</th><th>Value</th><th>%</th></tr>
             </thead>
             <tbody></tbody>
           </table>
@@ -92,13 +92,28 @@ while <!DOCTYPE html>
     </section>
 
     <!-- Coin-M Positions Section -->
-    <section id="coinm-positions-section" class="dashboard-card portfolio-section" style="display: none;">
-      <h2>📈 Coin-M Positions</h2>
+    <section id="coinm-positions-section" class="dashboard-card portfolio-section coinm-narrow" style="display: none;">
+      <h2>📈 Positions</h2>
       <div id="coinm-positions-content" class="portfolio-content">
         <div class="portfolio-table-wrapper">
-          <table id="coinm-positions-table" class="portfolio-table futures-table">
+          <table id="coinm-positions-table" class="portfolio-table futures-table narrow-table">
             <thead>
-              <tr><th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th></tr>
+              <tr><th>Symbol</th><th>Dir</th><th>Size</th><th>Entry</th><th>Mark</th><th>PnL</th><th>%</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Coin-M Orders Section -->
+    <section id="coinm-orders-section" class="dashboard-card portfolio-section coinm-narrow" style="display: none;">
+      <h2>📋 Orders</h2>
+      <div id="coinm-orders-content" class="portfolio-content">
+        <div class="portfolio-table-wrapper">
+          <table id="coinm-orders-table" class="portfolio-table orders-table narrow-table">
+            <thead>
+              <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Qty</th><th>Price</th><th>Status</th></tr>
             </thead>
             <tbody></tbody>
           </table>
@@ -118,6 +133,6 @@ while <!DOCTYPE html>
   <!-- Load theme manager first, then pie chart, then troubleshoot logic -->
   <script src="theme-manager.js?v=1"></script>
   <script src="pie-chart.js?v=1"></script>
-  <script type="module" src="troubleshoot.js?v=4.5"></script>
+  <script type="module" src="troubleshoot.js?v=4.6"></script>
 </body>
 </html>

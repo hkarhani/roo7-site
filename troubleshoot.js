@@ -328,10 +328,12 @@ function initializeTroubleshootPage() {
     const spotSection = document.getElementById('spot-portfolio-section');
     const coinmAssetsSection = document.getElementById('coinm-assets-section');
     const coinmPositionsSection = document.getElementById('coinm-positions-section');
+    const coinmOrdersSection = document.getElementById('coinm-orders-section');
     
     if (spotSection) spotSection.style.display = 'none';
     if (coinmAssetsSection) coinmAssetsSection.style.display = 'none';
     if (coinmPositionsSection) coinmPositionsSection.style.display = 'none';
+    if (coinmOrdersSection) coinmOrdersSection.style.display = 'none';
     
     if (diagnosticInfo) {
       diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
@@ -443,9 +445,10 @@ function initializeTroubleshootPage() {
       }
     }
     
-    // Display FUTURES assets and positions in separate sections
+    // Display FUTURES assets, positions, and orders in separate sections
     displayCoinMAssets(snapshot.futures_coinm_assets);
     displayCoinMPositions(snapshot.futures_coinm_positions);
+    displayCoinMOrders(snapshot.open_orders_futures_coinm);
     
     console.log('✅ Detailed snapshot processing complete');
   }
@@ -558,6 +561,36 @@ function initializeTroubleshootPage() {
         <td class="${pnlClass}">${unrealizedPnl.toFixed(4)}</td>
         <td>${usdtValue}</td>
         <td><span class="percentage-badge">${percentage}%</span></td>
+      `;
+    });
+  }
+
+  function displayCoinMOrders(coinmOrders) {
+    const section = document.getElementById('coinm-orders-section');
+    const tableBody = document.querySelector('#coinm-orders-table tbody');
+    
+    if (!coinmOrders || coinmOrders.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    console.log('📋 Displaying Coin-M orders:', coinmOrders.length);
+    section.style.display = 'block';
+    tableBody.innerHTML = '';
+    
+    coinmOrders.forEach(order => {
+      const side = order.side.toLowerCase();
+      const originalQty = parseFloat(order.original_qty).toFixed(3);
+      const price = parseFloat(order.price).toFixed(4);
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${order.symbol}</strong></td>
+        <td><span class="order-side ${side}">${order.side}</span></td>
+        <td>${order.type}</td>
+        <td>${originalQty}</td>
+        <td>${price}</td>
+        <td>${order.status}</td>
       `;
     });
   }
