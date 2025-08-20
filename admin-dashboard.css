@@ -35,6 +35,11 @@
   grid-row: 3;
 }
 
+#section-source-accounts {
+  grid-column: 1 / -1;
+  grid-row: 4;
+}
+
 #section-activity {
   grid-column: 3;
   grid-row: 3;
@@ -912,5 +917,139 @@
   .actions button {
     font-size: 13px;
     padding: 8px 12px;
+  }
+}
+
+/* === SOURCE ACCOUNT SPECIFIC STYLES === */
+
+/* Source account table styling */
+#source-accounts-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#source-accounts-table th,
+#source-accounts-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#source-accounts-table th {
+  background-color: var(--card-bg);
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+#source-accounts-table tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* Status badges */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Source account modal form styles */
+#source-account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#source-account-form input,
+#source-account-form select,
+#source-account-form textarea {
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+#source-account-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Toggle styles for source account status */
+#source-account-status .toggle-group {
+  margin-top: 10px;
+}
+
+#source-account-status .toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Action buttons in table */
+.action-btn {
+  padding: 6px 10px;
+  margin: 0 2px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+}
+
+.action-btn:hover {
+  opacity: 0.8;
+}
+
+.action-btn.danger {
+  background-color: #dc3545;
+}
+
+.action-btn.danger:hover {
+  background-color: #c82333;
+}
+
+/* Delete confirmation modal styling */
+#source-account-delete-modal .account-info {
+  background-color: var(--hover-bg);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  border-left: 4px solid #ffc107;
+}
+
+#source-account-delete-modal .account-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* Responsive adjustments for source accounts */
+@media (max-width: 768px) {
+  #source-accounts-table {
+    font-size: 12px;
+  }
+  
+  #source-accounts-table th,
+  #source-accounts-table td {
+    padding: 8px 4px;
+  }
+  
+  .action-btn {
+    font-size: 10px;
+    padding: 4px 6px;
   }
 }

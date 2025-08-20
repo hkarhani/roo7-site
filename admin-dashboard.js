@@ -979,6 +979,302 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
 
+  // === SOURCE ACCOUNT MANAGEMENT ===
+  
+  let currentEditingSourceAccountId = null;
+  let sourceStrategies = [];
+
+  // Load source accounts
+  async function loadSourceAccounts() {
+    try {
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        displaySourceAccounts(data.source_accounts);
+      } else {
+        console.error('❌ Failed to load source accounts:', data.detail);
+        showNotification('Failed to load source accounts', 'error');
+      }
+    } catch (error) {
+      console.error('❌ Error loading source accounts:', error);
+      showNotification('Error loading source accounts', 'error');
+    }
+  }
+
+  // Display source accounts in table
+  function displaySourceAccounts(sourceAccounts) {
+    const tbody = document.querySelector('#source-accounts-table tbody');
+    
+    if (!sourceAccounts || sourceAccounts.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="no-data">No source accounts found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = sourceAccounts.map(account => `
+      <tr>
+        <td>${account.account_name}</td>
+        <td>${account.exchange}</td>
+        <td>${account.account_type}</td>
+        <td>${account.strategy}</td>
+        <td>
+          <span class="status-badge ${account.is_active ? 'active' : 'inactive'}">
+            ${account.is_active ? '✅ Active' : '⏸️ Inactive'}
+          </span>
+        </td>
+        <td>${formatDate(account.created_at)}</td>
+        <td>
+          <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
+          <button class="delete-source-btn action-btn danger" data-id="${account.id}">🗑️ Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    // Add event listeners to action buttons
+    document.querySelectorAll('.edit-source-btn').forEach(btn => {
+      btn.onclick = () => editSourceAccount(btn.dataset.id);
+    });
+
+    document.querySelectorAll('.delete-source-btn').forEach(btn => {
+      btn.onclick = () => deleteSourceAccount(btn.dataset.id);
+    });
+  }
+
+  // Load strategies for dropdown
+  async function loadSourceStrategies() {
+    try {
+      const response = await fetch(`${AUTH_API_BASE}/strategies`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.strategies) {
+        // Filter out custom portfolio strategy for source accounts
+        sourceStrategies = data.strategies.filter(strategy => 
+          !['custom_portfolio', 'Custom Portfolio'].includes(strategy)
+        );
+        populateStrategyDropdown();
+      } else {
+        console.error('❌ Failed to load strategies:', data.detail);
+      }
+    } catch (error) {
+      console.error('❌ Error loading strategies:', error);
+    }
+  }
+
+  // Populate strategy dropdown
+  function populateStrategyDropdown() {
+    const select = document.getElementById('source-strategy-select');
+    select.innerHTML = '<option value="">Select Strategy</option>';
+    
+    sourceStrategies.forEach(strategy => {
+      const option = document.createElement('option');
+      option.value = strategy;
+      option.textContent = strategy;
+      select.appendChild(option);
+    });
+  }
+
+  // Open add source account modal
+  function openAddSourceAccountModal() {
+    currentEditingSourceAccountId = null;
+    document.getElementById('source-account-modal-title').textContent = 'Add Source Account';
+    document.getElementById('source-account-submit').textContent = 'Create Source Account';
+    document.getElementById('source-account-status').style.display = 'none';
+    document.getElementById('source-account-form').reset();
+    document.getElementById('source-account-modal').style.display = 'block';
+  }
+
+  // Edit source account
+  async function editSourceAccount(accountId) {
+    try {
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const account = await response.json();
+      
+      if (response.ok) {
+        currentEditingSourceAccountId = accountId;
+        document.getElementById('source-account-modal-title').textContent = 'Edit Source Account';
+        document.getElementById('source-account-submit').textContent = 'Update Source Account';
+        document.getElementById('source-account-status').style.display = 'block';
+        
+        // Populate form
+        document.getElementById('source-account-id').value = account.id;
+        document.getElementById('source-account-name').value = account.account_name;
+        document.getElementById('source-exchange-select').value = account.exchange;
+        document.getElementById('source-account-type-select').value = account.account_type;
+        document.getElementById('source-strategy-select').value = account.strategy;
+        document.getElementById('source-description').value = account.description || '';
+        document.getElementById('source-is-active').checked = account.is_active;
+        
+        // Clear credentials for security
+        document.getElementById('source-api-key').value = '';
+        document.getElementById('source-api-secret').value = '';
+        document.getElementById('source-api-key').placeholder = 'Leave blank to keep existing API Key';
+        document.getElementById('source-api-secret').placeholder = 'Leave blank to keep existing API Secret';
+        document.getElementById('source-api-key').required = false;
+        document.getElementById('source-api-secret').required = false;
+        
+        document.getElementById('source-account-modal').style.display = 'block';
+      } else {
+        console.error('❌ Failed to load source account:', account.detail);
+        showNotification('Failed to load source account', 'error');
+      }
+    } catch (error) {
+      console.error('❌ Error loading source account:', error);
+      showNotification('Error loading source account', 'error');
+    }
+  }
+
+  // Delete source account
+  async function deleteSourceAccount(accountId) {
+    try {
+      // Get account details first
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const account = await response.json();
+      
+      if (response.ok) {
+        // Populate delete modal
+        document.getElementById('delete-account-name').textContent = account.account_name;
+        document.getElementById('delete-account-exchange').textContent = account.exchange;
+        document.getElementById('delete-account-strategy').textContent = account.strategy;
+        
+        // Store account ID for deletion
+        document.getElementById('confirm-delete-source-account').dataset.accountId = accountId;
+        document.getElementById('source-account-delete-modal').style.display = 'block';
+      }
+    } catch (error) {
+      console.error('❌ Error loading source account for deletion:', error);
+      showNotification('Error loading source account', 'error');
+    }
+  }
+
+  // Confirm delete source account
+  async function confirmDeleteSourceAccount(accountId) {
+    try {
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        showNotification('Source account deleted successfully', 'success');
+        document.getElementById('source-account-delete-modal').style.display = 'none';
+        loadSourceAccounts(); // Reload the list
+      } else {
+        console.error('❌ Failed to delete source account:', data.detail);
+        showNotification('Failed to delete source account', 'error');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting source account:', error);
+      showNotification('Error deleting source account', 'error');
+    }
+  }
+
+  // Handle source account form submission
+  async function handleSourceAccountSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const accountData = Object.fromEntries(formData.entries());
+    
+    // Handle boolean conversion
+    accountData.is_active = document.getElementById('source-is-active').checked;
+    
+    // Remove empty credentials for updates
+    if (currentEditingSourceAccountId && (!accountData.api_key || !accountData.api_secret)) {
+      delete accountData.api_key;
+      delete accountData.api_secret;
+    }
+
+    try {
+      const url = currentEditingSourceAccountId 
+        ? `${AUTH_API_BASE}/admin/source-accounts/${currentEditingSourceAccountId}`
+        : `${AUTH_API_BASE}/admin/source-accounts`;
+      
+      const method = currentEditingSourceAccountId ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(accountData)
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        const action = currentEditingSourceAccountId ? 'updated' : 'created';
+        showNotification(`Source account ${action} successfully`, 'success');
+        document.getElementById('source-account-modal').style.display = 'none';
+        loadSourceAccounts(); // Reload the list
+      } else {
+        console.error(`❌ Failed to ${method.toLowerCase()} source account:`, data.detail);
+        showNotification(`Failed to ${method.toLowerCase()} source account`, 'error');
+      }
+    } catch (error) {
+      console.error('❌ Error submitting source account:', error);
+      showNotification('Error submitting source account', 'error');
+    }
+  }
+
+  // Add event listeners for source account management
+  document.getElementById('add-source-account').onclick = openAddSourceAccountModal;
+  document.getElementById('source-account-form').onsubmit = handleSourceAccountSubmit;
+  
+  // Source account modal close events
+  document.getElementById('source-account-modal-close').onclick = () => {
+    document.getElementById('source-account-modal').style.display = 'none';
+  };
+  
+  document.getElementById('source-account-cancel').onclick = () => {
+    document.getElementById('source-account-modal').style.display = 'none';
+  };
+
+  // Source account delete modal events
+  document.getElementById('source-account-delete-close').onclick = () => {
+    document.getElementById('source-account-delete-modal').style.display = 'none';
+  };
+  
+  document.getElementById('cancel-delete-source-account').onclick = () => {
+    document.getElementById('source-account-delete-modal').style.display = 'none';
+  };
+  
+  document.getElementById('confirm-delete-source-account').onclick = (event) => {
+    const accountId = event.target.dataset.accountId;
+    if (accountId) {
+      confirmDeleteSourceAccount(accountId);
+    }
+  };
+
   // Initialize dashboard
   console.log('🚀 Initializing admin dashboard...');
   loadSystemOverview();
@@ -987,6 +1283,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTierUpgrades();
   loadReferrals();
   loadActivity();
+  loadSourceStrategies();
+  loadSourceAccounts();
   
   }); // End of authorization check
 });
