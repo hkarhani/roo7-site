@@ -475,19 +475,40 @@ function initializeTroubleshootPage() {
         console.log('🔍 First asset structure:', asset);
         console.log('🔍 Available asset fields:', Object.keys(asset));
       }
-      const walletBalance = asset.wallet_balance !== undefined ? 
-        parseFloat(asset.wallet_balance).toFixed(6) : 
-        parseFloat(asset.total || asset.free || 0).toFixed(6);
       
-      const marginBalance = asset.margin_balance !== undefined ? 
-        parseFloat(asset.margin_balance).toFixed(6) : 
-        parseFloat(asset.total || 0).toFixed(6);
+      const walletBalance = parseFloat(
+        asset.wallet_balance || 
+        asset.walletBalance ||
+        asset.balance ||
+        asset.total || 
+        asset.free || 
+        0
+      ).toFixed(6);
       
-      const availableBalance = asset.available_balance !== undefined ? 
-        parseFloat(asset.available_balance).toFixed(6) : 
-        parseFloat(asset.free || 0).toFixed(6);
+      const marginBalance = parseFloat(
+        asset.margin_balance || 
+        asset.marginBalance ||
+        asset.crossWalletBalance ||
+        asset.total || 
+        asset.balance ||
+        0
+      ).toFixed(6);
       
-      const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
+      const availableBalance = parseFloat(
+        asset.available_balance || 
+        asset.availableBalance ||
+        asset.availableMargin ||
+        asset.free || 
+        asset.balance ||
+        0
+      ).toFixed(6);
+      
+      const usdtValue = parseFloat(
+        asset.usdt_value || 
+        asset.usdtValue ||
+        asset.value ||
+        0
+      ).toFixed(2);
       const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
       
       const row = tableBody.insertRow();
@@ -515,17 +536,9 @@ function initializeTroubleshootPage() {
       return;
     }
     
-    const activePositions = positions.filter(pos => {
-      const posAmt = parseFloat(pos.position_amt || pos.positionAmt || 0);
-      const isActive = posAmt !== 0;
-      
-      // Debug specific instruments
-      if (pos.symbol && pos.symbol.includes('BTC')) {
-        console.log(`🔍 Position ${pos.symbol}: posAmt=${posAmt}, isActive=${isActive}, rawField=${pos.position_amt || pos.positionAmt}`);
-      }
-      
-      return isActive;
-    });
+    // TEMPORARILY SHOW ALL POSITIONS - NO FILTERING FOR DEBUGGING
+    console.log('⚠️ SHOWING ALL POSITIONS (NO FILTERING) FOR DEBUGGING');
+    const activePositions = positions; // Show all positions regardless of amount
     
     console.log(`🔍 Total ${futuresType} positions: ${positions.length}, Active: ${activePositions.length}`);
     
@@ -547,14 +560,40 @@ function initializeTroubleshootPage() {
         console.log('🔍 Available position fields:', Object.keys(position));
       }
       
-      const positionAmt = parseFloat(position.position_amt || position.positionAmt || 0);
+      const positionAmt = parseFloat(
+        position.position_amt || 
+        position.positionAmt || 
+        position.positionSide || 
+        position.size || 
+        0
+      );
       const isLong = positionAmt > 0;
       const direction = isLong ? 'long' : 'short';
       const directionText = isLong ? 'LONG' : 'SHORT';
       
-      const entryPrice = parseFloat(position.entry_price || position.entryPrice || 0).toFixed(4);
-      const markPrice = parseFloat(position.mark_price || position.markPrice || 0).toFixed(4);
-      const unrealizedPnl = parseFloat(position.unrealized_pnl || position.unRealizedProfit || 0);
+      const entryPrice = parseFloat(
+        position.entry_price || 
+        position.entryPrice || 
+        position.avgPrice || 
+        position.averagePrice || 
+        0
+      ).toFixed(4);
+      
+      const markPrice = parseFloat(
+        position.mark_price || 
+        position.markPrice || 
+        position.lastPrice || 
+        position.price || 
+        0
+      ).toFixed(4);
+      
+      const unrealizedPnl = parseFloat(
+        position.unrealized_pnl || 
+        position.unRealizedProfit || 
+        position.pnl || 
+        position.profit || 
+        0
+      );
       const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
       
       // Enhanced value calculation for Coin-M positions
@@ -611,9 +650,26 @@ function initializeTroubleshootPage() {
         console.log('🔍 Available order fields:', Object.keys(order));
       }
       
-      const side = order.side.toLowerCase();
-      const originalQty = parseFloat(order.original_qty || order.origQty || order.orig_qty || order.executedQty || 0).toFixed(3);
-      const price = parseFloat(order.price || order.stopPrice || order.activatePrice || 0).toFixed(4);
+      const side = (order.side || 'UNKNOWN').toLowerCase();
+      const originalQty = parseFloat(
+        order.original_qty || 
+        order.origQty || 
+        order.orig_qty || 
+        order.origQuantity ||
+        order.quantity ||
+        order.executedQty || 
+        0
+      ).toFixed(3);
+      
+      const price = parseFloat(
+        order.price || 
+        order.stopPrice || 
+        order.activatePrice ||
+        order.limitPrice ||
+        order.triggerPrice ||
+        order.avgPrice ||
+        0
+      ).toFixed(4);
       
       const row = tableBody.insertRow();
       row.innerHTML = `
@@ -635,6 +691,14 @@ function initializeTroubleshootPage() {
       futures_usdtm_positions: snapshot.futures_usdtm_positions?.length || 0,
       futures_coinm_positions: snapshot.futures_coinm_positions?.length || 0
     });
+    
+    // COMPREHENSIVE RAW DATA LOGGING
+    console.log('🔍 RAW USDⓈ-M ASSETS:', snapshot.futures_usdtm_assets);
+    console.log('🔍 RAW COIN-M ASSETS:', snapshot.futures_coinm_assets);
+    console.log('🔍 RAW USDⓈ-M POSITIONS:', snapshot.futures_usdtm_positions);
+    console.log('🔍 RAW COIN-M POSITIONS:', snapshot.futures_coinm_positions);
+    console.log('🔍 RAW USDⓈ-M ORDERS:', snapshot.open_orders_futures_usdtm);
+    console.log('🔍 RAW COIN-M ORDERS:', snapshot.open_orders_futures_coinm);
     
     // Special debugging for BTCUSDT_250926 and similar instruments
     const findBTCInstruments = (positions, type) => {
@@ -670,45 +734,12 @@ function initializeTroubleshootPage() {
     const usdtmOrders = snapshot.open_orders_futures_usdtm || [];
     const coinmOrders = snapshot.open_orders_futures_coinm || [];
     
-    // Filter for non-zero values AFTER getting the raw arrays
-    const filteredUsdtmAssets = usdtmAssets.filter(asset => {
-      const balance = parseFloat(asset.total || asset.wallet_balance || asset.balance || 0);
-      return balance > 0;
-    });
-    const filteredCoinmAssets = coinmAssets.filter(asset => {
-      const balance = parseFloat(asset.total || asset.wallet_balance || asset.balance || 0);
-      return balance > 0;
-    });
-    // Enhanced debugging for positions
-    console.log('🔍 All USDⓈ-M positions before filtering:', usdtmPositions.map(p => ({
-      symbol: p.symbol,
-      position_amt: p.position_amt || p.positionAmt,
-      size: parseFloat(p.position_amt || p.positionAmt || 0)
-    })));
-    
-    console.log('🔍 All Coin-M positions before filtering:', coinmPositions.map(p => ({
-      symbol: p.symbol, 
-      position_amt: p.position_amt || p.positionAmt,
-      size: parseFloat(p.position_amt || p.positionAmt || 0)
-    })));
-    
-    const filteredUsdtmPositions = usdtmPositions.filter(pos => {
-      const posAmt = parseFloat(pos.position_amt || pos.positionAmt || 0);
-      const isActive = posAmt !== 0;
-      if (!isActive && pos.symbol && pos.symbol.includes('BTC')) {
-        console.log(`⚠️ Filtering out ${pos.symbol}: position_amt = ${posAmt}`);
-      }
-      return isActive;
-    });
-    
-    const filteredCoinmPositions = coinmPositions.filter(pos => {
-      const posAmt = parseFloat(pos.position_amt || pos.positionAmt || 0);
-      const isActive = posAmt !== 0;
-      if (!isActive && pos.symbol && pos.symbol.includes('BTC')) {
-        console.log(`⚠️ Filtering out ${pos.symbol}: position_amt = ${posAmt}`);
-      }
-      return isActive;
-    });
+    // TEMPORARILY SHOW ALL DATA - NO FILTERING FOR DEBUGGING
+    console.log('⚠️ SHOWING ALL DATA (NO FILTERING) FOR DEBUGGING');
+    const filteredUsdtmAssets = usdtmAssets; // Show all assets
+    const filteredCoinmAssets = coinmAssets; // Show all assets
+    const filteredUsdtmPositions = usdtmPositions; // Show all positions
+    const filteredCoinmPositions = coinmPositions; // Show all positions
     
     console.log('📊 FUTURES data summary (before filtering):', {
       usdtmAssets: usdtmAssets.length,
