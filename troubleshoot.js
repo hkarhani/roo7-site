@@ -326,12 +326,10 @@ function initializeTroubleshootPage() {
     
     // Hide all portfolio sections and clear diagnostics
     const spotSection = document.getElementById('spot-portfolio-section');
-    const futuresSection = document.getElementById('futures-positions-section');
-    const ordersSection = document.getElementById('open-orders-section');
+    const futuresSection = document.getElementById('futures-comprehensive-section');
     
     if (spotSection) spotSection.style.display = 'none';
     if (futuresSection) futuresSection.style.display = 'none';
-    if (ordersSection) ordersSection.style.display = 'none';
     
     if (diagnosticInfo) {
       diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
@@ -443,61 +441,8 @@ function initializeTroubleshootPage() {
       }
     }
     
-    // Display FUTURES assets (USDⓈ-M and Coin-M wallet balances)
-    const hasUSDTMAssets = snapshot.futures_usdtm_assets && snapshot.futures_usdtm_assets.length > 0;
-    const hasCoinMAssets = snapshot.futures_coinm_assets && snapshot.futures_coinm_assets.length > 0;
-    
-    if (hasUSDTMAssets || hasCoinMAssets) {
-      const nonZeroUSDTMAssets = hasUSDTMAssets ? 
-        snapshot.futures_usdtm_assets.filter(asset => parseFloat(asset.total) > 0) : [];
-      const nonZeroCoinMAssets = hasCoinMAssets ? 
-        snapshot.futures_coinm_assets.filter(asset => parseFloat(asset.total) > 0) : [];
-      
-      if (nonZeroUSDTMAssets.length > 0 || nonZeroCoinMAssets.length > 0) {
-        console.log('🔮 Displaying FUTURES assets - USDⓈ-M:', nonZeroUSDTMAssets.length, 'Coin-M:', nonZeroCoinMAssets.length);
-        displayFuturesAssets(nonZeroUSDTMAssets, nonZeroCoinMAssets);
-      }
-    }
-    
-    // Display FUTURES positions if available
-    const hasUSDTMPositions = snapshot.futures_usdtm_positions && snapshot.futures_usdtm_positions.length > 0;
-    const hasCoinMPositions = snapshot.futures_coinm_positions && snapshot.futures_coinm_positions.length > 0;
-    
-    if (hasUSDTMPositions || hasCoinMPositions) {
-      console.log('🔍 Raw FUTURES positions data:');
-      if (hasUSDTMPositions) console.log('  USDⓈ-M positions:', snapshot.futures_usdtm_positions);
-      if (hasCoinMPositions) console.log('  Coin-M positions:', snapshot.futures_coinm_positions);
-      
-      const activeUSDTMPositions = hasUSDTMPositions ? 
-        snapshot.futures_usdtm_positions.filter(pos => parseFloat(pos.position_amt) !== 0) : [];
-      const activeCoinMPositions = hasCoinMPositions ? 
-        snapshot.futures_coinm_positions.filter(pos => parseFloat(pos.position_amt) !== 0) : [];
-      
-      console.log('🔍 After position_amt filtering:');
-      console.log('  Active USDⓈ-M positions:', activeUSDTMPositions.length);
-      console.log('  Active Coin-M positions:', activeCoinMPositions.length);
-      
-      if (activeUSDTMPositions.length > 0 || activeCoinMPositions.length > 0) {
-        console.log('📈 Displaying FUTURES positions - USDⓈ-M:', activeUSDTMPositions.length, 'Coin-M:', activeCoinMPositions.length);
-        displayFuturesPositions(activeUSDTMPositions, activeCoinMPositions);
-      } else {
-        console.log('❌ No active positions after filtering (all position_amt = 0)');
-      }
-    }
-    
-    // Display open orders if available
-    const hasSpotOrders = snapshot.open_orders_spot && snapshot.open_orders_spot.length > 0;
-    const hasUSDTMOrders = snapshot.open_orders_futures_usdtm && snapshot.open_orders_futures_usdtm.length > 0;
-    const hasCoinMOrders = snapshot.open_orders_futures_coinm && snapshot.open_orders_futures_coinm.length > 0;
-    
-    if (hasSpotOrders || hasUSDTMOrders || hasCoinMOrders) {
-      console.log('📋 Displaying orders - SPOT:', hasSpotOrders, 'USDⓈ-M:', hasUSDTMOrders, 'Coin-M:', hasCoinMOrders);
-      displayOpenOrders(
-        snapshot.open_orders_spot || [],
-        snapshot.open_orders_futures_usdtm || [],
-        snapshot.open_orders_futures_coinm || []
-      );
-    }
+    // Display comprehensive FUTURES section with dynamic tabs
+    displayComprehensiveFuturesSection(snapshot);
     
     console.log('✅ Detailed snapshot processing complete');
   }
@@ -514,6 +459,157 @@ function initializeTroubleshootPage() {
     
     // For basic portfolio, show in SPOT section regardless of account type
     displaySpotAssets(nonZeroBalances);
+  }
+
+  function displayComprehensiveFuturesSection(snapshot) {
+    console.log('🔮 Building comprehensive FUTURES section...');
+    
+    // Analyze available data
+    const usdtmAssets = snapshot.futures_usdtm_assets?.filter(asset => parseFloat(asset.total || asset.wallet_balance || 0) > 0) || [];
+    const coinmAssets = snapshot.futures_coinm_assets?.filter(asset => parseFloat(asset.total || asset.wallet_balance || 0) > 0) || [];
+    const usdtmPositions = snapshot.futures_usdtm_positions?.filter(pos => parseFloat(pos.position_amt) !== 0) || [];
+    const coinmPositions = snapshot.futures_coinm_positions?.filter(pos => parseFloat(pos.position_amt) !== 0) || [];
+    const spotOrders = snapshot.open_orders_spot || [];
+    const usdtmOrders = snapshot.open_orders_futures_usdtm || [];
+    const coinmOrders = snapshot.open_orders_futures_coinm || [];
+    
+    console.log('📊 FUTURES data summary:', {
+      usdtmAssets: usdtmAssets.length,
+      coinmAssets: coinmAssets.length,
+      usdtmPositions: usdtmPositions.length,
+      coinmPositions: coinmPositions.length,
+      spotOrders: spotOrders.length,
+      usdtmOrders: usdtmOrders.length,
+      coinmOrders: coinmOrders.length
+    });
+    
+    // Check if we have any FUTURES data to display
+    const hasFuturesData = usdtmAssets.length > 0 || coinmAssets.length > 0 || 
+                          usdtmPositions.length > 0 || coinmPositions.length > 0 ||
+                          usdtmOrders.length > 0 || coinmOrders.length > 0;
+    
+    const section = document.getElementById('futures-comprehensive-section');
+    if (!section) {
+      console.error('❌ futures-comprehensive-section not found');
+      return;
+    }
+    
+    if (!hasFuturesData) {
+      console.log('❌ No FUTURES data to display');
+      section.style.display = 'none';
+      return;
+    }
+    
+    console.log('✅ Displaying comprehensive FUTURES section');
+    section.style.display = 'block';
+    
+    // Build dynamic tabs and content
+    const tabsContainer = document.getElementById('futures-dynamic-tabs');
+    const contentContainer = document.getElementById('futures-dynamic-content');
+    
+    if (!tabsContainer || !contentContainer) {
+      console.error('❌ Dynamic containers not found');
+      return;
+    }
+    
+    // Clear existing content
+    tabsContainer.innerHTML = '';
+    contentContainer.innerHTML = '';
+    
+    const tabs = [];
+    let firstTab = null;
+    
+    // Add USDⓈ-M tabs if data exists
+    if (usdtmAssets.length > 0 || usdtmPositions.length > 0 || usdtmOrders.length > 0) {
+      if (usdtmAssets.length > 0) {
+        tabs.push({ id: 'usdtm-assets', label: 'USDⓈ-M Assets', type: 'assets', data: usdtmAssets });
+      }
+      if (usdtmPositions.length > 0) {
+        tabs.push({ id: 'usdtm-positions', label: 'USDⓈ-M Positions', type: 'positions', data: usdtmPositions });
+      }
+      if (usdtmOrders.length > 0) {
+        tabs.push({ id: 'usdtm-orders', label: 'USDⓈ-M Orders', type: 'orders', data: usdtmOrders });
+      }
+    }
+    
+    // Add Coin-M tabs if data exists
+    if (coinmAssets.length > 0 || coinmPositions.length > 0 || coinmOrders.length > 0) {
+      if (coinmAssets.length > 0) {
+        tabs.push({ id: 'coinm-assets', label: 'Coin-M Assets', type: 'assets', data: coinmAssets });
+      }
+      if (coinmPositions.length > 0) {
+        tabs.push({ id: 'coinm-positions', label: 'Coin-M Positions', type: 'positions', data: coinmPositions });
+      }
+      if (coinmOrders.length > 0) {
+        tabs.push({ id: 'coinm-orders', label: 'Coin-M Orders', type: 'orders', data: coinmOrders });
+      }
+    }
+    
+    // Add SPOT orders if they exist (for consistency)
+    if (spotOrders.length > 0) {
+      tabs.push({ id: 'spot-orders', label: 'SPOT Orders', type: 'orders', data: spotOrders });
+    }
+    
+    console.log(`📋 Creating ${tabs.length} dynamic tabs:`, tabs.map(t => t.label));
+    
+    // Create tab buttons
+    tabs.forEach((tab, index) => {
+      const tabButton = document.createElement('button');
+      tabButton.className = `futures-tab ${index === 0 ? 'active' : ''}`;
+      tabButton.setAttribute('data-tab', tab.id);
+      tabButton.textContent = tab.label;
+      tabsContainer.appendChild(tabButton);
+      
+      if (index === 0) firstTab = tab.id;
+    });
+    
+    // Create tab content areas
+    tabs.forEach((tab, index) => {
+      const contentDiv = document.createElement('div');
+      contentDiv.id = `${tab.id}-content`;
+      contentDiv.className = `futures-tab-content ${index === 0 ? 'active' : ''}`;
+      
+      const tableWrapper = document.createElement('div');
+      tableWrapper.className = 'portfolio-table-wrapper';
+      
+      const table = document.createElement('table');
+      table.id = `${tab.id}-table`;
+      table.className = 'portfolio-table futures-table';
+      
+      // Create appropriate table headers based on type
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      
+      if (tab.type === 'assets') {
+        headerRow.innerHTML = '<th>Asset</th><th>Wallet Balance</th><th>Unrealized PnL</th><th>Margin Balance</th><th>Available</th><th>Value (USDT)</th><th>%</th>';
+      } else if (tab.type === 'positions') {
+        headerRow.innerHTML = '<th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th>';
+      } else if (tab.type === 'orders') {
+        headerRow.innerHTML = '<th>Symbol</th><th>Side</th><th>Type</th><th>Amount</th><th>Executed</th><th>Price</th><th>Status</th><th>Value</th>';
+      }
+      
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      
+      const tbody = document.createElement('tbody');
+      table.appendChild(tbody);
+      
+      tableWrapper.appendChild(table);
+      contentDiv.appendChild(tableWrapper);
+      contentContainer.appendChild(contentDiv);
+      
+      // Populate table with data
+      if (tab.type === 'assets') {
+        populateAssetsTable(`${tab.id}-table`, tab.data);
+      } else if (tab.type === 'positions') {
+        populatePositionsTable(`${tab.id}-table`, tab.data);
+      } else if (tab.type === 'orders') {
+        populateOrdersTable(`${tab.id}-table`, tab.data);
+      }
+    });
+    
+    // Re-initialize tab functionality for dynamic tabs
+    initializeDynamicTabs();
   }
 
   function displaySpotAssets(assets) {
@@ -684,14 +780,25 @@ function initializeTroubleshootPage() {
   }
 
   function displayFuturesPositions(usdtmPositions, coinmPositions) {
+    console.log('🔧 displayFuturesPositions called with:', {
+      usdtm: usdtmPositions?.length || 0,
+      coinm: coinmPositions?.length || 0
+    });
+    
     const section = document.getElementById('futures-positions-section');
+    if (!section) {
+      console.error('❌ futures-positions-section element not found!');
+      return;
+    }
     
     if ((!usdtmPositions || usdtmPositions.length === 0) && 
         (!coinmPositions || coinmPositions.length === 0)) {
+      console.log('❌ No positions to display, hiding section');
       section.style.display = 'none';
       return;
     }
     
+    console.log('✅ Showing FUTURES positions section');
     section.style.display = 'block';
     
     // Display USDⓈ-M positions
@@ -1023,6 +1130,130 @@ function initializeTroubleshootPage() {
       table.style.display = 'table';
     }
     
+  }
+
+  // Helper functions for dynamic table population
+  function populateAssetsTable(tableId, assets) {
+    const tableBody = document.querySelector(`#${tableId} tbody`);
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    assets.forEach(asset => {
+      const walletBalance = asset.wallet_balance !== undefined ? 
+        parseFloat(asset.wallet_balance).toFixed(6) : 
+        parseFloat(asset.total || asset.free || 0).toFixed(6);
+      
+      const unrealizedPnl = asset.unrealized_pnl !== undefined ? 
+        parseFloat(asset.unrealized_pnl).toFixed(4) : 'N/A';
+      
+      const marginBalance = asset.margin_balance !== undefined ? 
+        parseFloat(asset.margin_balance).toFixed(6) : 
+        parseFloat(asset.total || 0).toFixed(6);
+      
+      const availableBalance = asset.available_balance !== undefined ? 
+        parseFloat(asset.available_balance).toFixed(6) : 
+        parseFloat(asset.free || 0).toFixed(6);
+      
+      const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
+      const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
+      
+      const pnlClass = unrealizedPnl !== 'N/A' && parseFloat(unrealizedPnl) >= 0 ? 'pnl-positive' : 'pnl-negative';
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${asset.asset}</strong></td>
+        <td>${walletBalance}</td>
+        <td class="${pnlClass}">${unrealizedPnl}</td>
+        <td>${marginBalance}</td>
+        <td>${availableBalance}</td>
+        <td>${usdtValue}</td>
+        <td><span class="percentage-badge">${percentage}%</span></td>
+      `;
+    });
+  }
+  
+  function populatePositionsTable(tableId, positions) {
+    const tableBody = document.querySelector(`#${tableId} tbody`);
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    positions.forEach(position => {
+      const positionAmt = parseFloat(position.position_amt);
+      const isLong = positionAmt > 0;
+      const direction = isLong ? 'long' : 'short';
+      const directionText = isLong ? 'LONG' : 'SHORT';
+      
+      const entryPrice = parseFloat(position.entry_price).toFixed(4);
+      const markPrice = parseFloat(position.mark_price).toFixed(4);
+      const unrealizedPnl = parseFloat(position.unrealized_pnl);
+      const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+      const usdtValue = position.usdt_value ? parseFloat(position.usdt_value).toFixed(2) : 'N/A';
+      const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${position.symbol}</strong></td>
+        <td><span class="position-direction ${direction}">${directionText}</span></td>
+        <td>${Math.abs(positionAmt).toFixed(6)}</td>
+        <td>${entryPrice}</td>
+        <td>${markPrice}</td>
+        <td class="${pnlClass}">${unrealizedPnl.toFixed(4)}</td>
+        <td>${usdtValue}</td>
+        <td><span class="percentage-badge">${percentage}%</span></td>
+      `;
+    });
+  }
+  
+  function populateOrdersTable(tableId, orders) {
+    const tableBody = document.querySelector(`#${tableId} tbody`);
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    orders.forEach(order => {
+      const side = order.side.toLowerCase();
+      const originalQty = parseFloat(order.original_qty).toFixed(6);
+      const executedQty = parseFloat(order.executed_qty).toFixed(6);
+      const price = parseFloat(order.price).toFixed(6);
+      const usdtValue = order.usdt_value ? parseFloat(order.usdt_value).toFixed(2) : 'N/A';
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${order.symbol}</strong></td>
+        <td><span class="order-side ${side}">${order.side}</span></td>
+        <td>${order.type}</td>
+        <td>${originalQty}</td>
+        <td>${executedQty}</td>
+        <td>${price}</td>
+        <td>${order.status}</td>
+        <td>${usdtValue}</td>
+      `;
+    });
+  }
+  
+  function initializeDynamicTabs() {
+    document.querySelectorAll('#futures-dynamic-tabs .futures-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const tabId = this.dataset.tab;
+        const parentContainer = this.closest('#futures-comprehensive-content');
+        
+        // Update tab states
+        parentContainer.querySelectorAll('.futures-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Update content visibility
+        parentContainer.querySelectorAll('.futures-tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        
+        const targetContent = document.getElementById(`${tabId}-content`);
+        if (targetContent) {
+          targetContent.classList.add('active');
+        }
+      });
+    });
   }
 
   // Initialize tab functionality

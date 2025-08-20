@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+stilstill<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Account Troubleshoot</title>
   <link rel="stylesheet" href="dashboard.css" />
-  <link rel="stylesheet" href="troubleshoot.css?v=4.0" />
+  <link rel="stylesheet" href="troubleshoot.css?v=4.1" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -76,76 +76,14 @@
       </div>
     </section>
 
-    <!-- FUTURES Positions Section -->
-    <section id="futures-positions-section" class="dashboard-card portfolio-section" style="display: none;">
-      <h2>🔮 FUTURES Positions</h2>
-      <div id="futures-positions-content" class="portfolio-content">
-        <div class="futures-tabs">
-          <button class="futures-tab active" data-tab="usdtm">USDⓈ-M Futures</button>
-          <button class="futures-tab" data-tab="coinm">Coin-M Futures</button>
-        </div>
-        <div id="futures-usdtm-content" class="futures-tab-content active">
-          <div class="portfolio-table-wrapper">
-            <table id="futures-usdtm-table" class="portfolio-table futures-table">
-              <thead>
-                <tr><th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-        <div id="futures-coinm-content" class="futures-tab-content">
-          <div class="portfolio-table-wrapper">
-            <table id="futures-coinm-table" class="portfolio-table futures-table">
-              <thead>
-                <tr><th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Open Orders Section -->
-    <section id="open-orders-section" class="dashboard-card portfolio-section" style="display: none;">
-      <h2>📋 Open Orders</h2>
-      <div id="open-orders-content" class="portfolio-content">
-        <div class="futures-tabs">
-          <button class="futures-tab active" data-tab="spot-orders">SPOT Orders</button>
-          <button class="futures-tab" data-tab="usdtm-orders">USDⓈ-M Orders</button>
-          <button class="futures-tab" data-tab="coinm-orders">Coin-M Orders</button>
-        </div>
-        <div id="spot-orders-content" class="futures-tab-content active">
-          <div class="portfolio-table-wrapper">
-            <table id="spot-orders-table" class="portfolio-table orders-table">
-              <thead>
-                <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Amount</th><th>Executed</th><th>Price</th><th>Status</th><th>Value</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-        <div id="usdtm-orders-content" class="futures-tab-content">
-          <div class="portfolio-table-wrapper">
-            <table id="usdtm-orders-table" class="portfolio-table orders-table">
-              <thead>
-                <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Amount</th><th>Executed</th><th>Price</th><th>Status</th><th>Value</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-        <div id="coinm-orders-content" class="futures-tab-content">
-          <div class="portfolio-table-wrapper">
-            <table id="coinm-orders-table" class="portfolio-table orders-table">
-              <thead>
-                <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Amount</th><th>Executed</th><th>Price</th><th>Status</th><th>Value</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
+    <!-- Comprehensive FUTURES Section -->
+    <section id="futures-comprehensive-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>🔮 FUTURES Portfolio</h2>
+      <div id="futures-comprehensive-content" class="portfolio-content">
+        <!-- Dynamic tabs will be generated based on available data -->
+        <div id="futures-dynamic-tabs" class="futures-tabs"></div>
+        <!-- Dynamic content areas will be generated based on available data -->
+        <div id="futures-dynamic-content" class="futures-dynamic-content"></div>
       </div>
     </section>
 
@@ -161,6 +99,6 @@
   <!-- Load theme manager first, then pie chart, then troubleshoot logic -->
   <script src="theme-manager.js?v=1"></script>
   <script src="pie-chart.js?v=1"></script>
-  <script type="module" src="troubleshoot.js?v=4.0"></script>
+  <script type="module" src="troubleshoot.js?v=4.1"></script>
 </body>
 </html>

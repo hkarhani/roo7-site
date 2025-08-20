@@ -821,11 +821,14 @@
   gap: 20px;
 }
 
-/* Portfolio sections - full width on second row */
-.troubleshoot-grid > #spot-portfolio-section,
-.troubleshoot-grid > #futures-positions-section,
-.troubleshoot-grid > #open-orders-section {
-  grid-column: 1 / -1;
+/* Portfolio sections - arrange in flexible grid */
+.troubleshoot-grid > #spot-portfolio-section {
+  grid-column: 1;
+  grid-row: auto;
+}
+
+.troubleshoot-grid > #futures-comprehensive-section {
+  grid-column: 2;
   grid-row: auto;
 }
 
