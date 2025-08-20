@@ -816,15 +816,15 @@
 
 /* Grid Layout Updates for Multiple Sections */
 .troubleshoot-grid {
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: auto auto auto;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto auto;
   gap: 15px;
 }
 
-/* Portfolio sections - SPOT on left, Coin-M sections on right */
+/* Portfolio sections - SPOT in column 1, Coin-M stacked in column 2, Orders in column 3 */
 .troubleshoot-grid > #spot-portfolio-section {
   grid-column: 1;
-  grid-row: 3;
+  grid-row: 3 / 5;
 }
 
 .troubleshoot-grid > #coinm-assets-section {
@@ -833,19 +833,19 @@
 }
 
 .troubleshoot-grid > #coinm-positions-section {
-  grid-column: 3;
-  grid-row: 3;
+  grid-column: 2;
+  grid-row: 4;
 }
 
 .troubleshoot-grid > #coinm-orders-section {
-  grid-column: 4;
-  grid-row: 3;
+  grid-column: 3;
+  grid-row: 3 / 5;
 }
 
-/* Diagnostics - full width on bottom */
+/* Diagnostics - constrained width to match content */
 .troubleshoot-grid > #section-diagnostics {
-  grid-column: 1 / -1;
-  grid-row: 4;
+  grid-column: 1 / 4;
+  grid-row: 5;
 }
 
 /* Narrow Coin-M sections styling */
@@ -892,8 +892,14 @@
 .diagnostics-enhanced .diagnostic-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  gap: 20px;
   align-items: start;
+  max-width: 100%;
+}
+
+.diagnostics-enhanced {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .diagnostic-checklist {

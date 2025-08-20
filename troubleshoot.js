@@ -448,6 +448,14 @@ function initializeTroubleshootPage() {
     // Display FUTURES assets, positions, and orders in separate sections
     displayCoinMAssets(snapshot.futures_coinm_assets);
     displayCoinMPositions(snapshot.futures_coinm_positions);
+    
+    // Debug orders data
+    console.log('🔍 Available order data in snapshot:', {
+      spot: snapshot.open_orders_spot?.length || 0,
+      usdtm: snapshot.open_orders_futures_usdtm?.length || 0, 
+      coinm: snapshot.open_orders_futures_coinm?.length || 0
+    });
+    
     displayCoinMOrders(snapshot.open_orders_futures_coinm);
     
     console.log('✅ Detailed snapshot processing complete');
@@ -569,8 +577,17 @@ function initializeTroubleshootPage() {
     const section = document.getElementById('coinm-orders-section');
     const tableBody = document.querySelector('#coinm-orders-table tbody');
     
+    console.log('🔍 Coin-M Orders data received:', coinmOrders);
+    console.log('🔍 Orders section element:', section);
+    
+    // Always show the orders section, even if empty
+    section.style.display = 'block';
+    tableBody.innerHTML = '';
+    
     if (!coinmOrders || coinmOrders.length === 0) {
-      section.style.display = 'none';
+      console.log('❌ No Coin-M orders to display - showing placeholder');
+      const row = tableBody.insertRow();
+      row.innerHTML = '<td colspan="6" class="empty-portfolio-message">No open orders</td>';
       return;
     }
     
