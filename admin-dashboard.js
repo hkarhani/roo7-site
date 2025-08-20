@@ -253,50 +253,35 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="stat-value">${users.total || users.count || 0}</div>
           <div class="stat-action">Click to manage →</div>
         </div>
-        <div class="stat-card admin">
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
           <div class="stat-icon">✅</div>
           <div class="stat-label">Verified Users</div>
           <div class="stat-value">${users.verified || users.verified_count || 0}</div>
+          <div class="stat-action">Click to manage →</div>
         </div>
-        <div class="stat-card admin">
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
           <div class="stat-icon">🔄</div>
           <div class="stat-label">Active Subs</div>
           <div class="stat-value">${subscriptions.active || subscriptions.active_count || 0}</div>
+          <div class="stat-action">Click to manage →</div>
         </div>
-        <div class="stat-card admin">
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
           <div class="stat-icon">📄</div>
           <div class="stat-label">Pending Invoices</div>
           <div class="stat-value">${invoices.pending || invoices.pending_count || 0}</div>
+          <div class="stat-action">Click to manage →</div>
         </div>
-        <div class="stat-card admin">
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
           <div class="stat-icon">💰</div>
           <div class="stat-label">Total Revenue</div>
           <div class="stat-value">$${(invoices.total_revenue || invoices.revenue || 0).toLocaleString()}</div>
+          <div class="stat-action">Click to manage →</div>
         </div>
-        <div class="stat-card admin">
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
           <div class="stat-icon">📈</div>
           <div class="stat-label">Portfolio Value</div>
           <div class="stat-value">$${(portfolio.total_value || portfolio.value || 0).toLocaleString()}</div>
-        </div>
-      </div>
-      
-      <div class="users-management-link-section">
-        <div class="management-link-card">
-          <div class="link-icon">👥</div>
-          <div class="link-content">
-            <h3>User Management</h3>
-            <p>Comprehensive user management with search, filtering, disable/enable, and delete capabilities.</p>
-            <div class="link-stats">
-              <span>Total: ${users.total || 0} users</span>
-              <span>Active: ${(users.total || 0) - (users.disabled || 0)} users</span>
-              <span>Disabled: ${users.disabled || 0} users</span>
-            </div>
-          </div>
-          <div class="link-action">
-            <button class="primary-button admin" onclick="window.location.href='/admin-users.html'">
-              Manage Users →
-            </button>
-          </div>
+          <div class="stat-action">Click to manage →</div>
         </div>
       </div>
     `;

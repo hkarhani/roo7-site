@@ -32,6 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🔒 SECURITY: Verify admin access before loading page
   async function verifyAdminAccess() {
     try {
+      console.log('🔐 Verifying admin access...');
+      console.log('🔗 AUTH_API_BASE:', AUTH_API_BASE);
+      console.log('🔑 Token present:', !!token);
+      
       const response = await fetch(`${AUTH_API_BASE}/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -39,14 +43,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
+      console.log('📥 Auth response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ Auth API error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
       const userData = await response.json();
+      console.log('👤 User data received:', userData);
       
       if (!userData.is_admin) {
         console.error("🚨 SECURITY VIOLATION: Unauthorized admin access attempt");
+        console.log('👤 User is_admin status:', userData.is_admin);
         showSecurityViolationMessage();
         setTimeout(() => {
           window.location.href = "/dashboard.html";
@@ -55,9 +65,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       currentUser = userData;
+      console.log('✅ Admin access verified successfully');
       return true;
     } catch (error) {
-      console.error("Error verifying admin access:", error);
+      console.error("❌ Error verifying admin access:", error);
+      showToast('Failed to verify admin access. Redirecting to login...', 'error');
       setTimeout(() => {
         window.location.href = "/auth.html";
       }, 2000);
@@ -125,6 +137,71 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // Test API connectivity
+  async function testApiConnectivity() {
+    console.log('🧪 Testing API connectivity...');
+    
+    // Test invoicing API first
+    try {
+      console.log('📡 Testing invoicing API health endpoint...');
+      const healthResponse = await fetch(`${INVOICING_API_BASE}/health`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      console.log('📥 Health endpoint response:', healthResponse.status);
+      
+      if (healthResponse.ok) {
+        const healthData = await healthResponse.json();
+        console.log('✅ Invoicing API health check passed:', healthData);
+      } else {
+        console.warn('⚠️ Invoicing API health check failed:', healthResponse.status);
+      }
+    } catch (error) {
+      console.error('❌ Invoicing API connectivity test failed:', error);
+    }
+    
+    // Test auth API
+    try {
+      console.log('📡 Testing auth API...');
+      const authTestResponse = await fetch(`${AUTH_API_BASE}/health`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      console.log('📥 Auth API health response:', authTestResponse.status);
+      
+      if (authTestResponse.ok) {
+        const authHealthData = await authTestResponse.json();
+        console.log('✅ Auth API health check passed:', authHealthData);
+      } else {
+        console.warn('⚠️ Auth API health check failed:', authTestResponse.status);
+      }
+    } catch (error) {
+      console.error('❌ Auth API connectivity test failed:', error);
+    }
+    
+    // Test authenticated endpoint
+    try {
+      console.log('📡 Testing authenticated endpoint...');
+      const meResponse = await fetch(`${AUTH_API_BASE}/me`, {
+        headers: getAuthHeaders(token)
+      });
+      
+      console.log('📥 /me endpoint response:', meResponse.status);
+      
+      if (meResponse.ok) {
+        const userData = await meResponse.json();
+        console.log('✅ /me endpoint working:', userData);
+      } else {
+        const errorText = await meResponse.text();
+        console.warn('⚠️ /me endpoint failed:', meResponse.status, errorText);
+      }
+    } catch (error) {
+      console.error('❌ /me endpoint test failed:', error);
+    }
+  }
+
   // Toast notification system
   window.showToast = function(message, type = 'info', duration = 4000) {
     const existingToasts = document.querySelectorAll('.toast');
@@ -159,6 +236,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadUsers(searchTerm = '', statusFilter = '', tierFilter = '', offset = 0, limit = pageSize) {
     try {
       console.log('👥 Loading users...', { searchTerm, statusFilter, tierFilter, offset, limit });
+      console.log('🔗 INVOICING_API_BASE:', INVOICING_API_BASE);
+      console.log('🔑 Token present:', !!token);
       
       let url = `${INVOICING_API_BASE}/admin/users?limit=${limit}&offset=${offset}`;
       
@@ -167,13 +246,22 @@ document.addEventListener("DOMContentLoaded", () => {
         url = `${INVOICING_API_BASE}/admin/users/search?q=${encodeURIComponent(searchTerm)}`;
       }
       
+      console.log('📡 Making request to:', url);
+      
       const response = await fetch(url, {
         headers: getAuthHeaders(token)
       });
       
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Raw API response:', data);
+        
         let users = data.users || [];
+        console.log('👥 Users array:', users);
+        console.log('📊 Total from API:', data.total);
         
         // Apply client-side filtering for status and tier
         if (statusFilter || tierFilter) {
@@ -210,18 +298,23 @@ document.addEventListener("DOMContentLoaded", () => {
         filteredUsers = users;
         totalUsers = data.total || users.length;
         
+        console.log('✅ Final users to display:', users.length);
+        console.log('✅ Total users count:', totalUsers);
+        
         displayUsers(users);
         updatePagination();
         updateUserStats();
         
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('❌ Error loading users:', error);
       document.querySelector('#admin-users-table tbody').innerHTML = 
-        '<tr><td colspan="11" class="loading-message">Failed to load users</td></tr>';
-      showToast('Failed to load users', 'error');
+        '<tr><td colspan="11" class="loading-message">Failed to load users - Check console for details</td></tr>';
+      showToast(`Failed to load users: ${error.message}`, 'error');
     }
   }
   
@@ -804,13 +897,30 @@ document.addEventListener("DOMContentLoaded", () => {
   // Only proceed with user management if access is verified
   verifyAdminAccess().then(isAuthorized => {
     if (!isAuthorized) {
+      console.log('❌ Admin access verification failed');
       return; // Stop execution if not authorized
     }
 
     console.log('🚀 Initializing admin user management...');
+    console.log('🔗 API Base URLs:', {
+      INVOICING_API_BASE,
+      AUTH_API_BASE
+    });
     
     // Initialize with empty state - user must click Load All Users or search
     updateUserStats();
     updatePagination();
+    
+    console.log('✅ Admin user management initialized successfully');
+    
+    // DEBUG: Auto-load users to see what happens
+    console.log('🔍 DEBUG: Auto-loading users for debugging...');
+    
+    // First test basic connectivity
+    testApiConnectivity().then(() => {
+      loadUsers();
+    });
+  }).catch(error => {
+    console.error('❌ Failed to verify admin access:', error);
   });
 });
