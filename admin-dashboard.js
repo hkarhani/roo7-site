@@ -5,6 +5,24 @@ console.log('🚀 Loading admin-dashboard.js v2.4 with wallet verification and e
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
 
+// === UTILITY FUNCTIONS ===
+
+function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return 'Invalid Date';
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Use centralized API configuration  
   const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
@@ -979,23 +997,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
 
-  // === UTILITY FUNCTIONS ===
-  
-  function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      return 'Invalid Date';
-    }
-  }
 
   // === NOTIFICATION SYSTEM ===
   
