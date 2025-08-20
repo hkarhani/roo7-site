@@ -1284,3 +1284,175 @@
   }
 }
 
+/* === DETAILED BREAKDOWN STYLES === */
+
+.distribution-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.dist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: var(--hover-bg);
+  border-radius: 6px;
+  border-left: 3px solid var(--primary-color);
+}
+
+.dist-label {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 13px;
+}
+
+.dist-value {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 14px;
+}
+
+.assets-list {
+  background-color: var(--hover-bg);
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.asset-item {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px 80px;
+  gap: 15px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background-color: var(--card-bg);
+  border-radius: 6px;
+  font-size: 13px;
+  align-items: center;
+  border-left: 3px solid var(--primary-color);
+}
+
+.asset-symbol {
+  font-weight: bold;
+  color: var(--primary-color);
+  font-size: 14px;
+}
+
+.asset-amount {
+  color: var(--text-color);
+  font-family: monospace;
+}
+
+.asset-value {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.asset-percent {
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 12px;
+  text-align: right;
+}
+
+.position-item {
+  display: grid;
+  grid-template-columns: 100px 60px 1fr 100px 70px 100px;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background-color: var(--card-bg);
+  border-radius: 6px;
+  font-size: 12px;
+  align-items: center;
+  border-left: 3px solid var(--primary-color);
+}
+
+.position-item .symbol {
+  font-weight: bold;
+  color: var(--primary-color);
+  font-size: 13px;
+}
+
+.position-item .side {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: var(--primary-color);
+  color: white;
+  text-align: center;
+}
+
+.position-item .amount {
+  font-family: monospace;
+  color: var(--text-color);
+}
+
+.position-item .value {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.position-item .percent {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 11px;
+  text-align: center;
+}
+
+.position-item .pnl.positive {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.position-item .pnl.negative {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.more-assets, .more-positions {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-top: 10px;
+  padding: 8px;
+  background-color: var(--card-bg);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Enhanced verification modal responsiveness */
+@media (max-width: 768px) {
+  .distribution-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .asset-item {
+    grid-template-columns: 60px 1fr 80px;
+    font-size: 11px;
+    gap: 8px;
+  }
+  
+  .asset-item .asset-amount {
+    display: none;
+  }
+  
+  .position-item {
+    grid-template-columns: 80px 1fr 80px;
+    font-size: 10px;
+    gap: 8px;
+  }
+  
+  .position-item .side, 
+  .position-item .amount,
+  .position-item .percent {
+    display: none;
+  }
+}
+

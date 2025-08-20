@@ -1326,13 +1326,19 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.className = 'modal verification-modal';
     modal.style.display = 'block';
     
+    // Helper function to format percentage
+    const formatPercent = (value) => value ? `${value.toFixed(1)}%` : '0.0%';
+    
+    // Helper function to format currency
+    const formatCurrency = (value) => value ? `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '$0.00';
+    
     const content = `
       <div class="modal-content verification-content">
         <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
-        <h3>🔍 Source Account Verification Results</h3>
+        <h3>🔍 Enhanced Source Account Analysis</h3>
         
         <div class="verification-summary">
-          <h4>${data.account_name} (${data.account_type})</h4>
+          <h4>${data.account_name} (${data.account_type}) - ${data.strategy || 'No Strategy'}</h4>
           <div class="status-grid">
             <div class="status-item ${data.verification_success ? 'success' : 'error'}">
               <span class="label">Overall Status:</span>
@@ -1352,42 +1358,150 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="verification-values">
           <div class="value-card">
             <h5>💰 Total Portfolio Value</h5>
-            <div class="value-large">$${data.total_usdt_value.toLocaleString()}</div>
+            <div class="value-large">${formatCurrency(data.total_usdt_value)}</div>
           </div>
           ${data.account_type === 'FUTURES' ? `
             <div class="value-card">
               <h5>🔸 SPOT Value</h5>
-              <div class="value-medium">$${data.spot_value.toLocaleString()}</div>
+              <div class="value-medium">${formatCurrency(data.spot_value)}</div>
+              <small>${formatPercent(data.detailed_breakdown?.distribution?.spot_percentage)}</small>
             </div>
             <div class="value-card">
               <h5>🔹 FUTURES Value</h5>
-              <div class="value-medium">$${data.futures_value.toLocaleString()}</div>
+              <div class="value-medium">${formatCurrency(data.futures_value)}</div>
+              <small>USDⓈ-M: ${formatPercent(data.detailed_breakdown?.distribution?.futures_usdtm_percentage)} | Coin-M: ${formatPercent(data.detailed_breakdown?.distribution?.futures_coinm_percentage)}</small>
             </div>
             <div class="value-card">
               <h5>📊 Unrealized PnL</h5>
               <div class="value-medium ${data.total_unrealized_pnl >= 0 ? 'positive' : 'negative'}">
-                $${data.total_unrealized_pnl.toLocaleString()}
+                ${formatCurrency(data.total_unrealized_pnl)}
               </div>
             </div>
           ` : ''}
         </div>
 
-        ${data.futures_positions && data.futures_positions.length > 0 ? `
+        ${data.detailed_breakdown ? `
           <div class="verification-section">
-            <h5>📈 Active Positions (${data.futures_positions.length})</h5>
-            <div class="positions-list">
-              ${data.futures_positions.map(pos => `
-                <div class="position-item">
-                  <span class="symbol">${pos.symbol}</span>
-                  <span class="side">${pos.position_side}</span>
-                  <span class="amount">${pos.position_amt}</span>
-                  <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
-                    $${pos.unrealized_pnl.toFixed(2)}
-                  </span>
-                </div>
-              `).join('')}
+            <h5>📊 Account Distribution Analysis</h5>
+            <div class="distribution-grid">
+              <div class="dist-item">
+                <span class="dist-label">💵 Cash Assets:</span>
+                <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.cash_percentage)}</span>
+              </div>
+              <div class="dist-item">
+                <span class="dist-label">📈 Active Positions:</span>
+                <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.positions_percentage)}</span>
+              </div>
+              <div class="dist-item">
+                <span class="dist-label">📋 Open Orders:</span>
+                <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.open_orders_percentage || 0)}</span>
+              </div>
             </div>
           </div>
+
+          ${data.detailed_breakdown.asset_details?.spot_assets_with_percentages?.length > 0 ? `
+            <div class="verification-section">
+              <h5>🔸 SPOT Assets Distribution</h5>
+              <div class="assets-list">
+                ${data.detailed_breakdown.asset_details.spot_assets_with_percentages
+                  .filter(asset => asset.usdt_value > 0)
+                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                  .slice(0, 8)
+                  .map(asset => `
+                    <div class="asset-item">
+                      <span class="asset-symbol">${asset.asset}</span>
+                      <span class="asset-amount">${asset.total.toFixed(4)}</span>
+                      <span class="asset-value">${formatCurrency(asset.usdt_value)}</span>
+                      <span class="asset-percent">${formatPercent(asset.percentage_of_total)}</span>
+                    </div>
+                  `).join('')}
+                ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0).length > 8 ? 
+                  `<div class="more-assets">... and ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0).length - 8} more assets</div>` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          ${data.detailed_breakdown.asset_details?.coinm_assets_with_percentages?.length > 0 ? `
+            <div class="verification-section">
+              <h5>🔹 Coin-M FUTURES Assets</h5>
+              <div class="assets-list">
+                ${data.detailed_breakdown.asset_details.coinm_assets_with_percentages
+                  .filter(asset => asset.usdt_value > 0)
+                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                  .map(asset => `
+                    <div class="asset-item">
+                      <span class="asset-symbol">${asset.asset}</span>
+                      <span class="asset-amount">${asset.total.toFixed(4)}</span>
+                      <span class="asset-value">${formatCurrency(asset.usdt_value)}</span>
+                      <span class="asset-percent">${formatPercent(asset.percentage_of_total)}</span>
+                    </div>
+                  `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${data.detailed_breakdown.asset_details?.usdtm_assets_with_percentages?.length > 0 ? `
+            <div class="verification-section">
+              <h5>🔶 USDⓈ-M FUTURES Assets</h5>
+              <div class="assets-list">
+                ${data.detailed_breakdown.asset_details.usdtm_assets_with_percentages
+                  .filter(asset => asset.usdt_value > 0)
+                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                  .map(asset => `
+                    <div class="asset-item">
+                      <span class="asset-symbol">${asset.asset}</span>
+                      <span class="asset-amount">${asset.total.toFixed(4)}</span>
+                      <span class="asset-value">${formatCurrency(asset.usdt_value)}</span>
+                      <span class="asset-percent">${formatPercent(asset.percentage_of_total)}</span>
+                    </div>
+                  `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${data.detailed_breakdown.position_details?.coinm_positions_with_percentages?.length > 0 ? `
+            <div class="verification-section">
+              <h5>📈 Coin-M FUTURES Positions</h5>
+              <div class="positions-list">
+                ${data.detailed_breakdown.position_details.coinm_positions_with_percentages
+                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                  .map(pos => `
+                    <div class="position-item">
+                      <span class="symbol">${pos.symbol}</span>
+                      <span class="side">${pos.position_side}</span>
+                      <span class="amount">${pos.position_amt.toFixed(4)}</span>
+                      <span class="value">${formatCurrency(pos.usdt_value)}</span>
+                      <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
+                      <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
+                        ${formatCurrency(pos.unrealized_pnl)}
+                      </span>
+                    </div>
+                  `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${data.detailed_breakdown.position_details?.usdtm_positions_with_percentages?.length > 0 ? `
+            <div class="verification-section">
+              <h5>📊 USDⓈ-M FUTURES Positions</h5>
+              <div class="positions-list">
+                ${data.detailed_breakdown.position_details.usdtm_positions_with_percentages
+                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                  .map(pos => `
+                    <div class="position-item">
+                      <span class="symbol">${pos.symbol}</span>
+                      <span class="side">${pos.position_side}</span>
+                      <span class="amount">${pos.position_amt.toFixed(4)}</span>
+                      <span class="value">${formatCurrency(pos.usdt_value)}</span>
+                      <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
+                      <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
+                        ${formatCurrency(pos.unrealized_pnl)}
+                      </span>
+                    </div>
+                  `).join('')}
+              </div>
+            </div>
+          ` : ''}
         ` : ''}
 
         ${data.open_orders && data.open_orders.length > 0 ? `
@@ -1400,7 +1514,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   <span class="side">${order.side}</span>
                   <span class="type">${order.type}</span>
                   <span class="qty">${order.original_qty}</span>
-                  <span class="price">$${order.price}</span>
+                  <span class="price">${formatCurrency(order.price)}</span>
                 </div>
               `).join('')}
               ${data.open_orders.length > 5 ? `<div class="more-orders">... and ${data.open_orders.length - 5} more</div>` : ''}
@@ -1409,7 +1523,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ` : ''}
 
         <div class="verification-section">
-          <h5>🔧 Test Results</h5>
+          <h5>🔧 Technical Verification</h5>
           <div class="test-results">
             ${data.test_results.map(test => `
               <div class="test-item ${test.success ? 'success' : 'error'}">
@@ -1423,8 +1537,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="verification-footer">
-          <small>Verified on ${new Date(data.verified_at).toLocaleString()} by ${data.verified_by}</small>
-          <small>Execution time: ${data.execution_time_ms.toFixed(0)}ms</small>
+          <small>📅 Verified on ${new Date(data.verified_at).toLocaleString()} by ${data.verified_by}</small>
+          <small>⚡ Execution time: ${data.execution_time_ms.toFixed(0)}ms</small>
         </div>
       </div>
     `;
