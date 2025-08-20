@@ -1059,10 +1059,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       
       if (response.ok && data.strategies) {
-        // Filter out custom portfolio strategy for source accounts
-        sourceStrategies = data.strategies.filter(strategy => 
-          !['custom_portfolio', 'Custom Portfolio'].includes(strategy)
-        );
+        // Extract strategy names and filter out custom portfolio strategy for source accounts
+        sourceStrategies = data.strategies
+          .map(strategy => {
+            // Handle both string format and object format
+            if (typeof strategy === 'string') {
+              return strategy;
+            } else if (strategy && strategy.name) {
+              return strategy.name;
+            } else if (strategy && strategy.id) {
+              return strategy.id;
+            }
+            return null;
+          })
+          .filter(strategyName => 
+            strategyName && !['custom_portfolio', 'Custom Portfolio'].includes(strategyName)
+          );
         populateStrategyDropdown();
       } else {
         console.error('❌ Failed to load strategies:', data.detail);
