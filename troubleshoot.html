@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+while <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Account Troubleshoot</title>
   <link rel="stylesheet" href="dashboard.css" />
-  <link rel="stylesheet" href="troubleshoot.css?v=4.2" />
+  <link rel="stylesheet" href="troubleshoot.css?v=4.5" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -76,20 +76,39 @@
       </div>
     </section>
 
-    <!-- Comprehensive FUTURES Section -->
-    <section id="futures-comprehensive-section" class="dashboard-card portfolio-section" style="display: none;">
-      <h2>🔮 FUTURES Portfolio</h2>
-      <div id="futures-comprehensive-content" class="portfolio-content">
-        <!-- Dynamic tabs will be generated based on available data -->
-        <div id="futures-dynamic-tabs" class="futures-tabs"></div>
-        <!-- Dynamic content areas will be generated based on available data -->
-        <div id="futures-dynamic-content" class="futures-dynamic-content"></div>
+    <!-- Coin-M Assets Section -->
+    <section id="coinm-assets-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>💰 Coin-M Assets</h2>
+      <div id="coinm-assets-content" class="portfolio-content">
+        <div class="portfolio-table-wrapper">
+          <table id="coinm-assets-table" class="portfolio-table">
+            <thead>
+              <tr><th>Asset</th><th>Wallet Balance</th><th>Margin Balance</th><th>Available</th><th>Value (USDT)</th><th>%</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- Diagnostics Section -->
-    <section id="section-diagnostics" class="dashboard-card">
-      <h2>Diagnostic Information</h2>
+    <!-- Coin-M Positions Section -->
+    <section id="coinm-positions-section" class="dashboard-card portfolio-section" style="display: none;">
+      <h2>📈 Coin-M Positions</h2>
+      <div id="coinm-positions-content" class="portfolio-content">
+        <div class="portfolio-table-wrapper">
+          <table id="coinm-positions-table" class="portfolio-table futures-table">
+            <thead>
+              <tr><th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enhanced Diagnostics Section -->
+    <section id="section-diagnostics" class="dashboard-card diagnostics-enhanced">
+      <h2>🔍 Diagnostic Summary</h2>
       <div id="diagnostic-info" class="diagnostic-content">
         <p>Click "Test Binance Connection" to run diagnostics...</p>
       </div>
@@ -99,6 +118,6 @@
   <!-- Load theme manager first, then pie chart, then troubleshoot logic -->
   <script src="theme-manager.js?v=1"></script>
   <script src="pie-chart.js?v=1"></script>
-  <script type="module" src="troubleshoot.js?v=4.4"></script>
+  <script type="module" src="troubleshoot.js?v=4.5"></script>
 </body>
 </html>

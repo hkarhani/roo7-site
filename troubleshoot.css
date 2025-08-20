@@ -817,25 +817,118 @@
 /* Grid Layout Updates for Multiple Sections */
 .troubleshoot-grid {
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto auto auto auto;
   gap: 20px;
 }
 
-/* Portfolio sections - arrange in flexible grid */
+/* Portfolio sections - arrange in 2x2 grid */
 .troubleshoot-grid > #spot-portfolio-section {
   grid-column: 1;
-  grid-row: auto;
+  grid-row: 3;
 }
 
-.troubleshoot-grid > #futures-comprehensive-section {
+.troubleshoot-grid > #coinm-assets-section {
   grid-column: 2;
-  grid-row: auto;
+  grid-row: 3;
+}
+
+.troubleshoot-grid > #coinm-positions-section {
+  grid-column: 1;
+  grid-row: 4;
 }
 
 /* Diagnostics - full width on bottom */
 .troubleshoot-grid > #section-diagnostics {
   grid-column: 1 / -1;
-  grid-row: auto;
+  grid-row: 5;
+}
+
+/* Enhanced Diagnostics Styling */
+.diagnostics-enhanced .diagnostic-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.diagnostic-checklist {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #007bff;
+}
+
+.dark-theme .diagnostic-checklist {
+  background: #2a2a2a;
+  border-left-color: #0d6efd;
+}
+
+.diagnostic-checklist h4 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark-theme .diagnostic-checklist h4 {
+  color: #e0e0e0;
+}
+
+.diagnostic-checklist-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.diagnostic-checklist-items li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.diagnostic-checklist-items li:last-child {
+  border-bottom: none;
+}
+
+.dark-theme .diagnostic-checklist-items li {
+  border-bottom-color: #444;
+}
+
+.diagnostic-status-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.diagnostic-status-icon.success {
+  background: #28a745;
+  color: white;
+}
+
+.diagnostic-status-icon.error {
+  background: #dc3545;
+  color: white;
+}
+
+.diagnostic-status-icon.warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.diagnostic-status-icon.pending {
+  background: #6c757d;
+  color: white;
 }
 
 /* Enhanced Portfolio Section for FUTURES */

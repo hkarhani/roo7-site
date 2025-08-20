@@ -326,10 +326,12 @@ function initializeTroubleshootPage() {
     
     // Hide all portfolio sections and clear diagnostics
     const spotSection = document.getElementById('spot-portfolio-section');
-    const futuresSection = document.getElementById('futures-comprehensive-section');
+    const coinmAssetsSection = document.getElementById('coinm-assets-section');
+    const coinmPositionsSection = document.getElementById('coinm-positions-section');
     
     if (spotSection) spotSection.style.display = 'none';
-    if (futuresSection) futuresSection.style.display = 'none';
+    if (coinmAssetsSection) coinmAssetsSection.style.display = 'none';
+    if (coinmPositionsSection) coinmPositionsSection.style.display = 'none';
     
     if (diagnosticInfo) {
       diagnosticInfo.innerHTML = '<div class="diagnostic-content">🔍 Running comprehensive diagnostics...</div>';
@@ -441,10 +443,123 @@ function initializeTroubleshootPage() {
       }
     }
     
-    // Display comprehensive FUTURES section with dynamic tabs
-    displayComprehensiveFuturesSection(snapshot);
+    // Display FUTURES assets and positions in separate sections
+    displayCoinMAssets(snapshot.futures_coinm_assets);
+    displayCoinMPositions(snapshot.futures_coinm_positions);
     
     console.log('✅ Detailed snapshot processing complete');
+  }
+
+  function displayCoinMAssets(coinmAssets) {
+    const section = document.getElementById('coinm-assets-section');
+    const tableBody = document.querySelector('#coinm-assets-table tbody');
+    
+    if (!coinmAssets || coinmAssets.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    const nonZeroAssets = coinmAssets.filter(asset => parseFloat(asset.total || asset.wallet_balance || 0) > 0);
+    if (nonZeroAssets.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    console.log('💰 Displaying Coin-M assets:', nonZeroAssets.length);
+    section.style.display = 'block';
+    tableBody.innerHTML = '';
+    
+    nonZeroAssets.forEach(asset => {
+      const walletBalance = asset.wallet_balance !== undefined ? 
+        parseFloat(asset.wallet_balance).toFixed(6) : 
+        parseFloat(asset.total || asset.free || 0).toFixed(6);
+      
+      const marginBalance = asset.margin_balance !== undefined ? 
+        parseFloat(asset.margin_balance).toFixed(6) : 
+        parseFloat(asset.total || 0).toFixed(6);
+      
+      const availableBalance = asset.available_balance !== undefined ? 
+        parseFloat(asset.available_balance).toFixed(6) : 
+        parseFloat(asset.free || 0).toFixed(6);
+      
+      const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
+      const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${asset.asset}</strong></td>
+        <td>${walletBalance}</td>
+        <td>${marginBalance}</td>
+        <td>${availableBalance}</td>
+        <td>${usdtValue}</td>
+        <td><span class="percentage-badge">${percentage}%</span></td>
+      `;
+    });
+  }
+
+  function displayCoinMPositions(coinmPositions) {
+    const section = document.getElementById('coinm-positions-section');
+    const tableBody = document.querySelector('#coinm-positions-table tbody');
+    
+    if (!coinmPositions || coinmPositions.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    const activePositions = coinmPositions.filter(pos => parseFloat(pos.position_amt) !== 0);
+    if (activePositions.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    console.log('📈 Displaying Coin-M positions:', activePositions.length);
+    section.style.display = 'block';
+    tableBody.innerHTML = '';
+    
+    activePositions.forEach((position, index) => {
+      // Debug: log the first position structure
+      if (index === 0) {
+        console.log('🔍 First position structure:', position);
+        console.log('🔍 Available position fields:', Object.keys(position));
+      }
+      
+      const positionAmt = parseFloat(position.position_amt);
+      const isLong = positionAmt > 0;
+      const direction = isLong ? 'long' : 'short';
+      const directionText = isLong ? 'LONG' : 'SHORT';
+      
+      const entryPrice = parseFloat(position.entry_price).toFixed(4);
+      const markPrice = parseFloat(position.mark_price).toFixed(4);
+      const unrealizedPnl = parseFloat(position.unrealized_pnl);
+      const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+      
+      // Enhanced value calculation for Coin-M positions
+      const usdtValue = position.usdt_value !== undefined && position.usdt_value !== null ? 
+        parseFloat(position.usdt_value).toFixed(2) : 
+        position.notional !== undefined && position.notional !== null ?
+        parseFloat(position.notional).toFixed(2) :
+        position.notionalValue !== undefined && position.notionalValue !== null ?
+        parseFloat(position.notionalValue).toFixed(2) :
+        position.value !== undefined && position.value !== null ?
+        parseFloat(position.value).toFixed(2) :
+        // For Coin-M, calculate notional value: position_amt * mark_price
+        Math.abs(positionAmt) * parseFloat(position.mark_price) ? 
+        (Math.abs(positionAmt) * parseFloat(position.mark_price)).toFixed(2) : 'N/A';
+      
+      const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
+      
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td><strong>${position.symbol}</strong></td>
+        <td><span class="position-direction ${direction}">${directionText}</span></td>
+        <td>${Math.abs(positionAmt).toFixed(6)}</td>
+        <td>${entryPrice}</td>
+        <td>${markPrice}</td>
+        <td class="${pnlClass}">${unrealizedPnl.toFixed(4)}</td>
+        <td>${usdtValue}</td>
+        <td><span class="percentage-badge">${percentage}%</span></td>
+      `;
+    });
   }
 
   function displayBasicPortfolio(results, accountType) {
@@ -1004,49 +1119,94 @@ function initializeTroubleshootPage() {
   }
 
   function displayDetailedDiagnostics(results, container) {
-    let diagnosticHtml = '<div class="diagnostic-results">';
+    let diagnosticHtml = '<div class="diagnostic-content">';
     
-    // Test stages results
+    // Left column: Connection Tests
+    diagnosticHtml += '<div class="diagnostic-checklist">';
+    diagnosticHtml += '<h4>🔍 Connection Tests</h4>';
+    diagnosticHtml += '<ul class="diagnostic-checklist-items">';
+    
     if (results.test_results && results.test_results.length > 0) {
-      diagnosticHtml += '<div class="diagnostic-section">';
-      diagnosticHtml += '<h4>🔍 Diagnostic Tests</h4>';
-      
       results.test_results.forEach(test => {
-        const statusIcon = test.success ? '✅' : '❌';
-        const itemClass = test.success ? 'diagnostic-item' : 'diagnostic-item error';
+        const statusClass = test.success ? 'success' : 'error';
+        const statusIcon = test.success ? '✓' : '✗';
         
-        diagnosticHtml += `<div class="${itemClass}">`;
-        diagnosticHtml += `<strong>${statusIcon} ${formatStageTitle(test.stage)}</strong>`;
-        diagnosticHtml += `<div class="test-message">${test.message}</div>`;
-        
+        diagnosticHtml += `<li>`;
+        diagnosticHtml += `<div class="diagnostic-status-icon ${statusClass}">${statusIcon}</div>`;
+        diagnosticHtml += `<div>`;
+        diagnosticHtml += `<strong>${formatStageTitle(test.stage)}</strong>`;
         if (test.latency_ms) {
-          diagnosticHtml += `<div class="test-detail">Latency: ${test.latency_ms.toFixed(1)}ms</div>`;
+          diagnosticHtml += `<div style="font-size: 12px; color: #666;">Latency: ${test.latency_ms.toFixed(1)}ms</div>`;
         }
-        
-        if (test.error_code) {
-          diagnosticHtml += `<div class="test-detail error-code">Error Code: ${test.error_code}</div>`;
-        }
-        
-        diagnosticHtml += '</div>';
+        diagnosticHtml += `</div>`;
+        diagnosticHtml += `</li>`;
       });
+    }
+    
+    diagnosticHtml += '</ul>';
+    diagnosticHtml += '</div>';
+    
+    // Right column: Account Status
+    diagnosticHtml += '<div class="diagnostic-checklist">';
+    diagnosticHtml += '<h4>📊 Account Status</h4>';
+    diagnosticHtml += '<ul class="diagnostic-checklist-items">';
+    
+    // API Key Status
+    const apiKeyClass = results.api_key_valid ? 'success' : 'error';
+    const apiKeyIcon = results.api_key_valid ? '✓' : '✗';
+    diagnosticHtml += `<li>`;
+    diagnosticHtml += `<div class="diagnostic-status-icon ${apiKeyClass}">${apiKeyIcon}</div>`;
+    diagnosticHtml += `<div><strong>API Key Valid</strong></div>`;
+    diagnosticHtml += `</li>`;
+    
+    // IP Whitelist Status
+    const ipClass = results.ip_whitelisted ? 'success' : 'error';
+    const ipIcon = results.ip_whitelisted ? '✓' : '✗';
+    diagnosticHtml += `<li>`;
+    diagnosticHtml += `<div class="diagnostic-status-icon ${ipClass}">${ipIcon}</div>`;
+    diagnosticHtml += `<div><strong>IP Whitelisted</strong></div>`;
+    diagnosticHtml += `</li>`;
+    
+    // Portfolio Value
+    if (results.total_usdt_value !== null && results.total_usdt_value !== undefined) {
+      diagnosticHtml += `<li>`;
+      diagnosticHtml += `<div class="diagnostic-status-icon success">$</div>`;
+      diagnosticHtml += `<div><strong>Total Value</strong><div style="font-size: 12px; color: #666;">$${parseFloat(results.total_usdt_value).toFixed(2)}</div></div>`;
+      diagnosticHtml += `</li>`;
+    }
+    
+    // Execution Time
+    if (results.execution_time_ms) {
+      diagnosticHtml += `<li>`;
+      diagnosticHtml += `<div class="diagnostic-status-icon success">⚡</div>`;
+      diagnosticHtml += `<div><strong>Test Duration</strong><div style="font-size: 12px; color: #666;">${results.execution_time_ms.toFixed(0)}ms</div></div>`;
+      diagnosticHtml += `</li>`;
+    }
+    
+    // Asset count
+    if (results.detailed_snapshot) {
+      const spotCount = results.detailed_snapshot.spot_assets?.length || 0;
+      const coinmCount = results.detailed_snapshot.futures_coinm_assets?.length || 0;
+      const positionCount = results.detailed_snapshot.futures_coinm_positions?.filter(p => parseFloat(p.position_amt) !== 0).length || 0;
       
-      diagnosticHtml += '</div>';
+      if (spotCount > 0 || coinmCount > 0) {
+        diagnosticHtml += `<li>`;
+        diagnosticHtml += `<div class="diagnostic-status-icon success">#</div>`;
+        diagnosticHtml += `<div><strong>Active Assets</strong><div style="font-size: 12px; color: #666;">SPOT: ${spotCount}, Coin-M: ${coinmCount}</div></div>`;
+        diagnosticHtml += `</li>`;
+      }
+      
+      if (positionCount > 0) {
+        diagnosticHtml += `<li>`;
+        diagnosticHtml += `<div class="diagnostic-status-icon success">📈</div>`;
+        diagnosticHtml += `<div><strong>Active Positions</strong><div style="font-size: 12px; color: #666;">${positionCount} Coin-M positions</div></div>`;
+        diagnosticHtml += `</li>`;
+      }
     }
-
-    // Recommendations
-    if (results.recommendations && results.recommendations.length > 0) {
-      diagnosticHtml += '<div class="diagnostic-section">';
-      diagnosticHtml += '<h4>💡 Recommendations</h4>';
-      diagnosticHtml += '<div class="diagnostic-item">';
-      diagnosticHtml += '<ul>';
-      results.recommendations.forEach(rec => {
-        diagnosticHtml += `<li>${rec}</li>`;
-      });
-      diagnosticHtml += '</ul>';
-      diagnosticHtml += '</div>';
-      diagnosticHtml += '</div>';
-    }
-
+    
+    diagnosticHtml += '</ul>';
+    diagnosticHtml += '</div>';
+    
     diagnosticHtml += '</div>';
     container.innerHTML = diagnosticHtml;
   }
