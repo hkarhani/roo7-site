@@ -1377,36 +1377,64 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${formatCurrency(data.total_unrealized_pnl)}
               </div>
             </div>
-          ` : ''}
+          ` : `
+            <div class="value-card">
+              <h5>🔸 SPOT Account</h5>
+              <div class="value-medium">${formatCurrency(data.spot_value || data.total_usdt_value)}</div>
+              <small>100% SPOT Trading</small>
+            </div>
+            ${data.open_orders && data.open_orders.length > 0 ? `
+              <div class="value-card">
+                <h5>📋 Open Orders</h5>
+                <div class="value-medium">${data.open_orders.length}</div>
+                <small>Active Orders</small>
+              </div>
+            ` : ''}
+          `}
         </div>
 
         ${data.detailed_breakdown ? `
           <div class="verification-section">
             <h5>📊 Account Distribution Analysis</h5>
             <div class="distribution-grid">
-              <div class="dist-item">
-                <span class="dist-label">💵 Cash Assets:</span>
-                <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.cash_percentage)}</span>
-              </div>
-              <div class="dist-item">
-                <span class="dist-label">📈 Active Positions:</span>
-                <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.positions_percentage)}</span>
-              </div>
-              <div class="dist-item">
-                <span class="dist-label">📋 Open Orders:</span>
-                <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.open_orders_percentage || 0)}</span>
-              </div>
+              ${data.account_type === 'SPOT' ? `
+                <div class="dist-item">
+                  <span class="dist-label">🔸 SPOT Assets:</span>
+                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.spot_percentage || 100)}</span>
+                </div>
+                <div class="dist-item">
+                  <span class="dist-label">💵 Total Cash:</span>
+                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.cash_percentage || 100)}</span>
+                </div>
+                <div class="dist-item">
+                  <span class="dist-label">📋 Open Orders:</span>
+                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.open_orders_percentage || 0)}</span>
+                </div>
+              ` : `
+                <div class="dist-item">
+                  <span class="dist-label">💵 Cash Assets:</span>
+                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.cash_percentage)}</span>
+                </div>
+                <div class="dist-item">
+                  <span class="dist-label">📈 Active Positions:</span>
+                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.positions_percentage)}</span>
+                </div>
+                <div class="dist-item">
+                  <span class="dist-label">📋 Open Orders:</span>
+                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.open_orders_percentage || 0)}</span>
+                </div>
+              `}
             </div>
           </div>
 
           ${data.detailed_breakdown.asset_details?.spot_assets_with_percentages?.length > 0 ? `
             <div class="verification-section">
-              <h5>🔸 SPOT Assets Distribution</h5>
+              <h5>🔸 ${data.account_type === 'SPOT' ? 'Top SPOT Assets' : 'SPOT Assets Distribution'} (${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0).length} assets)</h5>
               <div class="assets-list">
                 ${data.detailed_breakdown.asset_details.spot_assets_with_percentages
-                  .filter(asset => asset.usdt_value > 0)
+                  .filter(asset => asset.usdt_value > 0.01) // Show only assets worth more than 1 cent
                   .sort((a, b) => b.usdt_value - a.usdt_value)
-                  .slice(0, 8)
+                  .slice(0, data.account_type === 'SPOT' ? 10 : 8) // Show more for SPOT-only accounts
                   .map(asset => `
                     <div class="asset-item">
                       <span class="asset-symbol">${asset.asset}</span>
@@ -1415,8 +1443,8 @@ document.addEventListener("DOMContentLoaded", () => {
                       <span class="asset-percent">${formatPercent(asset.percentage_of_total)}</span>
                     </div>
                   `).join('')}
-                ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0).length > 8 ? 
-                  `<div class="more-assets">... and ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0).length - 8} more assets</div>` : ''}
+                ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0.01).length > (data.account_type === 'SPOT' ? 10 : 8) ? 
+                  `<div class="more-assets">... and ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0.01).length - (data.account_type === 'SPOT' ? 10 : 8)} more assets</div>` : ''}
               </div>
             </div>
           ` : ''}
