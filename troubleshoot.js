@@ -1173,7 +1173,12 @@ function initializeTroubleshootPage() {
     
     tableBody.innerHTML = '';
     
-    positions.forEach(position => {
+    positions.forEach((position, index) => {
+      // Debug: log the first position structure to understand the data format
+      if (index === 0) {
+        console.log('🔍 First position structure:', position);
+        console.log('🔍 Available position fields:', Object.keys(position));
+      }
       const positionAmt = parseFloat(position.position_amt);
       const isLong = positionAmt > 0;
       const direction = isLong ? 'long' : 'short';
@@ -1183,7 +1188,20 @@ function initializeTroubleshootPage() {
       const markPrice = parseFloat(position.mark_price).toFixed(4);
       const unrealizedPnl = parseFloat(position.unrealized_pnl);
       const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-      const usdtValue = position.usdt_value ? parseFloat(position.usdt_value).toFixed(2) : 'N/A';
+      
+      // Check multiple possible field names for position value
+      const usdtValue = position.usdt_value !== undefined && position.usdt_value !== null ? 
+        parseFloat(position.usdt_value).toFixed(2) : 
+        position.notional !== undefined && position.notional !== null ?
+        parseFloat(position.notional).toFixed(2) :
+        position.notionalValue !== undefined && position.notionalValue !== null ?
+        parseFloat(position.notionalValue).toFixed(2) :
+        position.value !== undefined && position.value !== null ?
+        parseFloat(position.value).toFixed(2) :
+        // For Coin-M, calculate notional value: position_amt * mark_price
+        Math.abs(positionAmt) * parseFloat(position.mark_price) ? 
+        (Math.abs(positionAmt) * parseFloat(position.mark_price)).toFixed(2) : 'N/A';
+      
       const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
       
       const row = tableBody.insertRow();
