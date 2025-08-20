@@ -246,7 +246,7 @@
 }
 
 /* ===== INVOICE AND REFERRAL COUNTS ===== */
-.invoice-count, .referral-count {
+.invoice-count, .referral-count, .invoice-amount {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
@@ -256,22 +256,27 @@
   min-width: 30px;
 }
 
-.invoice-count.paid {
+.invoice-amount {
+  min-width: 60px;
+  font-family: 'Courier New', monospace;
+}
+
+.invoice-count.paid, .invoice-amount.paid {
   background: #d4edda;
   color: #155724;
 }
 
-.dark-theme .invoice-count.paid {
+.dark-theme .invoice-count.paid, .dark-theme .invoice-amount.paid {
   background: #1e3a1e;
   color: #4caf50;
 }
 
-.invoice-count.unpaid {
+.invoice-count.unpaid, .invoice-amount.unpaid {
   background: #f8d7da;
   color: #721c24;
 }
 
-.dark-theme .invoice-count.unpaid {
+.dark-theme .invoice-count.unpaid, .dark-theme .invoice-amount.unpaid {
   background: #3a1e1e;
   color: #f44336;
 }

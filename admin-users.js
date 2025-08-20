@@ -372,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${user.total_accounts || 0}</td>
           <td>$${(user.active_funds || 0).toLocaleString()}</td>
           <td><span class="tier-badge tier-${user.current_tier}">${user.current_tier || 'Free'}</span></td>
-          <td><span class="invoice-count paid">${user.paid_invoices || 0}</span></td>
+          <td><span class="invoice-amount paid">$${(user.total_paid_amount || 0).toFixed(2)}</span></td>
           <td><span class="referral-earnings">$${(user.lifetime_referral_earnings || 0).toFixed(2)}</span></td>
           <td><span class="subscription-period" title="${subscriptionPeriod}">${subscriptionPeriod}</span></td>
           <td>${statusBadge}</td>
@@ -559,17 +559,37 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="detail-section">
             <h4>Invoice Statistics</h4>
             <div class="detail-row">
-              <span class="detail-label">Paid Invoices:</span>
-              <span class="detail-value invoice-count paid">${user.paid_invoices || 0}</span>
+              <span class="detail-label">Paid Invoices Count:</span>
+              <span class="detail-value invoice-count paid">${user.paid_invoices_count || 0}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">Unpaid Invoices:</span>
-              <span class="detail-value invoice-count unpaid">${user.unpaid_invoices || 0}</span>
+              <span class="detail-label">Total Paid Amount:</span>
+              <span class="detail-value invoice-amount paid">$${(user.total_paid_amount || 0).toFixed(2)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Unpaid Invoices Count:</span>
+              <span class="detail-value invoice-count unpaid">${user.unpaid_invoices_count || 0}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Total Unpaid Amount:</span>
+              <span class="detail-value invoice-amount unpaid">$${(user.total_unpaid_amount || 0).toFixed(2)}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Total Invoices:</span>
-              <span class="detail-value">${(user.paid_invoices || 0) + (user.unpaid_invoices || 0)}</span>
+              <span class="detail-value">${(user.paid_invoices_count || 0) + (user.unpaid_invoices_count || 0)}</span>
             </div>
+            ${user.last_paid_amount && user.last_paid_amount > 0 ? `
+              <div class="detail-row">
+                <span class="detail-label">Last Paid Invoice:</span>
+                <span class="detail-value">$${user.last_paid_amount.toFixed(2)}</span>
+              </div>
+              ${user.last_paid_date ? `
+                <div class="detail-row">
+                  <span class="detail-label">Last Payment Date:</span>
+                  <span class="detail-value">${new Date(user.last_paid_date).toLocaleDateString()}</span>
+                </div>
+              ` : ''}
+            ` : ''}
           </div>
           
           <div class="detail-section">
