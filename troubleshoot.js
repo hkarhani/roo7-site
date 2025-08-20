@@ -476,38 +476,27 @@ function initializeTroubleshootPage() {
         console.log('🔍 Available asset fields:', Object.keys(asset));
       }
       
+      // Use exact field names from your Python structure
       const walletBalance = parseFloat(
-        asset.wallet_balance || 
-        asset.walletBalance ||
-        asset.balance ||
-        asset.total || 
-        asset.free || 
+        asset.balance ||           // USDT-M: "balance"
+        asset.walletBalance ||     // Coin-M: "walletBalance"
         0
       ).toFixed(6);
       
       const marginBalance = parseFloat(
-        asset.margin_balance || 
-        asset.marginBalance ||
-        asset.crossWalletBalance ||
-        asset.total || 
-        asset.balance ||
+        asset.available ||         // USDT-M: "available"
+        asset.walletBalance ||     // Coin-M fallback
         0
       ).toFixed(6);
       
       const availableBalance = parseFloat(
-        asset.available_balance || 
-        asset.availableBalance ||
-        asset.availableMargin ||
-        asset.free || 
-        asset.balance ||
+        asset.available ||         // USDT-M: "available"
+        asset.walletBalance ||     // Coin-M fallback
         0
       ).toFixed(6);
       
       const usdtValue = parseFloat(
-        asset.usdt_value || 
-        asset.usdtValue ||
-        asset.value ||
-        0
+        asset.usdt_value || 0      // Both use "usdt_value"
       ).toFixed(2);
       const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
       
@@ -560,54 +549,19 @@ function initializeTroubleshootPage() {
         console.log('🔍 Available position fields:', Object.keys(position));
       }
       
-      const positionAmt = parseFloat(
-        position.position_amt || 
-        position.positionAmt || 
-        position.positionSide || 
-        position.size || 
-        0
-      );
+      // Use exact field names from your Python structure
+      const positionAmt = parseFloat(position.positionAmt || 0);
       const isLong = positionAmt > 0;
       const direction = isLong ? 'long' : 'short';
-      const directionText = isLong ? 'LONG' : 'SHORT';
+      const directionText = position.side || (isLong ? 'Long' : 'Short'); // Use "side" from Python
       
-      const entryPrice = parseFloat(
-        position.entry_price || 
-        position.entryPrice || 
-        position.avgPrice || 
-        position.averagePrice || 
-        0
-      ).toFixed(4);
-      
-      const markPrice = parseFloat(
-        position.mark_price || 
-        position.markPrice || 
-        position.lastPrice || 
-        position.price || 
-        0
-      ).toFixed(4);
-      
-      const unrealizedPnl = parseFloat(
-        position.unrealized_pnl || 
-        position.unRealizedProfit || 
-        position.pnl || 
-        position.profit || 
-        0
-      );
+      const entryPrice = parseFloat(position.entryPrice || 0).toFixed(4);
+      const markPrice = parseFloat(position.markPrice || 0).toFixed(4);
+      const unrealizedPnl = parseFloat(position.unRealizedPnL || 0);
       const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
       
-      // Enhanced value calculation for Coin-M positions
-      const usdtValue = position.usdt_value !== undefined && position.usdt_value !== null ? 
-        parseFloat(position.usdt_value).toFixed(2) : 
-        position.notional !== undefined && position.notional !== null ?
-        parseFloat(position.notional).toFixed(2) :
-        position.notionalValue !== undefined && position.notionalValue !== null ?
-        parseFloat(position.notionalValue).toFixed(2) :
-        position.value !== undefined && position.value !== null ?
-        parseFloat(position.value).toFixed(2) :
-        // For Coin-M, calculate notional value: position_amt * mark_price
-        Math.abs(positionAmt) * parseFloat(position.mark_price) ? 
-        (Math.abs(positionAmt) * parseFloat(position.mark_price)).toFixed(2) : 'N/A';
+      // Use exact field from Python structure
+      const usdtValue = parseFloat(position.usdt_value || 0).toFixed(2);
       
       const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
       
@@ -650,26 +604,10 @@ function initializeTroubleshootPage() {
         console.log('🔍 Available order fields:', Object.keys(order));
       }
       
-      const side = (order.side || 'UNKNOWN').toLowerCase();
-      const originalQty = parseFloat(
-        order.original_qty || 
-        order.origQty || 
-        order.orig_qty || 
-        order.origQuantity ||
-        order.quantity ||
-        order.executedQty || 
-        0
-      ).toFixed(3);
-      
-      const price = parseFloat(
-        order.price || 
-        order.stopPrice || 
-        order.activatePrice ||
-        order.limitPrice ||
-        order.triggerPrice ||
-        order.avgPrice ||
-        0
-      ).toFixed(4);
+      // Use exact field names from your Python structure
+      const side = order.side || 'UNKNOWN';
+      const originalQty = parseFloat(order.origQty || 0).toFixed(3);
+      const price = parseFloat(order.price || 0).toFixed(4);
       
       const row = tableBody.insertRow();
       row.innerHTML = `
