@@ -131,6 +131,51 @@ document.addEventListener("DOMContentLoaded", () => {
       'Content-Type': 'application/json'
     };
   }
+  
+  // Helper function to format user created date
+  function formatUserCreatedDate(user) {
+    // Try multiple possible date fields and formats
+    const possibleDates = [
+      user.created_at,
+      user.createdAt,
+      user.registration_date,
+      user.date_joined
+    ];
+    
+    for (const dateValue of possibleDates) {
+      if (dateValue) {
+        try {
+          // Handle MongoDB ObjectId timestamp
+          if (typeof dateValue === 'object' && dateValue.$date) {
+            return new Date(dateValue.$date).toLocaleString();
+          }
+          // Handle ISO string or timestamp
+          const date = new Date(dateValue);
+          if (!isNaN(date.getTime())) {
+            return date.toLocaleString();
+          }
+        } catch (error) {
+          console.warn('Error parsing date:', dateValue, error);
+        }
+      }
+    }
+    
+    // If no valid date found, extract from ObjectId if available
+    if (user._id) {
+      try {
+        // MongoDB ObjectId contains timestamp in first 4 bytes
+        const objectId = user._id.toString();
+        if (objectId.length === 24) {
+          const timestamp = parseInt(objectId.substring(0, 8), 16) * 1000;
+          return new Date(timestamp).toLocaleString() + ' (from ID)';
+        }
+      } catch (error) {
+        console.warn('Error extracting date from ObjectId:', user._id, error);
+      }
+    }
+    
+    return 'Date not available';
+  }
 
   // Optimized API connectivity test - minimal and non-blocking
   async function testApiConnectivity() {
@@ -281,6 +326,18 @@ document.addEventListener("DOMContentLoaded", () => {
         currentUsers = users;
         filteredUsers = users;
         totalUsers = data.total || users.length;
+        
+        // Debug invoice data for first user
+        if (users.length > 0) {
+          console.log('🔍 Sample user invoice data:', {
+            user: users[0].email || users[0].username,
+            paid_invoices_count: users[0].paid_invoices_count,
+            total_paid_amount: users[0].total_paid_amount,
+            unpaid_invoices_count: users[0].unpaid_invoices_count,
+            total_unpaid_amount: users[0].total_unpaid_amount,
+            created_at: users[0].created_at
+          });
+        }
         
         displayUsers(users);
         updatePagination();
@@ -528,7 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="detail-row">
               <span class="detail-label">Created:</span>
-              <span class="detail-value">${user.created_at ? new Date(user.created_at).toLocaleString() : 'N/A'}</span>
+              <span class="detail-value">${formatUserCreatedDate(user)}</span>
             </div>
           </div>
           
