@@ -464,14 +464,24 @@ function initializeTroubleshootPage() {
     const hasCoinMPositions = snapshot.futures_coinm_positions && snapshot.futures_coinm_positions.length > 0;
     
     if (hasUSDTMPositions || hasCoinMPositions) {
+      console.log('🔍 Raw FUTURES positions data:');
+      if (hasUSDTMPositions) console.log('  USDⓈ-M positions:', snapshot.futures_usdtm_positions);
+      if (hasCoinMPositions) console.log('  Coin-M positions:', snapshot.futures_coinm_positions);
+      
       const activeUSDTMPositions = hasUSDTMPositions ? 
         snapshot.futures_usdtm_positions.filter(pos => parseFloat(pos.position_amt) !== 0) : [];
       const activeCoinMPositions = hasCoinMPositions ? 
         snapshot.futures_coinm_positions.filter(pos => parseFloat(pos.position_amt) !== 0) : [];
       
+      console.log('🔍 After position_amt filtering:');
+      console.log('  Active USDⓈ-M positions:', activeUSDTMPositions.length);
+      console.log('  Active Coin-M positions:', activeCoinMPositions.length);
+      
       if (activeUSDTMPositions.length > 0 || activeCoinMPositions.length > 0) {
         console.log('📈 Displaying FUTURES positions - USDⓈ-M:', activeUSDTMPositions.length, 'Coin-M:', activeCoinMPositions.length);
         displayFuturesPositions(activeUSDTMPositions, activeCoinMPositions);
+      } else {
+        console.log('❌ No active positions after filtering (all position_amt = 0)');
       }
     }
     
