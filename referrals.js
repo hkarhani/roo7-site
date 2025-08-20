@@ -58,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check if invoicing API is available
   async function checkServiceStatus() {
     try {
-      console.log('🔍 Checking invoicing service status...');
       
       // Set a shorter timeout for the health check
       const controller = new AbortController();
@@ -74,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Invoicing service is healthy:', data);
         return true;
       } else {
         console.warn('⚠️ Invoicing service health check failed:', response.status);
@@ -116,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load referral dashboard data
   async function loadReferralData() {
     try {
-      console.log('🔄 Loading referral data from:', `${INVOICING_API_BASE}/referrals/me`);
       
       const response = await fetch(`${INVOICING_API_BASE}/referrals/me`, {
         headers: getAuthHeaders(token)
@@ -133,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
             referral_link: '',
             referred_users: []
           };
-          console.log('ℹ️ No referral data found - user hasn\'t generated code yet');
           return;
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -143,7 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
       allReferrals = referralData.referred_users || [];
       filteredReferrals = [...allReferrals];
       
-      console.log('✅ Referral data loaded:', referralData);
       
     } catch (error) {
       console.error('Error loading referral data:', error);
@@ -261,8 +256,6 @@ document.addEventListener("DOMContentLoaded", () => {
     generateBtn.textContent = 'Generating...';
     
     try {
-      console.log('🔄 Generating referral code...');
-      console.log('📡 API URL:', `${INVOICING_API_BASE}/referrals/generate-code`);
       console.log('🔑 Token exists:', !!token);
       
       const response = await fetch(`${INVOICING_API_BASE}/referrals/generate-code`, {
@@ -270,8 +263,6 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: getAuthHeaders(token)
       });
 
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         let errorMessage;
@@ -287,13 +278,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await response.json();
-      console.log('✅ Response data:', data);
       
       if (data.referral_code) {
         // Update local data
         referralData.referral_code = data.referral_code;
         
-        console.log('✅ Updated referral data:', {
           code: referralData.referral_code
         });
         
@@ -847,6 +836,5 @@ Best regards`);
   }
 
   // Initialize the page
-  console.log('🚀 Initializing referrals page...');
   initializePage();
 });

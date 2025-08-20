@@ -44,7 +44,6 @@ class ModalManager {
         return;
       }
 
-      console.log('📡 Loading strategies from API...');
       const response = await fetch(`${this.API_BASE}/strategies`, {
         method: 'GET',
         headers: {
@@ -59,15 +58,7 @@ class ModalManager {
 
       const data = await response.json();
       this.availableStrategies = data.strategies || [];
-      console.log(`✅ Loaded ${this.availableStrategies.length} strategies from API`);
-      console.log("🔍 Strategy data structure:", this.availableStrategies);
       
-      // Log each strategy's parameters to debug
-      this.availableStrategies.forEach((strategy, index) => {
-        console.log(`📋 Strategy ${index + 1}:`, strategy.name);
-        console.log(`   - Parameters:`, strategy.parameters);
-        console.log(`   - Full object:`, strategy);
-      });
       
       // Update strategy dropdown with initial selection
       this.updateStrategyOptions();
@@ -132,7 +123,6 @@ class ModalManager {
         return;
       }
 
-      console.log('📡 Loading SPOT symbols from market-data-service...');
       console.log('🔑 Token length:', token.length);
       
       const response = await fetch(`${this.MARKET_DATA_API}/spot-instruments`, {
@@ -143,14 +133,12 @@ class ModalManager {
         }
       });
 
-      console.log('📡 Market data service response status:', response.status);
 
       if (response.status === 401) {
         console.warn('⚠️ Authentication failed for market data API - trying to use fallback');
         // Try to use health endpoint to check if service is accessible
         const healthResponse = await fetch(`${this.MARKET_DATA_API}/health`);
         if (healthResponse.ok) {
-          console.log('✅ Market data service is accessible - auth issue confirmed');
           // Fallback: Try to get symbols from auth service instead
           return await this.loadSymbolsFromAuthService();
         }
@@ -162,7 +150,6 @@ class ModalManager {
       }
 
       const data = await response.json();
-      console.log('📡 Market data API response:', data);
       
       // Handle the correct /spot-instruments API response format
       if (data.success && data.data && Array.isArray(data.data)) {
@@ -180,11 +167,8 @@ class ModalManager {
         throw new Error('Invalid response format from market-data-service /spot-instruments');
       }
       
-      console.log(`✅ Loaded ${this.binanceSymbols.length} active SPOT USDT symbols from market-data-service`);
-      console.log('🔍 First 10 symbols:', this.binanceSymbols.slice(0, 10));
     } catch (error) {
       console.error('❌ Failed to load symbols from market-data-service:', error);
-      console.log('🔄 Attempting fallback to direct Binance API...');
       await this.loadSymbolsFromBinanceDirectly();
     }
   }
@@ -202,9 +186,7 @@ class ModalManager {
       });
       
       if (response.ok) {
-        console.log('✅ Auth service token validation successful');
         // Token is valid for auth service, but not market-data-service
-        console.log('⚠️ Token works for auth but not market-data service - possible JWT secret mismatch');
         window.showToast('Warning: Market data service authentication issue. Using basic validation.', 'warning');
       }
     } catch (error) {
@@ -215,7 +197,6 @@ class ModalManager {
   // Final fallback: Load symbols directly from Binance (temporary solution)
   async loadSymbolsFromBinanceDirectly() {
     try {
-      console.log('📡 Fallback: Loading symbols directly from Binance API...');
       const response = await fetch('https://api.binance.com/api/v3/exchangeInfo');
       
       if (!response.ok) {
@@ -227,7 +208,6 @@ class ModalManager {
         .filter(symbol => symbol.status === 'TRADING' && symbol.symbol.endsWith('USDT'))
         .map(symbol => symbol.symbol);
       
-      console.log(`✅ Fallback successful: Loaded ${this.binanceSymbols.length} USDT symbols from Binance directly`);
       window.showToast('Using direct Binance API for symbol validation (fallback mode).', 'info');
       
     } catch (error) {
@@ -319,12 +299,9 @@ class ModalManager {
     
     // Show modal
     this.modal.style.display = "block";
-    console.log("✅ Add Account modal opened");
   }
 
   openEditAccountModal(account) {
-    console.log("✏️ Opening EDIT ACCOUNT modal for:", account.account_name);
-    console.log("📋 Account data:", account);
     
     // Check if modal exists
     if (!this.modal) {
@@ -362,7 +339,6 @@ class ModalManager {
         useSameCredButton.style.display = "block";
         useSameCredButton.textContent = "🔒 Use Same API Credentials";
         useSameCredButton.classList.remove("active");
-        console.log("✅ FORCED SHOW Use Same Credentials button for EDIT mode");
       }
       
       // Show edit-specific elements
@@ -373,7 +349,6 @@ class ModalManager {
       
       // Show modal
       this.modal.style.display = "block";
-      console.log("✅ Edit Account modal opened successfully");
       
     } catch (error) {
       console.error("❌ Error in openEditAccountModal:", error);
@@ -411,7 +386,6 @@ class ModalManager {
       useSameCredButton.classList.remove("active");
     }
     
-    console.log("✅ Account modal closed");
   }
 
   // HEDGE MODAL FUNCTIONS
@@ -433,9 +407,6 @@ class ModalManager {
 
   // STRATEGY MODAL FUNCTIONS
   openStrategyModal(account) {
-    console.log("🎯 Opening strategy assignment modal for:", account.account_name);
-    console.log("📋 Account strategy data:", account.strategy);
-    console.log("📋 Full account data:", account);
     
     this.currentStrategyAccountId = account.id;
     this.currentAccount = account; // Store current account data for access
@@ -459,7 +430,6 @@ class ModalManager {
       }
       
       if (strategyConfig) {
-        console.log("🎯 Found strategy config:", strategyConfig.name, "for account strategy:", account.strategy);
         this.strategySelect.value = strategyConfig.id; // Use the strategy ID for the dropdown
         this.currentStrategyConfig = strategyConfig;
         this.ensureStrategyParameters(); // Ensure parameters exist
@@ -480,11 +450,9 @@ class ModalManager {
     }
     
     this.strategyModal.style.display = "block";
-    console.log("✅ Strategy modal opened");
     
     // Add a small delay to ensure DOM is ready before processing
     setTimeout(() => {
-      console.log("🔄 Delayed processing to ensure DOM is ready");
       if (this.currentStrategyConfig) {
         this.showStrategyCustomization();
       }
@@ -497,7 +465,6 @@ class ModalManager {
     this.currentStrategyAccountId = null;
     this.currentAccount = null; // Reset current account data
     this.hideStrategyCustomization();
-    console.log("✅ Strategy modal closed");
   }
 
   // UI HELPER FUNCTIONS (keeping these for backward compatibility but using direct style.display now)
@@ -505,7 +472,6 @@ class ModalManager {
     const button = document.getElementById("use-same-credentials");
     if (button) {
       button.style.display = "block";
-      console.log("👁️ Use Same Credentials button shown");
     }
   }
 
@@ -513,7 +479,6 @@ class ModalManager {
     const button = document.getElementById("use-same-credentials");
     if (button) {
       button.style.display = "none";
-      console.log("👁️ Use Same Credentials button hidden");
     }
   }
 
@@ -593,7 +558,6 @@ class ModalManager {
   }
 
   handleStrategySelectionChange() {
-    console.log("🔄 ENTERING handleStrategySelectionChange");
     const selectedStrategyId = this.strategySelect.value;
     const selectedOption = this.strategySelect.selectedOptions[0];
     
@@ -624,8 +588,6 @@ class ModalManager {
         return;
       }
       
-      console.log("🔄 Strategy selected:", this.currentStrategyConfig.name);
-      console.log("📋 Strategy config:", this.currentStrategyConfig);
       
       // Add fallback parameters if strategy doesn't have them
       this.ensureStrategyParameters();
@@ -646,7 +608,6 @@ class ModalManager {
     
     // If no parameters exist, create them based on strategy name
     if (!this.currentStrategyConfig.parameters) {
-      console.log("⚠️ No parameters found, creating fallback parameters");
       this.currentStrategyConfig.parameters = {};
     }
     
@@ -664,7 +625,6 @@ class ModalManager {
             { symbol: "XRPUSDT", weight: 20 }
           ]
         };
-        console.log("✅ Added custom_instruments parameter for Custom Portfolio strategy");
       }
       
       if (!this.currentStrategyConfig.parameters.rebalance_frequency) {
@@ -673,7 +633,6 @@ class ModalManager {
           default: "default",
           options: ["default", "hourly", "daily", "weekly"]
         };
-        console.log("✅ Added rebalance_frequency parameter for Custom Portfolio strategy");
       }
     } else {
       // Non-Custom Portfolio strategies get top_x_count and rebalance_frequency only
@@ -684,7 +643,6 @@ class ModalManager {
           min: 0,
           max: 50
         };
-        console.log("✅ Added top_x_count parameter for non-Custom Portfolio strategy");
       }
       
       if (!this.currentStrategyConfig.parameters.rebalance_frequency) {
@@ -693,13 +651,11 @@ class ModalManager {
           default: "default",
           options: ["default", "hourly", "daily", "weekly"]
         };
-        console.log("✅ Added rebalance_frequency parameter for non-Custom Portfolio strategy");
       }
       
       // Explicitly remove custom_instruments if it exists (shouldn't be there)
       if (this.currentStrategyConfig.parameters.custom_instruments) {
         delete this.currentStrategyConfig.parameters.custom_instruments;
-        console.log("🗑️ Removed custom_instruments parameter from non-Custom Portfolio strategy");
       }
     }
     
@@ -727,7 +683,6 @@ class ModalManager {
           } else if (paramName === 'custom_instruments') {
             // Handle custom portfolio instruments
             if (account.custom_portfolio && account.custom_portfolio.length > 0) {
-              console.log("📋 Loading existing custom portfolio:", account.custom_portfolio);
               account.custom_portfolio.forEach(instrument => {
                 this.addInstrumentField(instrument.symbol, instrument.weight);
               });
@@ -803,7 +758,6 @@ class ModalManager {
     customizationDiv.style.display = 'block';
     customizationDiv.style.visibility = 'visible';
     customizationDiv.style.opacity = '1';
-    console.log("✅ Set strategy-customization display to block with full visibility");
     
     if (!this.strategyParametersForm) {
       console.error("❌ strategyParametersForm element not found!");
@@ -821,8 +775,6 @@ class ModalManager {
     console.log("🧹 Cleared form contents");
     
     const parameters = this.currentStrategyConfig.parameters;
-    console.log("🔍 Processing parameters:", parameters);
-    console.log("🔍 Parameter keys:", Object.keys(parameters));
     
     Object.keys(parameters).forEach(paramName => {
       const param = parameters[paramName];
@@ -830,7 +782,6 @@ class ModalManager {
       
       if (paramName === 'custom_instruments') {
         // Handle custom portfolio specially - only for Custom Portfolio strategies
-        console.log("📋 Setting up custom portfolio section");
         this.showCustomPortfolioSection();
       } else if (paramName === 'top_x_count') {
         // Handle top X count parameter
@@ -848,7 +799,6 @@ class ModalManager {
                  value="${param.default || 0}">
         `;
         this.strategyParametersForm.appendChild(wrapper);
-        console.log("✅ Added top_x_count field to form");
       } else if (paramName === 'rebalance_frequency') {
         // Handle rebalance frequency dropdown
         console.log("⏰ Setting up rebalance frequency parameter", param);
@@ -880,14 +830,11 @@ class ModalManager {
           </select>
         `;
         this.strategyParametersForm.appendChild(wrapper);
-        console.log("✅ Added rebalance_frequency field to form with options:", options);
       } else {
-        console.log(`⚠️ Unknown parameter type: ${paramName}`, param);
       }
     });
     
     // Force a visual refresh of the customization section
-    console.log("🔄 Forcing visual refresh of customization section");
     setTimeout(() => {
       const customizationDiv = document.getElementById('strategy-customization');
       const portfolioSection = document.getElementById('custom-portfolio-section');
@@ -897,7 +844,6 @@ class ModalManager {
         customizationDiv.style.setProperty('visibility', 'visible', 'important');
         customizationDiv.style.setProperty('opacity', '1', 'important');
         customizationDiv.style.setProperty('height', 'auto', 'important');
-        console.log("🔄 Applied delayed visibility fix with !important");
       }
       
       // CRITICAL FIX: Force show the strategy-parameters-form which is hidden
@@ -918,10 +864,8 @@ class ModalManager {
           portfolioSection.style.setProperty('display', 'block', 'important');
           portfolioSection.style.setProperty('visibility', 'visible', 'important');
           portfolioSection.style.setProperty('opacity', '1', 'important');
-          console.log("🔄 Applied portfolio section visibility fix for Custom Portfolio strategy");
         } else {
           portfolioSection.style.setProperty('display', 'none', 'important');
-          console.log("🔄 Hidden portfolio section for non-Custom Portfolio strategy");
         }
       }
       
@@ -961,8 +905,6 @@ class ModalManager {
       
       // Log all child elements to see what's actually in the customization div
       if (customizationDiv) {
-        console.log("🔍 Strategy customization div children:", customizationDiv.children);
-        console.log("🔍 Strategy customization div innerHTML:", customizationDiv.innerHTML);
       }
       
       // If we're opening strategy modal for an existing account with data, populate it
@@ -977,7 +919,6 @@ class ModalManager {
       return;
     }
     
-    console.log("🔍 Populating existing account strategy data:", this.currentAccount);
     
     // Populate top_x_count if exists
     if (this.currentAccount.top_x_count !== undefined && this.currentAccount.top_x_count !== null) {
@@ -1008,7 +949,6 @@ class ModalManager {
           console.log("⏰ Set rebalance_frequency to fallback:", rebalanceInput.value);
         }
       } else {
-        console.log("⚠️ Rebalance frequency input not found");
       }
     }, 100); // Small delay to ensure the dropdown is fully rendered
     
@@ -1040,7 +980,6 @@ class ModalManager {
     portfolioSection.style.display = 'block';
     portfolioSection.style.visibility = 'visible';
     portfolioSection.style.opacity = '1';
-    console.log("✅ Set custom-portfolio-section display to block with full visibility");
     
     if (!this.portfolioInstruments) {
       console.error("❌ portfolioInstruments element not found!");
@@ -1051,7 +990,6 @@ class ModalManager {
     this.loadBinanceSymbols();
     
     // Add default instruments if none exist
-    console.log("🔍 Current portfolio instruments count:", this.portfolioInstruments.children.length);
     
     if (this.portfolioInstruments.children.length === 0) {
       if (this.currentStrategyConfig && 
@@ -1060,7 +998,6 @@ class ModalManager {
           this.currentStrategyConfig.parameters.custom_instruments.default) {
         
         const defaultInstruments = this.currentStrategyConfig.parameters.custom_instruments.default;
-        console.log("📋 Using API default instruments:", defaultInstruments);
         
         defaultInstruments.forEach(instrument => {
           console.log("➕ Adding instrument:", instrument.symbol, instrument.weight);
@@ -1068,14 +1005,12 @@ class ModalManager {
         });
       } else {
         // Fallback to hardcoded defaults with proper USDT format
-        console.log("📋 Using fallback default instruments");
         this.addPortfolioInstrument("BTCUSDT", 50);
         this.addPortfolioInstrument("ETHUSDT", 30);
         this.addPortfolioInstrument("XRPUSDT", 20);
       }
     }
     
-    console.log("✅ showCustomPortfolioSection completed");
   }
 
   showTopXFields() {
@@ -1130,14 +1065,12 @@ class ModalManager {
           this.currentStrategyConfig.parameters.custom_instruments.default) {
         
         const defaultInstruments = this.currentStrategyConfig.parameters.custom_instruments.default;
-        console.log("📋 Using API default instruments:", defaultInstruments);
         
         defaultInstruments.forEach(instrument => {
           this.addInstrumentField(instrument.symbol, instrument.weight);
         });
       } else {
         // Fallback to hardcoded defaults
-        console.log("📋 Using fallback default instruments");
         this.addInstrumentField("BTCUSDT", 50);
         this.addInstrumentField("ETHUSDT", 30);
         this.addInstrumentField("XRPUSDT", 20);
@@ -1646,7 +1579,6 @@ class ModalManager {
     
     // Prevent multiple submissions
     if (submitButton.disabled) {
-      console.log("⚠️ Strategy assignment already in progress, ignoring duplicate click");
       return;
     }
     

@@ -4,7 +4,6 @@ import CONFIG from './frontend-config.js';
 function initializeTroubleshootPage() {
   const API_BASE = CONFIG.API_CONFIG.authUrl;      // auth endpoints (port 443)
   
-  console.log("🔍 Troubleshoot page initialization started");
   
   // Check authentication
   const token = localStorage.getItem("token");
@@ -19,7 +18,6 @@ function initializeTroubleshootPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const accountName = urlParams.get('account');
   
-  console.log("🔍 Account name from URL:", accountName);
   
   if (!accountName) {
     console.error("❌ No account name in URL parameters");
@@ -32,7 +30,6 @@ function initializeTroubleshootPage() {
   const headerElement = document.getElementById('account-name-display');
   if (headerElement) {
     headerElement.textContent = accountName;
-    console.log("✅ Header updated with account name");
   } else {
     console.error("❌ Header element not found");
   }
@@ -149,7 +146,6 @@ function initializeTroubleshootPage() {
 
   // Load account details with enhanced error handling
   async function loadAccountDetails() {
-    console.log("📋 Starting to load account details...");
     
     // Verify all required DOM elements exist first
     const requiredElements = ['account-name', 'strategy', 'current-value', 'hedge-percent', 'api-key-status'];
@@ -178,7 +174,6 @@ function initializeTroubleshootPage() {
       });
 
       clearTimeout(timeoutId);
-      console.log(`📡 API Response received - Status: ${res.status}`);
 
       if (res.status === 401) {
         console.error("❌ Authentication failed");
@@ -194,8 +189,6 @@ function initializeTroubleshootPage() {
       }
 
       const accounts = await res.json();
-      console.log(`✅ Accounts loaded: ${accounts.length} total`);
-      console.log("🔍 Looking for account:", accountName);
       
       if (!Array.isArray(accounts)) {
         throw new Error("Invalid API response format");
@@ -209,7 +202,6 @@ function initializeTroubleshootPage() {
         account = accounts.find(acc => 
           acc.account_name && acc.account_name.toLowerCase() === accountName.toLowerCase()
         );
-        console.log("🔍 Case-insensitive search result:", account ? "Found" : "Not found");
       }
 
       if (!account) {
@@ -218,7 +210,6 @@ function initializeTroubleshootPage() {
         throw new Error(`Account "${accountName}" not found`);
       }
 
-      console.log("🎯 Account found:", account.account_name);
 
       // Populate UI elements with proper formatting
       const updates = {
@@ -237,17 +228,14 @@ function initializeTroubleshootPage() {
           element.textContent = value;
           element.style.color = ''; // Reset any error styling
           updateCount++;
-          console.log(`✅ Updated ${elementId}: "${value}"`);
         } else {
           console.error(`❌ Element not found: ${elementId}`);
         }
       }
 
-      console.log(`✅ Updated ${updateCount}/${Object.keys(updates).length} UI elements`);
 
       // Store account data globally
       window.currentAccount = account;
-      console.log("✅ Account data stored globally");
       
       // Show success message
       showToast("Account details loaded successfully", 'success', 2000);
@@ -309,7 +297,6 @@ function initializeTroubleshootPage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-      console.log(`🚀 Starting troubleshoot test for account ID: ${window.currentAccount.id}`);
       
       const res = await fetch(`${API_BASE}/troubleshoot/${window.currentAccount.id}`, {
         method: "POST",
@@ -328,7 +315,6 @@ function initializeTroubleshootPage() {
       }
 
       const results = await res.json();
-      console.log("✅ Troubleshoot results received:", results);
 
       // Update API connection status and Account Details based on results
       if (results.success && results.api_key_valid && results.ip_whitelisted) {
@@ -482,7 +468,6 @@ function initializeTroubleshootPage() {
       });
       
       pieChart.setData(chartData);
-      console.log('✅ Pie chart created successfully');
       
       // Store reference for cleanup
       window.currentPieChart = pieChart;
@@ -594,7 +579,6 @@ function initializeTroubleshootPage() {
   const testButton = document.getElementById('test-connection');
   if (testButton) {
     testButton.onclick = testBinanceConnection;
-    console.log("✅ Test button event wired");
   } else {
     console.error("❌ Test connection button not found");
   }
@@ -621,7 +605,6 @@ function initializeTroubleshootPage() {
       table.style.display = 'table';
     }
     
-    console.log("✅ Section alignment fixes applied");
   }
 
   // Initialize alignment fix
@@ -631,7 +614,6 @@ function initializeTroubleshootPage() {
   updateAPIConnectionStatus('ready', 'Ready to test connection');
 
   // Start loading account details
-  console.log("🚀 Starting account details load...");
   loadAccountDetails();
 }
 
@@ -641,18 +623,15 @@ console.log("📄 Script loaded, setting up initialization...");
 // Strategy 1: DOMContentLoaded
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    console.log("🎯 DOMContentLoaded fired");
     setTimeout(initializeTroubleshootPage, 100);
   });
 } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
   // Strategy 2: DOM already ready
-  console.log("🎯 DOM already ready, initializing immediately");
   setTimeout(initializeTroubleshootPage, 100);
 }
 
 // Strategy 3: Window load as fallback
 window.addEventListener('load', () => {
-  console.log("🎯 Window load event fired");
   // Only initialize if not already done
   if (!window.troubleshootInitialized) {
     window.troubleshootInitialized = true;
@@ -663,7 +642,6 @@ window.addEventListener('load', () => {
 // Strategy 4: Immediate execution with longer delay as final fallback
 setTimeout(() => {
   if (!window.troubleshootInitialized) {
-    console.log("🎯 Fallback initialization after 1 second");
     window.troubleshootInitialized = true;
     initializeTroubleshootPage();
   }

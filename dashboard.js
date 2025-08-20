@@ -216,7 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load accounts and bind events
   window.loadAccounts = async function() {
-    console.log("📋 Loading accounts...");
     
     const token = localStorage.getItem("token");
     if (!token) {
@@ -242,7 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const accounts = await res.json();
-      console.log(`✅ Loaded ${accounts.length} accounts`);
       
       // Store accounts globally for modal access
       window.lastLoadedAccounts = accounts;
@@ -272,11 +270,9 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.onclick = function(e) {
           e.preventDefault();
           e.stopImmediatePropagation();
-          console.log(`✏️ EDIT CLICKED for ${accountName}`);
           
           const account = accounts.find(acc => acc.id === accountId);
           if (account) {
-            console.log("🎯 Found account data:", account);
             modalManager.openEditAccountModal(account);
           } else {
             console.error("❌ Account not found for ID:", accountId);
@@ -326,7 +322,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const exchange = btn.dataset.exchange;
           const accountType = btn.dataset.type;
           
-          console.log(`📋 Assign strategy clicked for ${accountName}`);
           
           const account = accounts.find(acc => acc.id === accountId);
           if (account) {
@@ -337,7 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       });
 
-      console.log("✅ All event listeners bound successfully");
     }, 50);
   }
 
@@ -468,7 +462,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const marketInsightsBtn = document.getElementById("market-insights-btn");
     if (marketInsightsBtn) {
       marketInsightsBtn.onclick = () => {
-        console.log("📊 MARKET INSIGHTS clicked");
         window.location.href = "/market-insights.html";
       };
     }
@@ -486,7 +479,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const referralsBtn = document.getElementById("referrals-btn");
     if (referralsBtn) {
       referralsBtn.onclick = () => {
-        console.log("🎯 REFERRALS clicked");
         window.location.href = "/referrals.html";
       };
     }
@@ -598,7 +590,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const refreshStrategiesBtn = document.getElementById('refresh-strategies');
   if (refreshStrategiesBtn) {
     refreshStrategiesBtn.onclick = async () => {
-      console.log("🔄 Refresh strategies clicked");
       showToast("Refreshing strategies...", 'info', 2000);
       
       // Reload strategies by calling loadAccounts which will trigger updateStrategyManagement

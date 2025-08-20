@@ -1,6 +1,5 @@
 // admin-users.js - Admin User Management v1.0
 
-console.log('🚀 Loading admin-users.js v1.0');
 
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
@@ -188,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       
       if (healthResponse.ok) {
-        console.log('✅ API connectivity verified');
       }
     } catch (error) {
       // Silent fail - don't block user experience
@@ -329,7 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Debug invoice data for first user
         if (users.length > 0) {
-          console.log('🔍 Sample user invoice data:', {
             user: users[0].email || users[0].username,
             paid_invoices_count: users[0].paid_invoices_count,
             total_paid_amount: users[0].total_paid_amount,

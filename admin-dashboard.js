@@ -1,6 +1,5 @@
 // admin-dashboard.js - Admin Dashboard Logic v2.4
 
-console.log('🚀 Loading admin-dashboard.js v2.4 with wallet verification and email reminders');
 
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
@@ -234,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // === SYSTEM OVERVIEW FUNCTIONS ===
   async function loadSystemOverview() {
     try {
-      console.log('📊 Loading system overview...');
       const response = await fetch(`${INVOICING_API_BASE}/admin/dashboard/summary`, {
         headers: getAuthHeaders(token)
       });
@@ -308,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // === WALLET VERIFICATION FUNCTIONS ===
   async function loadWalletVerifications() {
     try {
-      console.log('💳 Loading wallet verifications...');
       const response = await fetch(`${INVOICING_API_BASE}/admin/wallet/pending-verifications`, {
         headers: getAuthHeaders(token)
       });
@@ -510,7 +507,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // === TIER UPGRADES FUNCTIONS ===
   async function loadTierUpgrades() {
     try {
-      console.log('⬆️ Loading tier upgrades...');
       const response = await fetch(`${INVOICING_API_BASE}/admin/tier-upgrades/pending`, {
         headers: getAuthHeaders(token)
       });
@@ -629,7 +625,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // === REFERRALS FUNCTIONS ===
   async function loadReferrals() {
     try {
-      console.log('🎯 Loading referrals... (v2.1 with enhanced debugging)');
       const response = await fetch(`${INVOICING_API_BASE}/admin/referrals`, {
         headers: getAuthHeaders(token)
       });
@@ -651,11 +646,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById('referrals-overview');
     
     // Debug logging to see what data we're getting
-    console.log('🔍 Referrals data received:', data);
-    console.log('🔍 Referrers array:', data.referrers);
-    console.log('🔍 Referrers length:', data.referrers ? data.referrers.length : 'undefined');
-    console.log('🔍 First referrer details:', data.referrers && data.referrers[0] ? data.referrers[0] : 'no first referrer');
-    console.log('🔍 Data type check - is array?', Array.isArray(data.referrers));
     
     // Use the actual referrers array length for accurate count
     const actualReferrersCount = (data.referrers && Array.isArray(data.referrers)) ? data.referrers.length : 0;
@@ -688,12 +678,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show detailed referrers list if available
     let referrersHtml = '';
     if (data.referrers && data.referrers.length > 0) {
-      console.log('✅ Showing referrers list with', data.referrers.length, 'referrers');
-      console.log('🔍 About to generate HTML for referrers:', data.referrers);
       
       try {
         const referrerItems = data.referrers.map((referrer, index) => {
-          console.log(`🔍 Processing referrer ${index}:`, referrer);
           
           // Determine wallet status and styling
           const hasWallet = referrer.wallet_address && referrer.wallet_address.trim() !== '';
@@ -749,7 +736,6 @@ document.addEventListener("DOMContentLoaded", () => {
             ${referrerItems.join('')}
           </div>
         `;
-        console.log('🔍 Generated referrers HTML length:', referrersHtml.length);
       } catch (error) {
         console.error('❌ Error generating referrers HTML:', error);
         referrersHtml = `
@@ -760,7 +746,6 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
     } else if (data.total_referrers > 0) {
-      console.log('ℹ️ No referrers with pending payouts, but total_referrers > 0');
       referrersHtml = `
         <div class="empty-state admin" style="margin-top: 20px;">
           <h4>No Pending Payouts</h4>
@@ -768,7 +753,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
     } else {
-      console.log('ℹ️ No referrers data at all');
       referrersHtml = `
         <div class="empty-state admin" style="margin-top: 20px;">
           <h4>No Referrals Data</h4>
@@ -801,14 +785,9 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
     
-    console.log('🔍 Final summaryHtml length:', summaryHtml.length);
-    console.log('🔍 Final referrersHtml length:', referrersHtml.length);
-    console.log('🔍 Final paidPerUserHtml length:', paidPerUserHtml.length);
-    console.log('🔍 Final combined HTML length:', (summaryHtml + referrersHtml + paidPerUserHtml).length);
     
     container.innerHTML = summaryHtml + referrersHtml + paidPerUserHtml;
     
-    console.log('🔍 Container after innerHTML set:', container.innerHTML.length, 'chars');
   }
 
   // Show wallet required message
@@ -874,7 +853,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Payout successful:', result);
         showToast(`✅ Successfully paid out $${amount.toFixed(2)} to ${username}`, 'success');
         
         // Reload referrals data to update the display
@@ -898,7 +876,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // === ACTIVITY LOG FUNCTIONS ===
   async function loadActivity() {
     try {
-      console.log('📋 Loading activity...');
       const response = await fetch(`${INVOICING_API_BASE}/admin/dashboard/activity`, {
         headers: getAuthHeaders(token)
       });
@@ -1687,7 +1664,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize dashboard
-  console.log('🚀 Initializing admin dashboard...');
   loadSystemOverview();
   loadWalletVerifications();
   loadInvoices();

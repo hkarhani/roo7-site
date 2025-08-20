@@ -76,10 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (!userSubscription || userSubscription.status !== 'active') {
       activationSection.style.display = 'block';
-      console.log('ℹ️ No active subscription - showing activation section');
     } else {
       activationSection.style.display = 'none';
-      console.log('✅ Active subscription found - hiding activation section');
     }
   }
 
@@ -92,9 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         userSubscription = await response.json();
-        console.log('✅ Subscription loaded:', userSubscription);
       } else if (response.status === 404) {
-        console.log('ℹ️ No subscription found');
         userSubscription = null;
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -120,7 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
       allInvoices = data.invoices || [];
       filteredInvoices = [...allInvoices];
       
-      console.log(`✅ Loaded ${allInvoices.length} invoices`);
       updateInvoicesTable();
       
     } catch (error) {
@@ -819,6 +814,5 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize the page
-  console.log('🚀 Initializing invoices page...');
   initializePage();
 });
