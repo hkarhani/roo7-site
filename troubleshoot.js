@@ -581,7 +581,7 @@ function initializeTroubleshootPage() {
       const headerRow = document.createElement('tr');
       
       if (tab.type === 'assets') {
-        headerRow.innerHTML = '<th>Asset</th><th>Wallet Balance</th><th>Unrealized PnL</th><th>Margin Balance</th><th>Available</th><th>Value (USDT)</th><th>%</th>';
+        headerRow.innerHTML = '<th>Asset</th><th>Wallet Balance</th><th>Margin Balance</th><th>Available</th><th>Value (USDT)</th><th>%</th>';
       } else if (tab.type === 'positions') {
         headerRow.innerHTML = '<th>Symbol</th><th>Direction</th><th>Position</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th><th>Value (USDT)</th><th>%</th>';
       } else if (tab.type === 'orders') {
@@ -1144,9 +1144,6 @@ function initializeTroubleshootPage() {
         parseFloat(asset.wallet_balance).toFixed(6) : 
         parseFloat(asset.total || asset.free || 0).toFixed(6);
       
-      const unrealizedPnl = asset.unrealized_pnl !== undefined ? 
-        parseFloat(asset.unrealized_pnl).toFixed(4) : 'N/A';
-      
       const marginBalance = asset.margin_balance !== undefined ? 
         parseFloat(asset.margin_balance).toFixed(6) : 
         parseFloat(asset.total || 0).toFixed(6);
@@ -1158,13 +1155,10 @@ function initializeTroubleshootPage() {
       const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
       const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
       
-      const pnlClass = unrealizedPnl !== 'N/A' && parseFloat(unrealizedPnl) >= 0 ? 'pnl-positive' : 'pnl-negative';
-      
       const row = tableBody.insertRow();
       row.innerHTML = `
         <td><strong>${asset.asset}</strong></td>
         <td>${walletBalance}</td>
-        <td class="${pnlClass}">${unrealizedPnl}</td>
         <td>${marginBalance}</td>
         <td>${availableBalance}</td>
         <td>${usdtValue}</td>
