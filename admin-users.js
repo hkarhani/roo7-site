@@ -28,13 +28,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let totalUsers = 0;
   let selectedUsers = new Set();
   let currentUser = null;
+  let isLoading = false;
+  let searchCache = new Map(); // Cache search results for better performance
 
   // 🔒 SECURITY: Verify admin access before loading page
   async function verifyAdminAccess() {
     try {
-      console.log('🔐 Verifying admin access...');
-      console.log('🔗 AUTH_API_BASE:', AUTH_API_BASE);
-      console.log('🔑 Token present:', !!token);
+      // Show loading indicator during auth check
+      const tbody = document.querySelector('#admin-users-table tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="16" class="loading-message">🔐 Verifying admin access...</td></tr>';
+      }
       
       const response = await fetch(`${AUTH_API_BASE}/me`, {
         headers: {
@@ -43,20 +47,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      console.log('📥 Auth response status:', response.status);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Auth API error:', errorText);
-        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        throw new Error(`Authentication failed: ${response.status}`);
       }
 
       const userData = await response.json();
-      console.log('👤 User data received:', userData);
       
       if (!userData.is_admin) {
-        console.error("🚨 SECURITY VIOLATION: Unauthorized admin access attempt");
-        console.log('👤 User is_admin status:', userData.is_admin);
         showSecurityViolationMessage();
         setTimeout(() => {
           window.location.href = "/dashboard.html";
@@ -65,11 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       currentUser = userData;
-      console.log('✅ Admin access verified successfully');
       return true;
     } catch (error) {
-      console.error("❌ Error verifying admin access:", error);
-      showToast('Failed to verify admin access. Redirecting to login...', 'error');
+      showToast('Authentication failed. Redirecting...', 'error');
       setTimeout(() => {
         window.location.href = "/auth.html";
       }, 2000);
@@ -137,68 +132,22 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Test API connectivity
+  // Optimized API connectivity test - minimal and non-blocking
   async function testApiConnectivity() {
-    console.log('🧪 Testing API connectivity...');
-    
-    // Test invoicing API first
     try {
-      console.log('📡 Testing invoicing API health endpoint...');
+      // Quick health check without verbose logging
       const healthResponse = await fetch(`${INVOICING_API_BASE}/health`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 3000 // 3 second timeout
       });
-      
-      console.log('📥 Health endpoint response:', healthResponse.status);
       
       if (healthResponse.ok) {
-        const healthData = await healthResponse.json();
-        console.log('✅ Invoicing API health check passed:', healthData);
-      } else {
-        console.warn('⚠️ Invoicing API health check failed:', healthResponse.status);
+        console.log('✅ API connectivity verified');
       }
     } catch (error) {
-      console.error('❌ Invoicing API connectivity test failed:', error);
-    }
-    
-    // Test auth API
-    try {
-      console.log('📡 Testing auth API...');
-      const authTestResponse = await fetch(`${AUTH_API_BASE}/health`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      console.log('📥 Auth API health response:', authTestResponse.status);
-      
-      if (authTestResponse.ok) {
-        const authHealthData = await authTestResponse.json();
-        console.log('✅ Auth API health check passed:', authHealthData);
-      } else {
-        console.warn('⚠️ Auth API health check failed:', authTestResponse.status);
-      }
-    } catch (error) {
-      console.error('❌ Auth API connectivity test failed:', error);
-    }
-    
-    // Test authenticated endpoint
-    try {
-      console.log('📡 Testing authenticated endpoint...');
-      const meResponse = await fetch(`${AUTH_API_BASE}/me`, {
-        headers: getAuthHeaders(token)
-      });
-      
-      console.log('📥 /me endpoint response:', meResponse.status);
-      
-      if (meResponse.ok) {
-        const userData = await meResponse.json();
-        console.log('✅ /me endpoint working:', userData);
-      } else {
-        const errorText = await meResponse.text();
-        console.warn('⚠️ /me endpoint failed:', meResponse.status, errorText);
-      }
-    } catch (error) {
-      console.error('❌ /me endpoint test failed:', error);
+      // Silent fail - don't block user experience
+      console.warn('⚠️ API connectivity check failed');
     }
   }
 
@@ -234,10 +183,47 @@ document.addEventListener("DOMContentLoaded", () => {
   // === USER MANAGEMENT FUNCTIONS ===
   
   async function loadUsers(searchTerm = '', statusFilter = '', tierFilter = '', offset = 0, limit = pageSize) {
+    // Prevent concurrent loading requests
+    if (isLoading) {
+      return;
+    }
+    
+    isLoading = true;
+    
     try {
-      console.log('👥 Loading users...', { searchTerm, statusFilter, tierFilter, offset, limit });
-      console.log('🔗 INVOICING_API_BASE:', INVOICING_API_BASE);
-      console.log('🔑 Token present:', !!token);
+      // Check cache for search results (improves performance for repeated searches)
+      const cacheKey = `${searchTerm}-${statusFilter}-${tierFilter}-${offset}-${limit}`;
+      if (searchTerm && searchCache.has(cacheKey)) {
+        const cachedData = searchCache.get(cacheKey);
+        currentUsers = cachedData.users;
+        filteredUsers = cachedData.users;
+        totalUsers = cachedData.total;
+        displayUsers(cachedData.users);
+        updatePagination();
+        updateUserStats();
+        showToast(`Loaded ${cachedData.users.length} users (cached)`, 'info', 1000);
+        return;
+      }
+      
+      // Show enhanced loading indicator with progress
+      const tbody = document.querySelector('#admin-users-table tbody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="16" class="loading-message">
+            <div class="loading-spinner">🔄</div>
+            <div class="loading-text">Loading users...</div>
+            <div class="loading-progress">Please wait...</div>
+          </td>
+        </tr>
+      `;
+      
+      // Optimized loading timeout - shorter duration
+      const loadingTimeout = setTimeout(() => {
+        const loadingProgress = document.querySelector('.loading-progress');
+        if (loadingProgress && isLoading) {
+          loadingProgress.textContent = 'Processing user data...';
+        }
+      }, 800);
       
       let url = `${INVOICING_API_BASE}/admin/users?limit=${limit}&offset=${offset}`;
       
@@ -246,22 +232,15 @@ document.addEventListener("DOMContentLoaded", () => {
         url = `${INVOICING_API_BASE}/admin/users/search?q=${encodeURIComponent(searchTerm)}`;
       }
       
-      console.log('📡 Making request to:', url);
-      
       const response = await fetch(url, {
         headers: getAuthHeaders(token)
       });
       
-      console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+      clearTimeout(loadingTimeout);
       
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 Raw API response:', data);
-        
         let users = data.users || [];
-        console.log('👥 Users array:', users);
-        console.log('📊 Total from API:', data.total);
         
         // Apply client-side filtering for status and tier
         if (statusFilter || tierFilter) {
@@ -294,27 +273,37 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
         
+        // Cache search results for better performance
+        if (searchTerm && searchCache.size < 50) { // Limit cache size
+          searchCache.set(cacheKey, { users, total: data.total || users.length });
+        }
+        
         currentUsers = users;
         filteredUsers = users;
         totalUsers = data.total || users.length;
-        
-        console.log('✅ Final users to display:', users.length);
-        console.log('✅ Total users count:', totalUsers);
         
         displayUsers(users);
         updatePagination();
         updateUserStats();
         
+        // Show concise success feedback
+        if (searchTerm) {
+          showToast(`Found ${users.length} users`, 'success', 1200);
+        } else if (users.length > 0) {
+          showToast(`Loaded ${users.length} users`, 'success', 1200);
+        }
+        
       } else {
         const errorText = await response.text();
-        console.error('❌ API Error Response:', errorText);
-        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
       console.error('❌ Error loading users:', error);
       document.querySelector('#admin-users-table tbody').innerHTML = 
-        '<tr><td colspan="11" class="loading-message">Failed to load users - Check console for details</td></tr>';
-      showToast(`Failed to load users: ${error.message}`, 'error');
+        '<tr><td colspan="16" class="loading-message">❌ Failed to load users. Please try again.</td></tr>';
+      showToast('Failed to load users. Please try again.', 'error');
+    } finally {
+      isLoading = false;
     }
   }
   
@@ -322,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.querySelector('#admin-users-table tbody');
     
     if (!Array.isArray(users) || users.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" class="loading-message">No users found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="16" class="loading-message">No users found</td></tr>';
       return;
     }
     
@@ -330,6 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const isDisabled = user.is_disabled || false;
       const isAdmin = user.is_admin || false;
       const emailVerified = user.email_verified || false;
+      const isPayingCustomer = user.is_paying_customer || false;
       
       let statusBadge = '';
       if (isDisabled) {
@@ -344,8 +334,27 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A';
       
+      // Format subscription period
+      let subscriptionPeriod = 'N/A';
+      if (user.subscription_start && user.subscription_end) {
+        const startDate = new Date(user.subscription_start).toLocaleDateString();
+        const endDate = new Date(user.subscription_end).toLocaleDateString();
+        subscriptionPeriod = `${startDate} - ${endDate}`;
+      } else if (user.subscription_start) {
+        const startDate = new Date(user.subscription_start).toLocaleDateString();
+        subscriptionPeriod = `${startDate} - Ongoing`;
+      }
+      
+      // Determine row class for paying customer highlighting
+      let rowClass = '';
+      if (isDisabled) {
+        rowClass = 'user-disabled';
+      } else if (isPayingCustomer) {
+        rowClass = 'paying-customer';
+      }
+      
       return `
-        <tr class="${isDisabled ? 'user-disabled' : ''}" data-user-id="${user._id}">
+        <tr class="${rowClass}" data-user-id="${user._id}">
           <td>
             <input type="checkbox" class="user-checkbox" value="${user._id}" 
                    ${isAdmin ? 'disabled title="Cannot select admin users"' : ''} />
@@ -354,6 +363,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="user-info">
               <span class="username" onclick="viewUserDetails('${user._id}')">${user.username || 'N/A'}</span>
               ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+              ${isPayingCustomer ? '<span class="paying-badge">PAYING</span>' : ''}
             </div>
           </td>
           <td>${user.email || 'N/A'}</td>
@@ -362,6 +372,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${user.strategies_assigned || 0}</td>
           <td>$${(user.active_funds || 0).toLocaleString()}</td>
           <td><span class="tier-badge tier-${user.current_tier}">${user.current_tier || 'Free'}</span></td>
+          <td><span class="invoice-count paid">${user.paid_invoices || 0}</span></td>
+          <td><span class="invoice-count unpaid">${user.unpaid_invoices || 0}</span></td>
+          <td><span class="referral-count">${user.total_referrals || 0}</span></td>
+          <td><span class="referral-count successful">${user.successful_referrals || 0}</span></td>
+          <td><span class="subscription-period" title="${subscriptionPeriod}">${subscriptionPeriod}</span></td>
           <td>${statusBadge}</td>
           <td>${createdDate}</td>
           <td>
@@ -519,6 +534,42 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="detail-label">Active Funds:</span>
               <span class="detail-value">$${(user.active_funds || 0).toLocaleString()}</span>
             </div>
+            <div class="detail-row">
+              <span class="detail-label">Paying Customer:</span>
+              <span class="detail-value">${user.is_paying_customer ? '✅ Yes' : '❌ No'}</span>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Invoice & Referral Statistics</h4>
+            <div class="detail-row">
+              <span class="detail-label">Paid Invoices:</span>
+              <span class="detail-value">${user.paid_invoices || 0}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Unpaid Invoices:</span>
+              <span class="detail-value">${user.unpaid_invoices || 0}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Total Referrals:</span>
+              <span class="detail-value">${user.total_referrals || 0}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Successful Referrals:</span>
+              <span class="detail-value">${user.successful_referrals || 0}</span>
+            </div>
+            ${user.subscription_start ? `
+              <div class="detail-row">
+                <span class="detail-label">Subscription Start:</span>
+                <span class="detail-value">${new Date(user.subscription_start).toLocaleDateString()}</span>
+              </div>
+            ` : ''}
+            ${user.subscription_end ? `
+              <div class="detail-row">
+                <span class="detail-label">Subscription End:</span>
+                <span class="detail-value">${new Date(user.subscription_end).toLocaleDateString()}</span>
+              </div>
+            ` : ''}
           </div>
           
           <div class="detail-section">
@@ -671,9 +722,22 @@ document.addEventListener("DOMContentLoaded", () => {
     loadUsers();
   };
   
-  // Enter key for search
+  // Debounced search for better performance
+  let searchTimeout;
+  document.getElementById('user-search').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      if (e.target.value.length >= 3 || e.target.value.length === 0) {
+        currentPage = 1;
+        refreshCurrentView();
+      }
+    }, 500); // 500ms debounce
+  });
+  
+  // Enter key for immediate search
   document.getElementById('user-search').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
+      clearTimeout(searchTimeout);
       currentPage = 1;
       refreshCurrentView();
     }
@@ -897,30 +961,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Only proceed with user management if access is verified
   verifyAdminAccess().then(isAuthorized => {
     if (!isAuthorized) {
-      console.log('❌ Admin access verification failed');
       return; // Stop execution if not authorized
     }
 
-    console.log('🚀 Initializing admin user management...');
-    console.log('🔗 API Base URLs:', {
-      INVOICING_API_BASE,
-      AUTH_API_BASE
-    });
+    // Show immediate success feedback
+    showToast('Admin panel ready', 'success', 1500);
     
     // Initialize with empty state - user must click Load All Users or search
     updateUserStats();
     updatePagination();
     
-    console.log('✅ Admin user management initialized successfully');
+    // Run API connectivity test in background (completely non-blocking)
+    setTimeout(() => {
+      testApiConnectivity();
+    }, 500);
     
-    // DEBUG: Auto-load users to see what happens
-    console.log('🔍 DEBUG: Auto-loading users for debugging...');
-    
-    // First test basic connectivity
-    testApiConnectivity().then(() => {
-      loadUsers();
-    });
   }).catch(error => {
-    console.error('❌ Failed to verify admin access:', error);
+    console.error('❌ Admin access verification failed');
+    showToast('Authentication failed', 'error');
   });
 });

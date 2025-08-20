@@ -141,7 +141,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  min-width: 1200px;
+  min-width: 1600px; /* Increased for new columns */
 }
 
 #admin-users-table th {
@@ -221,6 +221,94 @@
   border-radius: 10px;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+/* ===== PAYING CUSTOMER STYLING ===== */
+.paying-customer {
+  background: #e8f5e8 !important;
+  border-left: 4px solid #28a745 !important;
+}
+
+.dark-theme .paying-customer {
+  background: #1e3a1e !important;
+  border-left: 4px solid #4caf50 !important;
+}
+
+.paying-badge {
+  background: #28a745;
+  color: white;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 5px;
+}
+
+/* ===== INVOICE AND REFERRAL COUNTS ===== */
+.invoice-count, .referral-count {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 30px;
+}
+
+.invoice-count.paid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.dark-theme .invoice-count.paid {
+  background: #1e3a1e;
+  color: #4caf50;
+}
+
+.invoice-count.unpaid {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.dark-theme .invoice-count.unpaid {
+  background: #3a1e1e;
+  color: #f44336;
+}
+
+.referral-count {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.dark-theme .referral-count {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+.referral-count.successful {
+  background: #e8f5e8;
+  color: #155724;
+}
+
+.dark-theme .referral-count.successful {
+  background: #1e3a1e;
+  color: #4caf50;
+}
+
+/* ===== SUBSCRIPTION PERIOD ===== */
+.subscription-period {
+  font-size: 11px;
+  color: #666;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.dark-theme .subscription-period {
+  color: #ccc;
 }
 
 /* ===== STATUS BADGES ===== */
@@ -729,7 +817,13 @@
   }
   
   #admin-users-table {
-    min-width: 800px;
+    min-width: 1000px; /* Increased for new columns */
+  }
+  
+  /* Make subscription period more readable on mobile */
+  .subscription-period {
+    max-width: 80px;
+    font-size: 10px;
   }
 }
 
@@ -742,6 +836,38 @@
 }
 
 .dark-theme .loading-message {
+  color: #ccc;
+}
+
+.loading-spinner {
+  font-size: 24px;
+  margin-bottom: 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #1976d2;
+}
+
+.dark-theme .loading-text {
+  color: #60a5fa;
+}
+
+.loading-progress {
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+}
+
+.dark-theme .loading-progress {
   color: #ccc;
 }
 
