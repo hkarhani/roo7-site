@@ -979,6 +979,64 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
 
+  // === NOTIFICATION SYSTEM ===
+  
+  function showNotification(message, type = 'info') {
+    // Simple notification system
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <span>${message}</span>
+      <button onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Add styles if not already present
+    if (!document.querySelector('#notification-styles')) {
+      const styles = document.createElement('style');
+      styles.id = 'notification-styles';
+      styles.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          color: white;
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          max-width: 300px;
+          animation: slideIn 0.3s ease;
+        }
+        .notification-success { background-color: #28a745; }
+        .notification-error { background-color: #dc3545; }
+        .notification-info { background-color: #17a2b8; }
+        .notification button {
+          background: none;
+          border: none;
+          color: white;
+          font-size: 18px;
+          cursor: pointer;
+        }
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
   // === SOURCE ACCOUNT MANAGEMENT ===
   
   let currentEditingSourceAccountId = null;
