@@ -1634,3 +1634,35 @@
   }
 }
 
+/* VERIFICATION MODAL HEADERS */
+.assets-header,
+.positions-header {
+  display: grid;
+  font-weight: bold;
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 8px 0;
+  margin-bottom: 5px;
+}
+
+.assets-header {
+  grid-template-columns: 60px 80px 100px 60px;
+  gap: 10px;
+}
+
+.positions-header {
+  grid-template-columns: 100px 80px 80px 100px 60px 100px;
+  gap: 10px;
+}
+
+/* Responsive adjustments for headers */
+@media (max-width: 1200px) {
+  .positions-header {
+    grid-template-columns: 80px 60px 70px 80px 50px 80px;
+    gap: 8px;
+    font-size: 11px;
+  }
+}
+

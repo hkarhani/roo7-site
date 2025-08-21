@@ -1408,6 +1408,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="verification-section">
               <h5>🔸 ${data.account_type === 'SPOT' ? 'Top SPOT Assets' : 'SPOT Assets Distribution'} (${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || []).filter(a => (a.usdt_value || a.value_usdt || 0) > 0).length} assets)</h5>
               <div class="assets-list">
+                <div class="assets-header">
+                  <span class="header-symbol">Asset</span>
+                  <span class="header-amount">Balance</span>
+                  <span class="header-value">Value (USDT)</span>
+                  <span class="header-percent">%</span>
+                </div>
                 ${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || [])
                   .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 0.01) // Show only assets worth more than 1 cent
                   .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
@@ -1433,6 +1439,12 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="verification-section">
                 <h5>🔹 Coin-M FUTURES Assets (${coinmAssets.length})</h5>
                 <div class="assets-list">
+                  <div class="assets-header">
+                    <span class="header-symbol">Asset</span>
+                    <span class="header-amount">Balance</span>
+                    <span class="header-value">Value (USDT)</span>
+                    <span class="header-percent">%</span>
+                  </div>
                   ${coinmAssets
                     .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                     .map(asset => `
@@ -1455,6 +1467,12 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="verification-section">
                 <h5>🔶 USDⓈ-M FUTURES Assets (${usdtmAssets.length})</h5>
                 <div class="assets-list">
+                  <div class="assets-header">
+                    <span class="header-symbol">Asset</span>
+                    <span class="header-amount">Balance</span>
+                    <span class="header-value">Value (USDT)</span>
+                    <span class="header-percent">%</span>
+                  </div>
                   ${usdtmAssets
                     .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                     .map(asset => `
@@ -1477,6 +1495,14 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="verification-section">
                 <h5>📈 Coin-M FUTURES Positions (${coinmPositions.length})</h5>
                 <div class="positions-list">
+                  <div class="positions-header">
+                    <span class="header-symbol">Symbol</span>
+                    <span class="header-direction">Direction</span>
+                    <span class="header-quantity">Quantity</span>
+                    <span class="header-value">Position Value</span>
+                    <span class="header-percent">%</span>
+                    <span class="header-pnl">Unrealized PnL</span>
+                  </div>
                   ${coinmPositions
                     .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                     .map(pos => {
@@ -1514,6 +1540,14 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="verification-section">
                 <h5>📊 USDⓈ-M FUTURES Positions (${usdtmPositions.length})</h5>
                 <div class="positions-list">
+                  <div class="positions-header">
+                    <span class="header-symbol">Symbol</span>
+                    <span class="header-direction">Direction</span>
+                    <span class="header-quantity">Quantity</span>
+                    <span class="header-value">Position Value</span>
+                    <span class="header-percent">%</span>
+                    <span class="header-pnl">Unrealized PnL</span>
+                  </div>
                   ${usdtmPositions
                     .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                     .map(pos => {
