@@ -1434,7 +1434,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           ${(() => {
             const coinmAssets = (data.detailed_breakdown.asset_details?.coinm_assets_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_assets || [])
-              .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 1); // Only show assets worth more than $1
+              .filter(asset => (asset.wallet_balance || asset.total || asset.walletBalance || 0) > 0 || (asset.usdt_value || asset.value_usdt || 0) > 1); // Show assets with balance OR value
             return coinmAssets.length > 0 ? `
               <div class="verification-section">
                 <h5>🔹 Coin-M FUTURES Assets (${coinmAssets.length})</h5>
@@ -1452,7 +1452,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .map(asset => `
                       <div class="coinm-asset-item">
                         <span class="asset-symbol">${asset.asset}</span>
-                        <span class="asset-wallet">${(asset.wallet_balance || asset.total || 0).toFixed(8)}</span>
+                        <span class="asset-wallet">${(asset.wallet_balance || asset.total || asset.walletBalance || asset.balance || 0).toFixed(8)}</span>
                         <span class="asset-pnl ${(asset.unrealized_pnl || 0) >= 0 ? 'positive' : 'negative'}">
                           ${(asset.unrealized_pnl || 0) >= 0 ? '+' : ''}${formatCurrency(asset.unrealized_pnl || 0)}
                         </span>
