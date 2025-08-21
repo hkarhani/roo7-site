@@ -1340,13 +1340,13 @@ document.addEventListener("DOMContentLoaded", () => {
           ${data.account_type === 'FUTURES' ? `
             <div class="value-card">
               <h5>🔸 SPOT Value</h5>
-              <div class="value-medium">${formatCurrency(data.spot_value)}</div>
-              <small>${formatPercent(data.detailed_breakdown?.distribution?.spot_percentage)}</small>
+              <div class="value-medium">${formatCurrency(data.spot_value || data.detailed_breakdown?.spot_total_value)}</div>
+              <small>${data.detailed_breakdown?.spot_total_value ? formatPercent((data.detailed_breakdown.spot_total_value / data.detailed_breakdown.total_account_value) * 100) : formatPercent(data.detailed_breakdown?.distribution?.spot_percentage)}</small>
             </div>
             <div class="value-card">
               <h5>🔹 FUTURES Value</h5>
-              <div class="value-medium">${formatCurrency(data.futures_value)}</div>
-              <small>USDⓈ-M: ${formatPercent(data.detailed_breakdown?.distribution?.futures_usdtm_percentage)} | Coin-M: ${formatPercent(data.detailed_breakdown?.distribution?.futures_coinm_percentage)}</small>
+              <div class="value-medium">${formatCurrency(data.futures_value || data.detailed_breakdown?.futures_total_value)}</div>
+              <small>${data.detailed_breakdown?.futures_total_value ? formatPercent((data.detailed_breakdown.futures_total_value / data.detailed_breakdown.total_account_value) * 100) : 'USDⓈ-M: ' + formatPercent(data.detailed_breakdown?.distribution?.futures_usdtm_percentage) + ' | Coin-M: ' + formatPercent(data.detailed_breakdown?.distribution?.futures_coinm_percentage)}</small>
             </div>
             <div class="value-card">
               <h5>📊 Unrealized PnL</h5>
@@ -1377,103 +1377,103 @@ document.addEventListener("DOMContentLoaded", () => {
               ${data.account_type === 'SPOT' ? `
                 <div class="dist-item">
                   <span class="dist-label">🔸 SPOT Assets:</span>
-                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.spot_percentage || 100)}</span>
+                  <span class="dist-value">${data.detailed_breakdown?.distribution?.spot_percentage ? formatPercent(data.detailed_breakdown.distribution.spot_percentage) : '100.0%'}</span>
                 </div>
                 <div class="dist-item">
                   <span class="dist-label">💵 Total Cash:</span>
-                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.cash_percentage || 100)}</span>
+                  <span class="dist-value">${data.detailed_breakdown?.distribution?.cash_percentage ? formatPercent(data.detailed_breakdown.distribution.cash_percentage) : '100.0%'}</span>
                 </div>
                 <div class="dist-item">
                   <span class="dist-label">📋 Open Orders:</span>
-                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.open_orders_percentage || 0)}</span>
+                  <span class="dist-value">${data.detailed_breakdown?.distribution?.open_orders_percentage ? formatPercent(data.detailed_breakdown.distribution.open_orders_percentage) : '0.0%'}</span>
                 </div>
               ` : `
                 <div class="dist-item">
-                  <span class="dist-label">💵 Cash Assets:</span>
-                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.cash_percentage)}</span>
+                  <span class="dist-label">💵 SPOT Assets:</span>
+                  <span class="dist-value">${data.detailed_breakdown?.spot_total_value && data.detailed_breakdown?.total_account_value ? formatPercent((data.detailed_breakdown.spot_total_value / data.detailed_breakdown.total_account_value) * 100) : formatPercent(data.detailed_breakdown?.distribution?.cash_percentage || 0)}</span>
                 </div>
                 <div class="dist-item">
-                  <span class="dist-label">📈 Active Positions:</span>
-                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.positions_percentage)}</span>
+                  <span class="dist-label">📈 FUTURES Assets:</span>
+                  <span class="dist-value">${data.detailed_breakdown?.futures_total_value && data.detailed_breakdown?.total_account_value ? formatPercent((data.detailed_breakdown.futures_total_value / data.detailed_breakdown.total_account_value) * 100) : formatPercent(data.detailed_breakdown?.distribution?.positions_percentage || 0)}</span>
                 </div>
                 <div class="dist-item">
                   <span class="dist-label">📋 Open Orders:</span>
-                  <span class="dist-value">${formatPercent(data.detailed_breakdown.distribution.open_orders_percentage || 0)}</span>
+                  <span class="dist-value">${data.detailed_breakdown?.distribution?.open_orders_percentage ? formatPercent(data.detailed_breakdown.distribution.open_orders_percentage) : '0.0%'}</span>
                 </div>
               `}
             </div>
           </div>
 
-          ${data.detailed_breakdown.asset_details?.spot_assets_with_percentages?.length > 0 ? `
+          ${(data.detailed_breakdown.asset_details?.spot_assets_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.spot_assets?.length > 0) ? `
             <div class="verification-section">
-              <h5>🔸 ${data.account_type === 'SPOT' ? 'Top SPOT Assets' : 'SPOT Assets Distribution'} (${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0).length} assets)</h5>
+              <h5>🔸 ${data.account_type === 'SPOT' ? 'Top SPOT Assets' : 'SPOT Assets Distribution'} (${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || []).filter(a => (a.usdt_value || a.value_usdt || 0) > 0).length} assets)</h5>
               <div class="assets-list">
-                ${data.detailed_breakdown.asset_details.spot_assets_with_percentages
-                  .filter(asset => asset.usdt_value > 0.01) // Show only assets worth more than 1 cent
-                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                ${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || [])
+                  .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 0.01) // Show only assets worth more than 1 cent
+                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                   .slice(0, data.account_type === 'SPOT' ? 10 : 8) // Show more for SPOT-only accounts
                   .map(asset => `
                     <div class="asset-item">
                       <span class="asset-symbol">${asset.asset}</span>
-                      <span class="asset-amount">${asset.total.toFixed(4)}</span>
-                      <span class="asset-value">${formatCurrency(asset.usdt_value)}</span>
-                      <span class="asset-percent">${formatPercent(asset.percentage_of_total)}</span>
+                      <span class="asset-amount">${(asset.total || asset.free + asset.locked || 0).toFixed(4)}</span>
+                      <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
+                      <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
                     </div>
                   `).join('')}
-                ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0.01).length > (data.account_type === 'SPOT' ? 10 : 8) ? 
-                  `<div class="more-assets">... and ${data.detailed_breakdown.asset_details.spot_assets_with_percentages.filter(a => a.usdt_value > 0.01).length - (data.account_type === 'SPOT' ? 10 : 8)} more assets</div>` : ''}
+                ${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || []).filter(a => (a.usdt_value || a.value_usdt || 0) > 0.01).length > (data.account_type === 'SPOT' ? 10 : 8) ? 
+                  `<div class="more-assets">... and ${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || []).filter(a => (a.usdt_value || a.value_usdt || 0) > 0.01).length - (data.account_type === 'SPOT' ? 10 : 8)} more assets</div>` : ''}
               </div>
             </div>
           ` : ''}
 
-          ${data.detailed_breakdown.asset_details?.coinm_assets_with_percentages?.length > 0 ? `
+          ${(data.detailed_breakdown.asset_details?.coinm_assets_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_coinm_assets?.length > 0) ? `
             <div class="verification-section">
               <h5>🔹 Coin-M FUTURES Assets</h5>
               <div class="assets-list">
-                ${data.detailed_breakdown.asset_details.coinm_assets_with_percentages
-                  .filter(asset => asset.usdt_value > 0)
-                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                ${(data.detailed_breakdown.asset_details.coinm_assets_with_percentages || data.detailed_breakdown.asset_details.futures_coinm_assets || [])
+                  .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 0)
+                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                   .map(asset => `
                     <div class="asset-item">
                       <span class="asset-symbol">${asset.asset}</span>
-                      <span class="asset-amount">${asset.total.toFixed(4)}</span>
-                      <span class="asset-value">${formatCurrency(asset.usdt_value)}</span>
-                      <span class="asset-percent">${formatPercent(asset.percentage_of_total)}</span>
+                      <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
+                      <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
+                      <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
                     </div>
                   `).join('')}
               </div>
             </div>
           ` : ''}
 
-          ${data.detailed_breakdown.asset_details?.usdtm_assets_with_percentages?.length > 0 ? `
+          ${(data.detailed_breakdown.asset_details?.usdtm_assets_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_usdtm_assets?.length > 0) ? `
             <div class="verification-section">
               <h5>🔶 USDⓈ-M FUTURES Assets</h5>
               <div class="assets-list">
-                ${data.detailed_breakdown.asset_details.usdtm_assets_with_percentages
-                  .filter(asset => asset.usdt_value > 0)
-                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                ${(data.detailed_breakdown.asset_details.usdtm_assets_with_percentages || data.detailed_breakdown.asset_details.futures_usdtm_assets || [])
+                  .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 0)
+                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                   .map(asset => `
                     <div class="asset-item">
                       <span class="asset-symbol">${asset.asset}</span>
-                      <span class="asset-amount">${asset.total.toFixed(4)}</span>
-                      <span class="asset-value">${formatCurrency(asset.usdt_value)}</span>
-                      <span class="asset-percent">${formatPercent(asset.percentage_of_total)}</span>
+                      <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
+                      <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
+                      <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
                     </div>
                   `).join('')}
               </div>
             </div>
           ` : ''}
 
-          ${data.detailed_breakdown.position_details?.coinm_positions_with_percentages?.length > 0 ? `
+          ${(data.detailed_breakdown.position_details?.coinm_positions_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_coinm_positions?.length > 0) ? `
             <div class="verification-section">
-              <h5>📈 Coin-M FUTURES Positions (${data.detailed_breakdown.position_details.coinm_positions_with_percentages.length})</h5>
+              <h5>📈 Coin-M FUTURES Positions (${(data.detailed_breakdown.position_details?.coinm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_positions || []).length})</h5>
               <div class="positions-list">
-                ${data.detailed_breakdown.position_details.coinm_positions_with_percentages
-                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                ${(data.detailed_breakdown.position_details?.coinm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_positions || [])
+                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                   .map(pos => {
                     // Determine if position is LONG or SHORT
-                    const isLong = pos.position_amt > 0;
-                    const isShort = pos.position_amt < 0;
+                    const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
+                    const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
                     const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
                     const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
                     const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
@@ -1484,11 +1484,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="direction ${directionClass}">
                           ${directionIcon} ${directionLabel}
                         </span>
-                        <span class="amount">${Math.abs(pos.position_amt).toFixed(4)}</span>
-                        <span class="value">${formatCurrency(pos.usdt_value)}</span>
-                        <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
-                        <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
-                          ${pos.unrealized_pnl >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl)}
+                        <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
+                        <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
+                        <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
+                        <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
+                          ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
                         </span>
                       </div>
                     `;
@@ -1497,16 +1497,16 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           ` : ''}
 
-          ${data.detailed_breakdown.position_details?.usdtm_positions_with_percentages?.length > 0 ? `
+          ${(data.detailed_breakdown.position_details?.usdtm_positions_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_usdtm_positions?.length > 0) ? `
             <div class="verification-section">
-              <h5>📊 USDⓈ-M FUTURES Positions (${data.detailed_breakdown.position_details.usdtm_positions_with_percentages.length})</h5>
+              <h5>📊 USDⓈ-M FUTURES Positions (${(data.detailed_breakdown.position_details?.usdtm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_positions || []).length})</h5>
               <div class="positions-list">
-                ${data.detailed_breakdown.position_details.usdtm_positions_with_percentages
-                  .sort((a, b) => b.usdt_value - a.usdt_value)
+                ${(data.detailed_breakdown.position_details?.usdtm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_positions || [])
+                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                   .map(pos => {
                     // Determine if position is LONG or SHORT
-                    const isLong = pos.position_amt > 0;
-                    const isShort = pos.position_amt < 0;
+                    const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
+                    const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
                     const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
                     const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
                     const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
@@ -1517,11 +1517,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="direction ${directionClass}">
                           ${directionIcon} ${directionLabel}
                         </span>
-                        <span class="amount">${Math.abs(pos.position_amt).toFixed(4)}</span>
-                        <span class="value">${formatCurrency(pos.usdt_value)}</span>
-                        <span class="percent">${formatPercent(pos.percentage_of_total)}</span>
-                        <span class="pnl ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
-                          ${pos.unrealized_pnl >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl)}
+                        <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
+                        <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
+                        <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
+                        <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
+                          ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
                         </span>
                       </div>
                     `;
