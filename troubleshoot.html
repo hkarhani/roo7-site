@@ -17,9 +17,9 @@
   </div>
 
   <main class="dashboard-grid troubleshoot-grid">
-    <!-- Account Details Section -->
-    <section class="dashboard-card">
-      <h2>Account Details</h2>
+    <!-- Section 1: Account Details & Testing (Top-Left) -->
+    <section class="dashboard-card account-test-section">
+      <h2>Account Details & Testing</h2>
       <div class="account-info">
         <div class="info-row">
           <label>Account Name:</label>
@@ -46,86 +46,48 @@
           <span id="api-key-status"></span>
         </div>
       </div>
-    </section>
-
-    <!-- Connectivity Test Section -->
-    <section class="dashboard-card">
-      <h2>Connectivity Test</h2>
-      <div class="troubleshoot-actions">
-        <button id="test-connection" class="test-btn">Test Binance Connection</button>
-        <div id="test-results" class="test-results"></div>
+      
+      <div class="test-action">
+        <button id="analyze-account" class="primary-test-btn">
+          🔍 Analyze Account
+        </button>
+        <div id="test-progress" class="test-progress"></div>
       </div>
     </section>
 
-    <!-- SPOT Portfolio Assets Section -->
-    <section id="spot-portfolio-section" class="dashboard-card portfolio-section" style="display: none;">
-      <h2>💰 SPOT Assets</h2>
-      <div id="spot-portfolio-content" class="portfolio-content">
-        <div class="portfolio-table-wrapper">
-          <table id="spot-portfolio-table" class="portfolio-table">
-            <thead>
-              <tr><th>Asset</th><th>Free</th><th>Locked</th><th>Total</th><th>Value (USDT)</th><th>%</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+    <!-- Section 2: Account Summary (Top-Right) -->
+    <section class="dashboard-card summary-section">
+      <h2>Account Summary</h2>
+      <div id="summary-content" class="summary-content">
+        <div class="summary-placeholder">
+          <p>Click "Analyze Account" to view portfolio summary...</p>
         </div>
-        <div class="portfolio-chart-wrapper">
-          <div class="portfolio-chart-title">SPOT Asset Distribution</div>
-          <div id="spot-portfolio-pie-chart" class="portfolio-pie-chart"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FUTURES Assets Section -->
-    <section id="futures-assets-section" class="dashboard-card portfolio-section futures-narrow" style="display: none;">
-      <h2 id="futures-assets-title">💰 Assets</h2>
-      <div id="futures-assets-content" class="portfolio-content">
-        <div class="portfolio-table-wrapper">
-          <table id="futures-assets-table" class="portfolio-table narrow-table">
-            <thead>
-              <tr><th>Asset</th><th>Wallet</th><th>Margin</th><th>Available</th><th>Value</th><th>%</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div id="summary-metrics" class="summary-metrics" style="display: none;">
+          <div class="metric-card total-value">
+            <span class="metric-label">Total Value</span>
+            <span id="total-value-display" class="metric-value">$0.00</span>
+          </div>
+          <div class="metric-card unrealized-pnl">
+            <span class="metric-label">Unrealized PnL</span>
+            <span id="unrealized-pnl-display" class="metric-value">$0.00</span>
+          </div>
+          <div id="allocation-breakdown" class="allocation-breakdown">
+            <!-- Allocation items will be populated by JavaScript -->
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- FUTURES Positions Section -->
-    <section id="futures-positions-section" class="dashboard-card portfolio-section futures-narrow" style="display: none;">
-      <h2 id="futures-positions-title">📈 Positions</h2>
-      <div id="futures-positions-content" class="portfolio-content">
-        <div class="portfolio-table-wrapper">
-          <table id="futures-positions-table" class="portfolio-table futures-table narrow-table">
-            <thead>
-              <tr><th>Symbol</th><th>Dir</th><th>Size</th><th>Entry</th><th>Mark</th><th>PnL</th><th>%</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+    <!-- Section 3: Test Results (Bottom Full-Width) -->
+    <section class="dashboard-card test-results-section">
+      <h2>Diagnostic Results</h2>
+      <div id="test-results-content" class="test-results-content">
+        <div class="test-placeholder">
+          <p>Diagnostic results will appear here after running the account analysis...</p>
         </div>
-      </div>
-    </section>
-
-    <!-- FUTURES Orders Section -->
-    <section id="futures-orders-section" class="dashboard-card portfolio-section futures-narrow" style="display: none;">
-      <h2 id="futures-orders-title">📋 Orders</h2>
-      <div id="futures-orders-content" class="portfolio-content">
-        <div class="portfolio-table-wrapper">
-          <table id="futures-orders-table" class="portfolio-table orders-table narrow-table">
-            <thead>
-              <tr><th>Symbol</th><th>Side</th><th>Type</th><th>Qty</th><th>Price</th><th>Status</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div id="compact-test-grid" class="compact-test-grid" style="display: none;">
+          <!-- Test results will be populated by JavaScript -->
         </div>
-      </div>
-    </section>
-
-    <!-- Enhanced Diagnostics Section -->
-    <section id="section-diagnostics" class="dashboard-card diagnostics-enhanced">
-      <h2>🔍 Diagnostic Summary</h2>
-      <div id="diagnostic-info" class="diagnostic-content">
-        <p>Click "Test Binance Connection" to run diagnostics...</p>
       </div>
     </section>
   </main>

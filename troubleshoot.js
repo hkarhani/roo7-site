@@ -1439,12 +1439,216 @@ function initializeTroubleshootPage() {
     </div>`;
   }
 
-  // Wire up events
+  // Format currency values
+  function formatCurrency(value) {
+    if (value === null || value === undefined || isNaN(value)) return '$0.00';
+    return `$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  // Format percentage values
+  function formatPercent(value) {
+    if (value === null || value === undefined || isNaN(value)) return '0.0%';
+    return `${parseFloat(value).toFixed(1)}%`;
+  }
+
+  // Display portfolio summary from new API
+  function displayPortfolioSummary(summary) {
+    const summaryPlaceholder = document.querySelector('.summary-placeholder');
+    const summaryMetrics = document.getElementById('summary-metrics');
+    
+    if (!summary) {
+      summaryPlaceholder.style.display = 'block';
+      summaryMetrics.style.display = 'none';
+      return;
+    }
+
+    // Hide placeholder and show metrics
+    summaryPlaceholder.style.display = 'none';
+    summaryMetrics.style.display = 'grid';
+
+    // Update total value
+    const totalValue = summary.total_value_usdt || 0;
+    document.getElementById('total-value-display').textContent = formatCurrency(totalValue);
+
+    // Update unrealized PnL
+    const unrealizedPnL = summary.total_unrealized_pnl_usdt || 0;
+    const pnlElement = document.getElementById('unrealized-pnl-display');
+    pnlElement.textContent = formatCurrency(unrealizedPnL);
+    pnlElement.className = `metric-value ${unrealizedPnL >= 0 ? 'positive' : 'negative'}`;
+
+    // Update allocation breakdown
+    const allocationBreakdown = document.getElementById('allocation-breakdown');
+    const spotValue = summary.spot_value_usdt || 0;
+    const usdtmValue = summary.usdtm_value_usdt || 0;
+    const coinmValue = summary.coinm_value_usdt || 0;
+    
+    const spotPercent = totalValue > 0 ? (spotValue / totalValue * 100) : 0;
+    const usdtmPercent = totalValue > 0 ? (usdtmValue / totalValue * 100) : 0;
+    const coinmPercent = totalValue > 0 ? (coinmValue / totalValue * 100) : 0;
+
+    allocationBreakdown.innerHTML = `
+      <div class="allocation-item">
+        <span class="allocation-label">SPOT:</span>
+        <span class="allocation-value">${formatCurrency(spotValue)} (${formatPercent(spotPercent)})</span>
+      </div>
+      <div class="allocation-item">
+        <span class="allocation-label">USDT-M:</span>
+        <span class="allocation-value">${formatCurrency(usdtmValue)} (${formatPercent(usdtmPercent)})</span>
+      </div>
+      <div class="allocation-item">
+        <span class="allocation-label">COIN-M:</span>
+        <span class="allocation-value">${formatCurrency(coinmValue)} (${formatPercent(coinmPercent)})</span>
+      </div>
+    `;
+  }
+
+  // Display compact test results
+  function displayTestResults(testResults) {
+    const testPlaceholder = document.querySelector('.test-placeholder');
+    const compactTestGrid = document.getElementById('compact-test-grid');
+    
+    if (!testResults || testResults.length === 0) {
+      testPlaceholder.style.display = 'block';
+      compactTestGrid.style.display = 'none';
+      return;
+    }
+
+    // Hide placeholder and show results
+    testPlaceholder.style.display = 'none';
+    compactTestGrid.style.display = 'grid';
+
+    // Group tests by category
+    const categories = {};
+    testResults.forEach(test => {
+      const category = test.category || 'General';
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      categories[category].push(test);
+    });
+
+    // Generate HTML for each category
+    compactTestGrid.innerHTML = Object.keys(categories).map(categoryName => `
+      <div class="test-category">
+        <h3>${getCategoryIcon(categoryName)} ${categoryName}</h3>
+        <div class="test-items">
+          ${categories[categoryName].map(test => `
+            <div class="test-item ${test.status}">
+              ${getStatusIcon(test.status)} ${test.name}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Helper functions for icons
+  function getCategoryIcon(category) {
+    switch (category.toLowerCase()) {
+      case 'connectivity': return '🔗';
+      case 'data access': return '📊';
+      case 'security': return '🔐';
+      case 'performance': return '⚡';
+      default: return '🔍';
+    }
+  }
+
+  function getStatusIcon(status) {
+    switch (status) {
+      case 'success': return '✅';
+      case 'warning': return '⚠️';
+      case 'failed': return '❌';
+      default: return '🔄';
+    }
+  }
+
+  // New simplified analyze account function
+  async function analyzeAccount() {
+    if (!window.currentAccount) {
+      showToast('Please wait for account information to load first.', 'warning');
+      return;
+    }
+
+    const analyzeBtn = document.getElementById('analyze-account');
+    const testProgress = document.getElementById('test-progress');
+    
+    try {
+      // Update button state
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = '🔄 Analyzing...';
+      testProgress.textContent = 'Connecting to Binance API...';
+
+      // Call the new simplified troubleshoot endpoint
+      const response = await fetch(`${API_BASE}/troubleshoot-simple/${window.currentAccount._id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update progress
+        testProgress.textContent = 'Analysis complete!';
+        
+        // Display results
+        displayPortfolioSummary(result.summary);
+        displayTestResults(result.test_results);
+        
+        // Update API key status
+        updateAPIKeyStatus(true, true);
+        updateAPIConnectionStatus('connected', `Account analysis completed successfully. Health: ${result.account_health}`);
+        
+        showToast('Account analysis completed successfully!', 'success');
+      } else {
+        throw new Error(result.error || 'Analysis failed');
+      }
+
+    } catch (error) {
+      console.error('❌ Analysis error:', error);
+      testProgress.textContent = 'Analysis failed';
+      
+      // Show error state
+      updateAPIKeyStatus(false, false);
+      updateAPIConnectionStatus('failed', error.message);
+      
+      // Display error in test results
+      displayTestResults([{
+        category: 'Connectivity',
+        name: 'API Connection',
+        status: 'failed',
+        message: error.message
+      }]);
+      
+      showToast(`Analysis failed: ${error.message}`, 'error');
+    } finally {
+      // Reset button state
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = '🔍 Analyze Account';
+      setTimeout(() => {
+        testProgress.textContent = '';
+      }, 3000);
+    }
+  }
+
+  // Wire up events for new layout
+  const analyzeButton = document.getElementById('analyze-account');
+  if (analyzeButton) {
+    analyzeButton.onclick = analyzeAccount;
+  } else {
+    console.error("❌ Analyze account button not found");
+  }
+
+  // Keep old test connection button for backwards compatibility
   const testButton = document.getElementById('test-connection');
   if (testButton) {
-    testButton.onclick = testBinanceConnection;
-  } else {
-    console.error("❌ Test connection button not found");
+    testButton.onclick = analyzeAccount; // Use same function
   }
 
   // Initialize alignment fix

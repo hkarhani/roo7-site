@@ -1,38 +1,31 @@
 /* troubleshoot.css - Professional troubleshoot page styles matching dashboard format */
 
-/* TROUBLESHOOT GRID LAYOUT */
+/* TROUBLESHOOT GRID LAYOUT - NEW 3-SECTION DESIGN */
 .troubleshoot-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 30px;
+  grid-template-rows: auto 1fr;
+  gap: 20px;
   padding: 0 20px 40px;
   min-height: calc(100vh - 120px);
   align-items: start;
 }
 
-/* Grid positioning */
-.troubleshoot-grid > .dashboard-card:nth-child(1) {
-  /* Account Details - Top Left */
+/* Section 1: Account Details & Testing (Top-Left) */
+.account-test-section {
   grid-column: 1;
   grid-row: 1;
 }
 
-.troubleshoot-grid > .dashboard-card:nth-child(2) {
-  /* Connectivity Test - Top Right */
+/* Section 2: Account Summary (Top-Right) */
+.summary-section {
   grid-column: 2;
   grid-row: 1;
 }
 
-.troubleshoot-grid > #portfolio-section {
-  /* Portfolio Assets - Bottom Left */
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.troubleshoot-grid > #section-diagnostics {
-  /* Diagnostics - Bottom Right */
-  grid-column: 2;
+/* Section 3: Test Results (Bottom Full-Width) */
+.test-results-section {
+  grid-column: 1 / -1;
   grid-row: 2;
 }
 
@@ -1034,5 +1027,313 @@
   .futures-table th,
   .futures-table td {
     padding: 8px 4px;
+  }
+}
+
+/* === NEW STYLES FOR 3-SECTION LAYOUT === */
+
+/* TEST ACTION SECTION */
+.test-action {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.dark-theme .test-action {
+  border-top-color: #444;
+}
+
+.primary-test-btn {
+  width: 100%;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #0077cc, #005fa3);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 119, 204, 0.2);
+}
+
+.primary-test-btn:hover {
+  background: linear-gradient(135deg, #005fa3, #004080);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 119, 204, 0.3);
+}
+
+.primary-test-btn:active {
+  transform: translateY(0);
+}
+
+.primary-test-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.test-progress {
+  margin-top: 10px;
+  min-height: 20px;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+}
+
+/* SUMMARY SECTION */
+.summary-content {
+  padding: 10px 0;
+}
+
+.summary-placeholder {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+.summary-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.metric-card {
+  background: var(--card-bg);
+  padding: 20px 15px;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.metric-label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.metric-value.positive {
+  color: #28a745;
+}
+
+.metric-value.negative {
+  color: #dc3545;
+}
+
+.allocation-breakdown {
+  grid-column: 1 / -1;
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid #e5e5e5;
+}
+
+.allocation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.allocation-item:last-child {
+  border-bottom: none;
+}
+
+.allocation-label {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.allocation-value {
+  color: #666;
+}
+
+/* COMPACT TEST RESULTS SECTION */
+.test-results-content {
+  padding: 10px 0;
+}
+
+.test-placeholder {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+.compact-test-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.test-category {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #e5e5e5;
+}
+
+.test-category h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.test-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.test-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+
+.test-item:hover {
+  transform: translateX(3px);
+}
+
+.test-item.success {
+  background: #d4edda;
+  color: #155724;
+  border-left: 4px solid #28a745;
+}
+
+.test-item.warning {
+  background: #fff3cd;
+  color: #856404;
+  border-left: 4px solid #ffc107;
+}
+
+.test-item.failed {
+  background: #f8d7da;
+  color: #721c24;
+  border-left: 4px solid #dc3545;
+}
+
+/* Dark theme for new components */
+.dark-theme .metric-card,
+.dark-theme .allocation-breakdown,
+.dark-theme .test-category {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.dark-theme .metric-label,
+.dark-theme .allocation-value {
+  color: #ccc;
+}
+
+.dark-theme .test-item.success {
+  background: #1e3a2e;
+  color: #4ade80;
+}
+
+.dark-theme .test-item.warning {
+  background: #3a3a1e;
+  color: #facc15;
+}
+
+.dark-theme .test-item.failed {
+  background: #3a1e1e;
+  color: #f87171;
+}
+
+/* NEW MOBILE RESPONSIVE LAYOUT */
+@media (max-width: 768px) {
+  /* Override old mobile layout with new 3-section layout */
+  .troubleshoot-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 15px;
+    padding: 0 15px 20px;
+  }
+  
+  .account-test-section {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  
+  .summary-section {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+  
+  .test-results-section {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+  }
+  
+  /* Adjust summary metrics for mobile */
+  .summary-metrics {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .allocation-breakdown {
+    grid-column: 1;
+  }
+  
+  /* Adjust test grid for mobile */
+  .compact-test-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  /* Smaller test button on mobile */
+  .primary-test-btn {
+    font-size: 14px;
+    padding: 12px 16px;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .troubleshoot-grid {
+    padding: 0 10px 15px;
+  }
+  
+  .metric-card {
+    padding: 15px 10px;
+  }
+  
+  .test-category {
+    padding: 15px;
+  }
+  
+  .allocation-item {
+    font-size: 13px;
   }
 }
