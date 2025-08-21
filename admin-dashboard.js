@@ -1450,7 +1450,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .map(asset => `
                       <div class="asset-item">
                         <span class="asset-symbol">${asset.asset}</span>
-                        <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
+                        <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.walletBalance || asset.balance || 0).toFixed(4)}</span>
                         <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
                         <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
                       </div>
@@ -1520,10 +1520,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${directionIcon} ${directionLabel}
                           </span>
                           <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
-                          <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
-                          <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
-                          <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
-                            ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
+                          <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || pos.position_value || 0)}</span>
+                          <span class="percent">${formatPercent(pos.percentage_of_total || pos.percent_of_total || 0)}</span>
+                          <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || pos.unrealizedPnl || 0) >= 0 ? 'positive' : 'negative'}">
+                            ${(pos.unrealized_pnl || pos.unRealizedProfit || pos.unrealizedPnl || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || pos.unrealizedPnl || 0)}
                           </span>
                         </div>
                       `;
