@@ -1426,109 +1426,123 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           ` : ''}
 
-          ${(data.detailed_breakdown.asset_details?.coinm_assets_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_coinm_assets?.length > 0) ? `
-            <div class="verification-section">
-              <h5>🔹 Coin-M FUTURES Assets</h5>
-              <div class="assets-list">
-                ${(data.detailed_breakdown.asset_details.coinm_assets_with_percentages || data.detailed_breakdown.asset_details.futures_coinm_assets || [])
-                  .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 0)
-                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                  .map(asset => `
-                    <div class="asset-item">
-                      <span class="asset-symbol">${asset.asset}</span>
-                      <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
-                      <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
-                      <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
-                    </div>
-                  `).join('')}
-              </div>
-            </div>
-          ` : ''}
-
-          ${(data.detailed_breakdown.asset_details?.usdtm_assets_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_usdtm_assets?.length > 0) ? `
-            <div class="verification-section">
-              <h5>🔶 USDⓈ-M FUTURES Assets</h5>
-              <div class="assets-list">
-                ${(data.detailed_breakdown.asset_details.usdtm_assets_with_percentages || data.detailed_breakdown.asset_details.futures_usdtm_assets || [])
-                  .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 0)
-                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                  .map(asset => `
-                    <div class="asset-item">
-                      <span class="asset-symbol">${asset.asset}</span>
-                      <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
-                      <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
-                      <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
-                    </div>
-                  `).join('')}
-              </div>
-            </div>
-          ` : ''}
-
-          ${(data.detailed_breakdown.position_details?.coinm_positions_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_coinm_positions?.length > 0) ? `
-            <div class="verification-section">
-              <h5>📈 Coin-M FUTURES Positions (${(data.detailed_breakdown.position_details?.coinm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_positions || []).length})</h5>
-              <div class="positions-list">
-                ${(data.detailed_breakdown.position_details?.coinm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_positions || [])
-                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                  .map(pos => {
-                    // Determine if position is LONG or SHORT
-                    const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
-                    const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
-                    const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
-                    const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
-                    const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
-                    
-                    return `
-                      <div class="position-item ${directionClass}">
-                        <span class="symbol">${pos.symbol}</span>
-                        <span class="direction ${directionClass}">
-                          ${directionIcon} ${directionLabel}
-                        </span>
-                        <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
-                        <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
-                        <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
-                        <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
-                          ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
-                        </span>
+          ${(() => {
+            const coinmAssets = (data.detailed_breakdown.asset_details?.coinm_assets_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_assets || [])
+              .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 1); // Only show assets worth more than $1
+            return coinmAssets.length > 0 ? `
+              <div class="verification-section">
+                <h5>🔹 Coin-M FUTURES Assets (${coinmAssets.length})</h5>
+                <div class="assets-list">
+                  ${coinmAssets
+                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
+                    .map(asset => `
+                      <div class="asset-item">
+                        <span class="asset-symbol">${asset.asset}</span>
+                        <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
+                        <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
+                        <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
                       </div>
-                    `;
-                  }).join('')}
+                    `).join('')}
+                </div>
               </div>
-            </div>
-          ` : ''}
+            ` : '';
+          })()}
 
-          ${(data.detailed_breakdown.position_details?.usdtm_positions_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.futures_usdtm_positions?.length > 0) ? `
-            <div class="verification-section">
-              <h5>📊 USDⓈ-M FUTURES Positions (${(data.detailed_breakdown.position_details?.usdtm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_positions || []).length})</h5>
-              <div class="positions-list">
-                ${(data.detailed_breakdown.position_details?.usdtm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_positions || [])
-                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                  .map(pos => {
-                    // Determine if position is LONG or SHORT
-                    const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
-                    const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
-                    const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
-                    const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
-                    const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
-                    
-                    return `
-                      <div class="position-item ${directionClass}">
-                        <span class="symbol">${pos.symbol}</span>
-                        <span class="direction ${directionClass}">
-                          ${directionIcon} ${directionLabel}
-                        </span>
-                        <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
-                        <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
-                        <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
-                        <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
-                          ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
-                        </span>
+          ${(() => {
+            const usdtmAssets = (data.detailed_breakdown.asset_details?.usdtm_assets_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_assets || [])
+              .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 1); // Only show assets worth more than $1
+            return usdtmAssets.length > 0 ? `
+              <div class="verification-section">
+                <h5>🔶 USDⓈ-M FUTURES Assets (${usdtmAssets.length})</h5>
+                <div class="assets-list">
+                  ${usdtmAssets
+                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
+                    .map(asset => `
+                      <div class="asset-item">
+                        <span class="asset-symbol">${asset.asset}</span>
+                        <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
+                        <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
+                        <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
                       </div>
-                    `;
-                  }).join('')}
+                    `).join('')}
+                </div>
               </div>
-            </div>
-          ` : ''}
+            ` : '';
+          })()}
+
+          ${(() => {
+            const coinmPositions = (data.detailed_breakdown.position_details?.coinm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_positions || [])
+              .filter(pos => Math.abs(pos.position_amt || pos.positionAmt || 0) > 0); // Only show positions with actual size
+            return coinmPositions.length > 0 ? `
+              <div class="verification-section">
+                <h5>📈 Coin-M FUTURES Positions (${coinmPositions.length})</h5>
+                <div class="positions-list">
+                  ${coinmPositions
+                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
+                    .map(pos => {
+                      // Determine if position is LONG or SHORT
+                      const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
+                      const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
+                      const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
+                      const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
+                      const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
+                      
+                      return `
+                        <div class="position-item ${directionClass}">
+                          <span class="symbol">${pos.symbol}</span>
+                          <span class="direction ${directionClass}">
+                            ${directionIcon} ${directionLabel}
+                          </span>
+                          <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
+                          <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
+                          <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
+                          <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
+                            ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
+                          </span>
+                        </div>
+                      `;
+                    }).join('')}
+                </div>
+              </div>
+            ` : '';
+          })()}
+
+          ${(() => {
+            const usdtmPositions = (data.detailed_breakdown.position_details?.usdtm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_positions || [])
+              .filter(pos => Math.abs(pos.position_amt || pos.positionAmt || 0) > 0); // Only show positions with actual size
+            return usdtmPositions.length > 0 ? `
+              <div class="verification-section">
+                <h5>📊 USDⓈ-M FUTURES Positions (${usdtmPositions.length})</h5>
+                <div class="positions-list">
+                  ${usdtmPositions
+                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
+                    .map(pos => {
+                      // Determine if position is LONG or SHORT
+                      const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
+                      const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
+                      const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
+                      const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
+                      const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
+                      
+                      return `
+                        <div class="position-item ${directionClass}">
+                          <span class="symbol">${pos.symbol}</span>
+                          <span class="direction ${directionClass}">
+                            ${directionIcon} ${directionLabel}
+                          </span>
+                          <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
+                          <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
+                          <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
+                          <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
+                            ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
+                          </span>
+                        </div>
+                      `;
+                    }).join('')}
+                </div>
+              </div>
+            ` : '';
+          })()}
         ` : ''}
 
         ${data.open_orders && data.open_orders.length > 0 ? `
