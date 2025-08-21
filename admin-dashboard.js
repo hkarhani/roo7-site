@@ -1439,18 +1439,24 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="verification-section">
                 <h5>🔹 Coin-M FUTURES Assets (${coinmAssets.length})</h5>
                 <div class="assets-list">
-                  <div class="assets-header">
-                    <span class="header-symbol">Asset</span>
-                    <span class="header-amount">Balance</span>
+                  <div class="coinm-assets-header">
+                    <span class="header-symbol">Symbol</span>
+                    <span class="header-wallet">Wallet Balance</span>
+                    <span class="header-pnl">Unrealized PnL</span>
+                    <span class="header-margin">Margin Balance</span>
                     <span class="header-value">Value (USDT)</span>
                     <span class="header-percent">%</span>
                   </div>
                   ${coinmAssets
                     .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                     .map(asset => `
-                      <div class="asset-item">
+                      <div class="coinm-asset-item">
                         <span class="asset-symbol">${asset.asset}</span>
-                        <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.walletBalance || asset.balance || 0).toFixed(4)}</span>
+                        <span class="asset-wallet">${(asset.wallet_balance || asset.total || 0).toFixed(8)}</span>
+                        <span class="asset-pnl ${(asset.unrealized_pnl || 0) >= 0 ? 'positive' : 'negative'}">
+                          ${(asset.unrealized_pnl || 0) >= 0 ? '+' : ''}${formatCurrency(asset.unrealized_pnl || 0)}
+                        </span>
+                        <span class="asset-margin">${formatCurrency(asset.margin_balance || asset.usdt_value || 0)}</span>
                         <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
                         <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
                       </div>
@@ -1495,35 +1501,37 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="verification-section">
                 <h5>📈 Coin-M FUTURES Positions (${coinmPositions.length})</h5>
                 <div class="positions-list">
-                  <div class="positions-header">
+                  <div class="coinm-positions-header">
                     <span class="header-symbol">Symbol</span>
-                    <span class="header-direction">Direction</span>
-                    <span class="header-quantity">Quantity</span>
-                    <span class="header-value">Position Value</span>
-                    <span class="header-percent">%</span>
+                    <span class="header-size">Size (Cont)</span>
+                    <span class="header-notional">Notional Value</span>
+                    <span class="header-entry">Entry Price</span>
+                    <span class="header-mark">Mark Price</span>
                     <span class="header-pnl">Unrealized PnL</span>
+                    <span class="header-pnl-pct">PnL %</span>
                   </div>
                   ${coinmPositions
                     .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
                     .map(pos => {
                       // Determine if position is LONG or SHORT
-                      const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
-                      const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
+                      const positionAmt = pos.position_amt || pos.positionAmt || 0;
+                      const isLong = positionAmt > 0;
+                      const isShort = positionAmt < 0;
                       const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
-                      const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
-                      const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
+                      const pnlPercent = pos.unrealized_pnl_percent || 0;
                       
                       return `
-                        <div class="position-item ${directionClass}">
-                          <span class="symbol">${pos.symbol}</span>
-                          <span class="direction ${directionClass}">
-                            ${directionIcon} ${directionLabel}
+                        <div class="coinm-position-item ${directionClass}">
+                          <span class="position-symbol">${pos.symbol}</span>
+                          <span class="position-size">${positionAmt.toFixed(0)} Cont</span>
+                          <span class="position-notional">${(pos.notional_value || 0).toFixed(8)} ${pos.symbol.includes('UNI') ? 'UNI' : 'BASE'}</span>
+                          <span class="position-entry">${(pos.entry_price || 0).toFixed(8)}</span>
+                          <span class="position-mark">${(pos.mark_price || 0).toFixed(8)}</span>
+                          <span class="position-pnl ${(pos.unrealized_pnl || 0) >= 0 ? 'positive' : 'negative'}">
+                            ${(pos.unrealized_pnl || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || 0)}
                           </span>
-                          <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
-                          <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || pos.position_value || 0)}</span>
-                          <span class="percent">${formatPercent(pos.percentage_of_total || pos.percent_of_total || 0)}</span>
-                          <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || pos.unrealizedPnl || 0) >= 0 ? 'positive' : 'negative'}">
-                            ${(pos.unrealized_pnl || pos.unRealizedProfit || pos.unrealizedPnl || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || pos.unrealizedPnl || 0)}
+                          <span class="position-pnl-pct ${pnlPercent >= 0 ? 'positive' : 'negative'}">
+                            ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%
                           </span>
                         </div>
                       `;

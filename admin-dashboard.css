@@ -1593,6 +1593,152 @@
   background: linear-gradient(90deg, rgba(220, 53, 69, 0.05) 0%, var(--card-bg) 100%);
 }
 
+/* === COIN-M FUTURES SPECIFIC STYLING === */
+
+/* Coin-M Assets Header */
+.coinm-assets-header {
+  display: grid;
+  grid-template-columns: 60px 120px 100px 120px 100px 60px;
+  gap: 10px;
+  font-weight: bold;
+  color: #666;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 8px 0;
+  margin-bottom: 5px;
+}
+
+/* Coin-M Asset Item */
+.coinm-asset-item {
+  display: grid;
+  grid-template-columns: 60px 120px 100px 120px 100px 60px;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background-color: var(--card-bg);
+  border-radius: 6px;
+  font-size: 12px;
+  align-items: center;
+  border-left: 3px solid var(--primary-color);
+  transition: all 0.2s ease;
+}
+
+.coinm-asset-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.coinm-asset-item .asset-wallet {
+  font-family: monospace;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.coinm-asset-item .asset-pnl {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.coinm-asset-item .asset-margin {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+/* Coin-M Positions Header */
+.coinm-positions-header {
+  display: grid;
+  grid-template-columns: 100px 80px 120px 90px 90px 100px 70px;
+  gap: 8px;
+  font-weight: bold;
+  color: #666;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 8px 0;
+  margin-bottom: 5px;
+}
+
+/* Coin-M Position Item */
+.coinm-position-item {
+  display: grid;
+  grid-template-columns: 100px 80px 120px 90px 90px 100px 70px;
+  gap: 8px;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  font-size: 12px;
+  align-items: center;
+  border-left: 4px solid var(--primary-color);
+  transition: all 0.2s ease;
+}
+
+.coinm-position-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.coinm-position-item .position-symbol {
+  font-weight: bold;
+  color: var(--primary-color);
+  font-size: 13px;
+}
+
+.coinm-position-item .position-size {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.coinm-position-item .position-notional {
+  font-family: monospace;
+  color: var(--text-color);
+  font-size: 11px;
+}
+
+.coinm-position-item .position-entry,
+.coinm-position-item .position-mark {
+  font-family: monospace;
+  color: var(--text-color);
+  font-size: 11px;
+}
+
+.coinm-position-item .position-pnl {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.coinm-position-item .position-pnl-pct {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Long/Short Coin-M Position Styling */
+.coinm-position-item.long-position {
+  border-left-color: #28a745;
+  background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, var(--card-bg) 100%);
+}
+
+.coinm-position-item.short-position {
+  border-left-color: #dc3545;
+  background: linear-gradient(90deg, rgba(220, 53, 69, 0.05) 0%, var(--card-bg) 100%);
+}
+
+/* Dark theme adjustments for Coin-M */
+.dark-theme .coinm-assets-header,
+.dark-theme .coinm-positions-header {
+  color: #ccc;
+  border-bottom-color: #444;
+}
+
+.dark-theme .coinm-position-item.long-position {
+  background: linear-gradient(90deg, rgba(40, 167, 69, 0.08) 0%, var(--card-bg) 100%);
+}
+
+.dark-theme .coinm-position-item.short-position {
+  background: linear-gradient(90deg, rgba(220, 53, 69, 0.08) 0%, var(--card-bg) 100%);
+}
+
 /* Enhanced verification modal responsiveness */
 @media (max-width: 768px) {
   .distribution-grid {
@@ -1630,6 +1776,36 @@
   
   .order-item .type,
   .order-item .qty {
+    display: none;
+  }
+
+  /* Coin-M responsive adjustments */
+  .coinm-assets-header {
+    grid-template-columns: 50px 80px 70px 80px 60px;
+    font-size: 10px;
+  }
+
+  .coinm-asset-item {
+    grid-template-columns: 50px 80px 70px 80px 60px;
+    font-size: 11px;
+  }
+
+  .coinm-asset-item .asset-margin {
+    display: none;
+  }
+
+  .coinm-positions-header {
+    grid-template-columns: 80px 60px 80px 80px 60px;
+    font-size: 10px;
+  }
+
+  .coinm-position-item {
+    grid-template-columns: 80px 60px 80px 80px 60px;
+    font-size: 10px;
+  }
+
+  .coinm-position-item .position-notional,
+  .coinm-position-item .position-entry {
     display: none;
   }
 }
