@@ -245,6 +245,14 @@ function initializeTroubleshootPage() {
       // Store account data globally
       window.currentAccount = account;
       
+      // Debug log to check account ID field
+      console.log("🔍 Account object:", account);
+      console.log("🔍 Account ID fields:", {
+        _id: account._id,
+        id: account.id,
+        account_id: account.account_id
+      });
+      
       // Show success message
       showToast("Account details loaded successfully", 'success', 2000);
 
@@ -1578,8 +1586,17 @@ function initializeTroubleshootPage() {
       analyzeBtn.textContent = '🔄 Analyzing...';
       testProgress.textContent = 'Connecting to Binance API...';
 
+      // Get account ID - try different possible field names
+      const accountId = window.currentAccount._id || window.currentAccount.id || window.currentAccount.account_id;
+      
+      if (!accountId) {
+        throw new Error('Account ID not found');
+      }
+      
+      console.log("🔍 Using account ID:", accountId);
+
       // Call the new simplified troubleshoot endpoint
-      const response = await fetch(`${API_BASE}/troubleshoot-simple/${window.currentAccount._id}`, {
+      const response = await fetch(`${API_BASE}/troubleshoot-simple/${accountId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
