@@ -43,45 +43,10 @@
       </div>
     </section>
 
-    <!-- Invoice Filters Section -->
-    <section id="section-filters" class="dashboard-card">
-      <h2>🔍 Filters</h2>
-      <div class="filter-controls">
-        <div class="filter-group">
-          <label for="status-filter">Status:</label>
-          <select id="status-filter">
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        
-        <div class="filter-group">
-          <label for="type-filter">Type:</label>
-          <select id="type-filter">
-            <option value="">All Types</option>
-            <option value="initial">Initial</option>
-            <option value="renewal">Renewal</option>
-            <option value="manual">Manual</option>
-          </select>
-        </div>
-        
-        <div class="filter-group">
-          <label for="date-from">From:</label>
-          <input type="date" id="date-from">
-        </div>
-        
-        <div class="filter-group">
-          <label for="date-to">To:</label>
-          <input type="date" id="date-to">
-        </div>
-        
-        <button id="apply-filters" class="filter-btn">Apply Filters</button>
-        <button id="clear-filters" class="filter-btn secondary">Clear</button>
-      </div>
-    </section>
+    <!-- Main Content Layout: Two-Column Design -->
+    <div class="main-content-layout">
+      <!-- Left Column: Invoice Request -->
+      <div class="left-column">
 
     <!-- NEW: Invoice Request Section -->
     <section id="section-invoice-request" class="dashboard-card" style="display: none;">
@@ -129,25 +94,68 @@
       </div>
     </section>
 
+      </div> <!-- End Left Column -->
 
-    <!-- Invoice Actions Section -->
-    <section id="section-actions" class="dashboard-card">
-      <h2>⚡ Quick Actions</h2>
-      <div class="action-buttons">
-        <button id="view-subscription-btn" class="action-btn info">
-          <span class="btn-icon">📋</span>
-          <span class="btn-text">View Subscription Details</span>
-        </button>
-        <button id="payment-help-btn" class="action-btn help">
-          <span class="btn-icon">❓</span>
-          <span class="btn-text">Payment Help</span>
-        </button>
-      </div>
-    </section>
+      <!-- Right Column: Quick Actions -->
+      <div class="right-column">
+        <section id="section-actions" class="dashboard-card">
+          <h2>⚡ Quick Actions</h2>
+          <div class="action-buttons">
+            <button id="view-subscription-btn" class="action-btn info">
+              <span class="btn-icon">📋</span>
+              <span class="btn-text">View Subscription Details</span>
+            </button>
+            <button id="payment-help-btn" class="action-btn help">
+              <span class="btn-icon">❓</span>
+              <span class="btn-text">Payment Help</span>
+            </button>
+          </div>
+        </section>
+      </div> <!-- End Right Column -->
 
-    <!-- Invoices Table Section -->
+    </div> <!-- End Main Content Layout -->
+
+    <!-- Invoices Table Section with Integrated Filters -->
     <section id="section-invoices" class="dashboard-card">
-      <h2>📄 Invoice History</h2>
+      <h2>📄 Invoice History & Filters</h2>
+      
+      <!-- Integrated Filter Controls -->
+      <div class="filter-controls">
+        <div class="filter-group">
+          <label for="status-filter">Status:</label>
+          <select id="status-filter">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="overdue">Overdue</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="type-filter">Type:</label>
+          <select id="type-filter">
+            <option value="">All Types</option>
+            <option value="initial">Initial</option>
+            <option value="renewal">Renewal</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="date-from">From:</label>
+          <input type="date" id="date-from">
+        </div>
+        
+        <div class="filter-group">
+          <label for="date-to">To:</label>
+          <input type="date" id="date-to">
+        </div>
+        
+        <button id="apply-filters" class="filter-btn">Apply Filters</button>
+        <button id="clear-filters" class="filter-btn secondary">Clear</button>
+      </div>
+
       <div class="table-container">
         <table id="invoices-table">
           <thead>

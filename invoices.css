@@ -1585,6 +1585,204 @@
   }
 }
 
+/* TWO-COLUMN LAYOUT STYLES */
+
+/* Main Content Layout */
+.main-content-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.left-column {
+  min-height: 300px;
+}
+
+.right-column {
+  min-height: 300px;
+}
+
+/* Right Column Sticky Positioning */
+.right-column .dashboard-card {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+/* Enhanced Action Buttons for Right Column */
+.right-column .action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.right-column .action-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.right-column .action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Integrated Filter Controls */
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.dark-theme .filter-controls {
+  background: linear-gradient(135deg, #2d3748, #4a5568);
+  border-color: #4a5568;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+  flex: 1;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dark-theme .filter-group label {
+  color: #e2e8f0;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.dark-theme .filter-group select,
+.dark-theme .filter-group input {
+  background: #4a5568;
+  border-color: #718096;
+  color: #e2e8f0;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-end;
+  margin-top: 20px;
+}
+
+.filter-btn.primary, 
+.filter-btn:not(.secondary) {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+}
+
+.filter-btn.secondary {
+  background: linear-gradient(135deg, #6c757d, #545b62);
+  color: white;
+}
+
+.filter-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile Responsiveness for Two-Column Layout */
+@media (max-width: 1024px) {
+  .main-content-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .right-column .dashboard-card {
+    position: static;
+    max-height: none;
+  }
+  
+  .right-column .action-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .right-column .action-btn {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content-layout {
+    gap: 12px;
+  }
+  
+  .filter-controls {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .filter-group {
+    min-width: 120px;
+  }
+  
+  .filter-btn {
+    margin-top: 16px;
+    width: 100%;
+  }
+  
+  .right-column .action-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .right-column .action-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-controls {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .filter-group {
+    min-width: 100%;
+  }
+}
+
 /* NEW INVOICE REQUEST FLOW STYLES */
 
 /* Invoice Request Section */
