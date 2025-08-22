@@ -1584,3 +1584,252 @@
     font-size: 13px;
   }
 }
+
+/* NEW INVOICE REQUEST FLOW STYLES */
+
+/* Invoice Request Section */
+.invoice-request-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Auto-troubleshoot Results */
+.auto-troubleshoot-info {
+  background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #28a745;
+}
+
+.dark-theme .auto-troubleshoot-info {
+  background: linear-gradient(135deg, #1e3a1e, #2d4a2d);
+  border-color: #2d5a3d;
+}
+
+.auto-troubleshoot-info h4 {
+  margin: 0 0 15px 0;
+  color: #28a745;
+  font-size: 16px;
+}
+
+.dark-theme .auto-troubleshoot-info h4 {
+  color: #4ade80;
+}
+
+/* Account Item Success/Failed States */
+.account-item.success {
+  background: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.account-item.failed {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.dark-theme .account-item.success {
+  background: #1e3a2e;
+  border-color: #2d5a3d;
+}
+
+.dark-theme .account-item.failed {
+  background: #3a1e1e;
+  border-color: #5d2d2d;
+}
+
+/* Preliminary Invoice Section */
+.preliminary-invoice {
+  background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
+  border: 1px solid #b3d9ff;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #2196f3;
+}
+
+.dark-theme .preliminary-invoice {
+  background: linear-gradient(135deg, #1e3a5f, #2d4a7f);
+  border-color: #3a5f8f;
+}
+
+.preliminary-invoice h4 {
+  margin: 0 0 15px 0;
+  color: #2196f3;
+  font-size: 16px;
+}
+
+.dark-theme .preliminary-invoice h4 {
+  color: #60a5fa;
+}
+
+/* New Referral Section */
+.new-referral-section {
+  background: linear-gradient(135deg, #fff3e0, #ffeaa7);
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #ff9800;
+}
+
+.dark-theme .new-referral-section {
+  background: linear-gradient(135deg, #3a2f1e, #4a3f28);
+  border-color: #4a4228;
+}
+
+.new-referral-section h4 {
+  margin: 0 0 15px 0;
+  color: #ff9800;
+  font-size: 16px;
+}
+
+.dark-theme .new-referral-section h4 {
+  color: #fbbf24;
+}
+
+.referral-help {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.dark-theme .referral-help {
+  color: #ccc;
+}
+
+/* Updated Pricing Section */
+.updated-pricing {
+  background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #28a745;
+}
+
+.dark-theme .updated-pricing {
+  background: linear-gradient(135deg, #1e3a1e, #2d4a2d);
+  border-color: #2d5a3d;
+}
+
+.updated-pricing h4 {
+  margin: 0 0 15px 0;
+  color: #28a745;
+  font-size: 16px;
+}
+
+.dark-theme .updated-pricing h4 {
+  color: #4ade80;
+}
+
+/* Invoice Request Actions */
+.invoice-request-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* Enhanced Pricing Display */
+.pricing-value.strikethrough {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.dark-theme .pricing-value.strikethrough {
+  color: #666;
+}
+
+/* Feature Toggle Controls (for development/testing) */
+.feature-toggles {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  z-index: 9999;
+  display: none; /* Hidden by default */
+}
+
+.feature-toggles.show {
+  display: block;
+}
+
+.feature-toggle {
+  margin: 5px 0;
+}
+
+.feature-toggle label {
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+/* Mobile Responsiveness for New Flow */
+@media (max-width: 768px) {
+  .invoice-request-content {
+    gap: 16px;
+  }
+
+  .auto-troubleshoot-info,
+  .preliminary-invoice,
+  .new-referral-section,
+  .updated-pricing {
+    padding: 16px;
+  }
+
+  .auto-troubleshoot-info h4,
+  .preliminary-invoice h4,
+  .new-referral-section h4,
+  .updated-pricing h4 {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .referral-help {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .invoice-request-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .invoice-request-actions .action-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auto-troubleshoot-info,
+  .preliminary-invoice,
+  .new-referral-section,
+  .updated-pricing {
+    padding: 12px;
+  }
+
+  .auto-troubleshoot-info h4,
+  .preliminary-invoice h4,
+  .new-referral-section h4,
+  .updated-pricing h4 {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .referral-help {
+    font-size: 12px;
+  }
+
+  .invoice-request-actions .action-btn {
+    padding: 12px;
+    font-size: 13px;
+  }
+}

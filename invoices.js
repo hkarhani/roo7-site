@@ -1,5 +1,5 @@
 // invoices.js - Invoice Management Page Logic
-import CONFIG from './frontend-config.js';
+import CONFIG, { FEATURE_FLAGS } from './frontend-config.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = CONFIG.API_CONFIG.authUrl;      // auth endpoints (port 443)
@@ -70,14 +70,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Check subscription status and show activation section if needed
+  // Check subscription status and show appropriate section based on feature flags
   function checkSubscriptionStatus() {
-    const activationSection = document.getElementById('section-activation');
+    const oldActivationSection = document.getElementById('section-activation');
+    const newInvoiceRequestSection = document.getElementById('section-invoice-request');
     
     if (!userSubscription || userSubscription.status !== 'active') {
-      activationSection.style.display = 'block';
+      // Show appropriate section based on feature flags
+      if (FEATURE_FLAGS.newInvoiceFlow) {
+        // NEW FLOW: Show invoice request section
+        newInvoiceRequestSection.style.display = 'block';
+        oldActivationSection.style.display = FEATURE_FLAGS.preserveOldFlow ? 'none' : 'none';
+      } else {
+        // OLD FLOW: Show original activation section
+        oldActivationSection.style.display = 'block';
+        newInvoiceRequestSection.style.display = 'none';
+      }
     } else {
-      activationSection.style.display = 'none';
+      // User has active subscription - hide both sections
+      oldActivationSection.style.display = 'none';
+      newInvoiceRequestSection.style.display = 'none';
     }
   }
 
@@ -760,6 +772,245 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // === NEW INVOICE REQUEST FUNCTIONS ===
+
+  // Request invoice with auto-troubleshooting
+  async function requestInvoiceWithAutoTroubleshoot() {
+    try {
+      const requestBtn = document.getElementById('request-invoice-btn');
+      requestBtn.disabled = true;
+      requestBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Processing...</span>';
+
+      const response = await fetch(`${INVOICING_API_BASE}${CONFIG.API_CONFIG.endpoints.requestInvoice}`, {
+        method: 'POST',
+        headers: getAuthHeaders(token)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        displayAutoTroubleshootResults(result.auto_troubleshoot_result);
+        displayInvoicePreview(result.preliminary_invoice);
+        showReferralSection();
+        showToast('✅ Invoice request processed successfully!', 'success');
+      } else {
+        throw new Error(result.error || 'Invoice request failed');
+      }
+
+    } catch (error) {
+      console.error('Error requesting invoice:', error);
+      showToast(`Invoice request failed: ${error.message}`, 'error');
+    } finally {
+      const requestBtn = document.getElementById('request-invoice-btn');
+      requestBtn.disabled = false;
+      requestBtn.innerHTML = '<span class="btn-icon">📄</span><span class="btn-text">Request Invoice</span>';
+    }
+  }
+
+  // Display auto-troubleshoot results
+  function displayAutoTroubleshootResults(troubleshootResult) {
+    const autoTroubleshootSection = document.getElementById('auto-troubleshoot-info');
+    const autoTroubleshootDetails = document.getElementById('auto-troubleshoot-details');
+    
+    if (!troubleshootResult) return;
+    
+    const { successful_troubleshoots, total_accounts_processed, troubleshoot_results, total_value_discovered } = troubleshootResult;
+    
+    autoTroubleshootDetails.innerHTML = `
+      <div class="validation-summary">
+        <div class="validation-item">
+          <span class="validation-label">Accounts Analyzed:</span>
+          <span class="validation-value">${total_accounts_processed}</span>
+        </div>
+        <div class="validation-item">
+          <span class="validation-label">Successfully Updated:</span>
+          <span class="validation-value">${successful_troubleshoots}</span>
+        </div>
+        <div class="validation-item">
+          <span class="validation-label">Total Value Discovered:</span>
+          <span class="validation-value"><strong>$${total_value_discovered.toFixed(2)}</strong></span>
+        </div>
+      </div>
+      ${troubleshoot_results.length > 0 ? `
+        <div class="accounts-list">
+          <h5>📊 Account Analysis Details</h5>
+          ${troubleshoot_results.map(result => `
+            <div class="account-item ${result.success ? 'success' : 'failed'}">
+              <span class="account-name">${result.account_name}</span>
+              <span class="account-value">${result.success ? `$${result.current_value?.toFixed(2) || '0.00'}` : 'Failed'}</span>
+              <span class="account-strategy">${result.message}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+    
+    autoTroubleshootSection.style.display = 'block';
+  }
+
+  // Display invoice preview
+  function displayInvoicePreview(preliminaryInvoice) {
+    const invoiceSection = document.getElementById('preliminary-invoice');
+    const invoiceDetails = document.getElementById('invoice-preview-details');
+    
+    if (!preliminaryInvoice) return;
+    
+    const { portfolio_value, tier, base_price, current_price, is_first_time_user } = preliminaryInvoice;
+    
+    invoiceDetails.innerHTML = `
+      <div class="pricing-breakdown">
+        <div class="pricing-item">
+          <span class="pricing-label">Portfolio Value:</span>
+          <span class="pricing-value">$${portfolio_value.toFixed(2)}</span>
+        </div>
+        <div class="pricing-item">
+          <span class="pricing-label">Subscription Tier:</span>
+          <span class="pricing-value">${getTierDisplayName(tier)}</span>
+        </div>
+        <div class="pricing-item">
+          <span class="pricing-label">Base Price:</span>
+          <span class="pricing-value">$${base_price.toFixed(2)} USDT</span>
+        </div>
+        <div class="pricing-item final">
+          <span class="pricing-label">Current Price:</span>
+          <span class="pricing-value"><strong>$${current_price.toFixed(2)} USDT</strong></span>
+        </div>
+        ${is_first_time_user ? `
+          <div class="pricing-notice">
+            <span class="referral-success">🎉 First-time user - eligible for referral discounts!</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    
+    // Store preliminary invoice data for later use
+    window.preliminaryInvoiceData = preliminaryInvoice;
+    
+    invoiceSection.style.display = 'block';
+  }
+
+  // Show referral section after invoice preview
+  function showReferralSection() {
+    const referralSection = document.getElementById('new-referral-section');
+    referralSection.style.display = 'block';
+  }
+
+  // Validate new referral code and update pricing
+  async function validateNewReferralCode() {
+    const referralCode = document.getElementById('new-referral-code').value.trim();
+    const referralMessage = document.getElementById('new-referral-message');
+    
+    if (!referralCode) {
+      referralMessage.innerHTML = '';
+      // Reset to original pricing
+      if (window.preliminaryInvoiceData) {
+        displayUpdatedPricing(null, window.preliminaryInvoiceData);
+      }
+      return;
+    }
+
+    if (!window.preliminaryInvoiceData) {
+      referralMessage.innerHTML = '<span class="referral-error">❌ Please request invoice first</span>';
+      return;
+    }
+
+    try {
+      const validateBtn = document.getElementById('validate-new-referral-btn');
+      validateBtn.disabled = true;
+      validateBtn.textContent = 'Validating...';
+
+      const response = await fetch(`${INVOICING_API_BASE}${CONFIG.API_CONFIG.endpoints.calculatePricing}`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          portfolio_value: window.preliminaryInvoiceData.portfolio_value,
+          referral_code: referralCode
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        referralMessage.innerHTML = `<span class="referral-info">✅ Valid referral code from ${result.referrer_info?.username || 'verified user'}</span>`;
+        displayUpdatedPricing(result.pricing, window.preliminaryInvoiceData);
+        showToast('🎉 Referral discount applied!', 'success');
+        
+        // Show activate button
+        document.getElementById('activate-with-pricing-btn').style.display = 'inline-block';
+      } else {
+        throw new Error(result.error || 'Referral validation failed');
+      }
+
+    } catch (error) {
+      console.error('Error validating referral:', error);
+      referralMessage.innerHTML = `<span class="referral-error">❌ ${error.message}</span>`;
+    } finally {
+      const validateBtn = document.getElementById('validate-new-referral-btn');
+      validateBtn.disabled = false;
+      validateBtn.textContent = 'Validate & Apply Discount';
+    }
+  }
+
+  // Display updated pricing with referral discount
+  function displayUpdatedPricing(newPricing, originalInvoice) {
+    const updatedPricingSection = document.getElementById('updated-pricing');
+    const updatedPricingDetails = document.getElementById('updated-pricing-details');
+    
+    if (!newPricing) {
+      // Show original pricing
+      updatedPricingDetails.innerHTML = `
+        <div class="pricing-breakdown">
+          <div class="pricing-item final">
+            <span class="pricing-label">Price:</span>
+            <span class="pricing-value"><strong>$${originalInvoice.current_price.toFixed(2)} USDT</strong></span>
+          </div>
+        </div>
+      `;
+    } else {
+      // Show pricing with discount
+      const hasDiscount = newPricing.discount > 0;
+      
+      updatedPricingDetails.innerHTML = `
+        <div class="pricing-breakdown">
+          ${hasDiscount ? `
+            <div class="pricing-item">
+              <span class="pricing-label">Original Price:</span>
+              <span class="pricing-value strikethrough">$${newPricing.base_price.toFixed(2)}</span>
+            </div>
+            <div class="pricing-item discount">
+              <span class="pricing-label">Referral Discount (${(newPricing.discount * 100).toFixed(0)}%):</span>
+              <span class="pricing-value">-$${newPricing.discount_amount.toFixed(2)}</span>
+            </div>
+          ` : ''}
+          <div class="pricing-item final">
+            <span class="pricing-label">Final Price:</span>
+            <span class="pricing-value"><strong>$${newPricing.final_price.toFixed(2)} USDT</strong></span>
+          </div>
+          ${hasDiscount ? `
+            <div class="pricing-notice">
+              <span class="referral-success">🎉 You save $${newPricing.discount_amount.toFixed(2)} with this referral!</span>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      // Store updated pricing
+      window.updatedPricingData = newPricing;
+    }
+    
+    updatedPricingSection.style.display = 'block';
+  }
+
   // Event Listeners
   document.getElementById('back-to-dashboard').onclick = () => {
     window.location.href = '/dashboard.html';
@@ -775,13 +1026,23 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('payment-help-modal').style.display = 'block';
   };
 
-  // Subscription activation event listeners
+  // Subscription activation event listeners (OLD FLOW)
   document.getElementById('validate-portfolio-btn').onclick = validatePortfolio;
   document.getElementById('activate-subscription-btn').onclick = activateSubscription;
   document.getElementById('validate-referral-btn').onclick = validateReferralCode;
   
-  // Real-time referral code validation
+  // Real-time referral code validation (OLD FLOW)
   document.getElementById('activation-referral-code').addEventListener('input', validateReferralCode);
+
+  // NEW INVOICE FLOW event listeners
+  if (FEATURE_FLAGS.newInvoiceFlow) {
+    document.getElementById('request-invoice-btn').onclick = requestInvoiceWithAutoTroubleshoot;
+    document.getElementById('validate-new-referral-btn').onclick = validateNewReferralCode;
+    document.getElementById('activate-with-pricing-btn').onclick = activateSubscription; // Reuse existing activation function
+    
+    // Real-time referral code validation (NEW FLOW)
+    document.getElementById('new-referral-code').addEventListener('input', validateNewReferralCode);
+  }
 
   // Modal event listeners
   document.getElementById('close-invoice-modal').onclick = () => {

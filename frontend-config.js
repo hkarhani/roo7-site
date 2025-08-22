@@ -114,6 +114,8 @@ export const API_CONFIG = {
         // Invoices
         myInvoices: "/invoices/me",
         invoice: "/invoices",
+        requestInvoice: "/invoices/request",  // NEW: Request invoice with auto-troubleshoot
+        calculatePricing: "/invoices/calculate-pricing",  // NEW: Calculate pricing with referral
         
         // Referrals
         myReferrals: "/referrals/me",
@@ -144,6 +146,33 @@ export const API_CONFIG = {
             users: "/admin/users/search"
         }
     }
+};
+
+// =============================================================================
+// FEATURE FLAGS
+// =============================================================================
+
+export const FEATURE_FLAGS = {
+    // NEW: Invoice system features
+    newInvoiceFlow: true,         // Enable new invoice request flow
+    autoTroubleshoot: true,       // Enable automatic account troubleshooting
+    enhancedPricing: true,        // Enable enhanced pricing with proper referral discounts
+    
+    // UI/UX Features
+    duplicateButtonFix: true,     // Fix duplicate validate buttons
+    progressiveEnhancement: true, // Enable progressive enhancement
+    
+    // Development/Testing
+    debugMode: false,             // Enable debug logging
+    simulateAutoTroubleshoot: true, // Use simulation for auto-troubleshoot
+    
+    // Rollout Control
+    enableForAllUsers: true,      // Enable new features for all users
+    enableForBetaUsers: true,     // Enable new features for beta users only
+    
+    // Backward Compatibility
+    preserveOldFlow: true,        // Keep old flow available during transition
+    showFeatureToggles: false     // Show feature toggle controls in UI
 };
 
 // =============================================================================

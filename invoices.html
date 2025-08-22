@@ -83,7 +83,53 @@
       </div>
     </section>
 
-    <!-- Subscription Activation Section -->
+    <!-- NEW: Invoice Request Section -->
+    <section id="section-invoice-request" class="dashboard-card" style="display: none;">
+      <h2>📄 Request Subscription Invoice</h2>
+      <div class="invoice-request-content">
+        <div class="activation-message">
+          <p>Request a subscription invoice with automatic account analysis and current portfolio valuation.</p>
+        </div>
+        
+        <div class="auto-troubleshoot-info" id="auto-troubleshoot-info" style="display: none;">
+          <h4>🔄 Account Analysis Results</h4>
+          <div id="auto-troubleshoot-details"></div>
+        </div>
+        
+        <div class="preliminary-invoice" id="preliminary-invoice" style="display: none;">
+          <h4>📋 Invoice Preview</h4>
+          <div id="invoice-preview-details"></div>
+        </div>
+        
+        <div class="new-referral-section" id="new-referral-section" style="display: none;">
+          <h4>🎯 Apply Referral Code (Optional)</h4>
+          <p class="referral-help">Enter a referral code to get additional discounts on your subscription.</p>
+          <div class="referral-input-group">
+            <input type="text" id="new-referral-code" placeholder="Enter referral code for discounts">
+            <button id="validate-new-referral-btn" class="validate-btn">Validate & Apply Discount</button>
+          </div>
+          <div id="new-referral-message" class="referral-message"></div>
+        </div>
+        
+        <div class="updated-pricing" id="updated-pricing" style="display: none;">
+          <h4>💰 Updated Pricing</h4>
+          <div id="updated-pricing-details"></div>
+        </div>
+        
+        <div class="invoice-request-actions">
+          <button id="request-invoice-btn" class="action-btn primary">
+            <span class="btn-icon">📄</span>
+            <span class="btn-text">Request Invoice</span>
+          </button>
+          <button id="activate-with-pricing-btn" class="action-btn success" style="display: none;">
+            <span class="btn-icon">🚀</span>
+            <span class="btn-text">Activate Subscription</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- OLD: Subscription Activation Section (for backward compatibility) -->
     <section id="section-activation" class="dashboard-card" style="display: none;">
       <h2>🚀 Activate Subscription</h2>
       <div class="activation-content">
