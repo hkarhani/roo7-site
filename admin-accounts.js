@@ -1,7 +1,12 @@
 import CONFIG from './frontend-config.js';
 
-const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicing;
-const AUTH_API_BASE = CONFIG.API_CONFIG.auth;
+const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
+const AUTH_API_BASE = CONFIG.API_CONFIG.authUrl;
+
+console.log('🔧 Admin Accounts Debug Info:');
+console.log('INVOICING_API_BASE:', INVOICING_API_BASE);
+console.log('AUTH_API_BASE:', AUTH_API_BASE);
+console.log('Config loaded:', CONFIG);
 
 let token = null;
 let allAccounts = [];
@@ -110,28 +115,44 @@ function toggleTheme() {
 function getAuthHeaders(token) {
   return {
     'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
   };
 }
 
 // Load accounts from API
 async function loadAccounts() {
   try {
+    console.log('🔄 Loading accounts from:', `${INVOICING_API_BASE}/admin/accounts`);
+    console.log('🔑 Token present:', !!token);
+    console.log('🔑 Token preview:', token ? token.substring(0, 20) + '...' : 'none');
+    
     const response = await fetch(`${INVOICING_API_BASE}/admin/accounts`, {
       headers: getAuthHeaders(token)
     });
 
+    console.log('📡 API Response Status:', response.status);
+    console.log('📡 API Response Headers:', Object.fromEntries(response.headers.entries()));
+
     if (response.ok) {
       const data = await response.json();
+      console.log('✅ Accounts data received:', data);
+      console.log('📊 Number of accounts:', data.accounts ? data.accounts.length : 0);
+      
       allAccounts = data.accounts || [];
       filteredAccounts = [...allAccounts];
       displayAccounts();
     } else {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('❌ API Error Response:', errorText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
     }
   } catch (error) {
-    console.error('Error loading accounts:', error);
-    showToast('Failed to load accounts', 'error');
+    console.error('❌ Error loading accounts:', error);
+    console.error('❌ Error stack:', error.stack);
+    showToast(`Failed to load accounts: ${error.message}`, 'error');
   }
 }
 

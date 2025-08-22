@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
   const AUTH_API_BASE = CONFIG.API_CONFIG.authUrl;
   
+  console.log('🔧 Admin Users Debug Info:');
+  console.log('INVOICING_API_BASE:', INVOICING_API_BASE);
+  console.log('AUTH_API_BASE:', AUTH_API_BASE);
+  
   // Check authentication
   const token = localStorage.getItem("token");
   if (!token) {
@@ -127,7 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function getAuthHeaders(token) {
     return {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     };
   }
   
@@ -275,9 +282,14 @@ document.addEventListener("DOMContentLoaded", () => {
         url = `${INVOICING_API_BASE}/admin/users/search?q=${encodeURIComponent(searchTerm)}`;
       }
       
+      console.log('🔄 Loading users from:', url);
+      console.log('🔑 Token present:', !!token);
+      
       const response = await fetch(url, {
         headers: getAuthHeaders(token)
       });
+      
+      console.log('📡 Users API Response Status:', response.status);
       
       clearTimeout(loadingTimeout);
       
