@@ -160,7 +160,11 @@ document.addEventListener("DOMContentLoaded", () => {
             currentValueDisplay = '$' + value.toFixed(0);
           }
         } else {
-          currentValueDisplay = '$' + value.toFixed(2);
+          // Desktop: Show full value with comma separators
+          currentValueDisplay = '$' + value.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
         }
       }
 

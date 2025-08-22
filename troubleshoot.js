@@ -157,9 +157,9 @@ function initializeTroubleshootPage() {
       if (!window.loadAccountRetryCount) window.loadAccountRetryCount = 0;
       window.loadAccountRetryCount++;
       
-      if (window.loadAccountRetryCount <= 3) {
-        console.log(`🔄 Retrying loadAccountDetails (attempt ${window.loadAccountRetryCount}/3)...`);
-        setTimeout(loadAccountDetails, window.loadAccountRetryCount * 500);
+      if (window.loadAccountRetryCount <= 5) {
+        console.log(`🔄 Retrying loadAccountDetails (attempt ${window.loadAccountRetryCount}/5)...`);
+        setTimeout(loadAccountDetails, window.loadAccountRetryCount * 1000); // Increase delay between retries
         return;
       } else {
         console.error("❌ Max retries reached for loadAccountDetails, continuing with available elements...");
@@ -171,7 +171,7 @@ function initializeTroubleshootPage() {
       console.log("🔐 Using token for API request");
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
       const res = await fetch(`${API_BASE}/accounts`, {
         method: "GET",
@@ -261,8 +261,9 @@ function initializeTroubleshootPage() {
         account_id: account.account_id
       });
       
-      // Reset retry counter on success
+      // Reset retry counters on success
       window.loadAccountRetryCount = 0;
+      window.networkRetryCount = 0;
       
       // Show success message
       showToast("Account details loaded successfully", 'success', 2000);
@@ -270,8 +271,28 @@ function initializeTroubleshootPage() {
     } catch (error) {
       console.error("❌ Failed to load account details:", error);
       
+      // Increment network retry counter
+      if (!window.networkRetryCount) window.networkRetryCount = 0;
+      window.networkRetryCount++;
+      
       if (error.name === 'AbortError') {
         showToast("Request timed out. Please check your connection.", 'error');
+        // Retry on timeout if we haven't exceeded retry limit
+        if (window.networkRetryCount <= 2) {
+          console.log(`🔄 Retrying due to timeout (attempt ${window.networkRetryCount}/2)...`);
+          setTimeout(loadAccountDetails, 3000);
+          return;
+        }
+      } else if (error.message.includes('fetch') || error.message.includes('network')) {
+        // Network error - retry
+        if (window.networkRetryCount <= 2) {
+          console.log(`🔄 Retrying due to network error (attempt ${window.networkRetryCount}/2)...`);
+          showToast(`Network error, retrying... (${window.networkRetryCount}/2)`, 'warning', 2000);
+          setTimeout(loadAccountDetails, 2000);
+          return;
+        } else {
+          showToast(`Failed to load account: ${error.message}`, 'error');
+        }
       } else {
         showToast(`Failed to load account: ${error.message}`, 'error');
       }
@@ -1862,8 +1883,11 @@ function initializeTroubleshootPage() {
   // Initialize connection status
   updateAPIConnectionStatus('ready', 'Ready to test connection');
 
-  // Start loading account details
-  loadAccountDetails();
+  // Start loading account details with a delay to ensure DOM is fully ready
+  setTimeout(() => {
+    console.log("🔄 Starting account details loading...");
+    loadAccountDetails();
+  }, 500);
 }
 
 // Enhanced initialization with better error handling and retries
@@ -1895,8 +1919,8 @@ function safeInitialize() {
   
   if (missingElements.length > 0 && window.troubleshootRetryCount < MAX_RETRIES) {
     window.troubleshootRetryCount++;
-    console.log(`⚠️ Missing DOM elements (${missingElements.join(', ')}), retrying in ${window.troubleshootRetryCount * 200}ms... (attempt ${window.troubleshootRetryCount}/${MAX_RETRIES})`);
-    setTimeout(safeInitialize, window.troubleshootRetryCount * 200);
+    console.log(`⚠️ Missing DOM elements (${missingElements.join(', ')}), retrying in ${window.troubleshootRetryCount * 300}ms... (attempt ${window.troubleshootRetryCount}/${MAX_RETRIES})`);
+    setTimeout(safeInitialize, window.troubleshootRetryCount * 300); // Increased delay
     return;
   }
   
