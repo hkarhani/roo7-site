@@ -283,9 +283,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update local data
         referralData.referral_code = data.referral_code;
         
-          code: referralData.referral_code
-        });
-        
         // Update UI
         updateUI();
         
