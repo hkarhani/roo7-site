@@ -7,6 +7,7 @@ console.log('🔧 Admin Accounts Debug Info:');
 console.log('INVOICING_API_BASE:', INVOICING_API_BASE);
 console.log('AUTH_API_BASE:', AUTH_API_BASE);
 console.log('Config loaded:', CONFIG);
+console.log('🔧 Full API Config:', CONFIG.API_CONFIG);
 
 let token = null;
 let allAccounts = [];
@@ -127,10 +128,22 @@ function initializeEventListeners() {
     });
   }
 
+  const closeDetailedTroubleshootModal = document.getElementById('close-detailed-troubleshoot-modal');
+  if (closeDetailedTroubleshootModal) {
+    closeDetailedTroubleshootModal.addEventListener('click', () => {
+      document.getElementById('detailed-troubleshoot-modal').style.display = 'none';
+    });
+  }
+
   // Modal action buttons
   const troubleshootBtn = document.getElementById('troubleshoot-account');
   if (troubleshootBtn) {
     troubleshootBtn.addEventListener('click', troubleshootCurrentAccount);
+  }
+
+  const detailedTroubleshootBtn = document.getElementById('detailed-troubleshoot-account');
+  if (detailedTroubleshootBtn) {
+    detailedTroubleshootBtn.addEventListener('click', detailedTroubleshootCurrentAccount);
   }
 
   const verifyBtn = document.getElementById('verify-account');
@@ -209,6 +222,15 @@ async function loadAccounts() {
       console.log('✅ Accounts data received:', data);
       console.log('📊 Number of accounts:', data.accounts ? data.accounts.length : 0);
       
+      // Debug: Log first account to see data structure
+      if (data.accounts && data.accounts.length > 0) {
+        console.log('🔍 First account debug data:', data.accounts[0]);
+        console.log('🔍 Portfolio value:', data.accounts[0].portfolio_value);
+        console.log('🔍 Test status:', data.accounts[0].test_status);
+        console.log('🔍 Status:', data.accounts[0].status);
+        console.log('🔍 Full name:', data.accounts[0].full_name);
+      }
+      
       allAccounts = data.accounts || [];
       filteredAccounts = [...allAccounts];
       displayAccounts();
@@ -247,7 +269,7 @@ function displayAccounts() {
       <td>${account.username || 'N/A'}</td>
       <td>${account.email || 'N/A'}</td>
       <td><span class="exchange-badge">${account.exchange || 'N/A'}</span></td>
-      <td><span class="status-badge status-${account.status}">${account.status}</span></td>
+      <td><span class="status-badge status-${account.test_status === 'successful' ? 'active' : account.test_status === 'failed' ? 'inactive' : 'disabled'}">${account.test_status || 'inactive'}</span></td>
       <td>$${(account.portfolio_value || 0).toFixed(2)}</td>
       <td class="account-actions">
         <button class="account-action-btn" onclick="viewAccountDetails('${account.account_id}')">
@@ -347,10 +369,6 @@ window.viewAccountDetails = function(accountId) {
         <span class="detail-value">${currentAccount.account_type || 'N/A'}</span>
       </div>
       <div class="detail-item">
-        <span class="detail-label">Status:</span>
-        <span class="detail-value">${currentAccount.status || 'N/A'}</span>
-      </div>
-      <div class="detail-item">
         <span class="detail-label">Test Status:</span>
         <span class="detail-value">${currentAccount.test_status || 'N/A'}</span>
       </div>
@@ -395,7 +413,10 @@ window.troubleshootAccount = async function(accountId) {
   showToast('Starting account troubleshoot...', 'info');
   
   try {
-    const response = await fetch(`${AUTH_API_BASE}/troubleshoot/${accountId}`, {
+    const troubleshootUrl = `${AUTH_API_BASE}/troubleshoot/${accountId}`;
+    console.log('🔧 Troubleshoot URL:', troubleshootUrl);
+    
+    const response = await fetch(troubleshootUrl, {
       method: 'POST',
       headers: getAuthHeaders(token)
     });
@@ -412,6 +433,29 @@ window.troubleshootAccount = async function(accountId) {
   } catch (error) {
     console.error('Error troubleshooting account:', error);
     showToast('Error troubleshooting account', 'error');
+  }
+};
+
+window.detailedTroubleshootAccount = async function(accountId) {
+  showToast('Starting detailed account analysis...', 'info');
+  
+  try {
+    const response = await fetch(`${INVOICING_API_BASE}/admin/accounts/${accountId}/troubleshoot`, {
+      method: 'POST',
+      headers: getAuthHeaders(token)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      showDetailedTroubleshootResults(result);
+      showToast('Detailed analysis completed successfully!', 'success');
+    } else {
+      const error = await response.json();
+      showToast(`Detailed analysis failed: ${error.detail}`, 'error');
+    }
+  } catch (error) {
+    console.error('Error performing detailed analysis:', error);
+    showToast('Error performing detailed analysis', 'error');
   }
 };
 
@@ -457,9 +501,212 @@ function showTroubleshootResults(result) {
   modal.style.display = 'block';
 }
 
+function showDetailedTroubleshootResults(result) {
+  const modal = document.getElementById('detailed-troubleshoot-modal');
+  const resultsContainer = document.getElementById('detailed-troubleshoot-results');
+  
+  const statusClass = result.success ? 'result-success' : 'result-error';
+  
+  resultsContainer.innerHTML = `
+    <div class="result-section ${statusClass}">
+      <h4>📊 Account Summary</h4>
+      <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 15px 0;">
+        <div class="summary-card">
+          <strong>Account Name:</strong> ${result.account_summary.account_name}<br>
+          <strong>Exchange:</strong> ${result.account_summary.exchange}<br>
+          <strong>Test Status:</strong> ${result.account_summary.test_status}<br>
+          <strong>Total USDT Value:</strong> $${(result.account_summary.total_usdt_value || 0).toFixed(2)}
+        </div>
+        <div class="summary-card">
+          <strong>API Key Valid:</strong> ${result.account_summary.api_key_valid ? '✅ Yes' : '❌ No'}<br>
+          <strong>IP Whitelisted:</strong> ${result.account_summary.ip_whitelisted ? '✅ Yes' : '❌ No'}<br>
+          <strong>Analysis Time:</strong> ${new Date(result.timestamp).toLocaleString()}
+        </div>
+      </div>
+    </div>
+    
+    ${result.detailed_data.spot_account && Object.keys(result.detailed_data.spot_account).length > 0 ? `
+      <div class="result-section">
+        <h4>💰 SPOT Account</h4>
+        <div class="account-details" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          ${result.detailed_data.spot_account.balances ? `
+            <h5>Assets:</h5>
+            <div style="max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #e9ecef;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Asset</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Free</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Locked</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${result.detailed_data.spot_account.balances.map(balance => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${balance.asset}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(balance.free || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(balance.locked || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${(balance.usdt_value || 0).toFixed(2)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : '<p>No SPOT balances found</p>'}
+        </div>
+      </div>
+    ` : ''}
+    
+    ${result.detailed_data.usdm_account && Object.keys(result.detailed_data.usdm_account).length > 0 ? `
+      <div class="result-section">
+        <h4>📈 USDT-M Futures</h4>
+        <div class="account-details" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          ${result.detailed_data.usdm_account.assets ? `
+            <h5>Assets:</h5>
+            <div style="max-height: 150px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #ffeaa7;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Asset</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Wallet Balance</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Unrealized PNL</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Available Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${result.detailed_data.usdm_account.assets.map(asset => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${asset.asset}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.walletBalance || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.unrealizedProfit || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.availableBalance || 0).toFixed(8)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+          
+          ${result.detailed_data.usdm_account.positions ? `
+            <h5>Positions:</h5>
+            <div style="max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #ffeaa7;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Symbol</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Size</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Entry Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Mark Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">PNL</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">ROE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${result.detailed_data.usdm_account.positions.filter(pos => parseFloat(pos.positionAmt || 0) !== 0).map(position => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${position.symbol}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(position.positionAmt || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.entryPrice || 0).toFixed(4)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.markPrice || 0).toFixed(4)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.unRealizedProfit || 0) >= 0 ? 'green' : 'red'};">$${parseFloat(position.unRealizedProfit || 0).toFixed(2)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.percentage || 0) >= 0 ? 'green' : 'red'};">${parseFloat(position.percentage || 0).toFixed(2)}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : '<p>No active USDT-M positions</p>'}
+        </div>
+      </div>
+    ` : ''}
+    
+    ${result.detailed_data.coinm_account && Object.keys(result.detailed_data.coinm_account).length > 0 ? `
+      <div class="result-section">
+        <h4>🪙 COIN-M Futures</h4>
+        <div class="account-details" style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          ${result.detailed_data.coinm_account.assets ? `
+            <h5>Assets:</h5>
+            <div style="max-height: 150px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #bee5eb;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Asset</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Wallet Balance</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Unrealized PNL</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Available Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${result.detailed_data.coinm_account.assets.map(asset => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${asset.asset}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.walletBalance || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.unrealizedProfit || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.availableBalance || 0).toFixed(8)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+          
+          ${result.detailed_data.coinm_account.positions ? `
+            <h5>Positions:</h5>
+            <div style="max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #bee5eb;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Symbol</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Size</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Entry Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Mark Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">PNL</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">ROE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${result.detailed_data.coinm_account.positions.filter(pos => parseFloat(pos.positionAmt || 0) !== 0).map(position => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${position.symbol}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(position.positionAmt || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.entryPrice || 0).toFixed(4)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.markPrice || 0).toFixed(4)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.unRealizedProfit || 0) >= 0 ? 'green' : 'red'};">$${parseFloat(position.unRealizedProfit || 0).toFixed(2)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.percentage || 0) >= 0 ? 'green' : 'red'};">${parseFloat(position.percentage || 0).toFixed(2)}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : '<p>No active COIN-M positions</p>'}
+        </div>
+      </div>
+    ` : ''}
+    
+    ${result.basic_troubleshoot && result.basic_troubleshoot.recommendations && result.basic_troubleshoot.recommendations.length > 0 ? `
+      <div class="result-section result-warning">
+        <h4>💡 Recommendations</h4>
+        <ul>
+          ${result.basic_troubleshoot.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+        </ul>
+      </div>
+    ` : ''}
+  `;
+
+  modal.style.display = 'block';
+}
+
 function troubleshootCurrentAccount() {
   if (currentAccount && currentAccount.account_id) {
     troubleshootAccount(currentAccount.account_id);
+    document.getElementById('account-modal').style.display = 'none';
+  }
+}
+
+function detailedTroubleshootCurrentAccount() {
+  if (currentAccount && currentAccount.account_id) {
+    detailedTroubleshootAccount(currentAccount.account_id);
     document.getElementById('account-modal').style.display = 'none';
   }
 }
