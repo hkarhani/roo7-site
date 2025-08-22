@@ -70,26 +70,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Check subscription status and show appropriate section based on feature flags
+  // Check subscription status and show invoice request section if needed
   function checkSubscriptionStatus() {
-    const oldActivationSection = document.getElementById('section-activation');
-    const newInvoiceRequestSection = document.getElementById('section-invoice-request');
+    const invoiceRequestSection = document.getElementById('section-invoice-request');
     
     if (!userSubscription || userSubscription.status !== 'active') {
-      // Show appropriate section based on feature flags
-      if (FEATURE_FLAGS.newInvoiceFlow) {
-        // NEW FLOW: Show invoice request section
-        newInvoiceRequestSection.style.display = 'block';
-        oldActivationSection.style.display = FEATURE_FLAGS.preserveOldFlow ? 'none' : 'none';
-      } else {
-        // OLD FLOW: Show original activation section
-        oldActivationSection.style.display = 'block';
-        newInvoiceRequestSection.style.display = 'none';
-      }
+      // Show invoice request section for users without active subscription
+      invoiceRequestSection.style.display = 'block';
     } else {
-      // User has active subscription - hide both sections
-      oldActivationSection.style.display = 'none';
-      newInvoiceRequestSection.style.display = 'none';
+      // User has active subscription - hide invoice request section
+      invoiceRequestSection.style.display = 'none';
     }
   }
 
@@ -536,176 +526,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // === SUBSCRIPTION ACTIVATION FUNCTIONS ===
+  // === SUBSCRIPTION ACTIVATION FUNCTIONS (Cleaned up) ===
 
-  // Validate portfolio for activation
-  async function validatePortfolio() {
-    try {
-      const validateBtn = document.getElementById('validate-portfolio-btn');
-      validateBtn.disabled = true;
-      validateBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Validating...</span>';
-
-      const response = await fetch(`${INVOICING_API_BASE}/subscriptions/validate-portfolio`, {
-        headers: getAuthHeaders(token)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const validation = await response.json();
-      displayPortfolioValidation(validation);
-      
-      if (validation.is_valid) {
-        showToast('Portfolio validated successfully!', 'success');
-        document.getElementById('activate-subscription-btn').style.display = 'inline-block';
-      } else {
-        showToast('No active accounts found for activation', 'warning');
-      }
-
-    } catch (error) {
-      console.error('Error validating portfolio:', error);
-      showToast(`Portfolio validation failed: ${error.message}`, 'error');
-    } finally {
-      const validateBtn = document.getElementById('validate-portfolio-btn');
-      validateBtn.disabled = false;
-      validateBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Validate Portfolio</span>';
-    }
-  }
-
-  // Display portfolio validation results
-  function displayPortfolioValidation(validation) {
-    const portfolioSection = document.getElementById('portfolio-validation');
-    const portfolioDetails = document.getElementById('portfolio-details');
-    
-    portfolioDetails.innerHTML = `
-      <div class="validation-summary">
-        <div class="validation-item">
-          <span class="validation-label">Total Portfolio Value:</span>
-          <span class="validation-value"><strong>$${validation.total_value.toFixed(2)}</strong></span>
-        </div>
-        <div class="validation-item">
-          <span class="validation-label">Active Accounts:</span>
-          <span class="validation-value">${validation.active_accounts_count}</span>
-        </div>
-      </div>
-      <div class="accounts-list">
-        <h5>📊 Account Details</h5>
-        ${validation.accounts.map(account => `
-          <div class="account-item">
-            <span class="account-name">${account.account_name}</span>
-            <span class="account-value">$${account.current_value.toFixed(2)}</span>
-            <span class="account-strategy">${account.strategy}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
-    
-    portfolioSection.style.display = 'block';
-    
-    // Calculate and display pricing
-    calculateAndDisplayPricing(validation.total_value);
-  }
-
-  // Calculate and display pricing information
-  function calculateAndDisplayPricing(portfolioValue) {
-    const referralCode = document.getElementById('activation-referral-code').value.trim();
-    const hasReferral = referralCode.length > 0;
-    
-    let pricing = {
-      tier: '',
-      base_price: 0,
-      final_price: 0,
-      discount: 0,
-      referral_applied: false
-    };
-
-    if (portfolioValue < 10000) {
-      pricing.tier = 'Tier 1';
-      pricing.base_price = 1000;
-      pricing.final_price = hasReferral ? 500 : 1000;
-      pricing.discount = hasReferral ? 0.5 : 0;
-      pricing.referral_applied = hasReferral;
-    } else if (portfolioValue < 100000) {
-      pricing.tier = 'Tier 2';
-      pricing.base_price = hasReferral ? Math.round(portfolioValue * 0.10) : Math.round(portfolioValue * 0.08);
-      pricing.final_price = hasReferral ? Math.round(portfolioValue * 0.08) : Math.round(portfolioValue * 0.10);
-      pricing.discount = hasReferral ? 0.2 : 0;
-      pricing.referral_applied = hasReferral;
-    } else {
-      pricing.tier = 'Tier 3';
-      pricing.base_price = 0;
-      pricing.final_price = 0;
-      pricing.discount = 0;
-      pricing.referral_applied = false;
-    }
-
-    displayPricingInfo(pricing);
-  }
-
-  // Display pricing information
-  function displayPricingInfo(pricing) {
-    const pricingSection = document.getElementById('pricing-info');
-    const pricingDetails = document.getElementById('pricing-details');
-    
-    if (pricing.tier === 'Tier 3') {
-      pricingDetails.innerHTML = `
-        <div class="pricing-notice custom-pricing">
-          <h5>🎯 Custom Pricing Required</h5>
-          <p>Your portfolio value requires custom pricing. Please contact our support team for a personalized quote.</p>
-          <div class="contact-info">
-            <p>📧 Email: ${CONFIG.EMAIL_CONFIG.support}</p>
-            <p>💬 Live Chat: Available 24/7</p>
-          </div>
-        </div>
-      `;
-      document.getElementById('activate-subscription-btn').style.display = 'none';
-    } else {
-      pricingDetails.innerHTML = `
-        <div class="pricing-breakdown">
-          <div class="pricing-item">
-            <span class="pricing-label">Subscription Tier:</span>
-            <span class="pricing-value">${pricing.tier}</span>
-          </div>
-          ${pricing.discount > 0 ? `
-            <div class="pricing-item">
-              <span class="pricing-label">Base Price:</span>
-              <span class="pricing-value strikethrough">$${pricing.base_price.toFixed(2)}</span>
-            </div>
-            <div class="pricing-item discount">
-              <span class="pricing-label">Discount (${(pricing.discount * 100).toFixed(0)}%):</span>
-              <span class="pricing-value">-$${(pricing.base_price - pricing.final_price).toFixed(2)}</span>
-            </div>
-          ` : ''}
-          <div class="pricing-item final">
-            <span class="pricing-label">Final Price:</span>
-            <span class="pricing-value"><strong>$${pricing.final_price.toFixed(2)} USDT</strong></span>
-          </div>
-          ${pricing.referral_applied ? `
-            <div class="pricing-notice">
-              <span class="referral-success">🎉 Referral discount applied!</span>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }
-    
-    pricingSection.style.display = 'block';
-  }
-
-  // Activate subscription
+  // Activate subscription (updated for new flow)
   async function activateSubscription() {
     try {
-      const activateBtn = document.getElementById('activate-subscription-btn');
+      // Check for new flow button first, fallback to old (for backward compatibility during transition)
+      const activateBtn = document.getElementById('activate-with-pricing-btn') || document.getElementById('activate-subscription-btn');
+      if (!activateBtn) {
+        throw new Error('Activation button not found');
+      }
+      
       activateBtn.disabled = true;
       activateBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Activating...</span>';
 
-      const referralCode = document.getElementById('activation-referral-code').value.trim();
+      // Get referral code from new flow input, fallback to old
+      const newReferralInput = document.getElementById('new-referral-code');
+      const oldReferralInput = document.getElementById('activation-referral-code');
+      const referralCode = (newReferralInput?.value || oldReferralInput?.value || '').trim();
       
       const activationData = {
         referral_code: referralCode || null,
-        notes: 'Subscription activated via invoices page'
+        notes: 'Subscription activated via new invoice flow'
       };
 
       const response = await fetch(`${INVOICING_API_BASE}/subscriptions/activate`, {
@@ -737,40 +579,15 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error('Error activating subscription:', error);
       showToast(`Activation failed: ${error.message}`, 'error');
     } finally {
-      const activateBtn = document.getElementById('activate-subscription-btn');
-      activateBtn.disabled = false;
-      activateBtn.innerHTML = '<span class="btn-icon">🚀</span><span class="btn-text">Activate Subscription</span>';
-    }
-  }
-
-  // Validate referral code
-  async function validateReferralCode() {
-    const referralCode = document.getElementById('activation-referral-code').value.trim();
-    const referralMessage = document.getElementById('referral-message');
-    
-    if (!referralCode) {
-      referralMessage.innerHTML = '';
-      return;
-    }
-
-    // Simple client-side validation
-    if (referralCode.length < 6 || referralCode.length > 12) {
-      referralMessage.innerHTML = '<span class="referral-error">❌ Invalid referral code format</span>';
-      return;
-    }
-
-    referralMessage.innerHTML = '<span class="referral-info">✅ Referral code format valid</span>';
-    
-    // Recalculate pricing if portfolio is already validated
-    const portfolioSection = document.getElementById('portfolio-validation');
-    if (portfolioSection.style.display === 'block') {
-      const totalValueElement = document.querySelector('.validation-value strong');
-      if (totalValueElement) {
-        const portfolioValue = parseFloat(totalValueElement.textContent.replace('$', '').replace(',', ''));
-        calculateAndDisplayPricing(portfolioValue);
+      // Reset button state
+      const activateBtn = document.getElementById('activate-with-pricing-btn') || document.getElementById('activate-subscription-btn');
+      if (activateBtn) {
+        activateBtn.disabled = false;
+        activateBtn.innerHTML = '<span class="btn-icon">🚀</span><span class="btn-text">Activate Subscription</span>';
       }
     }
   }
+
 
   // === NEW INVOICE REQUEST FUNCTIONS ===
 
@@ -1026,23 +843,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('payment-help-modal').style.display = 'block';
   };
 
-  // Subscription activation event listeners (OLD FLOW)
-  document.getElementById('validate-portfolio-btn').onclick = validatePortfolio;
-  document.getElementById('activate-subscription-btn').onclick = activateSubscription;
-  document.getElementById('validate-referral-btn').onclick = validateReferralCode;
+  // Invoice request flow event listeners
+  document.getElementById('request-invoice-btn').onclick = requestInvoiceWithAutoTroubleshoot;
+  document.getElementById('validate-new-referral-btn').onclick = validateNewReferralCode;
+  document.getElementById('activate-with-pricing-btn').onclick = activateSubscription; // Reuse existing activation function
   
-  // Real-time referral code validation (OLD FLOW)
-  document.getElementById('activation-referral-code').addEventListener('input', validateReferralCode);
-
-  // NEW INVOICE FLOW event listeners
-  if (FEATURE_FLAGS.newInvoiceFlow) {
-    document.getElementById('request-invoice-btn').onclick = requestInvoiceWithAutoTroubleshoot;
-    document.getElementById('validate-new-referral-btn').onclick = validateNewReferralCode;
-    document.getElementById('activate-with-pricing-btn').onclick = activateSubscription; // Reuse existing activation function
-    
-    // Real-time referral code validation (NEW FLOW)
-    document.getElementById('new-referral-code').addEventListener('input', validateNewReferralCode);
-  }
+  // Real-time referral code validation
+  document.getElementById('new-referral-code').addEventListener('input', validateNewReferralCode);
 
   // Modal event listeners
   document.getElementById('close-invoice-modal').onclick = () => {
