@@ -136,8 +136,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       referralData = await response.json();
+      console.log('🎯 Referral data loaded:', referralData);
       allReferrals = referralData.referred_users || [];
       filteredReferrals = [...allReferrals];
+      console.log('🎯 Found referrals:', allReferrals.length);
       
       
     } catch (error) {
@@ -165,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Update UI with loaded data
   function updateUI() {
+    console.log('🎯 Updating UI with referralData:', referralData);
     if (!referralData) return;
 
     // Update overview stats
