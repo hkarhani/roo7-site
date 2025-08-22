@@ -18,7 +18,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Get token from localStorage
   token = localStorage.getItem('token');
+  console.log('🔑 Token from localStorage:', token ? 'Present' : 'Missing');
   if (!token) {
+    console.log('❌ No token found, redirecting to auth...');
+    window.location.href = '/auth.html';
+    return;
+  }
+
+  // Verify admin access first
+  console.log('🔐 Verifying admin access...');
+  try {
+    const userResponse = await fetch(`${AUTH_API_BASE}/me`, {
+      headers: getAuthHeaders(token)
+    });
+    
+    console.log('🔐 User verification status:', userResponse.status);
+    
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      console.log('👤 Current user data:', userData);
+      console.log('👤 Is admin:', userData.is_admin);
+      
+      if (!userData.is_admin) {
+        console.log('❌ User is not admin, redirecting...');
+        showToast('Access denied: Admin privileges required', 'error');
+        setTimeout(() => window.location.href = '/dashboard.html', 2000);
+        return;
+      }
+    } else {
+      console.log('❌ User verification failed, status:', userResponse.status);
+      const errorText = await userResponse.text();
+      console.log('❌ Auth error response:', errorText);
+      window.location.href = '/auth.html';
+      return;
+    }
+  } catch (error) {
+    console.error('❌ Admin verification error:', error);
     window.location.href = '/auth.html';
     return;
   }
@@ -31,10 +66,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function initializeEventListeners() {
+  console.log('🔧 Initializing event listeners...');
+  
   // Navigation
   const backBtn = document.getElementById('back-to-dashboard');
+  console.log('📤 Back button found:', !!backBtn);
   if (backBtn) {
     backBtn.addEventListener('click', () => {
+      console.log('📤 Back to dashboard clicked');
       window.location.href = '/admin-dashboard.html';
     });
   }
@@ -43,6 +82,17 @@ function initializeEventListeners() {
   const themeToggle = document.getElementById('toggle-theme');
   if (themeToggle) {
     themeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // Logout button
+  const logoutBtn = document.getElementById('logout-btn');
+  console.log('🚪 Logout button found:', !!logoutBtn);
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      console.log('🚪 Logout button clicked');
+      localStorage.removeItem('token');
+      window.location.href = '/auth.html';
+    });
   }
 
   // Filter controls
@@ -125,12 +175,30 @@ function getAuthHeaders(token) {
 // Load accounts from API
 async function loadAccounts() {
   try {
-    console.log('🔄 Loading accounts from:', `${INVOICING_API_BASE}/admin/accounts`);
+    const fullUrl = `${INVOICING_API_BASE}/admin/accounts`;
+    console.log('🔄 Loading accounts from:', fullUrl);
     console.log('🔑 Token present:', !!token);
     console.log('🔑 Token preview:', token ? token.substring(0, 20) + '...' : 'none');
     
-    const response = await fetch(`${INVOICING_API_BASE}/admin/accounts`, {
-      headers: getAuthHeaders(token)
+    // Test network connectivity first
+    console.log('🌐 Testing network connectivity...');
+    try {
+      const testResponse = await fetch('https://api.roo7.site:8003/health', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      console.log('🌐 Health check status:', testResponse.status);
+    } catch (healthError) {
+      console.error('🌐 Health check failed:', healthError.message);
+    }
+    
+    const headers = getAuthHeaders(token);
+    console.log('📤 Request headers:', headers);
+    
+    const response = await fetch(fullUrl, {
+      method: 'GET',
+      headers: headers,
+      mode: 'cors'
     });
 
     console.log('📡 API Response Status:', response.status);
@@ -151,8 +219,16 @@ async function loadAccounts() {
     }
   } catch (error) {
     console.error('❌ Error loading accounts:', error);
-    console.error('❌ Error stack:', error.stack);
-    showToast(`Failed to load accounts: ${error.message}`, 'error');
+    console.error('❌ Error name:', error.name);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack || 'No stack trace available');
+    
+    // Show more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+      showToast('Network error - check if API server is running and accessible', 'error');
+    } else {
+      showToast(`Failed to load accounts: ${error.message}`, 'error');
+    }
   }
 }
 
