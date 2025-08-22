@@ -828,45 +828,111 @@ document.addEventListener("DOMContentLoaded", () => {
     updatedPricingSection.style.display = 'block';
   }
 
-  // Event Listeners
-  document.getElementById('back-to-dashboard').onclick = () => {
-    window.location.href = '/dashboard.html';
-  };
+  // Event Listeners (with null checks)
+  const backToDashboardBtn = document.getElementById('back-to-dashboard');
+  const applyFiltersBtn = document.getElementById('apply-filters');
+  const clearFiltersBtn = document.getElementById('clear-filters');
+  const exportInvoicesBtn = document.getElementById('export-invoices-btn');
+  const viewSubscriptionBtn = document.getElementById('view-subscription-btn');
+  const paymentHelpBtn = document.getElementById('payment-help-btn');
 
-  document.getElementById('apply-filters').onclick = applyFilters;
-  document.getElementById('clear-filters').onclick = clearFilters;
-  document.getElementById('export-invoices-btn').onclick = exportInvoices;
+  if (backToDashboardBtn) {
+    backToDashboardBtn.onclick = () => {
+      window.location.href = '/dashboard.html';
+    };
+  }
 
-  document.getElementById('view-subscription-btn').onclick = showSubscriptionDetails;
+  if (applyFiltersBtn) {
+    applyFiltersBtn.onclick = applyFilters;
+  }
 
-  document.getElementById('payment-help-btn').onclick = () => {
-    document.getElementById('payment-help-modal').style.display = 'block';
-  };
+  if (clearFiltersBtn) {
+    clearFiltersBtn.onclick = clearFilters;
+  }
 
-  // Invoice request flow event listeners
-  document.getElementById('request-invoice-btn').onclick = requestInvoiceWithAutoTroubleshoot;
-  document.getElementById('validate-new-referral-btn').onclick = validateNewReferralCode;
-  document.getElementById('activate-with-pricing-btn').onclick = activateSubscription; // Reuse existing activation function
+  if (exportInvoicesBtn) {
+    exportInvoicesBtn.onclick = exportInvoices;
+  }
+
+  if (viewSubscriptionBtn) {
+    viewSubscriptionBtn.onclick = showSubscriptionDetails;
+  }
+
+  if (paymentHelpBtn) {
+    paymentHelpBtn.onclick = () => {
+      const paymentHelpModal = document.getElementById('payment-help-modal');
+      if (paymentHelpModal) {
+        paymentHelpModal.style.display = 'block';
+      }
+    };
+  }
+
+  // Invoice request flow event listeners (with null checks)
+  const requestInvoiceBtn = document.getElementById('request-invoice-btn');
+  const validateNewReferralBtn = document.getElementById('validate-new-referral-btn');
+  const activateWithPricingBtn = document.getElementById('activate-with-pricing-btn');
+  const newReferralCodeInput = document.getElementById('new-referral-code');
+
+  if (requestInvoiceBtn) {
+    requestInvoiceBtn.onclick = requestInvoiceWithAutoTroubleshoot;
+  } else {
+    console.warn('⚠️ request-invoice-btn element not found - check if HTML is updated');
+  }
+
+  if (validateNewReferralBtn) {
+    validateNewReferralBtn.onclick = validateNewReferralCode;
+  } else {
+    console.warn('⚠️ validate-new-referral-btn element not found - check if HTML is updated');
+  }
+
+  if (activateWithPricingBtn) {
+    activateWithPricingBtn.onclick = activateSubscription;
+  } else {
+    console.warn('⚠️ activate-with-pricing-btn element not found - check if HTML is updated');
+  }
   
   // Real-time referral code validation
-  document.getElementById('new-referral-code').addEventListener('input', validateNewReferralCode);
+  if (newReferralCodeInput) {
+    newReferralCodeInput.addEventListener('input', validateNewReferralCode);
+  } else {
+    console.warn('⚠️ new-referral-code input element not found - check if HTML is updated');
+  }
 
-  // Modal event listeners
-  document.getElementById('close-invoice-modal').onclick = () => {
-    document.getElementById('invoice-modal').style.display = 'none';
-  };
+  // Modal event listeners (with null checks)
+  const closeInvoiceModalBtn = document.getElementById('close-invoice-modal');
+  const closeHelpModalBtn = document.getElementById('close-help-modal');
+  const downloadInvoiceBtn = document.getElementById('download-invoice');
+  const printInvoiceBtn = document.getElementById('print-invoice');
 
-  document.getElementById('close-help-modal').onclick = () => {
-    document.getElementById('payment-help-modal').style.display = 'none';
-  };
+  if (closeInvoiceModalBtn) {
+    closeInvoiceModalBtn.onclick = () => {
+      const invoiceModal = document.getElementById('invoice-modal');
+      if (invoiceModal) {
+        invoiceModal.style.display = 'none';
+      }
+    };
+  }
 
-  document.getElementById('download-invoice').onclick = () => {
-    showToast('Download functionality will be implemented soon', 'info');
-  };
+  if (closeHelpModalBtn) {
+    closeHelpModalBtn.onclick = () => {
+      const paymentHelpModal = document.getElementById('payment-help-modal');
+      if (paymentHelpModal) {
+        paymentHelpModal.style.display = 'none';
+      }
+    };
+  }
 
-  document.getElementById('print-invoice').onclick = () => {
-    window.print();
-  };
+  if (downloadInvoiceBtn) {
+    downloadInvoiceBtn.onclick = () => {
+      showToast('Download functionality will be implemented soon', 'info');
+    };
+  }
+
+  if (printInvoiceBtn) {
+    printInvoiceBtn.onclick = () => {
+      window.print();
+    };
+  }
 
   // Close modals when clicking outside
   window.onclick = (event) => {
