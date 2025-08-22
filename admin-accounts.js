@@ -538,6 +538,8 @@ function showDetailedTroubleshootResults(result) {
   const resultsContainer = document.getElementById('detailed-troubleshoot-results');
   
   const statusClass = result.success ? 'result-success' : 'result-error';
+  const breakdown = result.detailed_breakdown || {};
+  const summary = breakdown.summary || {};
   
   resultsContainer.innerHTML = `
     <div class="result-section ${statusClass}">
@@ -547,22 +549,29 @@ function showDetailedTroubleshootResults(result) {
           <strong>Account Name:</strong> ${result.account_summary.account_name}<br>
           <strong>Exchange:</strong> ${result.account_summary.exchange}<br>
           <strong>Test Status:</strong> ${result.account_summary.test_status}<br>
-          <strong>Total USDT Value:</strong> $${(result.account_summary.total_usdt_value || 0).toFixed(2)}
+          <strong>Total USDT Value:</strong> $${(summary.total_value_usdt || 0).toFixed(2)}
         </div>
         <div class="summary-card">
           <strong>API Key Valid:</strong> ${result.account_summary.api_key_valid ? '✅ Yes' : '❌ No'}<br>
           <strong>IP Whitelisted:</strong> ${result.account_summary.ip_whitelisted ? '✅ Yes' : '❌ No'}<br>
+          <strong>Total Unrealized PnL:</strong> <span style="color: ${(summary.total_unrealized_pnl_usdt || 0) >= 0 ? 'green' : 'red'};">$${(summary.total_unrealized_pnl_usdt || 0).toFixed(2)}</span><br>
           <strong>Analysis Time:</strong> ${new Date(result.timestamp).toLocaleString()}
         </div>
       </div>
+      
+      <div class="breakdown-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <div><strong>SPOT Value:</strong> $${(summary.spot_value_usdt || 0).toFixed(2)}</div>
+        <div><strong>USDT-M Value:</strong> $${(summary.usdtm_value_usdt || 0).toFixed(2)}</div>
+        <div><strong>COIN-M Value:</strong> $${(summary.coinm_value_usdt || 0).toFixed(2)}</div>
+      </div>
     </div>
     
-    ${result.detailed_data.spot_account && Object.keys(result.detailed_data.spot_account).length > 0 ? `
+    ${breakdown.spot && (breakdown.spot.assets.length > 0 || breakdown.spot.open_orders.length > 0) ? `
       <div class="result-section">
         <h4>💰 SPOT Account</h4>
         <div class="account-details" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-          ${result.detailed_data.spot_account.balances ? `
-            <h5>Assets:</h5>
+          ${breakdown.spot.assets && breakdown.spot.assets.length > 0 ? `
+            <h5>Assets (${breakdown.spot.assets.length}):</h5>
             <div style="max-height: 200px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse;">
                 <thead>
@@ -570,49 +579,83 @@ function showDetailedTroubleshootResults(result) {
                     <th style="padding: 8px; border: 1px solid #ddd;">Asset</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Free</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Locked</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Total</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${result.detailed_data.spot_account.balances.map(balance => `
+                  ${breakdown.spot.assets.map(asset => `
                     <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${balance.asset}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(balance.free || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(balance.locked || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">$${(balance.usdt_value || 0).toFixed(2)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.free || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.locked || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.total || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
             </div>
-          ` : '<p>No SPOT balances found</p>'}
+          ` : ''}
+          
+          ${breakdown.spot.open_orders && breakdown.spot.open_orders.length > 0 ? `
+            <h5>Open Orders (${breakdown.spot.open_orders.length}):</h5>
+            <div style="max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #e9ecef;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Symbol</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Side</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Type</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${breakdown.spot.open_orders.map(order => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${order.side === 'BUY' ? 'green' : 'red'};">${order.side}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${order.type}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(order.price || 0).toFixed(4)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(order.origQty || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(order.usdt_value || 0).toFixed(2)}</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+          
+          ${breakdown.spot.assets.length === 0 && breakdown.spot.open_orders.length === 0 ? '<p>No SPOT assets or orders found</p>' : ''}
         </div>
       </div>
     ` : ''}
     
-    ${result.detailed_data.usdm_account && Object.keys(result.detailed_data.usdm_account).length > 0 ? `
+    ${breakdown['USDT-M'] && (breakdown['USDT-M'].assets.length > 0 || breakdown['USDT-M'].positions.length > 0 || breakdown['USDT-M'].open_orders.length > 0) ? `
       <div class="result-section">
         <h4>📈 USDT-M Futures</h4>
         <div class="account-details" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">
-          ${result.detailed_data.usdm_account.assets ? `
-            <h5>Assets:</h5>
+          ${breakdown['USDT-M'].assets && breakdown['USDT-M'].assets.length > 0 ? `
+            <h5>Assets (${breakdown['USDT-M'].assets.length}):</h5>
             <div style="max-height: 150px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                   <tr style="background: #ffeaa7;">
                     <th style="padding: 8px; border: 1px solid #ddd;">Asset</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Wallet Balance</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Unrealized PNL</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Available Balance</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Balance</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Available</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${result.detailed_data.usdm_account.assets.map(asset => `
+                  ${breakdown['USDT-M'].assets.map(asset => `
                     <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${asset.asset}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.walletBalance || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.unrealizedProfit || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.availableBalance || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.balance || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.available || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -620,45 +663,85 @@ function showDetailedTroubleshootResults(result) {
             </div>
           ` : ''}
           
-          ${result.detailed_data.usdm_account.positions ? `
-            <h5>Positions:</h5>
+          ${breakdown['USDT-M'].positions && breakdown['USDT-M'].positions.length > 0 ? `
+            <h5>Positions (${breakdown['USDT-M'].positions.length}):</h5>
             <div style="max-height: 200px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                   <tr style="background: #ffeaa7;">
                     <th style="padding: 8px; border: 1px solid #ddd;">Symbol</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Side</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Size</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Entry Price</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Mark Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Leverage</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Margin</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">PNL</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">ROE</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${result.detailed_data.usdm_account.positions.filter(pos => parseFloat(pos.positionAmt || 0) !== 0).map(position => `
+                  ${breakdown['USDT-M'].positions.map(position => `
                     <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${position.symbol}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${position.side === 'Long' ? 'green' : 'red'};">${position.side}</td>
                       <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(position.positionAmt || 0).toFixed(8)}</td>
                       <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.entryPrice || 0).toFixed(4)}</td>
                       <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.markPrice || 0).toFixed(4)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.unRealizedProfit || 0) >= 0 ? 'green' : 'red'};">$${parseFloat(position.unRealizedProfit || 0).toFixed(2)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.percentage || 0) >= 0 ? 'green' : 'red'};">${parseFloat(position.percentage || 0).toFixed(2)}%</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${position.leverage || 'N/A'}x</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${position.marginType || 'N/A'}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? 'green' : 'red'};">$${parseFloat(position.unRealizedPnL || 0).toFixed(2)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(position.usdt_value || 0).toFixed(2)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
             </div>
-          ` : '<p>No active USDT-M positions</p>'}
+          ` : ''}
+          
+          ${breakdown['USDT-M'].open_orders && breakdown['USDT-M'].open_orders.length > 0 ? `
+            <h5>Open Orders (${breakdown['USDT-M'].open_orders.length}):</h5>
+            <div style="max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #ffeaa7;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Symbol</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Side</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Type</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Reduce Only</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${breakdown['USDT-M'].open_orders.map(order => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${order.side === 'Long' ? 'green' : 'red'};">${order.side}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${order.type}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(order.price || 0).toFixed(4)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(order.origQty || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${order.reduceOnly ? '✅' : '❌'}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(order.usdt_value || 0).toFixed(2)}</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+          
+          ${breakdown['USDT-M'].assets.length === 0 && breakdown['USDT-M'].positions.length === 0 && breakdown['USDT-M'].open_orders.length === 0 ? '<p>No USDT-M assets, positions, or orders found</p>' : ''}
         </div>
       </div>
     ` : ''}
     
-    ${result.detailed_data.coinm_account && Object.keys(result.detailed_data.coinm_account).length > 0 ? `
+    ${breakdown['COIN-M'] && (breakdown['COIN-M'].assets.length > 0 || breakdown['COIN-M'].positions.length > 0 || breakdown['COIN-M'].open_orders.length > 0) ? `
       <div class="result-section">
         <h4>🪙 COIN-M Futures</h4>
         <div class="account-details" style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin: 10px 0;">
-          ${result.detailed_data.coinm_account.assets ? `
-            <h5>Assets:</h5>
+          ${breakdown['COIN-M'].assets && breakdown['COIN-M'].assets.length > 0 ? `
+            <h5>Assets (${breakdown['COIN-M'].assets.length}):</h5>
             <div style="max-height: 150px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse;">
                 <thead>
@@ -666,16 +749,16 @@ function showDetailedTroubleshootResults(result) {
                     <th style="padding: 8px; border: 1px solid #ddd;">Asset</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Wallet Balance</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Unrealized PNL</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Available Balance</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${result.detailed_data.coinm_account.assets.map(asset => `
+                  ${breakdown['COIN-M'].assets.map(asset => `
                     <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${asset.asset}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
                       <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.walletBalance || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.unrealizedProfit || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.availableBalance || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(asset.unrealizedPnL || 0) >= 0 ? 'green' : 'red'};">${parseFloat(asset.unrealizedPnL || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -683,35 +766,75 @@ function showDetailedTroubleshootResults(result) {
             </div>
           ` : ''}
           
-          ${result.detailed_data.coinm_account.positions ? `
-            <h5>Positions:</h5>
+          ${breakdown['COIN-M'].positions && breakdown['COIN-M'].positions.length > 0 ? `
+            <h5>Positions (${breakdown['COIN-M'].positions.length}):</h5>
             <div style="max-height: 200px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                   <tr style="background: #bee5eb;">
                     <th style="padding: 8px; border: 1px solid #ddd;">Symbol</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Size</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Side</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Contracts</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Entry Price</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Mark Price</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">PNL</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">ROE</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Leverage</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Margin</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">PNL (USDT)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USD Value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${result.detailed_data.coinm_account.positions.filter(pos => parseFloat(pos.positionAmt || 0) !== 0).map(position => `
+                  ${breakdown['COIN-M'].positions.map(position => `
                     <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${position.symbol}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(position.positionAmt || 0).toFixed(8)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${position.side === 'Long' ? 'green' : 'red'};">${position.side}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(position.positionAmt || 0).toFixed(0)}</td>
                       <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.entryPrice || 0).toFixed(4)}</td>
                       <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(position.markPrice || 0).toFixed(4)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.unRealizedProfit || 0) >= 0 ? 'green' : 'red'};">$${parseFloat(position.unRealizedProfit || 0).toFixed(2)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.percentage || 0) >= 0 ? 'green' : 'red'};">${parseFloat(position.percentage || 0).toFixed(2)}%</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${position.leverage || 'N/A'}x</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${position.marginType || 'N/A'}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? 'green' : 'red'};">$${parseFloat(position.unRealizedPnL || 0).toFixed(2)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(position.usdt_value || 0).toFixed(2)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
             </div>
-          ` : '<p>No active COIN-M positions</p>'}
+          ` : ''}
+          
+          ${breakdown['COIN-M'].open_orders && breakdown['COIN-M'].open_orders.length > 0 ? `
+            <h5>Open Orders (${breakdown['COIN-M'].open_orders.length}):</h5>
+            <div style="max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #bee5eb;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Symbol</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Side</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Type</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Price</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Contracts</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Reduce Only</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">USD Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${breakdown['COIN-M'].open_orders.map(order => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
+                      <td style="padding: 8px; border: 1px solid #ddd; color: ${order.side === 'Long' ? 'green' : 'red'};">${order.side}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${order.type}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(order.price || 0).toFixed(4)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(order.origQty || 0).toFixed(0)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${order.reduceOnly ? '✅' : '❌'}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(order.usdt_value || 0).toFixed(2)}</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+          
+          ${breakdown['COIN-M'].assets.length === 0 && breakdown['COIN-M'].positions.length === 0 && breakdown['COIN-M'].open_orders.length === 0 ? '<p>No COIN-M assets, positions, or orders found</p>' : ''}
         </div>
       </div>
     ` : ''}
