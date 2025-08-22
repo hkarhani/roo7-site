@@ -194,8 +194,8 @@ document.addEventListener("DOMContentLoaded", () => {
               `<button class="invoice-action-btn" onclick="downloadInvoice('${invoice.invoice_id}')">
                 📥 Download
               </button>` : 
-              `<button class="invoice-action-btn" onclick="payInvoice('${invoice.invoice_id}')">
-                💳 Pay
+              `<button class="invoice-action-btn delete-btn" onclick="deleteInvoice('${invoice._id}')">
+                🗑️ Delete
               </button>`
             }
           </td>
@@ -282,8 +282,31 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast('Download functionality will be implemented soon', 'info');
   };
 
-  window.payInvoice = function(invoiceId) {
-    showToast('Payment functionality will be implemented soon', 'info');
+  window.deleteInvoice = async function(invoiceId) {
+    if (!confirm('⚠️ Are you sure you want to delete this invoice? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      console.log('Deleting invoice with ID:', invoiceId);
+      
+      const response = await fetch(`${INVOICING_API_BASE}/invoices/${invoiceId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        showToast('✅ Invoice deleted successfully! You can now request a new one.', 'success');
+        loadInvoices(); // Reload the invoice list
+      } else {
+        const error = await response.json();
+        showToast(`❌ Failed to delete invoice: ${error.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      showToast('❌ Error deleting invoice. Please try again.', 'error');
+    }
   };
 
   // Show invoice details modal

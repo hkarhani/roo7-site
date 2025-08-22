@@ -436,6 +436,31 @@
   color: #e0e0e0;
 }
 
+/* Delete button styling */
+.invoice-action-btn.delete-btn {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.invoice-action-btn.delete-btn:hover {
+  background: #c82333;
+  border-color: #bd2130;
+  color: white;
+}
+
+.dark-theme .invoice-action-btn.delete-btn {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.dark-theme .invoice-action-btn.delete-btn:hover {
+  background: #c82333;
+  border-color: #bd2130;
+  color: white;
+}
+
 /* MODAL ENHANCEMENTS */
 .invoice-modal-content {
   max-width: 700px;
