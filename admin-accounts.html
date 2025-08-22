@@ -52,6 +52,26 @@
         
         <button id="apply-account-filters" class="filter-btn">Apply Filters</button>
         <button id="clear-account-filters" class="filter-btn secondary">Clear</button>
+        <button id="load-all-accounts-btn" class="filter-btn primary">Load All Accounts</button>
+      </div>
+      
+      <div class="account-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total Accounts:</span>
+          <span id="total-accounts-count" class="stat-value">-</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing:</span>
+          <span id="showing-accounts-count" class="stat-value">-</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Active:</span>
+          <span id="active-accounts-count" class="stat-value">-</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Inactive:</span>
+          <span id="inactive-accounts-count" class="stat-value">-</span>
+        </div>
       </div>
     </section>
 
@@ -74,7 +94,13 @@
           </thead>
           <tbody>
             <tr>
-              <td colspan="7" class="loading-message">Loading accounts...</td>
+              <td colspan="7" class="loading-message">
+                <div class="initial-message">
+                  <div class="loading-spinner">🏦</div>
+                  <div class="loading-text">Admin Account Management</div>
+                  <div class="loading-progress">Click "Load All Accounts" or use search to view trading accounts</div>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>

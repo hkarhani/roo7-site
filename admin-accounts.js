@@ -62,8 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize event listeners
   initializeEventListeners();
   
-  // Load accounts
-  await loadAccounts();
+  // Don't auto-load accounts - wait for user action
 });
 
 function initializeEventListeners() {
@@ -107,10 +106,19 @@ function initializeEventListeners() {
     clearFiltersBtn.addEventListener('click', clearFilters);
   }
 
-  // Search input
+  const loadAllAccountsBtn = document.getElementById('load-all-accounts-btn');
+  if (loadAllAccountsBtn) {
+    loadAllAccountsBtn.addEventListener('click', loadAllAccounts);
+  }
+
+  // Search input - only trigger search when there are accounts loaded
   const searchInput = document.getElementById('search-account');
   if (searchInput) {
-    searchInput.addEventListener('input', applyFilters);
+    searchInput.addEventListener('input', () => {
+      if (allAccounts.length > 0) {
+        applyFilters();
+      }
+    });
   }
 
   // Modal close buttons
@@ -185,6 +193,12 @@ function getAuthHeaders(token) {
   };
 }
 
+// Load all accounts
+async function loadAllAccounts() {
+  showToast('Loading all accounts...', 'info');
+  await loadAccounts();
+}
+
 // Load accounts from API
 async function loadAccounts() {
   try {
@@ -233,6 +247,7 @@ async function loadAccounts() {
       
       allAccounts = data.accounts || [];
       filteredAccounts = [...allAccounts];
+      updateAccountStats();
       displayAccounts();
     } else {
       const errorText = await response.text();
@@ -314,6 +329,7 @@ function applyFilters() {
   });
 
   displayAccounts();
+  updateAccountStats();
 }
 
 function clearFilters() {
@@ -322,6 +338,22 @@ function clearFilters() {
   document.getElementById('verification-filter').value = '';
   filteredAccounts = [...allAccounts];
   displayAccounts();
+  updateAccountStats();
+}
+
+// Update account statistics
+function updateAccountStats() {
+  const totalCount = allAccounts.length;
+  const showingCount = filteredAccounts.length;
+  const activeCount = allAccounts.filter(account => 
+    account.test_status === 'successful' || account.status === 'active'
+  ).length;
+  const inactiveCount = totalCount - activeCount;
+
+  document.getElementById('total-accounts-count').textContent = totalCount;
+  document.getElementById('showing-accounts-count').textContent = showingCount;
+  document.getElementById('active-accounts-count').textContent = activeCount;
+  document.getElementById('inactive-accounts-count').textContent = inactiveCount;
 }
 
 // Account actions
