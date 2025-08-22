@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Check subscription status and show invoice request section if needed
   function checkSubscriptionStatus() {
-    const invoiceRequestSection = document.getElementById('section-invoice-request');
+    const invoiceRequestSection = document.getElementById('section-subscription-management');
     
     if (!userSubscription || userSubscription.status !== 'active') {
       // Show invoice request section for users without active subscription

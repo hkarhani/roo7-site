@@ -6,7 +6,7 @@
   <title id="page-title">My Invoices</title>
   <script type="module" src="frontend-config.js"></script>
   <link rel="stylesheet" href="dashboard.css?v=5.4" />
-  <link rel="stylesheet" href="invoices.css?v=2.1" />
+  <link rel="stylesheet" href="invoices.css?v=2.2" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -43,14 +43,42 @@
       </div>
     </section>
 
-    <!-- Main Content Layout: Two-Column Design -->
-    <div class="main-content-layout">
-      <!-- Left Column: Invoice Request -->
-      <div class="left-column">
+    <!-- Combined Subscription Management Section -->
+    <section id="section-subscription-management" class="dashboard-card" style="display: none;">
+      <h2>🚀 Subscription Management & Quick Actions</h2>
+      
+      <!-- Top Row: Quick Actions (similar to filter controls style) -->
+      <div class="subscription-controls">
+        <div class="quick-actions-group">
+          <h4>⚡ Quick Actions</h4>
+          <div class="quick-actions-buttons">
+            <button id="view-subscription-btn" class="action-btn info">
+              <span class="btn-icon">📋</span>
+              <span class="btn-text">View Subscription Details</span>
+            </button>
+            <button id="payment-help-btn" class="action-btn help">
+              <span class="btn-icon">❓</span>
+              <span class="btn-text">Payment Help</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="invoice-request-group">
+          <h4>📄 Request New Invoice</h4>
+          <div class="invoice-request-buttons">
+            <button id="request-invoice-btn" class="action-btn primary">
+              <span class="btn-icon">📄</span>
+              <span class="btn-text">Request Invoice</span>
+            </button>
+            <button id="activate-with-pricing-btn" class="action-btn success" style="display: none;">
+              <span class="btn-icon">🚀</span>
+              <span class="btn-text">Activate Subscription</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
-    <!-- NEW: Invoice Request Section -->
-    <section id="section-invoice-request" class="dashboard-card" style="display: none;">
-      <h2>📄 Request Subscription Invoice</h2>
+      <!-- Main Content: Invoice Request Flow -->
       <div class="invoice-request-content">
         <div class="activation-message">
           <p>Request a subscription invoice with automatic account analysis and current portfolio valuation.</p>
@@ -80,40 +108,8 @@
           <h4>💰 Updated Pricing</h4>
           <div id="updated-pricing-details"></div>
         </div>
-        
-        <div class="invoice-request-actions">
-          <button id="request-invoice-btn" class="action-btn primary">
-            <span class="btn-icon">📄</span>
-            <span class="btn-text">Request Invoice</span>
-          </button>
-          <button id="activate-with-pricing-btn" class="action-btn success" style="display: none;">
-            <span class="btn-icon">🚀</span>
-            <span class="btn-text">Activate Subscription</span>
-          </button>
-        </div>
       </div>
     </section>
-
-      </div> <!-- End Left Column -->
-
-      <!-- Right Column: Quick Actions -->
-      <div class="right-column">
-        <section id="section-actions" class="dashboard-card">
-          <h2>⚡ Quick Actions</h2>
-          <div class="action-buttons">
-            <button id="view-subscription-btn" class="action-btn info">
-              <span class="btn-icon">📋</span>
-              <span class="btn-text">View Subscription Details</span>
-            </button>
-            <button id="payment-help-btn" class="action-btn help">
-              <span class="btn-icon">❓</span>
-              <span class="btn-text">Payment Help</span>
-            </button>
-          </div>
-        </section>
-      </div> <!-- End Right Column -->
-
-    </div> <!-- End Main Content Layout -->
 
     <!-- Invoices Table Section with Integrated Filters -->
     <section id="section-invoices" class="dashboard-card">
@@ -256,6 +252,6 @@
       }
     });
   </script>
-  <script type="module" src="invoices.js?v=2.2"></script>
+  <script type="module" src="invoices.js?v=2.3"></script>
 </body>
 </html>

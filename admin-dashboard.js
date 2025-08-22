@@ -486,9 +486,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!confirm('Are you sure you want to approve this invoice?')) return;
     
     try {
+      // Log the invoice ID for debugging
+      console.log('Approving invoice with ID:', invoiceId);
+      
       const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/approve`, {
-        method: 'POST',
-        headers: getAuthHeaders(token)
+        method: 'PATCH',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          payment_method: 'manual_admin_approval',
+          notes: 'Approved via admin dashboard'
+        })
       });
 
       if (response.ok) {
