@@ -243,14 +243,12 @@ function displayAccounts() {
 
   tbody.innerHTML = filteredAccounts.map(account => `
     <tr>
+      <td><strong>${account.account_name || 'Unknown Account'}</strong></td>
       <td>${account.username || 'N/A'}</td>
       <td>${account.email || 'N/A'}</td>
-      <td><strong>${account.account_name || 'Unknown Account'}</strong></td>
       <td><span class="exchange-badge">${account.exchange || 'N/A'}</span></td>
       <td><span class="status-badge status-${account.status}">${account.status}</span></td>
-      <td><span class="verification-badge verification-${account.email_verified ? 'verified' : 'unverified'}">${account.email_verified ? 'Verified' : 'Unverified'}</span></td>
       <td>$${(account.portfolio_value || 0).toFixed(2)}</td>
-      <td>${formatDate(account.created_at)}</td>
       <td class="account-actions">
         <button class="account-action-btn" onclick="viewAccountDetails('${account.account_id}')">
           👁️ View
