@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="page-title">Admin - Account Management</title>
+  <script type="module" src="frontend-config.js"></script>
+  <link rel="stylesheet" href="dashboard.css?v=5.4" />
+  <link rel="stylesheet" href="admin-accounts.css?v=1.0" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>👥 Account Management</h1>
+
+    <div class="actions">
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="back-to-dashboard">← Dashboard</button>
+    </div>
+  </div>
+
+  <main class="dashboard-grid admin-accounts-grid">
+    <!-- Account Search & Filters -->
+    <section id="section-account-filters" class="dashboard-card">
+      <h2>🔍 Search & Filters</h2>
+      
+      <div class="filter-controls">
+        <div class="filter-group">
+          <label for="search-account">Search:</label>
+          <input type="text" id="search-account" placeholder="Search by username, email, or account name">
+        </div>
+        
+        <div class="filter-group">
+          <label for="account-status-filter">Account Status:</label>
+          <select id="account-status-filter">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="verification-filter">Verification Status:</label>
+          <select id="verification-filter">
+            <option value="">All</option>
+            <option value="verified">Verified</option>
+            <option value="unverified">Unverified</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        
+        <button id="apply-account-filters" class="filter-btn">Apply Filters</button>
+        <button id="clear-account-filters" class="filter-btn secondary">Clear</button>
+      </div>
+    </section>
+
+    <!-- Accounts Management Table -->
+    <section id="section-accounts-table" class="dashboard-card">
+      <h2>💰 User Accounts</h2>
+      
+      <div class="table-container">
+        <table id="accounts-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Account Name</th>
+              <th>Exchange</th>
+              <th>Status</th>
+              <th>Verified</th>
+              <th>Portfolio Value</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="9" class="loading-message">Loading accounts...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Account Details Modal -->
+  <div id="account-modal" class="modal">
+    <div class="modal-content account-modal-content">
+      <span class="close" id="close-account-modal">&times;</span>
+      <h3 id="account-modal-title">Account Details</h3>
+      
+      <div id="account-details" class="account-details">
+        <!-- Account details will be populated here -->
+      </div>
+      
+      <div class="modal-actions">
+        <button id="troubleshoot-account" class="action-btn primary">🔧 Troubleshoot</button>
+        <button id="verify-account" class="action-btn success">✅ Verify</button>
+        <button id="disable-account" class="action-btn danger">🚫 Disable</button>
+        <button id="enable-account" class="action-btn success" style="display: none;">✅ Enable</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Troubleshoot Results Modal -->
+  <div id="troubleshoot-modal" class="modal">
+    <div class="modal-content troubleshoot-modal-content">
+      <span class="close" id="close-troubleshoot-modal">&times;</span>
+      <h3>🔧 Account Troubleshoot Results</h3>
+      
+      <div id="troubleshoot-results" class="troubleshoot-results">
+        <!-- Troubleshoot results will be populated here -->
+      </div>
+      
+      <div class="modal-actions">
+        <button id="close-troubleshoot-btn" class="action-btn secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="theme-manager.js?v=1"></script>
+  <script type="module">
+    import CONFIG from './frontend-config.js';
+    
+    // Update page title
+    document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.admin_accounts || 'Admin - Account Management';
+  </script>
+  <script type="module" src="admin-accounts.js?v=1.0"></script>
+</body>
+</html>

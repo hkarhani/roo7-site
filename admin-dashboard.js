@@ -269,10 +269,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="stat-value">${users.total || users.count || 0}</div>
           <div class="stat-action">Click to manage →</div>
         </div>
-        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
-          <div class="stat-icon">✅</div>
-          <div class="stat-label">Verified Users</div>
-          <div class="stat-value">${users.verified || users.verified_count || 0}</div>
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-accounts.html'">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Total Accounts</div>
+          <div class="stat-value">${users.total_accounts || 0}</div>
           <div class="stat-action">Click to manage →</div>
         </div>
         <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
