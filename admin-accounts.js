@@ -245,24 +245,22 @@ function displayAccounts() {
     <tr>
       <td>${account.username || 'N/A'}</td>
       <td>${account.email || 'N/A'}</td>
-      <td>${account.account_name || 'No accounts'}</td>
-      <td>${account.exchange || 'N/A'}</td>
+      <td><strong>${account.account_name || 'Unknown Account'}</strong></td>
+      <td><span class="exchange-badge">${account.exchange || 'N/A'}</span></td>
       <td><span class="status-badge status-${account.status}">${account.status}</span></td>
       <td><span class="verification-badge verification-${account.email_verified ? 'verified' : 'unverified'}">${account.email_verified ? 'Verified' : 'Unverified'}</span></td>
       <td>$${(account.portfolio_value || 0).toFixed(2)}</td>
       <td>${formatDate(account.created_at)}</td>
       <td class="account-actions">
-        ${account.account_id ? `
-          <button class="account-action-btn" onclick="viewAccountDetails('${account.account_id}')">
-            👁️ View
-          </button>
-          <button class="account-action-btn troubleshoot" onclick="troubleshootAccount('${account.account_id}')">
-            🔧 Troubleshoot
-          </button>
-          <span class="status-badge status-${account.test_status === 'successful' ? 'active' : account.test_status === 'failed' ? 'inactive' : 'disabled'}" style="font-size: 10px; margin-left: 5px;">
-            ${account.test_status || 'N/A'}
-          </span>
-        ` : '<span class="text-muted">No actions available</span>'}
+        <button class="account-action-btn" onclick="viewAccountDetails('${account.account_id}')">
+          👁️ View
+        </button>
+        <button class="account-action-btn troubleshoot" onclick="troubleshootAccount('${account.account_id}')">
+          🔧 Troubleshoot
+        </button>
+        <span class="status-badge status-${account.test_status === 'successful' ? 'active' : account.test_status === 'failed' ? 'inactive' : 'disabled'}" style="font-size: 10px; margin-left: 5px;">
+          ${account.test_status || 'N/A'}
+        </span>
       </td>
     </tr>
   `).join('');

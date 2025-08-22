@@ -344,6 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Debug invoice data for first user
         if (users.length > 0) {
+          console.log('👤 First user debug:', {
             user: users[0].email || users[0].username,
             paid_invoices_count: users[0].paid_invoices_count,
             total_paid_amount: users[0].total_paid_amount,
@@ -835,15 +836,29 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // === EVENT LISTENERS ===
   
-  // Navigation
-  document.getElementById('back-to-admin').onclick = () => {
-    window.location.href = '/admin-dashboard.html';
-  };
+  console.log('🔧 Setting up navigation event listeners...');
   
-  document.getElementById('logout-btn').onclick = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/auth.html";
-  };
+  // Navigation
+  const backBtn = document.getElementById('back-to-admin');
+  const logoutBtn = document.getElementById('logout-btn');
+  
+  console.log('📤 Back to admin button found:', !!backBtn);
+  console.log('🚪 Logout button found:', !!logoutBtn);
+  
+  if (backBtn) {
+    backBtn.onclick = () => {
+      console.log('📤 Back to admin clicked');
+      window.location.href = '/admin-dashboard.html';
+    };
+  }
+  
+  if (logoutBtn) {
+    logoutBtn.onclick = () => {
+      console.log('🚪 Logout clicked');
+      localStorage.removeItem("token");
+      window.location.href = "/auth.html";
+    };
+  }
   
   // Search and filters
   document.getElementById('search-users-btn').onclick = () => {
