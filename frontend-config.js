@@ -222,6 +222,7 @@ export const PAGE_CONFIG = {
         invoices: `${BRAND_CONFIG.name} Invoices`,
         referrals: `${BRAND_CONFIG.name} Referrals`,
         admin: `${BRAND_CONFIG.name} Admin Dashboard`,
+        admin_accounts: `${BRAND_CONFIG.name} Account Management`,
         auth: `${BRAND_CONFIG.name} Login`,
         troubleshoot: `${BRAND_CONFIG.name} Account Troubleshoot`,
         marketInsights: `${BRAND_CONFIG.name} Market Insights`,
