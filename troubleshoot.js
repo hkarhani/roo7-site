@@ -14,22 +14,22 @@ function initializeTroubleshootPage() {
     return;
   }
 
-  // Get account name from URL parameter
+  // Get account ID from URL parameter
   const urlParams = new URLSearchParams(window.location.search);
-  const accountName = urlParams.get('account');
+  const accountId = urlParams.get('accountId');
   
   
-  if (!accountName) {
-    console.error("❌ No account name in URL parameters");
+  if (!accountId) {
+    console.error("❌ No account ID in URL parameters");
     alert("No account specified.");
     window.close();
     return;
   }
 
-  // Set the account name in header immediately
+  // Set the account ID in header temporarily (will be updated with name after loading)
   const headerElement = document.getElementById('account-name-display');
   if (headerElement) {
-    headerElement.textContent = accountName;
+    headerElement.textContent = 'Loading...';
   } else {
     console.error("❌ Header element not found");
   }
@@ -144,7 +144,7 @@ function initializeTroubleshootPage() {
     return summaryHtml;
   }
 
-  // Load account details with enhanced error handling
+  // Load account details with enhanced error handling and retry logic
   async function loadAccountDetails() {
     
     // Verify all required DOM elements exist first
@@ -153,8 +153,18 @@ function initializeTroubleshootPage() {
     
     if (missingElements.length > 0) {
       console.error("❌ Missing DOM elements:", missingElements);
-      setTimeout(loadAccountDetails, 500); // Retry after 500ms
-      return;
+      // Increment retry counter and check if we should continue retrying
+      if (!window.loadAccountRetryCount) window.loadAccountRetryCount = 0;
+      window.loadAccountRetryCount++;
+      
+      if (window.loadAccountRetryCount <= 3) {
+        console.log(`🔄 Retrying loadAccountDetails (attempt ${window.loadAccountRetryCount}/3)...`);
+        setTimeout(loadAccountDetails, window.loadAccountRetryCount * 500);
+        return;
+      } else {
+        console.error("❌ Max retries reached for loadAccountDetails, continuing with available elements...");
+        // Continue execution even with missing elements
+      }
     }
     
     try {
@@ -194,20 +204,18 @@ function initializeTroubleshootPage() {
         throw new Error("Invalid API response format");
       }
 
-      // Find account with exact name match (case sensitive)
-      let account = accounts.find(acc => acc.account_name === accountName);
-      
-      // If not found, try case-insensitive search
-      if (!account) {
-        account = accounts.find(acc => 
-          acc.account_name && acc.account_name.toLowerCase() === accountName.toLowerCase()
-        );
-      }
+      // Find account by ID
+      const account = accounts.find(acc => acc.id === accountId || acc._id === accountId);
 
       if (!account) {
         console.error("❌ Account not found");
-        console.log("Available accounts:", accounts.map(a => `"${a.account_name}"`));
-        throw new Error(`Account "${accountName}" not found`);
+        console.log("Available accounts:", accounts.map(a => ({name: a.account_name, id: a.id || a._id})));
+        throw new Error(`Account with ID "${accountId}" not found`);
+      }
+      
+      // Update header with actual account name
+      if (headerElement) {
+        headerElement.textContent = account.account_name || 'Unknown Account';
       }
 
 
@@ -253,6 +261,9 @@ function initializeTroubleshootPage() {
         account_id: account.account_id
       });
       
+      // Reset retry counter on success
+      window.loadAccountRetryCount = 0;
+      
       // Show success message
       showToast("Account details loaded successfully", 'success', 2000);
 
@@ -267,12 +278,17 @@ function initializeTroubleshootPage() {
       
       // Show error state in UI
       const errorUpdates = {
-        'account-name': accountName,
+        'account-name': 'Failed to load',
         'strategy': 'Failed to load',
         'current-value': 'Failed to load',
         'hedge-percent': 'Failed to load', 
         'api-key-status': 'Failed to load'
       };
+      
+      // Update header with error state
+      if (headerElement) {
+        headerElement.textContent = 'Error loading account';
+      }
 
       // Reset account type to unknown
       const accountTypeElement = document.getElementById('account-type');
@@ -1850,32 +1866,84 @@ function initializeTroubleshootPage() {
   loadAccountDetails();
 }
 
-// Multiple initialization strategies to ensure it works
-console.log("📄 Script loaded, setting up initialization...");
+// Enhanced initialization with better error handling and retries
+console.log("📄 Troubleshoot script loaded, setting up enhanced initialization...");
 
-// Strategy 1: DOMContentLoaded
+// Global state tracking
+window.troubleshootInitialized = false;
+window.troubleshootRetryCount = 0;
+const MAX_RETRIES = 5;
+
+function safeInitialize() {
+  if (window.troubleshootInitialized) {
+    console.log("✅ Troubleshoot page already initialized, skipping...");
+    return;
+  }
+  
+  // Check if essential DOM elements are available
+  const essentialElements = [
+    'account-name-display',
+    'analyze-account', 
+    'account-name',
+    'strategy',
+    'current-value',
+    'hedge-percent',
+    'api-key-status'
+  ];
+  
+  const missingElements = essentialElements.filter(id => !document.getElementById(id));
+  
+  if (missingElements.length > 0 && window.troubleshootRetryCount < MAX_RETRIES) {
+    window.troubleshootRetryCount++;
+    console.log(`⚠️ Missing DOM elements (${missingElements.join(', ')}), retrying in ${window.troubleshootRetryCount * 200}ms... (attempt ${window.troubleshootRetryCount}/${MAX_RETRIES})`);
+    setTimeout(safeInitialize, window.troubleshootRetryCount * 200);
+    return;
+  }
+  
+  if (missingElements.length > 0) {
+    console.error("❌ Critical DOM elements still missing after retries:", missingElements);
+    // Continue anyway - the script has error handling for missing elements
+  }
+  
+  console.log("✅ Initializing troubleshoot page...");
+  window.troubleshootInitialized = true;
+  
+  try {
+    initializeTroubleshootPage();
+    console.log("✅ Troubleshoot page initialization completed successfully");
+  } catch (error) {
+    console.error("❌ Troubleshoot initialization error:", error);
+    // Reset flag to allow retry
+    window.troubleshootInitialized = false;
+    // Try one more time after a delay
+    setTimeout(() => {
+      if (!window.troubleshootInitialized) {
+        console.log("🔄 Retrying troubleshoot initialization after error...");
+        initializeTroubleshootPage();
+      }
+    }, 1000);
+  }
+}
+
+// Strategy 1: DOMContentLoaded (preferred)
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initializeTroubleshootPage, 100);
+    setTimeout(safeInitialize, 50);
   });
-} else if (document.readyState === 'interactive' || document.readyState === 'complete') {
+} else {
   // Strategy 2: DOM already ready
-  setTimeout(initializeTroubleshootPage, 100);
+  setTimeout(safeInitialize, 50);
 }
 
 // Strategy 3: Window load as fallback
 window.addEventListener('load', () => {
-  // Only initialize if not already done
-  if (!window.troubleshootInitialized) {
-    window.troubleshootInitialized = true;
-    setTimeout(initializeTroubleshootPage, 100);
-  }
+  setTimeout(safeInitialize, 100);
 });
 
-// Strategy 4: Immediate execution with longer delay as final fallback
+// Strategy 4: Final safety net
 setTimeout(() => {
   if (!window.troubleshootInitialized) {
-    window.troubleshootInitialized = true;
-    initializeTroubleshootPage();
+    console.log("🔄 Final initialization attempt...");
+    safeInitialize();
   }
-}, 1000);
+}, 2000);

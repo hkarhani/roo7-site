@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${currentValueDisplay}</td>
           <td>${testStatusHtml}</td>
           <td class="account-actions">
-            <button class="action-icon troubleshoot-icon" data-account="${accountName}" title="Troubleshoot">🔧</button>
+            <button class="action-icon troubleshoot-icon" data-account-id="${acc.id || ''}" title="Troubleshoot">🔧</button>
             <button class="action-icon hedge-edit-icon" data-id="${acc.id || ''}" title="Edit Settings">⚙️</button>
             <button class="assign-strategy-btn" data-id="${acc.id || ''}" data-name="${accountName}" data-exchange="${exchange}" data-type="${accountType}" title="Assign Strategy">📋</button>
             <button class="edit-account action-icon" data-id="${acc.id || ''}" data-name="${accountName}" title="Edit Account">✏️</button>
@@ -293,10 +293,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Troubleshoot buttons
       document.querySelectorAll('.troubleshoot-icon').forEach(btn => {
         btn.onclick = function() {
-          const accountName = btn.dataset.account;
+          const accountId = btn.dataset.accountId;
           const token = localStorage.getItem("token");
           if (token) {
-            window.open(`troubleshoot.html?account=${encodeURIComponent(accountName)}`, '_blank');
+            window.open(`troubleshoot.html?accountId=${encodeURIComponent(accountId)}`, '_blank');
           } else {
             showToast("You must be logged in to access troubleshooting.", 'error');
           }
