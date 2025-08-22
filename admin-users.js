@@ -286,15 +286,20 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('🔑 Token present:', !!token);
       
       const response = await fetch(url, {
-        headers: getAuthHeaders(token)
+        method: 'GET',
+        headers: getAuthHeaders(token),
+        mode: 'cors'
       });
       
       console.log('📡 Users API Response Status:', response.status);
+      console.log('📡 Users API Response Headers:', Object.fromEntries(response.headers.entries()));
       
       clearTimeout(loadingTimeout);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Users data received:', data);
+        console.log('📊 Number of users:', data.users ? data.users.length : 0);
         let users = data.users || [];
         
         // Apply client-side filtering for status and tier
@@ -361,13 +366,24 @@ document.addEventListener("DOMContentLoaded", () => {
         
       } else {
         const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        console.error('❌ Users API Error Response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
     } catch (error) {
       console.error('❌ Error loading users:', error);
+      console.error('❌ Error name:', error.name);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack || 'No stack trace available');
+      
       document.querySelector('#admin-users-table tbody').innerHTML = 
         '<tr><td colspan="11" class="loading-message">❌ Failed to load users. Please try again.</td></tr>';
-      showToast('Failed to load users. Please try again.', 'error');
+      
+      // Show more specific error messages
+      if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+        showToast('Network error - check if API server is running', 'error');
+      } else {
+        showToast(`Failed to load users: ${error.message}`, 'error');
+      }
     } finally {
       isLoading = false;
     }
