@@ -1535,14 +1535,19 @@ function initializeTroubleshootPage() {
       categories[category].push(test);
     });
 
-    // Generate HTML for each category
+    // Generate HTML for each category with enhanced details
     compactTestGrid.innerHTML = Object.keys(categories).map(categoryName => `
       <div class="test-category">
         <h3>${getCategoryIcon(categoryName)} ${categoryName}</h3>
         <div class="test-items">
           ${categories[categoryName].map(test => `
-            <div class="test-item ${test.status}">
-              ${getStatusIcon(test.status)} ${test.name}
+            <div class="test-item ${test.status}" title="${test.message || ''}">
+              <div class="test-header">
+                ${getStatusIcon(test.status)} 
+                <span class="test-name">${test.name}</span>
+                ${test.latency_ms ? `<span class="test-latency">${test.latency_ms.toFixed(1)}ms</span>` : ''}
+              </div>
+              ${test.message ? `<div class="test-message">${test.message}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -1554,9 +1559,13 @@ function initializeTroubleshootPage() {
   function getCategoryIcon(category) {
     switch (category.toLowerCase()) {
       case 'connectivity': return '🔗';
+      case 'authentication': return '🔐';
+      case 'network': return '🌐';
       case 'data access': return '📊';
-      case 'security': return '🔐';
+      case 'security': return '🛡️';
       case 'performance': return '⚡';
+      case 'balance retrieval': return '💰';
+      case 'price data access': return '📈';
       default: return '🔍';
     }
   }

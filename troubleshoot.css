@@ -1210,12 +1210,40 @@
 
 .test-item {
   display: flex;
-  align-items: center;
-  padding: 10px 15px;
+  flex-direction: column;
+  padding: 12px 15px;
   border-radius: 6px;
   font-size: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.test-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.test-name {
+  flex-grow: 1;
   font-weight: 500;
-  transition: transform 0.2s ease;
+}
+
+.test-latency {
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #666;
+}
+
+.test-message {
+  font-size: 13px;
+  opacity: 0.9;
+  line-height: 1.4;
+  margin-left: 24px;
 }
 
 .test-item:hover {
