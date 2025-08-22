@@ -404,6 +404,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const emailVerified = user.email_verified || false;
       const isPayingCustomer = user.is_paying_customer || false;
       
+      // Debug paying customer status
+      if (user.total_paid_amount > 0 || user.paid_invoices_count > 0) {
+        console.log(`💰 User ${user.email}: paying_customer=${isPayingCustomer}, paid_amount=${user.total_paid_amount}, paid_invoices=${user.paid_invoices_count}`);
+      }
+      
       let statusBadge = '';
       if (isDisabled) {
         statusBadge = '<span class="status-badge status-disabled">Disabled</span>';

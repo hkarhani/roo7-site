@@ -237,7 +237,7 @@ function displayAccounts() {
   const tbody = document.querySelector('#accounts-table tbody');
   
   if (filteredAccounts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="loading-message">No accounts found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-message">No accounts found</td></tr>';
     return;
   }
 
