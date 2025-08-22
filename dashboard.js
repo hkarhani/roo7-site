@@ -423,12 +423,60 @@ document.addEventListener("DOMContentLoaded", () => {
             adminBtn.style.display = "inline-block";
           }
         }
+        
+        // Check subscription status
+        await checkSubscriptionStatus();
       } else if (res.status !== 404) {
         localStorage.removeItem("token");
         setTimeout(() => window.location.href = "/auth.html", 2000);
       }
     } catch (error) {
       console.error("Error fetching user:", error);
+    }
+  }
+
+  async function checkSubscriptionStatus() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      // Use invoicing API to get subscription data
+      const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
+      const res = await fetch(`${INVOICING_API_BASE}/subscriptions/me`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (res.ok) {
+        const subscription = await res.json();
+        console.log('Subscription data:', subscription);
+        
+        // Check if user has active subscription
+        if (subscription && subscription.status === 'active') {
+          const expiresAt = new Date(subscription.expires_at);
+          const now = new Date();
+          const daysRemaining = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+          
+          if (daysRemaining > 0) {
+            // Show subscription status
+            const statusElement = document.getElementById('subscription-status');
+            const daysElement = document.getElementById('subscription-days');
+            
+            if (statusElement && daysElement) {
+              daysElement.textContent = `(${daysRemaining} remaining days)`;
+              statusElement.style.display = 'block';
+            }
+          }
+        }
+      } else if (res.status === 404) {
+        // No subscription found - this is normal for users without subscriptions
+        console.log('No subscription found for user');
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
     }
   }
 

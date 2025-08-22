@@ -12,7 +12,13 @@
 </head>
 <body>
   <div class="dashboard-header">
-    <h1>Welcome, <strong id="user-fullname"></strong></h1>
+    <div class="user-info">
+      <h1>Welcome, <strong id="user-fullname"></strong></h1>
+      <div id="subscription-status" class="subscription-status" style="display: none;">
+        <span class="subscription-text">Active Subscription</span>
+        <span class="subscription-days" id="subscription-days"></span>
+      </div>
+    </div>
 
     <div class="actions">
       <button id="invoices-btn">📄 Invoices</button>
