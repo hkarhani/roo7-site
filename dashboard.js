@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize modal manager with market data API
   const modalManager = new window.ModalManager(API_BASE, MARKET_DATA_API);
+  
+  // Setup event delegation for strategy buttons (handles all buttons including dynamically added ones)
+  setupEventDelegation();
 
   // DOM elements
   const logoutBtn = document.getElementById("logout-btn");
@@ -318,25 +321,59 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       });
 
-      // Strategy assignment buttons
-      document.querySelectorAll('.assign-strategy-btn').forEach(btn => {
+      // Strategy assignment buttons with debug logging
+      const strategyButtons = document.querySelectorAll('.assign-strategy-btn');
+      console.log(`🔧 Debug: Found ${strategyButtons.length} strategy assignment buttons`);
+      
+      strategyButtons.forEach((btn, index) => {
+        const accountId = btn.dataset.id;
+        const accountName = btn.dataset.name;
+        console.log(`🔧 Debug: Attaching event listener to button ${index + 1}: ${accountName} (ID: ${accountId})`);
+        
         btn.onclick = function() {
-          const accountId = btn.dataset.id;
-          const accountName = btn.dataset.name;
-          const exchange = btn.dataset.exchange;
-          const accountType = btn.dataset.type;
-          
+          console.log(`🔧 Debug: Strategy button clicked for account: ${accountName} (ID: ${accountId})`);
           
           const account = accounts.find(acc => acc.id === accountId);
           if (account) {
+            console.log(`🔧 Debug: Account found, opening modal for: ${account.account_name}`);
             modalManager.openStrategyModal(account);
           } else {
+            console.error(`🔧 Debug: Account NOT found for ID: ${accountId}`);
+            console.log(`🔧 Debug: Available account IDs:`, accounts.map(acc => acc.id));
             showToast("Account not found", 'error');
           }
         };
       });
 
-    }, 50);
+    }, 200); // Increased delay for better DOM readiness
+  }
+
+  // Add event delegation for strategy buttons as backup (handles dynamically added buttons)
+  function setupEventDelegation() {
+    const tableContainer = document.querySelector('#accounts-table');
+    if (tableContainer) {
+      tableContainer.addEventListener('click', function(event) {
+        if (event.target.classList.contains('assign-strategy-btn')) {
+          console.log(`🔧 Delegation Debug: Strategy button clicked via delegation`);
+          
+          const btn = event.target;
+          const accountId = btn.dataset.id;
+          const accountName = btn.dataset.name;
+          
+          console.log(`🔧 Delegation Debug: Looking for account ID: ${accountId}`);
+          
+          const account = accounts.find(acc => acc.id === accountId);
+          if (account) {
+            console.log(`🔧 Delegation Debug: Account found via delegation, opening modal`);
+            modalManager.openStrategyModal(account);
+          } else {
+            console.error(`🔧 Delegation Debug: Account NOT found via delegation for ID: ${accountId}`);
+            showToast("Account not found", 'error');
+          }
+        }
+      });
+      console.log(`🔧 Delegation Debug: Event delegation setup complete`);
+    }
   }
 
   async function deleteAccount(accountId) {

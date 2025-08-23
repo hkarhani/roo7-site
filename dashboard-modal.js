@@ -407,6 +407,8 @@ class ModalManager {
 
   // STRATEGY MODAL FUNCTIONS
   openStrategyModal(account) {
+    console.log(`🔧 Modal Debug: Opening strategy modal for account:`, account);
+    console.log(`🔧 Modal Debug: Available strategies count:`, this.availableStrategies.length);
     
     this.currentStrategyAccountId = account.id;
     this.currentAccount = account; // Store current account data for access
@@ -416,8 +418,16 @@ class ModalManager {
     document.getElementById("strategy-account-exchange").textContent = account.exchange || "Binance";
     document.getElementById("strategy-account-type").textContent = account.account_type || "SPOT";
     
-    // Filter and populate strategies for this account's exchange and type
-    this.updateStrategyOptionsForAccount(account.exchange || "Binance", account.account_type || "SPOT");
+    // Check if strategies are loaded
+    if (this.availableStrategies.length === 0) {
+      console.warn(`🔧 Modal Debug: No strategies loaded, attempting to load...`);
+      this.loadStrategies().then(() => {
+        this.updateStrategyOptionsForAccount(account.exchange || "Binance", account.account_type || "SPOT");
+      });
+    } else {
+      // Filter and populate strategies for this account's exchange and type
+      this.updateStrategyOptionsForAccount(account.exchange || "Binance", account.account_type || "SPOT");
+    }
     
     // Set current strategy if assigned
     if (account.strategy && account.strategy.trim() !== '') {
@@ -525,6 +535,9 @@ class ModalManager {
 
   // STRATEGY HANDLING
   updateStrategyOptionsForAccount(exchange, accountType) {
+    console.log(`🔧 Strategy Debug: Updating options for ${exchange} ${accountType}`);
+    console.log(`🔧 Strategy Debug: Total available strategies:`, this.availableStrategies.length);
+    
     // Filter strategies based on exchange and account type - include coming soon
     const filteredStrategies = this.availableStrategies.filter(strategy => 
       strategy.exchange === exchange && 
@@ -532,8 +545,17 @@ class ModalManager {
       (strategy.is_active === true || strategy.coming_soon === true)
     );
     
+    console.log(`🔧 Strategy Debug: Filtered strategies:`, filteredStrategies.length);
+    console.log(`🔧 Strategy Debug: Filtered strategy names:`, filteredStrategies.map(s => s.name));
+    
     // Clear existing options
     this.strategySelect.innerHTML = '<option value="">Select Strategy...</option>';
+    
+    if (filteredStrategies.length === 0) {
+      console.warn(`🔧 Strategy Debug: No strategies found for ${exchange} ${accountType}`);
+      this.strategySelect.innerHTML = '<option value="">No strategies available for this account type</option>';
+      return;
+    }
     
     // Add filtered strategies with styling for coming soon
     filteredStrategies.forEach(strategy => {
