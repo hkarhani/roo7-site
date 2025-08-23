@@ -604,6 +604,16 @@ function showDetailedTroubleshootResults(result) {
   const modal = document.getElementById('detailed-troubleshoot-modal');
   const resultsContainer = document.getElementById('detailed-troubleshoot-results');
   
+  // Debug logging to see what data we're receiving
+  console.log('🔍 Detailed troubleshoot result:', result);
+  console.log('🔍 Detailed breakdown:', result.detailed_breakdown);
+  if (result.detailed_breakdown) {
+    console.log('🔍 SPOT data:', result.detailed_breakdown.spot);
+    console.log('🔍 USDT-M data:', result.detailed_breakdown['USDT-M']);
+    console.log('🔍 COIN-M data:', result.detailed_breakdown['COIN-M']);
+    console.log('🔍 Summary data:', result.detailed_breakdown.summary);
+  }
+  
   const statusClass = result.success ? 'result-success' : 'result-error';
   const breakdown = result.detailed_breakdown || {};
   const summary = breakdown.summary || {};
@@ -633,7 +643,7 @@ function showDetailedTroubleshootResults(result) {
       </div>
     </div>
     
-    ${breakdown.spot && (breakdown.spot.assets.length > 0 || breakdown.spot.open_orders.length > 0) ? `
+    ${breakdown.spot ? `
       <div class="result-section">
         <h4>💰 SPOT Account</h4>
         <div class="account-details" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
@@ -700,7 +710,7 @@ function showDetailedTroubleshootResults(result) {
       </div>
     ` : ''}
     
-    ${breakdown['USDT-M'] && (breakdown['USDT-M'].assets.length > 0 || breakdown['USDT-M'].positions.length > 0 || breakdown['USDT-M'].open_orders.length > 0) ? `
+    ${breakdown['USDT-M'] ? `
       <div class="result-section">
         <h4>📈 USDT-M Futures</h4>
         <div class="account-details" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">
@@ -803,7 +813,7 @@ function showDetailedTroubleshootResults(result) {
       </div>
     ` : ''}
     
-    ${breakdown['COIN-M'] && (breakdown['COIN-M'].assets.length > 0 || breakdown['COIN-M'].positions.length > 0 || breakdown['COIN-M'].open_orders.length > 0) ? `
+    ${breakdown['COIN-M'] ? `
       <div class="result-section">
         <h4>🪙 COIN-M Futures</h4>
         <div class="account-details" style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin: 10px 0;">
@@ -939,6 +949,15 @@ function showDetailedTroubleshootResults(result) {
         </ul>
       </div>
     ` : ''}
+    
+    <!-- Debug section to show raw data structure -->
+    <div class="result-section" style="margin-top: 20px; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+      <h4>🐛 Debug Info</h4>
+      <details style="margin: 10px 0;">
+        <summary style="cursor: pointer; font-weight: bold;">Raw Breakdown Data</summary>
+        <pre style="background: #fff; padding: 10px; border-radius: 4px; overflow: auto; max-height: 300px; font-size: 12px;">${JSON.stringify(breakdown, null, 2)}</pre>
+      </details>
+    </div>
   `;
 
   modal.style.display = 'block';
