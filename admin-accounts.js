@@ -595,6 +595,113 @@ function showTroubleshootResults(result) {
         </ul>
       </div>
     ` : ''}
+    
+    ${result.detailed_breakdown ? `
+      <div class="result-section">
+        <h4>📊 Account Breakdown</h4>
+        
+        ${result.detailed_breakdown.summary ? `
+          <div class="breakdown-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <div><strong>SPOT Value:</strong> $${(result.detailed_breakdown.summary.spot_value_usdt || 0).toFixed(2)}</div>
+            <div><strong>USDT-M Value:</strong> $${(result.detailed_breakdown.summary.usdtm_value_usdt || 0).toFixed(2)}</div>
+            <div><strong>COIN-M Value:</strong> $${(result.detailed_breakdown.summary.coinm_value_usdt || 0).toFixed(2)}</div>
+          </div>
+        ` : ''}
+        
+        ${result.detailed_breakdown.spot ? `
+          <div class="result-section">
+            <h5>💰 SPOT Account</h5>
+            ${result.detailed_breakdown.spot.assets && result.detailed_breakdown.spot.assets.length > 0 ? `
+              <div style="max-height: 200px; overflow-y: auto; margin: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                  <thead>
+                    <tr style="background: #e9ecef;">
+                      <th style="padding: 6px; border: 1px solid #ddd;">Asset</th>
+                      <th style="padding: 6px; border: 1px solid #ddd;">Free</th>
+                      <th style="padding: 6px; border: 1px solid #ddd;">Locked</th>
+                      <th style="padding: 6px; border: 1px solid #ddd;">USDT Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${result.detailed_breakdown.spot.assets.slice(0, 10).map(asset => `
+                      <tr>
+                        <td style="padding: 6px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                        <td style="padding: 6px; border: 1px solid #ddd;">${parseFloat(asset.free || 0).toFixed(8)}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd;">${parseFloat(asset.locked || 0).toFixed(8)}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                      </tr>
+                    `).join('')}
+                    ${result.detailed_breakdown.spot.assets.length > 10 ? `
+                      <tr>
+                        <td colspan="4" style="padding: 6px; border: 1px solid #ddd; text-align: center; font-style: italic;">
+                          ... and ${result.detailed_breakdown.spot.assets.length - 10} more assets
+                        </td>
+                      </tr>
+                    ` : ''}
+                  </tbody>
+                </table>
+              </div>
+            ` : '<p style="margin: 10px 0; font-style: italic;">No SPOT assets found</p>'}
+          </div>
+        ` : ''}
+        
+        ${result.detailed_breakdown['USDT-M'] ? `
+          <div class="result-section">
+            <h5>📈 USDT-M Futures</h5>
+            ${result.detailed_breakdown['USDT-M'].assets && result.detailed_breakdown['USDT-M'].assets.length > 0 ? `
+              <div style="max-height: 150px; overflow-y: auto; margin: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                  <thead>
+                    <tr style="background: #fff3cd;">
+                      <th style="padding: 6px; border: 1px solid #ddd;">Asset</th>
+                      <th style="padding: 6px; border: 1px solid #ddd;">Balance</th>
+                      <th style="padding: 6px; border: 1px solid #ddd;">USDT Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${result.detailed_breakdown['USDT-M'].assets.slice(0, 5).map(asset => `
+                      <tr>
+                        <td style="padding: 6px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                        <td style="padding: 6px; border: 1px solid #ddd;">${parseFloat(asset.balance || 0).toFixed(8)}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : '<p style="margin: 10px 0; font-style: italic;">No USDT-M assets found</p>'}
+          </div>
+        ` : ''}
+        
+        ${result.detailed_breakdown['COIN-M'] ? `
+          <div class="result-section">
+            <h5>🪙 COIN-M Futures</h5>
+            ${result.detailed_breakdown['COIN-M'].assets && result.detailed_breakdown['COIN-M'].assets.length > 0 ? `
+              <div style="max-height: 150px; overflow-y: auto; margin: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                  <thead>
+                    <tr style="background: #d1ecf1;">
+                      <th style="padding: 6px; border: 1px solid #ddd;">Asset</th>
+                      <th style="padding: 6px; border: 1px solid #ddd;">Balance</th>
+                      <th style="padding: 6px; border: 1px solid #ddd;">USDT Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${result.detailed_breakdown['COIN-M'].assets.slice(0, 5).map(asset => `
+                      <tr>
+                        <td style="padding: 6px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                        <td style="padding: 6px; border: 1px solid #ddd;">${parseFloat(asset.walletBalance || 0).toFixed(8)}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : '<p style="margin: 10px 0; font-style: italic;">No COIN-M assets found</p>'}
+          </div>
+        ` : ''}
+      </div>
+    ` : ''}
   `;
 
   modal.style.display = 'block';
