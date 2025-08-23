@@ -168,6 +168,21 @@ function initializeEventListeners() {
   if (enableBtn) {
     enableBtn.addEventListener('click', enableCurrentAccount);
   }
+
+  // Modal close buttons
+  const closeTroubleshootBtn = document.getElementById('close-troubleshoot-btn');
+  if (closeTroubleshootBtn) {
+    closeTroubleshootBtn.addEventListener('click', () => {
+      document.getElementById('troubleshoot-modal').style.display = 'none';
+    });
+  }
+
+  const closeDetailedTroubleshootBtn = document.getElementById('close-detailed-troubleshoot-btn');
+  if (closeDetailedTroubleshootBtn) {
+    closeDetailedTroubleshootBtn.addEventListener('click', () => {
+      document.getElementById('detailed-troubleshoot-modal').style.display = 'none';
+    });
+  }
 }
 
 // Theme functions
@@ -306,6 +321,8 @@ function applyFilters() {
   const searchTerm = document.getElementById('search-account').value.toLowerCase();
   const statusFilter = document.getElementById('account-status-filter').value;
   const verificationFilter = document.getElementById('verification-filter').value;
+  
+  showToast('Applying filters...', 'info');
 
   filteredAccounts = allAccounts.filter(account => {
     // Search filter
@@ -330,15 +347,23 @@ function applyFilters() {
 
   displayAccounts();
   updateAccountStats();
+  
+  const showingCount = filteredAccounts.length;
+  const totalCount = allAccounts.length;
+  showToast(`Filters applied - showing ${showingCount} of ${totalCount} accounts`, 'success');
 }
 
 function clearFilters() {
+  showToast('Clearing filters...', 'info');
+  
   document.getElementById('search-account').value = '';
   document.getElementById('account-status-filter').value = '';
   document.getElementById('verification-filter').value = '';
   filteredAccounts = [...allAccounts];
   displayAccounts();
   updateAccountStats();
+  
+  showToast('Filters cleared - showing all accounts', 'success');
 }
 
 // Update account statistics
