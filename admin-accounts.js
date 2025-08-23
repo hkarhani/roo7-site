@@ -442,6 +442,18 @@ window.viewAccountDetails = function(accountId) {
 };
 
 window.troubleshootAccount = async function(accountId) {
+  // Disable troubleshoot buttons
+  const troubleshootBtn = document.getElementById('troubleshoot-account');
+  const detailedTroubleshootBtn = document.getElementById('detailed-troubleshoot-account');
+  
+  if (troubleshootBtn) {
+    troubleshootBtn.disabled = true;
+    troubleshootBtn.innerHTML = '🔄 Troubleshooting...';
+  }
+  if (detailedTroubleshootBtn) {
+    detailedTroubleshootBtn.disabled = true;
+  }
+  
   showToast('Starting account troubleshoot...', 'info');
   
   try {
@@ -465,10 +477,31 @@ window.troubleshootAccount = async function(accountId) {
   } catch (error) {
     console.error('Error troubleshooting account:', error);
     showToast('Error troubleshooting account', 'error');
+  } finally {
+    // Re-enable troubleshoot buttons
+    if (troubleshootBtn) {
+      troubleshootBtn.disabled = false;
+      troubleshootBtn.innerHTML = '🔧 Troubleshoot';
+    }
+    if (detailedTroubleshootBtn) {
+      detailedTroubleshootBtn.disabled = false;
+    }
   }
 };
 
 window.detailedTroubleshootAccount = async function(accountId) {
+  // Disable both troubleshoot buttons
+  const troubleshootBtn = document.getElementById('troubleshoot-account');
+  const detailedTroubleshootBtn = document.getElementById('detailed-troubleshoot-account');
+  
+  if (detailedTroubleshootBtn) {
+    detailedTroubleshootBtn.disabled = true;
+    detailedTroubleshootBtn.innerHTML = '🔄 Analyzing...';
+  }
+  if (troubleshootBtn) {
+    troubleshootBtn.disabled = true;
+  }
+  
   showToast('Starting detailed account analysis...', 'info');
   
   try {
@@ -488,6 +521,15 @@ window.detailedTroubleshootAccount = async function(accountId) {
   } catch (error) {
     console.error('Error performing detailed analysis:', error);
     showToast('Error performing detailed analysis', 'error');
+  } finally {
+    // Re-enable both buttons
+    if (detailedTroubleshootBtn) {
+      detailedTroubleshootBtn.disabled = false;
+      detailedTroubleshootBtn.innerHTML = '🔍 Detailed Troubleshoot';
+    }
+    if (troubleshootBtn) {
+      troubleshootBtn.disabled = false;
+    }
   }
 };
 
@@ -835,6 +877,31 @@ function showDetailedTroubleshootResults(result) {
           ` : ''}
           
           ${breakdown['COIN-M'].assets.length === 0 && breakdown['COIN-M'].positions.length === 0 && breakdown['COIN-M'].open_orders.length === 0 ? '<p>No COIN-M assets, positions, or orders found</p>' : ''}
+        </div>
+      </div>
+    ` : ''}
+    
+    ${result.test_results && result.test_results.length > 0 ? `
+      <div class="result-section">
+        <h4>🔧 Troubleshoot Diagnostic Steps</h4>
+        <div class="diagnostic-steps" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          ${result.test_results.map(test => `
+            <div class="diagnostic-step" style="margin: 10px 0; padding: 10px; border-left: 4px solid ${test.success ? '#28a745' : '#dc3545'}; background: ${test.success ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+              <div class="step-header" style="font-weight: bold; color: ${test.success ? '#155724' : '#721c24'};">
+                ${test.success ? '✅' : '❌'} ${test.stage}: ${test.message}
+              </div>
+              ${test.details ? `
+                <div class="step-details" style="margin-top: 5px; font-size: 0.9em; color: ${test.success ? '#155724' : '#721c24'};">
+                  ${typeof test.details === 'object' ? JSON.stringify(test.details, null, 2) : test.details}
+                </div>
+              ` : ''}
+              ${test.latency_ms ? `
+                <div class="step-timing" style="margin-top: 5px; font-size: 0.8em; color: #6c757d;">
+                  Execution time: ${test.latency_ms.toFixed(1)}ms
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
         </div>
       </div>
     ` : ''}
