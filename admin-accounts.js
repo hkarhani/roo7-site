@@ -462,7 +462,7 @@ window.troubleshootAccount = async function(accountId) {
   showToast('Starting detailed account troubleshoot...', 'info');
   
   try {
-    const troubleshootUrl = `${AUTH_API_BASE}/troubleshoot/${accountId}`;
+    const troubleshootUrl = `${AUTH_API_BASE}/admin/source-accounts/${accountId}/verify`;
     console.log('🔧 Troubleshoot URL:', troubleshootUrl);
     
     const response = await fetch(troubleshootUrl, {
