@@ -500,13 +500,19 @@ function showTroubleshootResults(result) {
   
   resultsContainer.innerHTML = `
     <div class="result-section ${statusClass}">
-      <h4>Troubleshoot Summary</h4>
-      <p><strong>Account:</strong> ${result.account_name || 'N/A'}</p>
-      <p><strong>Status:</strong> ${result.success ? 'Success' : 'Failed'}</p>
-      <p><strong>Test Status:</strong> ${result.test_status || 'N/A'}</p>
-      <p><strong>API Key Valid:</strong> ${result.api_key_valid ? 'Yes' : 'No'}</p>
-      <p><strong>IP Whitelisted:</strong> ${result.ip_whitelisted ? 'Yes' : 'No'}</p>
-      <p><strong>Total Value:</strong> $${(result.total_usdt_value || 0).toFixed(2)}</p>
+      <h4>📊 Troubleshoot Summary</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
+          <div style="margin-bottom: 8px;"><strong>Account:</strong> ${result.account_name || 'N/A'}</div>
+          <div style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: ${result.success ? '#28a745' : '#dc3545'};">${result.success ? '✅ Success' : '❌ Failed'}</span></div>
+          <div><strong>Test Status:</strong> ${result.test_status || 'N/A'}</div>
+        </div>
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
+          <div style="margin-bottom: 8px;"><strong>API Key:</strong> <span style="color: ${result.api_key_valid ? '#28a745' : '#dc3545'};">${result.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
+          <div style="margin-bottom: 8px;"><strong>IP Whitelist:</strong> <span style="color: ${result.ip_whitelisted ? '#28a745' : '#dc3545'};">${result.ip_whitelisted ? '✅ Yes' : '❌ No'}</span></div>
+          <div><strong>Total Value:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">$${formatNumber(result.total_usdt_value || 0)}</span></div>
+        </div>
+      </div>
     </div>
     
     
@@ -525,9 +531,9 @@ function showTroubleshootResults(result) {
         
         ${result.detailed_breakdown.summary ? `
           <div class="breakdown-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-            <div><strong>SPOT Value:</strong> $${(result.detailed_breakdown.summary.spot_value_usdt || 0).toFixed(2)}</div>
-            <div><strong>USDT-M Value:</strong> $${(result.detailed_breakdown.summary.usdtm_value_usdt || 0).toFixed(2)}</div>
-            <div><strong>COIN-M Value:</strong> $${(result.detailed_breakdown.summary.coinm_value_usdt || 0).toFixed(2)}</div>
+            <div><strong>SPOT Value:</strong> $${formatNumber(result.detailed_breakdown.summary.spot_value_usdt || 0)}</div>
+            <div><strong>USDT-M Value:</strong> $${formatNumber(result.detailed_breakdown.summary.usdtm_value_usdt || 0)}</div>
+            <div><strong>COIN-M Value:</strong> $${formatNumber(result.detailed_breakdown.summary.coinm_value_usdt || 0)}</div>
           </div>
         ` : ''}
         
@@ -557,8 +563,8 @@ function showTroubleshootResults(result) {
                         return `
                           <tr>
                             <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(asset.total || 0).toFixed(8)}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.total || 0)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
                             <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${asset.percentage >= 10 ? '#28a745' : asset.percentage >= 5 ? '#ffc107' : '#6c757d'};">${asset.percentage.toFixed(1)}%</td>
                           </tr>
                         `;
@@ -591,9 +597,9 @@ function showTroubleshootResults(result) {
                     ${result.detailed_breakdown['USDT-M'].assets.map(asset => `
                       <tr>
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(asset.balance || 0).toFixed(8)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(asset.available || 0).toFixed(8)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.balance || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.available || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -622,11 +628,11 @@ function showTroubleshootResults(result) {
                       <tr>
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(position.positionAmt || 0).toFixed(8)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${parseFloat(position.entryPrice || 0).toFixed(4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${parseFloat(position.markPrice || 0).toFixed(4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${parseFloat(position.unRealizedPnL || 0).toFixed(2)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(position.usdt_value || 0).toFixed(2)}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(position.positionAmt || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.entryPrice || 0, 4)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.markPrice || 0, 4)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -691,9 +697,9 @@ function showTroubleshootResults(result) {
                     ${result.detailed_breakdown['COIN-M'].assets.map(asset => `
                       <tr>
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(asset.walletBalance || 0).toFixed(8)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(asset.unrealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">${parseFloat(asset.unrealizedPnL || 0).toFixed(8)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.walletBalance || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(asset.unrealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">${formatNumber(asset.unrealizedPnL || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -723,10 +729,10 @@ function showTroubleshootResults(result) {
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(position.positionAmt || 0).toFixed(0)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${parseFloat(position.entryPrice || 0).toFixed(4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${parseFloat(position.markPrice || 0).toFixed(4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${parseFloat(position.unRealizedPnL || 0).toFixed(2)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(position.usdt_value || 0).toFixed(2)}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.entryPrice || 0, 4)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.markPrice || 0, 4)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -807,6 +813,22 @@ function formatDate(dateString) {
   } catch {
     return 'Invalid Date';
   }
+}
+
+function formatNumber(num, decimals = 2) {
+  if (!num && num !== 0) return '0.00';
+  return parseFloat(num).toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
+
+function formatCrypto(num, decimals = 8) {
+  if (!num && num !== 0) return '0.00000000';
+  return parseFloat(num).toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
 }
 
 function showToast(message, type = 'info') {

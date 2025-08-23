@@ -553,3 +553,92 @@
     gap: 15px;
   }
 }
+
+/* Action Button Styles */
+.action-btn {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.action-btn.primary:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+}
+
+.action-btn.secondary {
+  background: linear-gradient(135deg, #6c757d, #545b62);
+}
+
+.action-btn.secondary:hover {
+  background: linear-gradient(135deg, #545b62, #3d4142);
+}
+
+.action-btn.success {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.action-btn.success:hover {
+  background: linear-gradient(135deg, #1e7e34, #155724);
+}
+
+.action-btn.danger {
+  background: linear-gradient(135deg, #dc3545, #bd2130);
+}
+
+.action-btn.danger:hover {
+  background: linear-gradient(135deg, #bd2130, #861e2d);
+}
+
+.action-btn.warning {
+  background: linear-gradient(135deg, #ffc107, #d39e00);
+  color: #212529;
+}
+
+.action-btn.warning:hover {
+  background: linear-gradient(135deg, #d39e00, #b8860b);
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 20px;
+  border-top: 1px solid #dee2e6;
+  background: #f8f9fa;
+}
+
+.dark-theme .modal-actions {
+  border-top-color: #4a5568;
+  background: #2d3748;
+}
+
+/* Dark Theme Adjustments */
+.dark-theme .action-btn {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .action-btn:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
