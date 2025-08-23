@@ -136,12 +136,6 @@ function initializeEventListeners() {
     });
   }
 
-  const closeDetailedTroubleshootModal = document.getElementById('close-detailed-troubleshoot-modal');
-  if (closeDetailedTroubleshootModal) {
-    closeDetailedTroubleshootModal.addEventListener('click', () => {
-      document.getElementById('detailed-troubleshoot-modal').style.display = 'none';
-    });
-  }
 
   // Modal action buttons
   const troubleshootBtn = document.getElementById('troubleshoot-account');
@@ -149,10 +143,6 @@ function initializeEventListeners() {
     troubleshootBtn.addEventListener('click', troubleshootCurrentAccount);
   }
 
-  const detailedTroubleshootBtn = document.getElementById('detailed-troubleshoot-account');
-  if (detailedTroubleshootBtn) {
-    detailedTroubleshootBtn.addEventListener('click', detailedTroubleshootCurrentAccount);
-  }
 
   const verifyBtn = document.getElementById('verify-account');
   if (verifyBtn) {
@@ -177,12 +167,6 @@ function initializeEventListeners() {
     });
   }
 
-  const closeDetailedTroubleshootBtn = document.getElementById('close-detailed-troubleshoot-btn');
-  if (closeDetailedTroubleshootBtn) {
-    closeDetailedTroubleshootBtn.addEventListener('click', () => {
-      document.getElementById('detailed-troubleshoot-modal').style.display = 'none';
-    });
-  }
 }
 
 // Theme functions
@@ -467,16 +451,12 @@ window.viewAccountDetails = function(accountId) {
 };
 
 window.troubleshootAccount = async function(accountId) {
-  // Disable troubleshoot buttons
+  // Disable troubleshoot button
   const troubleshootBtn = document.getElementById('troubleshoot-account');
-  const detailedTroubleshootBtn = document.getElementById('detailed-troubleshoot-account');
   
   if (troubleshootBtn) {
     troubleshootBtn.disabled = true;
     troubleshootBtn.innerHTML = '🔄 Troubleshooting...';
-  }
-  if (detailedTroubleshootBtn) {
-    detailedTroubleshootBtn.disabled = true;
   }
   
   showToast('Starting detailed account troubleshoot...', 'info');
@@ -492,7 +472,7 @@ window.troubleshootAccount = async function(accountId) {
 
     if (response.ok) {
       const result = await response.json();
-      showDetailedTroubleshootResults(result); // Show detailed results instead
+      showTroubleshootResults(result); // Show results in the regular modal
       showToast('Detailed troubleshoot completed successfully!', 'success');
       await loadAccounts(); // Reload to see updated status
     } else {
@@ -503,60 +483,14 @@ window.troubleshootAccount = async function(accountId) {
     console.error('Error troubleshooting account:', error);
     showToast('Error troubleshooting account', 'error');
   } finally {
-    // Re-enable troubleshoot buttons
+    // Re-enable troubleshoot button
     if (troubleshootBtn) {
       troubleshootBtn.disabled = false;
       troubleshootBtn.innerHTML = '🔧 Troubleshoot';
     }
-    if (detailedTroubleshootBtn) {
-      detailedTroubleshootBtn.disabled = false;
-    }
   }
 };
 
-window.detailedTroubleshootAccount = async function(accountId) {
-  // Disable both troubleshoot buttons
-  const troubleshootBtn = document.getElementById('troubleshoot-account');
-  const detailedTroubleshootBtn = document.getElementById('detailed-troubleshoot-account');
-  
-  if (detailedTroubleshootBtn) {
-    detailedTroubleshootBtn.disabled = true;
-    detailedTroubleshootBtn.innerHTML = '🔄 Analyzing...';
-  }
-  if (troubleshootBtn) {
-    troubleshootBtn.disabled = true;
-  }
-  
-  showToast('Starting detailed account analysis...', 'info');
-  
-  try {
-    const response = await fetch(`${INVOICING_API_BASE}/admin/accounts/${accountId}/troubleshoot`, {
-      method: 'POST',
-      headers: getAuthHeaders(token)
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      showDetailedTroubleshootResults(result);
-      showToast('Detailed analysis completed successfully!', 'success');
-    } else {
-      const error = await response.json();
-      showToast(`Detailed analysis failed: ${error.detail}`, 'error');
-    }
-  } catch (error) {
-    console.error('Error performing detailed analysis:', error);
-    showToast('Error performing detailed analysis', 'error');
-  } finally {
-    // Re-enable both buttons
-    if (detailedTroubleshootBtn) {
-      detailedTroubleshootBtn.disabled = false;
-      detailedTroubleshootBtn.innerHTML = '🔍 Detailed Troubleshoot';
-    }
-    if (troubleshootBtn) {
-      troubleshootBtn.disabled = false;
-    }
-  }
-};
 
 function showTroubleshootResults(result) {
   const modal = document.getElementById('troubleshoot-modal');
@@ -850,9 +784,6 @@ function showTroubleshootResults(result) {
   modal.style.display = 'block';
 }
 
-function showDetailedTroubleshootResults(result) {
-  const modal = document.getElementById('detailed-troubleshoot-modal');
-  const resultsContainer = document.getElementById('detailed-troubleshoot-results');
   
   // Debug logging to see what data we're receiving
   console.log('🔍 Detailed troubleshoot result:', result);
@@ -899,27 +830,29 @@ function showDetailedTroubleshootResults(result) {
         <div class="account-details" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
           ${breakdown.spot.assets && breakdown.spot.assets.length > 0 ? `
             <h5>Assets (${breakdown.spot.assets.length}):</h5>
-            <div style="max-height: 200px; overflow-y: auto;">
-              <table style="width: 100%; border-collapse: collapse;">
+            <div style="max-height: 300px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
                 <thead>
                   <tr style="background: #e9ecef;">
-                    <th style="padding: 8px; border: 1px solid #ddd;">Asset</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Free</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Locked</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Total</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">USDT Value</th>
+                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Asset</th>
+                    <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total</th>
+                    <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USDT Value</th>
+                    <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">% of Account</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${breakdown.spot.assets.map(asset => `
-                    <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.free || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.locked || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${parseFloat(asset.total || 0).toFixed(8)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
-                    </tr>
-                  `).join('')}
+                  ${breakdown.spot.assets.map(asset => {
+                    const totalValue = breakdown.summary?.total_value_usdt || 1;
+                    const percentage = ((asset.usdt_value || 0) / totalValue * 100);
+                    return `
+                      <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(asset.total || 0).toFixed(8)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${percentage >= 10 ? '#28a745' : percentage >= 5 ? '#ffc107' : '#6c757d'};">${percentage.toFixed(1)}%</td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
@@ -1220,12 +1153,6 @@ function troubleshootCurrentAccount() {
   }
 }
 
-function detailedTroubleshootCurrentAccount() {
-  if (currentAccount && currentAccount.account_id) {
-    detailedTroubleshootAccount(currentAccount.account_id);
-    document.getElementById('account-modal').style.display = 'none';
-  }
-}
 
 function verifyCurrentAccount() {
   showToast('Account verification functionality coming soon', 'info');
