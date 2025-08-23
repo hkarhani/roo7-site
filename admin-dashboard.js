@@ -1369,8 +1369,6 @@ document.addEventListener("DOMContentLoaded", () => {
               <div><strong>USDT-M Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.usdtm_value_usdt || data.futures_value || 0)}</div>
               <div><strong>COIN-M Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.coinm_value_usdt || 0)}</div>
             </div>
-        
-        ${data.detailed_breakdown ? `
           ${data.detailed_breakdown.spot ? `
             <div class="result-section">
               <h5>💰 SPOT Account</h5>
@@ -1631,7 +1629,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </span>
                     <span class="type">${order.type}</span>
                     <span class="qty">${order.original_qty}</span>
-                    <span class="price">${formatCurrency(order.price)}</span>
+                    <span class="price">${formatPrice(order.price)}</span>
                     <span class="status">${order.status}</span>
                   </div>
                 `;
