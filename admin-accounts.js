@@ -629,8 +629,8 @@ function showTroubleshootResults(result) {
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(position.positionAmt || 0)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.entryPrice || 0, 4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.markPrice || 0, 4)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
                       </tr>
@@ -661,9 +661,9 @@ function showTroubleshootResults(result) {
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${order.side === 'BUY' ? '#28a745' : '#dc3545'};">${order.side}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.type}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${parseFloat(order.price || 0).toFixed(4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(order.origQty || 0).toFixed(8)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(order.usdt_value || 0).toFixed(2)}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(order.price || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(order.origQty || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(order.usdt_value || 0)}</strong></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -729,8 +729,8 @@ function showTroubleshootResults(result) {
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(position.positionAmt || 0).toFixed(0)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.entryPrice || 0, 4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatNumber(position.markPrice || 0, 4)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
                       </tr>
@@ -762,10 +762,10 @@ function showTroubleshootResults(result) {
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${order.side === 'BUY' ? '#28a745' : '#dc3545'};">${order.side}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.type}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${parseFloat(order.price || 0).toFixed(4)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(order.origQty || 0).toFixed(0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(order.price || 0)}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(order.origQty || 0, 0)}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.reduceOnly ? '✅' : '❌'}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(order.usdt_value || 0).toFixed(2)}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(order.usdt_value || 0)}</strong></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -824,9 +824,18 @@ function formatNumber(num, decimals = 2) {
 }
 
 function formatCrypto(num, decimals = 8) {
-  if (!num && num !== 0) return '0.00000000';
+  if (!num && num !== 0) return '0';
+  const formatted = parseFloat(num).toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals
+  });
+  return formatted;
+}
+
+function formatPrice(num, decimals = 4) {
+  if (!num && num !== 0) return '0';
   return parseFloat(num).toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
+    minimumFractionDigits: 0,
     maximumFractionDigits: decimals
   });
 }
