@@ -1,8 +1,11 @@
-// admin-dashboard.js - Admin Dashboard Logic v2.4
+// admin-dashboard.js - Admin Dashboard Logic v3.5
 
+console.log('🔧 Admin Dashboard Debug: Script loading started...');
 
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
+
+console.log('🔧 Admin Dashboard Debug: Config loaded:', CONFIG);
 
 // === UTILITY FUNCTIONS ===
 
