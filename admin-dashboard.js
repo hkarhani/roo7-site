@@ -1360,19 +1360,19 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
 
-        ${data.detailed_breakdown ? `
+        ${data.detailed_breakdown || data.balances || data.balance_details ? `
           <div class="result-section">
             <h4>📊 Account Breakdown</h4>
             
             <div class="breakdown-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-              <div><strong>SPOT Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.spot_value_usdt || data.spot_value || 0)}</div>
-              <div><strong>USDT-M Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.usdtm_value_usdt || data.futures_value || 0)}</div>
-              <div><strong>COIN-M Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.coinm_value_usdt || 0)}</div>
+              <div><strong>SPOT Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.spot_value_usdt || data.spot_value || data.total_usdt_value || 0))}</div>
+              <div><strong>USDT-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.usdtm_value_usdt || data.futures_value || 0))}</div>
+              <div><strong>COIN-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.coinm_value_usdt || 0))}</div>
             </div>
-          ${data.detailed_breakdown.spot ? `
+          ${(data.detailed_breakdown?.spot || data.balances || data.balance_details) ? `
             <div class="result-section">
               <h5>💰 SPOT Account</h5>
-              ${data.detailed_breakdown.spot.assets && data.detailed_breakdown.spot.assets.length > 0 ? `
+              ${(data.detailed_breakdown?.spot?.assets || data.balances || data.balance_details) && (data.detailed_breakdown?.spot?.assets?.length > 0 || data.balances?.length > 0 || data.balance_details?.length > 0) ? `
                 <div style="max-height: 300px; overflow-y: auto; margin: 10px 0;">
                   <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
                     <thead>
@@ -1384,12 +1384,19 @@ document.addEventListener("DOMContentLoaded", () => {
                       </tr>
                     </thead>
                     <tbody>
-                      ${data.detailed_breakdown.spot.assets
+                      ${((data.detailed_breakdown?.spot?.assets || data.balances || data.balance_details || [])
                         .map(asset => {
-                          const totalValue = data.detailed_breakdown.summary?.total_value_usdt || 1;
-                          const percentage = ((asset.usdt_value || 0) / totalValue * 100);
-                          return { ...asset, percentage };
+                          const totalValue = data.total_usdt_value || data.detailed_breakdown?.summary?.total_value_usdt || 1;
+                          const usdt_value = asset.usdt_value || asset.value_usdt || (asset.total * (asset.price || 1)) || 0;
+                          const percentage = (usdt_value / totalValue * 100);
+                          return { 
+                            asset: asset.asset || asset.symbol || asset.coin,
+                            total: asset.total || asset.balance || asset.free + asset.locked || asset.quantity || 0,
+                            usdt_value: usdt_value,
+                            percentage: percentage
+                          };
                         })
+                        .filter(asset => asset.usdt_value > 0.01)
                         .sort((a, b) => b.percentage - a.percentage)
                         .map(asset => {
                           return `
@@ -1400,7 +1407,7 @@ document.addEventListener("DOMContentLoaded", () => {
                               <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${asset.percentage >= 10 ? '#28a745' : asset.percentage >= 5 ? '#ffc107' : '#6c757d'};">${asset.percentage.toFixed(1)}%</td>
                             </tr>
                           `;
-                        }).join('')}
+                        }).join(''))}
                     </tbody>
                   </table>
                 </div>
@@ -1639,19 +1646,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         ` : ''}
 
-        <div class="verification-section">
-          <h5>🔧 Technical Verification</h5>
-          <div class="test-results">
-            ${data.test_results.map(test => `
-              <div class="test-item ${test.success ? 'success' : 'error'}">
-                <span class="status">${test.success ? '✅' : '❌'}</span>
-                <span class="stage">${test.stage.replace(/_/g, ' ')}</span>
-                <span class="message">${test.message}</span>
-                ${test.latency_ms ? `<span class="latency">${test.latency_ms}ms</span>` : ''}
-              </div>
-            `).join('')}
-          </div>
-        </div>
 
         <div class="verification-footer">
           <small>📅 Verified on ${new Date(data.verified_at).toLocaleString()} by ${data.verified_by}</small>
