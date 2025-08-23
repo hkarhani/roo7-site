@@ -22,6 +22,30 @@ function formatDate(dateString) {
   }
 }
 
+function formatNumber(num, decimals = 2) {
+  if (!num && num !== 0) return '0.00';
+  return parseFloat(num).toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
+
+function formatCrypto(num, decimals = 8) {
+  if (!num && num !== 0) return '0';
+  return parseFloat(num).toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals
+  });
+}
+
+function formatPrice(num, decimals = 4) {
+  if (!num && num !== 0) return '0';
+  return parseFloat(num).toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Use centralized API configuration  
   const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
@@ -1304,294 +1328,286 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Show verification results in a modal
+  // Show verification results in a modal using admin-accounts troubleshoot format
   function showVerificationResults(data) {
     const modal = document.createElement('div');
     modal.className = 'modal verification-modal';
     modal.style.display = 'block';
     
-    // Helper function to format percentage
-    const formatPercent = (value) => value ? `${value.toFixed(1)}%` : '0.0%';
-    
-    // Helper function to format currency
-    const formatCurrency = (value) => value ? `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '$0.00';
+    const statusClass = data.verification_success ? 'result-success' : 'result-error';
     
     const content = `
       <div class="modal-content verification-content">
         <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
-        <h3>🔍 Enhanced Source Account Analysis</h3>
+        <h3>🔧 Account Verification Results</h3>
         
-        <div class="verification-summary">
-          <h4>${data.account_name} (${data.account_type}) - ${data.strategy || 'No Strategy'}</h4>
-          <div class="status-grid">
-            <div class="status-item ${data.verification_success ? 'success' : 'error'}">
-              <span class="label">Overall Status:</span>
-              <span class="value">${data.verification_success ? '✅ Success' : '❌ Failed'}</span>
+        <div class="result-section ${statusClass}">
+          <h4>📊 Verification Summary</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
+              <div style="margin-bottom: 8px;"><strong>Account:</strong> ${data.account_name || 'N/A'}</div>
+              <div style="margin-bottom: 8px;"><strong>Type:</strong> ${data.account_type || 'N/A'}</div>
+              <div><strong>Status:</strong> <span style="color: ${data.verification_success ? '#28a745' : '#dc3545'};">${data.verification_success ? '✅ Success' : '❌ Failed'}</span></div>
             </div>
-            <div class="status-item ${data.api_key_valid ? 'success' : 'error'}">
-              <span class="label">API Key:</span>
-              <span class="value">${data.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span>
-            </div>
-            <div class="status-item ${data.ip_whitelisted ? 'success' : 'warning'}">
-              <span class="label">IP Whitelist:</span>
-              <span class="value">${data.ip_whitelisted ? '✅ Whitelisted' : '⚠️ Not Whitelisted'}</span>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
+              <div style="margin-bottom: 8px;"><strong>API Key:</strong> <span style="color: ${data.api_key_valid ? '#28a745' : '#dc3545'};">${data.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
+              <div style="margin-bottom: 8px;"><strong>IP Whitelist:</strong> <span style="color: ${data.ip_whitelisted ? '#28a745' : '#dc3545'};">${data.ip_whitelisted ? '✅ Yes' : '❌ No'}</span></div>
+              <div><strong>Total Value:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">$${formatNumber(data.total_usdt_value || 0)}</span></div>
             </div>
           </div>
-        </div>
-
-        <div class="verification-values">
-          <div class="value-card">
-            <h5>💰 Total Portfolio Value</h5>
-            <div class="value-large">${formatCurrency(data.total_usdt_value)}</div>
-          </div>
-          ${data.account_type === 'FUTURES' ? `
-            <div class="value-card">
-              <h5>🔸 SPOT Value</h5>
-              <div class="value-medium">${formatCurrency(data.spot_value || data.detailed_breakdown?.spot_total_value)}</div>
-              <small>${data.detailed_breakdown?.spot_total_value ? formatPercent((data.detailed_breakdown.spot_total_value / data.detailed_breakdown.total_account_value) * 100) : formatPercent(data.detailed_breakdown?.distribution?.spot_percentage)}</small>
-            </div>
-            <div class="value-card">
-              <h5>🔹 FUTURES Value</h5>
-              <div class="value-medium">${formatCurrency(data.futures_value || data.detailed_breakdown?.futures_total_value)}</div>
-              <small>${data.detailed_breakdown?.futures_total_value ? formatPercent((data.detailed_breakdown.futures_total_value / data.detailed_breakdown.total_account_value) * 100) : 'USDⓈ-M: ' + formatPercent(data.detailed_breakdown?.distribution?.futures_usdtm_percentage) + ' | Coin-M: ' + formatPercent(data.detailed_breakdown?.distribution?.futures_coinm_percentage)}</small>
-            </div>
-            <div class="value-card">
-              <h5>📊 Unrealized PnL</h5>
-              <div class="value-medium ${data.total_unrealized_pnl >= 0 ? 'positive' : 'negative'}">
-                ${formatCurrency(data.total_unrealized_pnl)}
-              </div>
-            </div>
-          ` : `
-            <div class="value-card">
-              <h5>🔸 SPOT Account</h5>
-              <div class="value-medium">${formatCurrency(data.spot_value || data.total_usdt_value)}</div>
-              <small>100% SPOT Trading</small>
-            </div>
-            ${data.open_orders && data.open_orders.length > 0 ? `
-              <div class="value-card">
-                <h5>📋 Open Orders</h5>
-                <div class="value-medium">${data.open_orders.length}</div>
-                <small>Active Orders</small>
-              </div>
-            ` : ''}
-          `}
         </div>
 
         ${data.detailed_breakdown ? `
-          <div class="verification-section">
-            <h5>📊 Account Distribution Analysis</h5>
-            <div class="distribution-grid">
-              ${data.account_type === 'SPOT' ? `
-                <div class="dist-item">
-                  <span class="dist-label">🔸 SPOT Assets:</span>
-                  <span class="dist-value">${data.detailed_breakdown?.distribution?.spot_percentage ? formatPercent(data.detailed_breakdown.distribution.spot_percentage) : '100.0%'}</span>
-                </div>
-                <div class="dist-item">
-                  <span class="dist-label">💵 Total Cash:</span>
-                  <span class="dist-value">${data.detailed_breakdown?.distribution?.cash_percentage ? formatPercent(data.detailed_breakdown.distribution.cash_percentage) : '100.0%'}</span>
-                </div>
-                <div class="dist-item">
-                  <span class="dist-label">📋 Open Orders:</span>
-                  <span class="dist-value">${data.detailed_breakdown?.distribution?.open_orders_percentage ? formatPercent(data.detailed_breakdown.distribution.open_orders_percentage) : '0.0%'}</span>
-                </div>
-              ` : `
-                <div class="dist-item">
-                  <span class="dist-label">💵 SPOT Assets:</span>
-                  <span class="dist-value">${data.detailed_breakdown?.spot_total_value && data.detailed_breakdown?.total_account_value ? formatPercent((data.detailed_breakdown.spot_total_value / data.detailed_breakdown.total_account_value) * 100) : formatPercent(data.detailed_breakdown?.distribution?.cash_percentage || 0)}</span>
-                </div>
-                <div class="dist-item">
-                  <span class="dist-label">📈 FUTURES Assets:</span>
-                  <span class="dist-value">${data.detailed_breakdown?.futures_total_value && data.detailed_breakdown?.total_account_value ? formatPercent((data.detailed_breakdown.futures_total_value / data.detailed_breakdown.total_account_value) * 100) : formatPercent(data.detailed_breakdown?.distribution?.positions_percentage || 0)}</span>
-                </div>
-                <div class="dist-item">
-                  <span class="dist-label">📋 Open Orders:</span>
-                  <span class="dist-value">${data.detailed_breakdown?.distribution?.open_orders_percentage ? formatPercent(data.detailed_breakdown.distribution.open_orders_percentage) : '0.0%'}</span>
-                </div>
-              `}
+          <div class="result-section">
+            <h4>📊 Account Breakdown</h4>
+            
+            <div class="breakdown-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+              <div><strong>SPOT Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.spot_value_usdt || data.spot_value || 0)}</div>
+              <div><strong>USDT-M Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.usdtm_value_usdt || data.futures_value || 0)}</div>
+              <div><strong>COIN-M Value:</strong> $${formatNumber(data.detailed_breakdown.summary?.coinm_value_usdt || 0)}</div>
             </div>
-          </div>
-
-          ${(data.detailed_breakdown.asset_details?.spot_assets_with_percentages?.length > 0 || data.detailed_breakdown.asset_details?.spot_assets?.length > 0) ? `
-            <div class="verification-section">
-              <h5>🔸 ${data.account_type === 'SPOT' ? 'Top SPOT Assets' : 'SPOT Assets Distribution'} (${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || []).filter(a => (a.usdt_value || a.value_usdt || 0) > 0).length} assets)</h5>
-              <div class="assets-list">
-                <div class="assets-header">
-                  <span class="header-symbol">Asset</span>
-                  <span class="header-amount">Balance</span>
-                  <span class="header-value">Value (USDT)</span>
-                  <span class="header-percent">%</span>
+        
+        ${data.detailed_breakdown ? `
+          ${data.detailed_breakdown.spot ? `
+            <div class="result-section">
+              <h5>💰 SPOT Account</h5>
+              ${data.detailed_breakdown.spot.assets && data.detailed_breakdown.spot.assets.length > 0 ? `
+                <div style="max-height: 300px; overflow-y: auto; margin: 10px 0;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
+                    <thead>
+                      <tr style="background: #e9ecef;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Asset</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USDT Value</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">% of Account</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.detailed_breakdown.spot.assets
+                        .map(asset => {
+                          const totalValue = data.detailed_breakdown.summary?.total_value_usdt || 1;
+                          const percentage = ((asset.usdt_value || 0) / totalValue * 100);
+                          return { ...asset, percentage };
+                        })
+                        .sort((a, b) => b.percentage - a.percentage)
+                        .map(asset => {
+                          return `
+                            <tr>
+                              <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                              <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.total || 0)}</td>
+                              <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
+                              <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${asset.percentage >= 10 ? '#28a745' : asset.percentage >= 5 ? '#ffc107' : '#6c757d'};">${asset.percentage.toFixed(1)}%</td>
+                            </tr>
+                          `;
+                        }).join('')}
+                    </tbody>
+                  </table>
                 </div>
-                ${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || [])
-                  .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 0.01) // Show only assets worth more than 1 cent
-                  .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                  .slice(0, data.account_type === 'SPOT' ? 10 : 8) // Show more for SPOT-only accounts
-                  .map(asset => `
-                    <div class="asset-item">
-                      <span class="asset-symbol">${asset.asset}</span>
-                      <span class="asset-amount">${(asset.total || asset.free + asset.locked || 0).toFixed(4)}</span>
-                      <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
-                      <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
-                    </div>
-                  `).join('')}
-                ${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || []).filter(a => (a.usdt_value || a.value_usdt || 0) > 0.01).length > (data.account_type === 'SPOT' ? 10 : 8) ? 
-                  `<div class="more-assets">... and ${(data.detailed_breakdown.asset_details.spot_assets_with_percentages || data.detailed_breakdown.asset_details.spot_assets || []).filter(a => (a.usdt_value || a.value_usdt || 0) > 0.01).length - (data.account_type === 'SPOT' ? 10 : 8)} more assets</div>` : ''}
-              </div>
+              ` : '<p style="margin: 10px 0; font-style: italic;">No SPOT assets found</p>'}
             </div>
           ` : ''}
-
-          ${(() => {
-            const coinmAssets = (data.detailed_breakdown.asset_details?.coinm_assets_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_assets || [])
-              .filter(asset => (asset.wallet_balance || asset.total || asset.walletBalance || 0) > 0 || (asset.usdt_value || asset.value_usdt || 0) > 1); // Show assets with balance OR value
-            return coinmAssets.length > 0 ? `
-              <div class="verification-section">
-                <h5>🔹 Coin-M FUTURES Assets (${coinmAssets.length})</h5>
-                <div class="assets-list">
-                  <div class="coinm-assets-header">
-                    <span class="header-symbol">Symbol</span>
-                    <span class="header-wallet">Wallet Balance</span>
-                    <span class="header-pnl">Unrealized PnL</span>
-                    <span class="header-margin">Margin Balance</span>
-                    <span class="header-value">Value (USDT)</span>
-                    <span class="header-percent">%</span>
-                  </div>
-                  ${coinmAssets
-                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                    .map(asset => `
-                      <div class="coinm-asset-item">
-                        <span class="asset-symbol">${asset.asset}</span>
-                        <span class="asset-wallet">${(asset.wallet_balance || asset.total || asset.walletBalance || asset.balance || 0).toFixed(8)}</span>
-                        <span class="asset-pnl ${(asset.unrealized_pnl || 0) >= 0 ? 'positive' : 'negative'}">
-                          ${(asset.unrealized_pnl || 0) >= 0 ? '+' : ''}${formatCurrency(asset.unrealized_pnl || 0)}
-                        </span>
-                        <span class="asset-margin">${formatCurrency(asset.margin_balance || asset.usdt_value || 0)}</span>
-                        <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
-                        <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
-                      </div>
-                    `).join('')}
+          
+          ${data.detailed_breakdown['USDT-M'] ? `
+            <div class="result-section">
+              <h5>📈 USDT-M Futures</h5>
+              
+              <!-- Assets Row -->
+              ${data.detailed_breakdown['USDT-M'].assets && data.detailed_breakdown['USDT-M'].assets.length > 0 ? `
+                <h6 style="margin: 15px 0 5px 0; color: #495057;">Assets (${data.detailed_breakdown['USDT-M'].assets.length}):</h6>
+                <div style="max-height: 200px; overflow-y: auto; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
+                    <thead>
+                      <tr style="background: #fff3cd;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Asset</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Balance</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Available</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USDT Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.detailed_breakdown['USDT-M'].assets.map(asset => `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.balance || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.available || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-            ` : '';
-          })()}
-
-          ${(() => {
-            const usdtmAssets = (data.detailed_breakdown.asset_details?.usdtm_assets_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_assets || [])
-              .filter(asset => (asset.usdt_value || asset.value_usdt || 0) > 1); // Only show assets worth more than $1
-            return usdtmAssets.length > 0 ? `
-              <div class="verification-section">
-                <h5>🔶 USDⓈ-M FUTURES Assets (${usdtmAssets.length})</h5>
-                <div class="assets-list">
-                  <div class="assets-header">
-                    <span class="header-symbol">Asset</span>
-                    <span class="header-amount">Balance</span>
-                    <span class="header-value">Value (USDT)</span>
-                    <span class="header-percent">%</span>
-                  </div>
-                  ${usdtmAssets
-                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                    .map(asset => `
-                      <div class="asset-item">
-                        <span class="asset-symbol">${asset.asset}</span>
-                        <span class="asset-amount">${(asset.total || asset.wallet_balance || asset.balance || 0).toFixed(4)}</span>
-                        <span class="asset-value">${formatCurrency(asset.usdt_value || asset.value_usdt || 0)}</span>
-                        <span class="asset-percent">${formatPercent(asset.percentage_of_total || 0)}</span>
-                      </div>
-                    `).join('')}
+              ` : ''}
+              
+              <!-- Positions Row -->
+              ${data.detailed_breakdown['USDT-M'].positions && data.detailed_breakdown['USDT-M'].positions.length > 0 ? `
+                <h6 style="margin: 15px 0 5px 0; color: #495057;">Positions (${data.detailed_breakdown['USDT-M'].positions.length}):</h6>
+                <div style="max-height: 200px; overflow-y: auto; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
+                    <thead>
+                      <tr style="background: #fff3cd;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Symbol</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Side</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Size</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Entry Price</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Mark Price</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">PNL</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USDT Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.detailed_breakdown['USDT-M'].positions.map(position => `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(position.positionAmt || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-            ` : '';
-          })()}
-
-          ${(() => {
-            const coinmPositions = (data.detailed_breakdown.position_details?.coinm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_coinm_positions || [])
-              .filter(pos => Math.abs(pos.position_amt || pos.positionAmt || 0) > 0); // Only show positions with actual size
-            return coinmPositions.length > 0 ? `
-              <div class="verification-section">
-                <h5>📈 Coin-M FUTURES Positions (${coinmPositions.length})</h5>
-                <div class="positions-list">
-                  <div class="coinm-positions-header">
-                    <span class="header-symbol">Symbol</span>
-                    <span class="header-size">Size (Cont)</span>
-                    <span class="header-notional">Notional Value</span>
-                    <span class="header-entry">Entry Price</span>
-                    <span class="header-mark">Mark Price</span>
-                    <span class="header-pnl">Unrealized PnL</span>
-                    <span class="header-pnl-pct">PnL %</span>
-                  </div>
-                  ${coinmPositions
-                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                    .map(pos => {
-                      // Determine if position is LONG or SHORT
-                      const positionAmt = pos.position_amt || pos.positionAmt || 0;
-                      const isLong = positionAmt > 0;
-                      const isShort = positionAmt < 0;
-                      const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
-                      const pnlPercent = pos.unrealized_pnl_percent || 0;
-                      
-                      return `
-                        <div class="coinm-position-item ${directionClass}">
-                          <span class="position-symbol">${pos.symbol}</span>
-                          <span class="position-size">${positionAmt.toFixed(0)} Cont</span>
-                          <span class="position-notional">${(pos.notional_value || 0).toFixed(8)} ${pos.symbol.includes('UNI') ? 'UNI' : 'BASE'}</span>
-                          <span class="position-entry">${(pos.entry_price || 0).toFixed(8)}</span>
-                          <span class="position-mark">${(pos.mark_price || 0).toFixed(8)}</span>
-                          <span class="position-pnl ${(pos.unrealized_pnl || 0) >= 0 ? 'positive' : 'negative'}">
-                            ${(pos.unrealized_pnl || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || 0)}
-                          </span>
-                          <span class="position-pnl-pct ${pnlPercent >= 0 ? 'positive' : 'negative'}">
-                            ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%
-                          </span>
-                        </div>
-                      `;
-                    }).join('')}
+              ` : ''}
+              
+              <!-- Open Orders Row -->
+              ${data.detailed_breakdown['USDT-M'].open_orders && data.detailed_breakdown['USDT-M'].open_orders.length > 0 ? `
+                <h6 style="margin: 15px 0 5px 0; color: #495057;">Open Orders (${data.detailed_breakdown['USDT-M'].open_orders.length}):</h6>
+                <div style="max-height: 200px; overflow-y: auto; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
+                    <thead>
+                      <tr style="background: #fff3cd;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Symbol</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Side</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Type</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Price</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Quantity</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USDT Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.detailed_breakdown['USDT-M'].open_orders.map(order => `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${order.side === 'BUY' ? '#28a745' : '#dc3545'};">${order.side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.type}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(order.price || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(order.origQty || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(order.usdt_value || 0)}</strong></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-            ` : '';
-          })()}
-
-          ${(() => {
-            const usdtmPositions = (data.detailed_breakdown.position_details?.usdtm_positions_with_percentages || data.detailed_breakdown.asset_details?.futures_usdtm_positions || [])
-              .filter(pos => Math.abs(pos.position_amt || pos.positionAmt || 0) > 0); // Only show positions with actual size
-            return usdtmPositions.length > 0 ? `
-              <div class="verification-section">
-                <h5>📊 USDⓈ-M FUTURES Positions (${usdtmPositions.length})</h5>
-                <div class="positions-list">
-                  <div class="positions-header">
-                    <span class="header-symbol">Symbol</span>
-                    <span class="header-direction">Direction</span>
-                    <span class="header-quantity">Quantity</span>
-                    <span class="header-value">Position Value</span>
-                    <span class="header-percent">%</span>
-                    <span class="header-pnl">Unrealized PnL</span>
-                  </div>
-                  ${usdtmPositions
-                    .sort((a, b) => (b.usdt_value || b.value_usdt || 0) - (a.usdt_value || a.value_usdt || 0))
-                    .map(pos => {
-                      // Determine if position is LONG or SHORT
-                      const isLong = (pos.position_amt || pos.positionAmt || 0) > 0;
-                      const isShort = (pos.position_amt || pos.positionAmt || 0) < 0;
-                      const directionClass = isLong ? 'long-position' : isShort ? 'short-position' : 'neutral-position';
-                      const directionLabel = isLong ? 'LONG' : isShort ? 'SHORT' : 'NEUTRAL';
-                      const directionIcon = isLong ? '📈' : isShort ? '📉' : '➖';
-                      
-                      return `
-                        <div class="position-item ${directionClass}">
-                          <span class="symbol">${pos.symbol}</span>
-                          <span class="direction ${directionClass}">
-                            ${directionIcon} ${directionLabel}
-                          </span>
-                          <span class="amount">${Math.abs(pos.position_amt || pos.positionAmt || 0).toFixed(4)}</span>
-                          <span class="value">${formatCurrency(pos.usdt_value || pos.value_usdt || 0)}</span>
-                          <span class="percent">${formatPercent(pos.percentage_of_total || 0)}</span>
-                          <span class="pnl ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? 'positive' : 'negative'}">
-                            ${(pos.unrealized_pnl || pos.unRealizedProfit || 0) >= 0 ? '+' : ''}${formatCurrency(pos.unrealized_pnl || pos.unRealizedProfit || 0)}
-                          </span>
-                        </div>
-                      `;
-                    }).join('')}
+              ` : ''}
+              
+              ${!data.detailed_breakdown['USDT-M'].assets?.length && !data.detailed_breakdown['USDT-M'].positions?.length && !data.detailed_breakdown['USDT-M'].open_orders?.length ? 
+                '<p style="margin: 10px 0; font-style: italic;">No USDT-M assets, positions, or orders found</p>' : ''}
+            </div>
+          ` : ''}
+          
+          ${data.detailed_breakdown['COIN-M'] ? `
+            <div class="result-section">
+              <h5>🪙 COIN-M Futures</h5>
+              
+              <!-- Assets Row -->
+              ${data.detailed_breakdown['COIN-M'].assets && data.detailed_breakdown['COIN-M'].assets.length > 0 ? `
+                <h6 style="margin: 15px 0 5px 0; color: #495057;">Assets (${data.detailed_breakdown['COIN-M'].assets.length}):</h6>
+                <div style="max-height: 200px; overflow-y: auto; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
+                    <thead>
+                      <tr style="background: #d1ecf1;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Asset</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Balance</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Unrealized PnL</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USDT Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.detailed_breakdown['COIN-M'].assets.map(asset => `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.walletBalance || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(asset.unrealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">${formatNumber(asset.unrealizedPnL || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-            ` : '';
-          })()}
+              ` : ''}
+              
+              <!-- Positions Row -->
+              ${data.detailed_breakdown['COIN-M'].positions && data.detailed_breakdown['COIN-M'].positions.length > 0 ? `
+                <h6 style="margin: 15px 0 5px 0; color: #495057;">Positions (${data.detailed_breakdown['COIN-M'].positions.length}):</h6>
+                <div style="max-height: 200px; overflow-y: auto; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
+                    <thead>
+                      <tr style="background: #d1ecf1;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Symbol</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Side</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Contracts</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Entry Price</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Mark Price</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">PNL (USDT)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USD Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.detailed_breakdown['COIN-M'].positions.map(position => `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(position.positionAmt || 0).toFixed(0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              ` : ''}
+              
+              <!-- Open Orders Row -->
+              ${data.detailed_breakdown['COIN-M'].open_orders && data.detailed_breakdown['COIN-M'].open_orders.length > 0 ? `
+                <h6 style="margin: 15px 0 5px 0; color: #495057;">Open Orders (${data.detailed_breakdown['COIN-M'].open_orders.length}):</h6>
+                <div style="max-height: 200px; overflow-y: auto; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
+                    <thead>
+                      <tr style="background: #d1ecf1;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Symbol</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Side</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Type</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Price</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Contracts</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Reduce Only</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">USD Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.detailed_breakdown['COIN-M'].open_orders.map(order => `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${order.side === 'BUY' ? '#28a745' : '#dc3545'};">${order.side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.type}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(order.price || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(order.origQty || 0, 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.reduceOnly ? '✅' : '❌'}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(order.usdt_value || 0)}</strong></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              ` : ''}
+              
+              ${!data.detailed_breakdown['COIN-M'].assets?.length && !data.detailed_breakdown['COIN-M'].positions?.length && !data.detailed_breakdown['COIN-M'].open_orders?.length ? 
+                '<p style="margin: 10px 0; font-style: italic;">No COIN-M assets, positions, or orders found</p>' : ''}
+            </div>
+          ` : ''}
         ` : ''}
 
         ${data.open_orders && data.open_orders.length > 0 ? `
