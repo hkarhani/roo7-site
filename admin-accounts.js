@@ -479,7 +479,7 @@ window.troubleshootAccount = async function(accountId) {
     detailedTroubleshootBtn.disabled = true;
   }
   
-  showToast('Starting account troubleshoot...', 'info');
+  showToast('Starting detailed account troubleshoot...', 'info');
   
   try {
     const troubleshootUrl = `${AUTH_API_BASE}/troubleshoot/${accountId}`;
@@ -492,8 +492,8 @@ window.troubleshootAccount = async function(accountId) {
 
     if (response.ok) {
       const result = await response.json();
-      showTroubleshootResults(result);
-      showToast('Troubleshoot completed successfully!', 'success');
+      showDetailedTroubleshootResults(result); // Show detailed results instead
+      showToast('Detailed troubleshoot completed successfully!', 'success');
       await loadAccounts(); // Reload to see updated status
     } else {
       const error = await response.json();
