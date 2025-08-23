@@ -509,17 +509,6 @@ function showTroubleshootResults(result) {
       <p><strong>Total Value:</strong> $${(result.total_usdt_value || 0).toFixed(2)}</p>
     </div>
     
-    ${result.test_results && result.test_results.length > 0 ? `
-      <div class="result-section">
-        <h4>Test Results</h4>
-        ${result.test_results.map(test => `
-          <div class="result-section ${test.success ? 'result-success' : 'result-error'}">
-            <strong>${test.stage}:</strong> ${test.message}
-            ${test.details ? `<br><small>${test.details}</small>` : ''}
-          </div>
-        `).join('')}
-      </div>
-    ` : ''}
     
     ${result.recommendations && result.recommendations.length > 0 ? `
       <div class="result-section result-warning">
@@ -557,18 +546,23 @@ function showTroubleshootResults(result) {
                     </tr>
                   </thead>
                   <tbody>
-                    ${result.detailed_breakdown.spot.assets.map(asset => {
-                      const totalValue = result.detailed_breakdown.summary?.total_value_usdt || 1;
-                      const percentage = ((asset.usdt_value || 0) / totalValue * 100);
-                      return `
-                        <tr>
-                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(asset.total || 0).toFixed(8)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${percentage >= 10 ? '#28a745' : percentage >= 5 ? '#ffc107' : '#6c757d'};">${percentage.toFixed(1)}%</td>
-                        </tr>
-                      `;
-                    }).join('')}
+                    ${result.detailed_breakdown.spot.assets
+                      .map(asset => {
+                        const totalValue = result.detailed_breakdown.summary?.total_value_usdt || 1;
+                        const percentage = ((asset.usdt_value || 0) / totalValue * 100);
+                        return { ...asset, percentage };
+                      })
+                      .sort((a, b) => b.percentage - a.percentage)
+                      .map(asset => {
+                        return `
+                          <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(asset.total || 0).toFixed(8)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${(asset.usdt_value || 0).toFixed(2)}</strong></td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${asset.percentage >= 10 ? '#28a745' : asset.percentage >= 5 ? '#ffc107' : '#6c757d'};">${asset.percentage.toFixed(1)}%</td>
+                          </tr>
+                        `;
+                      }).join('')}
                   </tbody>
                 </table>
               </div>
