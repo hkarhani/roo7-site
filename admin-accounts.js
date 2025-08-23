@@ -613,16 +613,16 @@ function showDetailedTroubleshootResults(result) {
       <h4>📊 Account Summary</h4>
       <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 15px 0;">
         <div class="summary-card">
-          <strong>Account Name:</strong> ${result.account_summary.account_name}<br>
-          <strong>Exchange:</strong> ${result.account_summary.exchange}<br>
-          <strong>Test Status:</strong> ${result.account_summary.test_status}<br>
+          <strong>Account Name:</strong> ${result.account_name || 'N/A'}<br>
+          <strong>Exchange:</strong> ${result.account_summary?.exchange || 'Binance'}<br>
+          <strong>Test Status:</strong> ${result.test_status || 'N/A'}<br>
           <strong>Total USDT Value:</strong> $${(summary.total_value_usdt || 0).toFixed(2)}
         </div>
         <div class="summary-card">
-          <strong>API Key Valid:</strong> ${result.account_summary.api_key_valid ? '✅ Yes' : '❌ No'}<br>
-          <strong>IP Whitelisted:</strong> ${result.account_summary.ip_whitelisted ? '✅ Yes' : '❌ No'}<br>
+          <strong>API Key Valid:</strong> ${result.api_key_valid ? '✅ Yes' : '❌ No'}<br>
+          <strong>IP Whitelisted:</strong> ${result.ip_whitelisted ? '✅ Yes' : '❌ No'}<br>
           <strong>Total Unrealized PnL:</strong> <span style="color: ${(summary.total_unrealized_pnl_usdt || 0) >= 0 ? 'green' : 'red'};">$${(summary.total_unrealized_pnl_usdt || 0).toFixed(2)}</span><br>
-          <strong>Analysis Time:</strong> ${new Date(result.timestamp).toLocaleString()}
+          <strong>Analysis Time:</strong> ${result.timestamp ? new Date(result.timestamp).toLocaleString() : 'N/A'}
         </div>
       </div>
       
