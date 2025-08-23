@@ -1107,20 +1107,46 @@ function formatDate(dateString) {
 }
 
 function showToast(message, type = 'info') {
-  // Simple toast implementation
+  // Remove any existing toasts to prevent stacking
+  const existingToasts = document.querySelectorAll('.toast');
+  existingToasts.forEach(toast => {
+    if (document.body.contains(toast)) {
+      document.body.removeChild(toast);
+    }
+  });
+  
+  // Create toast container if it doesn't exist
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100000;
+      pointer-events: none;
+    `;
+    document.body.appendChild(toastContainer);
+  }
+  
+  // Create toast element
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   toast.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
     padding: 12px 20px;
-    border-radius: 6px;
+    margin-bottom: 10px;
+    border-radius: 8px;
     color: white;
     font-weight: 600;
-    z-index: 10000;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    max-width: 400px;
+    word-wrap: break-word;
   `;
   
   // Set background color based on type
@@ -1133,14 +1159,22 @@ function showToast(message, type = 'info') {
   toast.style.backgroundColor = colors[type] || colors.info;
   
   toast.textContent = message;
-  document.body.appendChild(toast);
+  toastContainer.appendChild(toast);
   
   // Animate in
-  setTimeout(() => toast.style.opacity = '1', 100);
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(0)';
+  }, 100);
   
-  // Remove after 3 seconds
+  // Remove after 4 seconds
   setTimeout(() => {
     toast.style.opacity = '0';
-    setTimeout(() => document.body.removeChild(toast), 300);
-  }, 3000);
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+      if (toastContainer.contains(toast)) {
+        toastContainer.removeChild(toast);
+      }
+    }, 300);
+  }, 4000);
 }
