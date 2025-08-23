@@ -110,6 +110,14 @@ function initializeEventListeners() {
   if (loadAllAccountsBtn) {
     loadAllAccountsBtn.addEventListener('click', loadAllAccounts);
   }
+  
+  const refreshBtn = document.getElementById('refresh-accounts-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      showToast('Refreshing accounts...', 'info');
+      loadAccounts();
+    });
+  }
 
   // Search input - only trigger search when there are accounts loaded
   const searchInput = document.getElementById('search-account');
@@ -194,29 +202,85 @@ function getAuthHeaders(token) {
 
 // Load all accounts
 async function loadAllAccounts() {
-  showToast('Loading all accounts...', 'info');
-  await loadAccounts();
+  const loadBtn = document.getElementById('load-all-accounts-btn');
+  const refreshBtn = document.getElementById('refresh-accounts-btn');
+  
+  // Disable buttons during loading
+  if (loadBtn) {
+    loadBtn.disabled = true;
+    loadBtn.textContent = '⏳ Loading...';
+  }
+  if (refreshBtn) {
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = '⏳ Loading...';
+  }
+  
+  try {
+    showToast('Loading all accounts...', 'info');
+    await loadAccounts();
+  } finally {
+    // Re-enable buttons
+    if (loadBtn) {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Load All Accounts';
+    }
+    if (refreshBtn) {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = '🔄 Refresh';
+    }
+  }
 }
 
-// Load accounts from API
-async function loadAccounts() {
+// Load accounts from API with retry logic and enhanced error handling
+async function loadAccounts(retryCount = 0) {
+  const maxRetries = 3;
+  const retryDelay = 1000 * (retryCount + 1); // Progressive delay: 1s, 2s, 3s
+  
   try {
+    // Show loading state
+    const loadingMessage = retryCount > 0 ? `Retrying... (${retryCount}/${maxRetries})` : 'Loading all accounts...';
+    showToast(loadingMessage, 'info');
+    
+    // Clear previous data while loading and show loading state
+    if (retryCount === 0) {
+      allAccounts = [];
+      filteredAccounts = [];
+      displayLoadingState();
+      updateAccountStats();
+    }
+    
     const fullUrl = `${INVOICING_API_BASE}/admin/accounts`;
-    console.log('🔄 Loading accounts from:', fullUrl);
+    console.log(`🔄 Loading accounts from: ${fullUrl} (attempt ${retryCount + 1}/${maxRetries + 1})`);
     console.log('🔑 Token present:', !!token);
     console.log('🔑 Token preview:', token ? token.substring(0, 20) + '...' : 'none');
     
-    // Test network connectivity first
-    console.log('🌐 Testing network connectivity...');
-    try {
-      const testResponse = await fetch('https://api.roo7.site:8003/health', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      console.log('🌐 Health check status:', testResponse.status);
-    } catch (healthError) {
-      console.error('🌐 Health check failed:', healthError.message);
+    // Test network connectivity first (only on first attempt to avoid spam)
+    if (retryCount === 0) {
+      console.log('🌐 Testing network connectivity...');
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        
+        const testResponse = await fetch('https://api.roo7.site:8003/health', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        console.log('🌐 Health check status:', testResponse.status);
+        
+        if (!testResponse.ok) {
+          throw new Error(`Health check failed with status ${testResponse.status}`);
+        }
+      } catch (healthError) {
+        console.error('🌐 Health check failed:', healthError.message);
+        throw new Error(`Network connectivity issue: ${healthError.message}`);
+      }
     }
+    
+    // Prepare request with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for accounts request
     
     const headers = getAuthHeaders(token);
     console.log('📤 Request headers:', headers);
@@ -224,9 +288,12 @@ async function loadAccounts() {
     const response = await fetch(fullUrl, {
       method: 'GET',
       headers: headers,
-      mode: 'cors'
+      mode: 'cors',
+      signal: controller.signal
     });
-
+    
+    clearTimeout(timeoutId);
+    
     console.log('📡 API Response Status:', response.status);
     console.log('📡 API Response Headers:', Object.fromEntries(response.headers.entries()));
 
@@ -235,8 +302,17 @@ async function loadAccounts() {
       console.log('✅ Accounts data received:', data);
       console.log('📊 Number of accounts:', data.accounts ? data.accounts.length : 0);
       
+      // Validate data structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format: not an object');
+      }
+      
+      if (!Array.isArray(data.accounts)) {
+        throw new Error('Invalid response format: accounts is not an array');
+      }
+      
       // Debug: Log first account to see data structure
-      if (data.accounts && data.accounts.length > 0) {
+      if (data.accounts.length > 0) {
         console.log('🔍 First account debug data:', data.accounts[0]);
         console.log('🔍 Portfolio value:', data.accounts[0].portfolio_value);
         console.log('🔍 Test status:', data.accounts[0].test_status);
@@ -244,28 +320,98 @@ async function loadAccounts() {
         console.log('🔍 Full name:', data.accounts[0].full_name);
       }
       
-      allAccounts = data.accounts || [];
+      // Update data
+      allAccounts = data.accounts;
       filteredAccounts = [...allAccounts];
       updateAccountStats();
       displayAccounts();
+      
+      // Success feedback
+      showToast(`Successfully loaded ${data.accounts.length} accounts`, 'success');
+      
     } else {
       const errorText = await response.text();
       console.error('❌ API Error Response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+      
+      // Handle specific HTTP errors
+      if (response.status === 401) {
+        throw new Error('Authentication failed - please login again');
+      } else if (response.status === 403) {
+        throw new Error('Access denied - admin privileges required');
+      } else if (response.status === 500) {
+        throw new Error('Server error - please try again');
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+      }
     }
   } catch (error) {
-    console.error('❌ Error loading accounts:', error);
+    console.error(`❌ Error loading accounts (attempt ${retryCount + 1}):`, error);
     console.error('❌ Error name:', error.name);
     console.error('❌ Error message:', error.message);
     console.error('❌ Error stack:', error.stack || 'No stack trace available');
     
-    // Show more specific error messages
-    if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
-      showToast('Network error - check if API server is running and accessible', 'error');
+    // Determine if we should retry
+    const shouldRetry = retryCount < maxRetries && (
+      error.name === 'TypeError' || // Network errors
+      error.name === 'AbortError' || // Timeout errors
+      error.message.includes('fetch') || // Fetch-related errors
+      error.message.includes('Network') || // Network errors
+      error.message.includes('timeout') || // Timeout errors
+      error.message.includes('Server error') // Server errors (500)
+    );
+    
+    if (shouldRetry) {
+      console.log(`🔄 Retrying in ${retryDelay}ms... (${retryCount + 1}/${maxRetries})`);
+      showToast(`Loading failed, retrying in ${retryDelay / 1000} seconds...`, 'warning');
+      
+      setTimeout(() => {
+        loadAccounts(retryCount + 1);
+      }, retryDelay);
     } else {
-      showToast(`Failed to load accounts: ${error.message}`, 'error');
+      // Final failure
+      console.error('❌ Final failure after all retry attempts');
+      
+      // Show specific error messages
+      let errorMessage = 'Failed to load accounts';
+      if (error.message.includes('Authentication failed')) {
+        errorMessage = 'Session expired - please refresh and login again';
+      } else if (error.message.includes('Access denied')) {
+        errorMessage = 'Admin access required - check your permissions';
+      } else if (error.message.includes('Network')) {
+        errorMessage = 'Network connection problem - check connectivity';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Request timed out - server may be overloaded';
+      } else {
+        errorMessage = `Failed to load accounts: ${error.message}`;
+      }
+      
+      showToast(errorMessage, 'error');
+      
+      // Show empty state
+      allAccounts = [];
+      filteredAccounts = [];
+      displayAccounts();
+      updateAccountStats();
     }
   }
+}
+
+// Display loading state in table
+function displayLoadingState() {
+  const tbody = document.querySelector('#accounts-table tbody');
+  if (!tbody) {
+    console.error('Table body not found');
+    return;
+  }
+  
+  tbody.innerHTML = `
+    <tr class="loading-row">
+      <td colspan="9" style="text-align: center; padding: 40px;">
+        <div class="loading-spinner">⏳</div>
+        <div style="margin-top: 10px;">Loading accounts...</div>
+      </td>
+    </tr>
+  `;
 }
 
 // Display accounts in table
@@ -514,7 +660,7 @@ function showTroubleshootResults(result) {
           <div style="margin-bottom: 8px;"><strong>Account:</strong> ${result.account_name || 'N/A'}</div>
           <div style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: ${result.success ? '#28a745' : '#dc3545'};">${result.success ? '✅ Success' : '❌ Failed'}</span></div>
           <div style="margin-bottom: 8px;"><strong>Active:</strong> <span style="color: ${result.is_account_active !== false ? '#28a745' : '#dc3545'};">${result.is_account_active !== false ? '✅ Yes' : '❌ Disabled'}</span></div>
-          <div><strong>Snapshot Saved:</strong> <span style="color: ${result.snapshot_saved ? '#28a745' : '#6c757d'};">${result.snapshot_saved ? '✅ Yes' : '❌ No'}</span></div>
+          <div><strong>Status Updated:</strong> <span style="color: ${result.status_updated !== false ? '#28a745' : '#6c757d'};">${result.status_updated !== false ? '✅ Yes' : '❌ No (Disabled)'}</span></div>
         </div>
         <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
           <div style="margin-bottom: 8px;"><strong>API Key:</strong> <span style="color: ${result.api_key_valid ? '#28a745' : '#dc3545'};">${result.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
