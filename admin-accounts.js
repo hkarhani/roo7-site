@@ -499,13 +499,22 @@ function showTroubleshootResults(result) {
   const statusClass = result.success ? 'result-success' : 'result-error';
   
   resultsContainer.innerHTML = `
+    ${result.account_status_message ? `
+      <div class="result-section result-warning" style="margin-bottom: 15px;">
+        <div style="padding: 12px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; color: #856404;">
+          <strong>${result.account_status_message}</strong>
+        </div>
+      </div>
+    ` : ''}
+    
     <div class="result-section ${statusClass}">
       <h4>📊 Troubleshoot Summary</h4>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
         <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
           <div style="margin-bottom: 8px;"><strong>Account:</strong> ${result.account_name || 'N/A'}</div>
           <div style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: ${result.success ? '#28a745' : '#dc3545'};">${result.success ? '✅ Success' : '❌ Failed'}</span></div>
-          <div><strong>Test Status:</strong> ${result.test_status || 'N/A'}</div>
+          <div style="margin-bottom: 8px;"><strong>Active:</strong> <span style="color: ${result.is_account_active !== false ? '#28a745' : '#dc3545'};">${result.is_account_active !== false ? '✅ Yes' : '❌ Disabled'}</span></div>
+          <div><strong>Snapshot Saved:</strong> <span style="color: ${result.snapshot_saved ? '#28a745' : '#6c757d'};">${result.snapshot_saved ? '✅ Yes' : '❌ No'}</span></div>
         </div>
         <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
           <div style="margin-bottom: 8px;"><strong>API Key:</strong> <span style="color: ${result.api_key_valid ? '#28a745' : '#dc3545'};">${result.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
