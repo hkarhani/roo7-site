@@ -45,7 +45,7 @@ class JobsManagerDashboard {
         });
 
         document.getElementById('logout-btn')?.addEventListener('click', () => {
-            localStorage.removeItem('authToken');
+            localStorage.removeItem('token');
             localStorage.removeItem('userData');
             window.location.href = 'auth.html';
         });
@@ -123,7 +123,7 @@ class JobsManagerDashboard {
     }
 
     async makeAuthenticatedRequest(url, options = {}) {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('token');
         if (!token) {
             throw new Error('No authentication token found');
         }
@@ -138,7 +138,7 @@ class JobsManagerDashboard {
         });
 
         if (response.status === 401) {
-            localStorage.removeItem('authToken');
+            localStorage.removeItem('token');
             window.location.href = 'auth.html';
             return;
         }
