@@ -179,11 +179,11 @@ class JobsManagerDashboard {
         try {
             console.log('🔧 Jobs Manager: Loading active jobs list');
             
-            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/active-users-accounts`);
+            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs`);
             const data = await response.json();
             
-            // Store the jobs data for use in showJobDetails
-            this.currentActiveJobs = data.accounts || [];
+            // Store the jobs data for use in showJobDetails  
+            this.currentActiveJobs = data.active_jobs || [];
             
             this.renderActiveJobsList(this.currentActiveJobs);
         } catch (error) {
@@ -354,17 +354,25 @@ class JobsManagerDashboard {
             return;
         }
 
-        tbody.innerHTML = accounts.map(account => `
+        tbody.innerHTML = accounts.map(account => {
+            const nextRun = account.next_run_at ? this.formatDateTime(account.next_run_at) : 'Not scheduled';
+            const lastRun = account.last_run_at ? this.formatDateTime(account.last_run_at) : 'Never';
+            const failures = account.consecutive_failures || 0;
+            
+            const statusClass = account.status ? account.status.toLowerCase() : 'active';
+            const runStatusClass = account.run_status ? account.run_status.toLowerCase() : 'idle';
+            
+            return `
             <tr>
                 <td>${this.truncateId(account.account_id)}</td>
                 <td>${account.username || 'N/A'}</td>
                 <td>${account.account_name || 'Unnamed'}</td>
                 <td>${account.strategy || 'N/A'}</td>
-                <td><span class="status-badge active">ACTIVE</span></td>
-                <td><span class="status-badge idle">IDLE</span></td>
-                <td class="time-display">Next cycle</td>
-                <td class="time-display">Never</td>
-                <td>0</td>
+                <td><span class="status-badge ${statusClass}">${account.status || 'ACTIVE'}</span></td>
+                <td><span class="status-badge ${runStatusClass}">${account.run_status || 'IDLE'}</span></td>
+                <td class="time-display">${nextRun}</td>
+                <td class="time-display">${lastRun}</td>
+                <td>${failures}</td>
                 <td>
                     <div class="job-actions">
                         <button class="job-action-btn force" onclick="jobsManager.showJobAction('${account.account_id}', 'force', '${account.account_name}')">
@@ -379,7 +387,8 @@ class JobsManagerDashboard {
                     </div>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     renderJobHistoryPlaceholder() {
