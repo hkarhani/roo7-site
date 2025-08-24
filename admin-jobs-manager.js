@@ -529,11 +529,11 @@ class JobsManagerDashboard {
                         </div>
                         <div class="execution-field">
                             <strong>Status:</strong>
-                            <span class="status-badge ${job.status.toLowerCase()}">${job.status}</span>
+                            <span class="status-badge ${job.status ? job.status.toLowerCase() : 'unknown'}">${job.status || 'N/A'}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Run Status:</strong>
-                            <span class="status-badge ${job.run_status.toLowerCase()}">${job.run_status}</span>
+                            <span class="status-badge ${job.run_status ? job.run_status.toLowerCase() : 'unknown'}">${job.run_status || 'N/A'}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Strategy:</strong>
@@ -549,7 +549,7 @@ class JobsManagerDashboard {
                         <h4>Execution Schedule</h4>
                         <div class="execution-field">
                             <strong>Cadence:</strong>
-                            <span>${job.cadence_minutes} minutes</span>
+                            <span>${job.cadence_minutes || 'N/A'} minutes</span>
                         </div>
                         <div class="execution-field">
                             <strong>Next Run:</strong>
@@ -561,7 +561,7 @@ class JobsManagerDashboard {
                         </div>
                         <div class="execution-field">
                             <strong>Consecutive Failures:</strong>
-                            <span class="${job.consecutive_failures > 0 ? 'text-danger' : 'text-success'}">${job.consecutive_failures}</span>
+                            <span class="${(job.consecutive_failures || 0) > 0 ? 'text-danger' : 'text-success'}">${job.consecutive_failures || 0}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Immediate:</strong>
@@ -572,7 +572,7 @@ class JobsManagerDashboard {
                     <div class="execution-section">
                         <h4>Target Portfolio</h4>
                         <div class="json-display">
-                            ${JSON.stringify(job.target_portfolio, null, 2)}
+                            ${JSON.stringify(job.target_portfolio || {}, null, 2)}
                         </div>
                     </div>
                     
@@ -581,11 +581,11 @@ class JobsManagerDashboard {
                             <h4>Last Execution Result</h4>
                             <div class="execution-field">
                                 <strong>Status:</strong>
-                                <span class="status-badge ${lastExecution.status.toLowerCase()}">${lastExecution.status}</span>
+                                <span class="status-badge ${lastExecution.status ? lastExecution.status.toLowerCase() : 'unknown'}">${lastExecution.status || 'N/A'}</span>
                             </div>
                             <div class="execution-field">
                                 <strong>Started:</strong>
-                                <span>${this.formatDateTime(lastExecution.started_at)}</span>
+                                <span>${lastExecution.started_at ? this.formatDateTime(lastExecution.started_at) : 'N/A'}</span>
                             </div>
                             <div class="execution-field">
                                 <strong>Completed:</strong>
