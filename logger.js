@@ -74,6 +74,10 @@ class Logger {
 // Create global logger instance
 window.logger = new Logger();
 
+// Export Logger class for ES6 module imports
+export { Logger };
+export default new Logger();
+
 // Usage examples in comments:
 // logger.debug('Loading data from API...'); // Only shows in development
 // logger.info('Data loaded successfully'); // Shows in development and info+ levels

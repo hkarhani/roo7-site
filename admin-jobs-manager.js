@@ -5,6 +5,14 @@ import { Logger } from './logger.js';
 // Fallback API_URL in case named import fails due to browser extension interference
 const FALLBACK_API_URL = config?.API_URL || config?.API_CONFIG?.authUrl || 'https://api.roo7.site:443';
 
+// Fallback Logger in case named import fails due to browser extension interference
+const FALLBACK_LOGGER = {
+    info: (context, message, ...args) => console.log(`[INFO] ${context}: ${message}`, ...args),
+    warn: (context, message, ...args) => console.warn(`[WARN] ${context}: ${message}`, ...args),
+    error: (context, message, ...args) => console.error(`[ERROR] ${context}: ${message}`, ...args),
+    debug: (context, message, ...args) => console.log(`[DEBUG] ${context}: ${message}`, ...args)
+};
+
 // Helper function to get API_URL with fallback for browser extension compatibility
 const getApiUrl = () => {
     try {
@@ -12,6 +20,16 @@ const getApiUrl = () => {
     } catch (e) {
         console.warn('Named import API_URL failed, using fallback:', e);
         return FALLBACK_API_URL;
+    }
+};
+
+// Helper function to get Logger with fallback for browser extension compatibility
+const getLogger = () => {
+    try {
+        return Logger || window.logger || FALLBACK_LOGGER;
+    } catch (e) {
+        console.warn('Named import Logger failed, using fallback:', e);
+        return window.logger || FALLBACK_LOGGER;
     }
 };
 
@@ -35,7 +53,7 @@ class JobsManagerDashboard {
     }
 
     async init() {
-        Logger.info('JobsManagerDashboard', 'Initializing Jobs Manager Dashboard');
+        getLogger().info('JobsManagerDashboard', 'Initializing Jobs Manager Dashboard');
         
         this.setupEventListeners();
         await this.loadInitialData();
@@ -152,35 +170,35 @@ class JobsManagerDashboard {
 
     async loadJobsManagerStatus() {
         try {
-            Logger.info('JobsManagerDashboard', 'Loading Jobs Manager status');
+            getLogger().info('JobsManagerDashboard', 'Loading Jobs Manager status');
             
             const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/status`);
             const data = await response.json();
             
             this.renderJobsManagerStatus(data);
         } catch (error) {
-            Logger.error('JobsManagerDashboard', 'Failed to load Jobs Manager status', error);
+            getLogger().error('JobsManagerDashboard', 'Failed to load Jobs Manager status', error);
             this.renderJobsManagerError('jobs-status-container', 'Failed to load Jobs Manager status');
         }
     }
 
     async loadActiveJobsSummary() {
         try {
-            Logger.info('JobsManagerDashboard', 'Loading active jobs summary');
+            getLogger().info('JobsManagerDashboard', 'Loading active jobs summary');
             
             const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs`);
             const data = await response.json();
             
             this.renderActiveJobsSummary(data);
         } catch (error) {
-            Logger.error('JobsManagerDashboard', 'Failed to load active jobs summary', error);
+            getLogger().error('JobsManagerDashboard', 'Failed to load active jobs summary', error);
             this.renderJobsManagerError('active-jobs-stats', 'Failed to load active jobs summary');
         }
     }
 
     async loadActiveJobs() {
         try {
-            Logger.info('JobsManagerDashboard', 'Loading active jobs list');
+            getLogger().info('JobsManagerDashboard', 'Loading active jobs list');
             
             // This endpoint doesn't exist yet, so we'll use a placeholder for now
             // In a real implementation, you'd need to add an endpoint to fetch active jobs list
@@ -189,14 +207,14 @@ class JobsManagerDashboard {
             
             this.renderActiveJobsList(data.accounts || []);
         } catch (error) {
-            Logger.error('JobsManagerDashboard', 'Failed to load active jobs', error);
+            getLogger().error('JobsManagerDashboard', 'Failed to load active jobs', error);
             this.renderActiveJobsError();
         }
     }
 
     async loadJobHistory() {
         try {
-            Logger.info('JobsManagerDashboard', 'Loading job execution history');
+            getLogger().info('JobsManagerDashboard', 'Loading job execution history');
             
             const limit = document.getElementById('history-limit').value || 50;
             const accountFilter = document.getElementById('history-account-filter').value;
@@ -205,7 +223,7 @@ class JobsManagerDashboard {
             // Placeholder for job history endpoint - would need to be implemented
             this.renderJobHistoryPlaceholder();
         } catch (error) {
-            Logger.error('JobsManagerDashboard', 'Failed to load job history', error);
+            getLogger().error('JobsManagerDashboard', 'Failed to load job history', error);
             this.renderJobHistoryError();
         }
     }
@@ -382,7 +400,7 @@ class JobsManagerDashboard {
                 });
             }
         } catch (error) {
-            Logger.error('JobsManagerDashboard', 'Failed to populate account filter', error);
+            getLogger().error('JobsManagerDashboard', 'Failed to populate account filter', error);
         }
     }
 
@@ -464,7 +482,7 @@ class JobsManagerDashboard {
             const result = await response.json();
             
             if (result.success) {
-                Logger.info('JobsManagerDashboard', `Job action ${action} successful for ${accountId}`);
+                getLogger().info('JobsManagerDashboard', `Job action ${action} successful for ${accountId}`);
                 this.showNotification(result.message, 'success');
                 this.loadActiveJobs(); // Refresh the list
             } else {
@@ -472,7 +490,7 @@ class JobsManagerDashboard {
             }
             
         } catch (error) {
-            Logger.error('JobsManagerDashboard', `Failed to execute job action ${action}`, error);
+            getLogger().error('JobsManagerDashboard', `Failed to execute job action ${action}`, error);
             this.showNotification('Failed to execute action', 'error');
         } finally {
             document.getElementById('job-action-modal').style.display = 'none';
