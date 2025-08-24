@@ -512,17 +512,41 @@ class JobsManagerDashboard {
             // Find the specific job from the jobs manager data
             const jobConfig = jobConfigData.active_jobs?.find(j => j.account_id === accountId) || null;
             
-            // Also fetch recent job executions for this account
-            const executionsResponse = await this.makeAuthenticatedRequest(
-                `${getApiUrl()}/admin/jobs-manager/job-executions/${accountId}?limit=5`
-            );
-            const executionsData = await executionsResponse.json();
-            
             title.textContent = `Job Details - ${job.account_name || 'Account'}`;
             
-            const lastExecution = executionsData.executions && executionsData.executions.length > 0 
-                ? executionsData.executions[0] 
-                : null;
+            // Fetch last execution: prioritize last_job_id from active job, fallback to latest execution
+            let lastExecution = null;
+            
+            if (jobConfig?.last_job_id) {
+                // Fetch the specific last execution using last_job_id
+                try {
+                    const lastExecutionResponse = await this.makeAuthenticatedRequest(
+                        `${getApiUrl()}/admin/jobs-manager/job-execution/${jobConfig.last_job_id}`
+                    );
+                    const lastExecutionData = await lastExecutionResponse.json();
+                    
+                    if (lastExecutionData.success) {
+                        lastExecution = lastExecutionData.execution;
+                        console.log('📊 Fetched specific last execution using last_job_id:', jobConfig.last_job_id);
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Failed to fetch specific last execution, falling back to latest:', error);
+                }
+            }
+            
+            // Fallback: get recent executions if specific fetch failed
+            if (!lastExecution) {
+                const executionsResponse = await this.makeAuthenticatedRequest(
+                    `${getApiUrl()}/admin/jobs-manager/job-executions/${accountId}?limit=5`
+                );
+                const executionsData = await executionsResponse.json();
+                
+                lastExecution = executionsData.executions && executionsData.executions.length > 0 
+                    ? executionsData.executions[0] 
+                    : null;
+                    
+                console.log('📊 Using latest execution as fallback');
+            }
             
             content.innerHTML = `
                 <div class="execution-details">
@@ -572,6 +596,18 @@ class JobsManagerDashboard {
                             <strong>Immediate:</strong>
                             <span class="${jobConfig?.immediate || job.immediate ? 'text-warning' : 'text-secondary'}">${jobConfig?.immediate || job.immediate ? 'Yes (Due for immediate execution)' : 'No'}</span>
                         </div>
+                        ${jobConfig?.current_job_id ? `
+                            <div class="execution-field">
+                                <strong>Current Job:</strong>
+                                <span class="text-info">Running (ID: ${jobConfig.current_job_id.slice(-8)})</span>
+                            </div>
+                        ` : ''}
+                        ${jobConfig?.last_job_id ? `
+                            <div class="execution-field">
+                                <strong>Last Job ID:</strong>
+                                <span class="text-secondary">${jobConfig.last_job_id.slice(-8)}...</span>
+                            </div>
+                        ` : ''}
                     </div>
                     
                     <div class="execution-section">
@@ -583,7 +619,7 @@ class JobsManagerDashboard {
                     
                     ${lastExecution ? `
                         <div class="execution-section">
-                            <h4>Last Execution Result</h4>
+                            <h4>Last Execution Result ${jobConfig?.last_job_id ? '(Job ID: ' + jobConfig.last_job_id.slice(-8) + '...)' : '(Latest)'}</h4>
                             <div class="execution-field">
                                 <strong>Status:</strong>
                                 <span class="status-badge ${lastExecution.status ? lastExecution.status.toLowerCase() : 'unknown'}">${lastExecution.status || 'N/A'}</span>
