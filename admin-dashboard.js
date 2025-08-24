@@ -330,6 +330,74 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
+  // === ACTIVE ACCOUNTS FUNCTIONS ===
+  async function loadActiveAccounts() {
+    try {
+      console.log('👥 Loading active accounts...');
+      const response = await fetch(`${AUTH_API_BASE}/admin/active-users-accounts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('👥 Active accounts response:', result);
+
+      displayActiveAccounts(result.accounts || []);
+      
+    } catch (error) {
+      console.error('❌ Error loading active accounts:', error);
+      document.getElementById('active-accounts-container').innerHTML = `
+        <div class="error-state">
+          <p>❌ Failed to load active accounts: ${error.message}</p>
+          <button onclick="loadActiveAccounts()" class="retry-btn">🔄 Retry</button>
+        </div>
+      `;
+    }
+  }
+
+  function displayActiveAccounts(accounts) {
+    const container = document.getElementById('active-accounts-container');
+    
+    if (!accounts || accounts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <p>📭 No active accounts found</p>
+          <small>No paying users have active trading accounts at this time</small>
+        </div>
+      `;
+      return;
+    }
+
+    // Create summary
+    const totalAccounts = accounts.length;
+    const uniqueUsers = new Set(accounts.map(acc => acc._user_id)).size;
+    const strategies = new Set(accounts.map(acc => acc.strategy)).size;
+
+    container.innerHTML = `
+      <div class="active-accounts-summary">
+        <span>${totalAccounts}</span> active accounts from <span>${uniqueUsers}</span> paying users 
+        (<span>${strategies}</span> different strategies)
+      </div>
+      <div class="active-accounts-list">
+        ${accounts.map(account => `
+          <div class="active-account-item">
+            <div class="account-info">
+              <div class="account-name">${account.account_name || 'Unnamed Account'}</div>
+              <div class="account-strategy">Strategy: ${account.strategy || 'None'}</div>
+            </div>
+            <div class="account-status">Active</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
   // === WALLET VERIFICATION FUNCTIONS ===
   async function loadWalletVerifications() {
     try {
@@ -978,6 +1046,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Refresh buttons
   document.getElementById('refresh-overview').onclick = loadSystemOverview;
+  document.getElementById('refresh-active-accounts').onclick = loadActiveAccounts;
   document.getElementById('refresh-wallets').onclick = loadWalletVerifications;
   document.getElementById('refresh-referrals').onclick = loadReferrals;
   document.getElementById('refresh-activity').onclick = loadActivity;
@@ -1739,6 +1808,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize dashboard
   loadSystemOverview();
+  loadActiveAccounts();
   loadWalletVerifications();
   loadInvoices();
   loadTierUpgrades();
