@@ -179,7 +179,7 @@ class JobsManagerDashboard {
         try {
             console.log('🔧 Jobs Manager: Loading active jobs list');
             
-            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs`);
+            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs-list`);
             const data = await response.json();
             
             // Store the jobs data for use in showJobDetails  
