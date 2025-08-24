@@ -398,10 +398,16 @@ document.addEventListener("DOMContentLoaded", () => {
           <tbody>
             ${accounts.map(account => `
               <tr>
-                <td class="user-name">${account.username || account._user_id || 'Unknown User'}</td>
-                <td class="account-name">${account.account_name || 'Unnamed Account'}</td>
+                <td class="user-name" title="${account.full_name || account.username || account._user_id}">
+                  ${account.full_name || account.username || account._user_id || 'Unknown User'}
+                </td>
+                <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
+                  ${account.account_name || 'Unnamed Account'}
+                </td>
                 <td class="account-strategy">${account.strategy || 'None'}</td>
-                <td class="account-value">${formatAccountValue(account.total_value || account.last_value)}</td>
+                <td class="account-value" title="Last updated: ${formatLastUpdated(account.last_updated)}">
+                  ${formatAccountValue(account.last_value)}
+                </td>
                 <td><span class="account-status">Active</span></td>
               </tr>
             `).join('')}
@@ -429,6 +435,40 @@ document.addEventListener("DOMContentLoaded", () => {
       return `$${(numValue / 1000).toFixed(1)}K`;
     } else {
       return `$${numValue.toFixed(2)}`;
+    }
+  }
+
+  // Helper function to format last updated timestamp
+  function formatLastUpdated(timestamp) {
+    if (!timestamp) {
+      return 'Never updated';
+    }
+    
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      if (diffMins < 1) {
+        return 'Just now';
+      } else if (diffMins < 60) {
+        return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+      } else if (diffHours < 24) {
+        return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      } else if (diffDays < 7) {
+        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      } else {
+        return date.toLocaleDateString();
+      }
+    } catch (e) {
+      return 'Unknown';
     }
   }
 
