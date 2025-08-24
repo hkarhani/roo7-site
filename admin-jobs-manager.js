@@ -13,6 +13,7 @@ const getApiUrl = () => {
 
 class JobsManagerDashboard {
     constructor() {
+        this.currentActiveJobs = [];
         this.currentFilters = {
             jobStatus: '',
             runStatus: '',
@@ -178,12 +179,13 @@ class JobsManagerDashboard {
         try {
             console.log('🔧 Jobs Manager: Loading active jobs list');
             
-            // This endpoint doesn't exist yet, so we'll use a placeholder for now
-            // In a real implementation, you'd need to add an endpoint to fetch active jobs list
             const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/active-users-accounts`);
             const data = await response.json();
             
-            this.renderActiveJobsList(data.accounts || []);
+            // Store the jobs data for use in showJobDetails
+            this.currentActiveJobs = data.accounts || [];
+            
+            this.renderActiveJobsList(this.currentActiveJobs);
         } catch (error) {
             console.error('❌ Jobs Manager: Failed to load active jobs', error);
             this.renderActiveJobsError();
