@@ -718,6 +718,23 @@ class JobsManagerDashboard {
         }
     }
 
+    formatDateTime(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } catch (error) {
+            return 'Invalid date';
+        }
+    }
+
     destroy() {
         // Clean up intervals
         Object.values(this.refreshIntervals).forEach(interval => {
