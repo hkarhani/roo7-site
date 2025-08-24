@@ -503,6 +503,15 @@ class JobsManagerDashboard {
                 return;
             }
             
+            // Get job configuration from jobs manager active jobs endpoint
+            const jobConfigResponse = await this.makeAuthenticatedRequest(
+                `${getApiUrl()}/admin/jobs-manager/active-jobs`
+            );
+            const jobConfigData = await jobConfigResponse.json();
+            
+            // Find the specific job from the jobs manager data
+            const jobConfig = jobConfigData.jobs?.find(j => j.account_id === accountId) || null;
+            
             // Also fetch recent job executions for this account
             const executionsResponse = await this.makeAuthenticatedRequest(
                 `${getApiUrl()}/admin/jobs-manager/job-executions/${accountId}?limit=5`
@@ -529,19 +538,15 @@ class JobsManagerDashboard {
                         </div>
                         <div class="execution-field">
                             <strong>Status:</strong>
-                            <span class="status-badge ${job.status ? job.status.toLowerCase() : 'unknown'}">${job.status || 'N/A'}</span>
+                            <span class="status-badge ${jobConfig?.status ? jobConfig.status.toLowerCase() : 'unknown'}">${jobConfig?.status || job.status || 'N/A'}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Run Status:</strong>
-                            <span class="status-badge ${job.run_status ? job.run_status.toLowerCase() : 'unknown'}">${job.run_status || 'N/A'}</span>
+                            <span class="status-badge ${jobConfig?.run_status ? jobConfig.run_status.toLowerCase() : 'unknown'}">${jobConfig?.run_status || job.run_status || 'N/A'}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Strategy:</strong>
-                            <span>${job.strategy || 'N/A'}</span>
-                        </div>
-                        <div class="execution-field">
-                            <strong>API Credentials:</strong>
-                            <span>🔒 Protected (Hidden from admin view)</span>
+                            <span>${jobConfig?.strategy || job.strategy || 'N/A'}</span>
                         </div>
                     </div>
                     
@@ -549,30 +554,30 @@ class JobsManagerDashboard {
                         <h4>Execution Schedule</h4>
                         <div class="execution-field">
                             <strong>Cadence:</strong>
-                            <span>${job.cadence_minutes || 'N/A'} minutes</span>
+                            <span>${jobConfig?.cadence_minutes || job.cadence_minutes || 'N/A'} minutes</span>
                         </div>
                         <div class="execution-field">
                             <strong>Next Run:</strong>
-                            <span>${job.next_run_at ? this.formatDateTime(job.next_run_at) : 'Not scheduled'}</span>
+                            <span>${jobConfig?.next_run_at ? this.formatDateTime(jobConfig.next_run_at) : (job.next_run_at ? this.formatDateTime(job.next_run_at) : 'Not scheduled')}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Last Run:</strong>
-                            <span>${job.last_run_at ? this.formatDateTime(job.last_run_at) : 'Never'}</span>
+                            <span>${jobConfig?.last_run_at ? this.formatDateTime(jobConfig.last_run_at) : (job.last_run_at ? this.formatDateTime(job.last_run_at) : 'Never')}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Consecutive Failures:</strong>
-                            <span class="${(job.consecutive_failures || 0) > 0 ? 'text-danger' : 'text-success'}">${job.consecutive_failures || 0}</span>
+                            <span class="${(jobConfig?.consecutive_failures || job.consecutive_failures || 0) > 0 ? 'text-danger' : 'text-success'}">${jobConfig?.consecutive_failures || job.consecutive_failures || 0}</span>
                         </div>
                         <div class="execution-field">
                             <strong>Immediate:</strong>
-                            <span class="${job.immediate ? 'text-warning' : 'text-secondary'}">${job.immediate ? 'Yes (Due for immediate execution)' : 'No'}</span>
+                            <span class="${jobConfig?.immediate || job.immediate ? 'text-warning' : 'text-secondary'}">${jobConfig?.immediate || job.immediate ? 'Yes (Due for immediate execution)' : 'No'}</span>
                         </div>
                     </div>
                     
                     <div class="execution-section">
                         <h4>Target Portfolio</h4>
                         <div class="json-display">
-                            ${JSON.stringify(job.target_portfolio || {}, null, 2)}
+                            ${JSON.stringify(jobConfig?.target_portfolio || lastExecution?.input_snapshot?.target_portfolio || job.target_portfolio || {}, null, 2)}
                         </div>
                     </div>
                     
