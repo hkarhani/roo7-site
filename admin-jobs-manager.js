@@ -200,8 +200,39 @@ class JobsManagerDashboard {
             const accountFilter = document.getElementById('history-account-filter').value;
             const statusFilter = document.getElementById('history-status-filter').value;
             
-            // Placeholder for job history endpoint - would need to be implemented
-            this.renderJobHistoryPlaceholder();
+            // Show loading state
+            this.renderJobHistoryLoading();
+            
+            let apiUrl;
+            if (accountFilter) {
+                // Get executions for specific account
+                apiUrl = `${getApiUrl()}/admin/jobs-manager/job-executions/${accountFilter}?limit=${limit}`;
+            } else {
+                // Get recent executions across all accounts
+                apiUrl = `${getApiUrl()}/admin/jobs-manager/job-executions?limit=${limit}`;
+            }
+            
+            console.log('📡 Fetching job history from:', apiUrl);
+            
+            const response = await this.makeAuthenticatedRequest(apiUrl);
+            const data = await response.json();
+            
+            if (response.ok && data.success !== false) {
+                let executions = data.executions || [];
+                
+                // Apply status filter if specified
+                if (statusFilter) {
+                    executions = executions.filter(exec => 
+                        exec.status && exec.status.toUpperCase() === statusFilter.toUpperCase()
+                    );
+                }
+                
+                console.log(`📊 Loaded ${executions.length} job executions`);
+                this.renderJobHistory(executions);
+            } else {
+                throw new Error(data.message || 'Failed to load job history');
+            }
+            
         } catch (error) {
             console.error('❌ Jobs Manager: Failed to load job history', error);
             this.renderJobHistoryError();
@@ -361,6 +392,198 @@ class JobsManagerDashboard {
                 </td>
             </tr>
         `;
+    }
+
+    renderJobHistoryLoading() {
+        const tbody = document.querySelector('#job-history-table tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="jobs-loading">
+                    <p>Loading job execution history...</p>
+                </td>
+            </tr>
+        `;
+    }
+
+    renderJobHistory(executions) {
+        const tbody = document.querySelector('#job-history-table tbody');
+        
+        if (!executions || executions.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="jobs-empty">
+                        <div class="jobs-empty-icon">📊</div>
+                        <p>No job executions found with current filters</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = executions.map(execution => `
+            <tr>
+                <td title="${execution.id}">${this.truncateId(execution.id)}</td>
+                <td title="${execution.account_id}">${this.truncateId(execution.account_id)}</td>
+                <td>
+                    <span class="status-badge ${execution.status ? execution.status.toLowerCase() : 'unknown'}">
+                        ${execution.status || 'N/A'}
+                    </span>
+                </td>
+                <td class="time-display">
+                    ${execution.started_at ? this.formatDateTime(execution.started_at) : 'N/A'}
+                </td>
+                <td>
+                    ${execution.duration_seconds ? `${execution.duration_seconds.toFixed(2)}s` : 'N/A'}
+                </td>
+                <td>${execution.worker_id || 'N/A'}</td>
+                <td>
+                    ${execution.spot_manager_result?.user_message 
+                        ? `<span title="${execution.spot_manager_result.user_message}">${execution.spot_manager_result.user_message.substring(0, 30)}${execution.spot_manager_result.user_message.length > 30 ? '...' : ''}</span>`
+                        : (execution.error_info ? '<span class="text-danger">Error</span>' : 'N/A')
+                    }
+                    ${execution.spot_manager_result?.current_total_value 
+                        ? `<br><small class="text-success">$${execution.spot_manager_result.current_total_value.toFixed(2)}</small>`
+                        : ''
+                    }
+                </td>
+                <td>
+                    <button class="job-action-btn details" onclick="jobsManager.showExecutionDetails('${execution.id}')">
+                        Details
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async showExecutionDetails(executionId) {
+        const modal = document.getElementById('execution-details-modal');
+        const content = document.getElementById('execution-details-content');
+        
+        // Show loading state
+        content.innerHTML = `<div class="loading-state"><p>Loading execution details...</p></div>`;
+        modal.style.display = 'block';
+        
+        try {
+            console.log('📊 Fetching execution details for:', executionId);
+            
+            const response = await this.makeAuthenticatedRequest(
+                `${getApiUrl()}/admin/jobs-manager/job-execution/${executionId}`
+            );
+            const data = await response.json();
+            
+            if (response.ok && data.success && data.execution) {
+                const execution = data.execution;
+                
+                content.innerHTML = `
+                    <div class="execution-details">
+                        <div class="execution-section">
+                            <h4>Execution Information</h4>
+                            <div class="execution-field">
+                                <strong>Execution ID:</strong>
+                                <span>${execution.id}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Account ID:</strong>
+                                <span>${execution.account_id}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Status:</strong>
+                                <span class="status-badge ${execution.status ? execution.status.toLowerCase() : 'unknown'}">${execution.status || 'N/A'}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Started:</strong>
+                                <span>${execution.started_at ? this.formatDateTime(execution.started_at) : 'N/A'}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Completed:</strong>
+                                <span>${execution.completed_at ? this.formatDateTime(execution.completed_at) : 'Still running'}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Duration:</strong>
+                                <span>${execution.duration_seconds ? `${execution.duration_seconds.toFixed(2)}s` : 'N/A'}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Worker:</strong>
+                                <span>${execution.worker_id || 'N/A'}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Attempt Number:</strong>
+                                <span>${execution.attempt_number || 1}</span>
+                            </div>
+                        </div>
+                        
+                        ${execution.input_snapshot ? `
+                            <div class="execution-section">
+                                <h4>Input Parameters</h4>
+                                <div class="json-display">
+                                    ${JSON.stringify(execution.input_snapshot, null, 2)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${execution.spot_manager_result ? `
+                            <div class="execution-section">
+                                <h4>Execution Results</h4>
+                                <div class="execution-field">
+                                    <strong>Result Message:</strong>
+                                    <span>${execution.spot_manager_result.user_message || 'N/A'}</span>
+                                </div>
+                                ${execution.spot_manager_result.current_total_value ? `
+                                    <div class="execution-field">
+                                        <strong>Portfolio Value:</strong>
+                                        <span class="text-success">$${execution.spot_manager_result.current_total_value.toFixed(2)}</span>
+                                    </div>
+                                ` : ''}
+                                ${execution.spot_manager_result.admin_message ? `
+                                    <div class="execution-field">
+                                        <strong>Admin Details:</strong>
+                                        <div class="json-display">
+                                            ${JSON.stringify(execution.spot_manager_result.admin_message, null, 2)}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        ${execution.error_info ? `
+                            <div class="execution-section">
+                                <h4>Error Information</h4>
+                                <div class="execution-field">
+                                    <strong>Error Stage:</strong>
+                                    <span class="text-danger">${execution.error_info.stage || 'N/A'}</span>
+                                </div>
+                                <div class="execution-field">
+                                    <strong>Error Type:</strong>
+                                    <span class="text-danger">${execution.error_info.type || 'N/A'}</span>
+                                </div>
+                                <div class="execution-field">
+                                    <strong>Error Message:</strong>
+                                    <span class="text-danger">${execution.error_info.message || 'N/A'}</span>
+                                </div>
+                                ${execution.error_info.traceback ? `
+                                    <div class="execution-field">
+                                        <strong>Stack Trace:</strong>
+                                        <div class="json-display">
+                                            ${execution.error_info.traceback}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                throw new Error(data.message || 'Failed to load execution details');
+            }
+            
+        } catch (error) {
+            console.error('❌ Jobs Manager: Failed to load execution details', error);
+            content.innerHTML = `
+                <div class="jobs-error">
+                    <p>Failed to load execution details: ${error.message}</p>
+                </div>
+            `;
+        }
     }
 
     async populateHistoryAccountFilter() {
