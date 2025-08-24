@@ -822,8 +822,10 @@ document.addEventListener("DOMContentLoaded", () => {
       <p>User ID: <code>${userId}</code></p>
     `;
     
+    // Reset modal state completely
     confirmationInput.value = '';
     confirmBtn.disabled = true;
+    confirmBtn.innerHTML = 'Delete User'; // Reset button text
     modal.style.display = 'block';
     
     // Store current user ID for the action
@@ -1042,6 +1044,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.ok) {
         showToast(`User "${username}" has been permanently deleted`, 'success');
         modal.style.display = 'none';
+        
+        // Reset button state before closing modal
+        confirmBtn.disabled = true; // Keep disabled until modal reopens
+        confirmBtn.innerHTML = 'Delete User';
+        
+        // Clear confirmation input
+        document.getElementById('delete-confirmation').value = '';
+        
         await refreshCurrentView();
       } else {
         const error = await response.json();
@@ -1058,6 +1068,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Re-enable button on error
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = originalText;
+    } finally {
+      // Ensure button is never left in loading state
+      if (confirmBtn.innerHTML === '🔄 Deleting...') {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+      }
     }
   };
   

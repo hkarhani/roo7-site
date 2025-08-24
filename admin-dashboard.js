@@ -367,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!accounts || accounts.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <p>📭 No active accounts found</p>
+          <p>📭 No active trading accounts found</p>
           <small>No paying users have active trading accounts at this time</small>
         </div>
       `;
@@ -384,18 +384,52 @@ document.addEventListener("DOMContentLoaded", () => {
         <span>${totalAccounts}</span> active accounts from <span>${uniqueUsers}</span> paying users 
         (<span>${strategies}</span> different strategies)
       </div>
-      <div class="active-accounts-list">
-        ${accounts.map(account => `
-          <div class="active-account-item">
-            <div class="account-info">
-              <div class="account-name">${account.account_name || 'Unnamed Account'}</div>
-              <div class="account-strategy">Strategy: ${account.strategy || 'None'}</div>
-            </div>
-            <div class="account-status">Active</div>
-          </div>
-        `).join('')}
+      <div class="active-accounts-table-container">
+        <table class="active-accounts-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Account Name</th>
+              <th>Strategy</th>
+              <th>Last Value</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${accounts.map(account => `
+              <tr>
+                <td class="user-name">${account.username || account._user_id || 'Unknown User'}</td>
+                <td class="account-name">${account.account_name || 'Unnamed Account'}</td>
+                <td class="account-strategy">${account.strategy || 'None'}</td>
+                <td class="account-value">${formatAccountValue(account.total_value || account.last_value)}</td>
+                <td><span class="account-status">Active</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
       </div>
     `;
+  }
+
+  // Helper function to format account values
+  function formatAccountValue(value) {
+    if (!value || value === 0 || value === '0') {
+      return '<span class="no-value">N/A</span>';
+    }
+    
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      return '<span class="no-value">N/A</span>';
+    }
+    
+    // Format based on value size
+    if (numValue >= 1000000) {
+      return `$${(numValue / 1000000).toFixed(1)}M`;
+    } else if (numValue >= 1000) {
+      return `$${(numValue / 1000).toFixed(1)}K`;
+    } else {
+      return `$${numValue.toFixed(2)}`;
+    }
   }
 
   // === WALLET VERIFICATION FUNCTIONS ===
