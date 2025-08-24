@@ -367,7 +367,8 @@ export default {
     EMAIL_CONFIG,
     PAGE_CONFIG,
     TIER_CONFIG,
-    CONFIG_UTILS
+    CONFIG_UTILS,
+    API_URL: API_CONFIG.authUrl  // Also include in default export for compatibility
 };
 
 // =============================================================================

@@ -1,6 +1,19 @@
 // Jobs Manager Dashboard JavaScript
-import { API_URL } from './frontend-config.js';
+import config, { API_URL } from './frontend-config.js';
 import { Logger } from './logger.js';
+
+// Fallback API_URL in case named import fails due to browser extension interference
+const FALLBACK_API_URL = config?.API_URL || config?.API_CONFIG?.authUrl || 'https://api.roo7.site:443';
+
+// Helper function to get API_URL with fallback for browser extension compatibility
+const getApiUrl = () => {
+    try {
+        return API_URL || FALLBACK_API_URL;
+    } catch (e) {
+        console.warn('Named import API_URL failed, using fallback:', e);
+        return FALLBACK_API_URL;
+    }
+};
 
 class JobsManagerDashboard {
     constructor() {
@@ -141,7 +154,7 @@ class JobsManagerDashboard {
         try {
             Logger.info('JobsManagerDashboard', 'Loading Jobs Manager status');
             
-            const response = await this.makeAuthenticatedRequest(`${API_URL}/admin/jobs-manager/status`);
+            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/status`);
             const data = await response.json();
             
             this.renderJobsManagerStatus(data);
@@ -155,7 +168,7 @@ class JobsManagerDashboard {
         try {
             Logger.info('JobsManagerDashboard', 'Loading active jobs summary');
             
-            const response = await this.makeAuthenticatedRequest(`${API_URL}/admin/jobs-manager/active-jobs`);
+            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs`);
             const data = await response.json();
             
             this.renderActiveJobsSummary(data);
@@ -171,7 +184,7 @@ class JobsManagerDashboard {
             
             // This endpoint doesn't exist yet, so we'll use a placeholder for now
             // In a real implementation, you'd need to add an endpoint to fetch active jobs list
-            const response = await this.makeAuthenticatedRequest(`${API_URL}/admin/active-users-accounts`);
+            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/active-users-accounts`);
             const data = await response.json();
             
             this.renderActiveJobsList(data.accounts || []);
@@ -354,7 +367,7 @@ class JobsManagerDashboard {
 
     async populateHistoryAccountFilter() {
         try {
-            const response = await this.makeAuthenticatedRequest(`${API_URL}/admin/active-users-accounts`);
+            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/active-users-accounts`);
             const data = await response.json();
             
             const select = document.getElementById('history-account-filter');
@@ -444,7 +457,7 @@ class JobsManagerDashboard {
                     throw new Error('Unknown action');
             }
             
-            const response = await this.makeAuthenticatedRequest(`${API_URL}${endpoint}`, {
+            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}${endpoint}`, {
                 method: 'POST'
             });
             
