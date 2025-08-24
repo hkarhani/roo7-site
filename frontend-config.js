@@ -144,6 +144,17 @@ export const API_CONFIG = {
             invoices: "/admin/invoices",
             referrals: "/admin/referrals",
             users: "/admin/users/search"
+        },
+        
+        // Jobs Manager Endpoints
+        jobsManager: {
+            status: "/admin/jobs-manager/status",
+            activeJobs: "/admin/jobs-manager/active-jobs",
+            dashboard: "/admin/jobs-manager/dashboard",
+            jobExecutions: "/admin/jobs-manager/job-executions",
+            forceExecution: "/admin/jobs-manager/force-execution",
+            pause: "/admin/jobs-manager/pause",
+            resume: "/admin/jobs-manager/resume"
         }
     }
 };
@@ -337,6 +348,13 @@ export const CONFIG_UTILS = {
         return TIER_CONFIG[tierName] || TIER_CONFIG.tier1;
     }
 };
+
+// =============================================================================
+// LEGACY EXPORTS (for backward compatibility)
+// =============================================================================
+
+// Export API_URL for legacy frontend compatibility  
+export const API_URL = API_CONFIG.authUrl;
 
 // =============================================================================
 // EXPORT DEFAULT CONFIGURATION
