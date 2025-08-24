@@ -510,7 +510,7 @@ class JobsManagerDashboard {
             const jobConfigData = await jobConfigResponse.json();
             
             // Find the specific job from the jobs manager data
-            const jobConfig = jobConfigData.jobs?.find(j => j.account_id === accountId) || null;
+            const jobConfig = jobConfigData.active_jobs?.find(j => j.account_id === accountId) || null;
             
             // Also fetch recent job executions for this account
             const executionsResponse = await this.makeAuthenticatedRequest(
