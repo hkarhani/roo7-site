@@ -475,53 +475,164 @@ class JobsManagerDashboard {
         }
     }
 
-    showJobDetails(accountId) {
-        // Placeholder for job details modal
-        // In a real implementation, you'd fetch job details and show them
+    async showJobDetails(accountId) {
         const modal = document.getElementById('job-details-modal');
         const content = document.getElementById('job-details-content');
+        const title = document.getElementById('job-details-title');
         
+        // Show loading state
         content.innerHTML = `
-            <div class="execution-details">
-                <div class="execution-section">
-                    <h4>Job Configuration</h4>
-                    <div class="execution-field">
-                        <strong>Account ID:</strong>
-                        <span>${this.truncateId(accountId)}</span>
-                    </div>
-                    <div class="execution-field">
-                        <strong>Status:</strong>
-                        <span class="status-badge active">ACTIVE</span>
-                    </div>
-                    <div class="execution-field">
-                        <strong>Strategy:</strong>
-                        <span>Loading...</span>
-                    </div>
-                    <div class="execution-field">
-                        <strong>API Credentials:</strong>
-                        <span>🔒 Protected (Hidden from admin view)</span>
-                    </div>
-                </div>
-                
-                <div class="execution-section">
-                    <h4>Execution Schedule</h4>
-                    <div class="execution-field">
-                        <strong>Cadence:</strong>
-                        <span>5 minutes</span>
-                    </div>
-                    <div class="execution-field">
-                        <strong>Next Run:</strong>
-                        <span>Loading...</span>
-                    </div>
-                    <div class="execution-field">
-                        <strong>Last Run:</strong>
-                        <span>Never</span>
-                    </div>
-                </div>
+            <div class="loading-state">
+                <p>Loading job details...</p>
             </div>
         `;
-        
         modal.style.display = 'block';
+        
+        try {
+            // Find the job data from our cached active jobs
+            const job = this.currentActiveJobs.find(job => job.account_id === accountId);
+            
+            if (!job) {
+                content.innerHTML = `
+                    <div class="jobs-error">
+                        <p>Job details not found for account ID: ${this.truncateId(accountId)}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Also fetch recent job executions for this account
+            const executionsResponse = await this.makeAuthenticatedRequest(
+                `${getApiUrl()}/admin/jobs-manager/job-executions/${accountId}?limit=5`
+            );
+            const executionsData = await executionsResponse.json();
+            
+            title.textContent = `Job Details - ${job.account_name || 'Account'}`;
+            
+            const lastExecution = executionsData.executions && executionsData.executions.length > 0 
+                ? executionsData.executions[0] 
+                : null;
+            
+            content.innerHTML = `
+                <div class="execution-details">
+                    <div class="execution-section">
+                        <h4>Job Configuration</h4>
+                        <div class="execution-field">
+                            <strong>Account ID:</strong>
+                            <span>${this.truncateId(job.account_id)}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Account Name:</strong>
+                            <span>${job.account_name || 'N/A'}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Status:</strong>
+                            <span class="status-badge ${job.status.toLowerCase()}">${job.status}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Run Status:</strong>
+                            <span class="status-badge ${job.run_status.toLowerCase()}">${job.run_status}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Strategy:</strong>
+                            <span>${job.strategy || 'N/A'}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>API Credentials:</strong>
+                            <span>🔒 Protected (Hidden from admin view)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="execution-section">
+                        <h4>Execution Schedule</h4>
+                        <div class="execution-field">
+                            <strong>Cadence:</strong>
+                            <span>${job.cadence_minutes} minutes</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Next Run:</strong>
+                            <span>${job.next_run_at ? this.formatDateTime(job.next_run_at) : 'Not scheduled'}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Last Run:</strong>
+                            <span>${job.last_run_at ? this.formatDateTime(job.last_run_at) : 'Never'}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Consecutive Failures:</strong>
+                            <span class="${job.consecutive_failures > 0 ? 'text-danger' : 'text-success'}">${job.consecutive_failures}</span>
+                        </div>
+                        <div class="execution-field">
+                            <strong>Immediate:</strong>
+                            <span class="${job.immediate ? 'text-warning' : 'text-secondary'}">${job.immediate ? 'Yes (Due for immediate execution)' : 'No'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="execution-section">
+                        <h4>Target Portfolio</h4>
+                        <div class="json-display">
+                            ${JSON.stringify(job.target_portfolio, null, 2)}
+                        </div>
+                    </div>
+                    
+                    ${lastExecution ? `
+                        <div class="execution-section">
+                            <h4>Last Execution Result</h4>
+                            <div class="execution-field">
+                                <strong>Status:</strong>
+                                <span class="status-badge ${lastExecution.status.toLowerCase()}">${lastExecution.status}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Started:</strong>
+                                <span>${this.formatDateTime(lastExecution.started_at)}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Completed:</strong>
+                                <span>${lastExecution.completed_at ? this.formatDateTime(lastExecution.completed_at) : 'Still running'}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Duration:</strong>
+                                <span>${lastExecution.duration_seconds ? `${lastExecution.duration_seconds.toFixed(2)}s` : 'N/A'}</span>
+                            </div>
+                            <div class="execution-field">
+                                <strong>Worker:</strong>
+                                <span>${lastExecution.worker_id || 'N/A'}</span>
+                            </div>
+                            ${lastExecution.spot_manager_result ? `
+                                <div class="execution-field">
+                                    <strong>Result Message:</strong>
+                                    <span>${lastExecution.spot_manager_result.user_message || 'N/A'}</span>
+                                </div>
+                                ${lastExecution.spot_manager_result.current_total_value ? `
+                                    <div class="execution-field">
+                                        <strong>Portfolio Value:</strong>
+                                        <span class="text-success">$${lastExecution.spot_manager_result.current_total_value.toFixed(2)}</span>
+                                    </div>
+                                ` : ''}
+                            ` : ''}
+                            ${lastExecution.error_info ? `
+                                <div class="execution-field">
+                                    <strong>Error:</strong>
+                                    <span class="text-danger">${lastExecution.error_info.message || 'Unknown error'}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : `
+                        <div class="execution-section">
+                            <h4>Execution History</h4>
+                            <p class="text-secondary">No execution history available for this job.</p>
+                        </div>
+                    `}
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('❌ Jobs Manager: Failed to load job details', error);
+            content.innerHTML = `
+                <div class="jobs-error">
+                    <p>Failed to load job details: ${error.message}</p>
+                </div>
+            `;
+        }
     }
 
     showNotification(message, type = 'info') {
