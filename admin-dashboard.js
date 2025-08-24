@@ -1105,6 +1105,93 @@ document.addEventListener("DOMContentLoaded", () => {
     `).join('');
   }
 
+  // === JOBS MANAGER FUNCTIONS ===
+  async function loadJobsManagerOverview() {
+    try {
+      const container = document.getElementById('jobs-manager-overview');
+      
+      // Show loading state
+      container.innerHTML = '<div class="loading-state"><p>Loading Jobs Manager status...</p></div>';
+      
+      // Fetch Jobs Manager status
+      const statusResponse = await fetch(`${AUTH_API_BASE}/admin/jobs-manager/status`, {
+        headers: getAuthHeaders(token)
+      });
+      
+      if (!statusResponse.ok) {
+        throw new Error(`HTTP ${statusResponse.status}: ${statusResponse.statusText}`);
+      }
+      
+      const statusData = await statusResponse.json();
+      
+      // Fetch active jobs summary
+      const summaryResponse = await fetch(`${AUTH_API_BASE}/admin/jobs-manager/active-jobs`, {
+        headers: getAuthHeaders(token)
+      });
+      
+      const summaryData = summaryResponse.ok ? await summaryResponse.json() : { error: 'Failed to fetch summary' };
+      
+      renderJobsManagerOverview(statusData, summaryData);
+      
+    } catch (error) {
+      console.error('Error loading Jobs Manager overview:', error);
+      const container = document.getElementById('jobs-manager-overview');
+      container.innerHTML = `
+        <div class="error-state">
+          <p>❌ Failed to load Jobs Manager: ${error.message}</p>
+          <button onclick="loadJobsManagerOverview()" class="retry-btn">🔄 Retry</button>
+        </div>
+      `;
+    }
+  }
+  
+  function renderJobsManagerOverview(statusData, summaryData) {
+    const container = document.getElementById('jobs-manager-overview');
+    
+    const isRunning = statusData.available && statusData.running;
+    const statusIcon = isRunning ? '🟢' : '🔴';
+    const statusText = isRunning ? 'Running' : 'Stopped';
+    const statusClass = isRunning ? 'success' : 'danger';
+    
+    // Get job counts from summary data
+    const activeJobs = summaryData.active_jobs_by_status?.ACTIVE || 0;
+    const runningJobs = summaryData.active_jobs_by_run_status?.RUNNING || 0;
+    const failedJobs = summaryData.active_jobs_by_run_status?.FAILED || 0;
+    
+    container.innerHTML = `
+      <div class="jobs-manager-status">
+        <div class="status-item">
+          <div class="status-header">
+            <h4>Service Status</h4>
+            <span class="status-badge ${statusClass}">${statusIcon} ${statusText}</span>
+          </div>
+          ${isRunning ? `
+            <div class="status-details">
+              <p><strong>Worker:</strong> ${statusData.worker_id || 'Unknown'}</p>
+              <p><strong>Cycles:</strong> ${statusData.cycles_completed || 0}</p>
+              <p><strong>Jobs Processed:</strong> ${statusData.jobs_processed || 0}</p>
+            </div>
+          ` : ''}
+        </div>
+        
+        <div class="jobs-summary">
+          <div class="summary-item">
+            <span class="summary-number">${activeJobs}</span>
+            <span class="summary-label">Active Jobs</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">${runningJobs}</span>
+            <span class="summary-label">Running</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">${failedJobs}</span>
+            <span class="summary-label">Failed</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   // === EVENT LISTENERS ===
   
   // Navigation
@@ -1125,6 +1212,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('refresh-referrals').onclick = loadReferrals;
   document.getElementById('refresh-activity').onclick = loadActivity;
   document.getElementById('scan-upgrades').onclick = scanUpgrades;
+  document.getElementById('refresh-jobs-manager').onclick = loadJobsManagerOverview;
+  
+  // Jobs Manager button
+  document.getElementById('open-jobs-dashboard').onclick = () => {
+    window.location.href = 'admin-jobs-manager.html';
+  };
 
   // Filter invoices
   document.getElementById('filter-invoices').onclick = () => {
@@ -1887,6 +1980,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadInvoices();
   loadTierUpgrades();
   loadReferrals();
+  loadJobsManagerOverview();
   loadActivity();
   loadSourceStrategies();
   loadSourceAccounts();

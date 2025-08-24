@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Jobs Manager Dashboard</title>
+  <script type="module" src="frontend-config.js"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-jobs-manager.css?v=1.0" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>⚙️ Jobs Manager Dashboard</h1>
+    <div class="actions">
+      <button id="back-to-admin">← Admin Dashboard</button>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <main class="dashboard-grid jobs-manager-grid">
+    <!-- Jobs Manager Status -->
+    <section id="section-jobs-status" class="dashboard-card">
+      <div class="section-header">
+        <h2>📊 Jobs Manager Status</h2>
+        <button id="refresh-jobs-status" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="jobs-status-container" id="jobs-status-container">
+        <div class="loading-state">
+          <p>Loading Jobs Manager status...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Jobs Summary -->
+    <section id="section-active-jobs-summary" class="dashboard-card">
+      <div class="section-header">
+        <h2>📋 Active Jobs Summary</h2>
+        <button id="refresh-active-jobs-summary" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="active-jobs-stats" id="active-jobs-stats">
+        <div class="loading-state">
+          <p>Loading active jobs summary...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Jobs List -->
+    <section id="section-active-jobs-list" class="dashboard-card full-width">
+      <div class="section-header">
+        <h2>📄 Active Jobs</h2>
+        <div class="jobs-filters">
+          <select id="job-status-filter">
+            <option value="">All Statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="PAUSED">Paused</option>
+            <option value="DISABLED">Disabled</option>
+            <option value="REVOKED">Revoked</option>
+            <option value="STALE">Stale</option>
+          </select>
+          <select id="run-status-filter">
+            <option value="">All Run Statuses</option>
+            <option value="IDLE">Idle</option>
+            <option value="DUE">Due</option>
+            <option value="RUNNING">Running</option>
+            <option value="SUCCEEDED">Succeeded</option>
+            <option value="FAILED">Failed</option>
+            <option value="BACKOFF">Backoff</option>
+          </select>
+          <button id="apply-filters" class="secondary-button">Apply Filters</button>
+          <button id="refresh-active-jobs" class="secondary-button">🔄 Refresh</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="active-jobs-table">
+          <thead>
+            <tr>
+              <th>Account ID</th>
+              <th>User</th>
+              <th>Account Name</th>
+              <th>Strategy</th>
+              <th>Status</th>
+              <th>Run Status</th>
+              <th>Next Run</th>
+              <th>Last Run</th>
+              <th>Failures</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="10" class="loading-message">Loading active jobs...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Job Execution History -->
+    <section id="section-job-history" class="dashboard-card full-width">
+      <div class="section-header">
+        <h2>📈 Job Execution History</h2>
+        <div class="history-controls">
+          <select id="history-account-filter">
+            <option value="">All Accounts</option>
+          </select>
+          <select id="history-status-filter">
+            <option value="">All Statuses</option>
+            <option value="SUCCEEDED">Succeeded</option>
+            <option value="FAILED">Failed</option>
+            <option value="RUNNING">Running</option>
+          </select>
+          <input type="number" id="history-limit" placeholder="Limit" value="50" min="1" max="200" />
+          <button id="load-job-history" class="secondary-button">Load History</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="job-history-table">
+          <thead>
+            <tr>
+              <th>Execution ID</th>
+              <th>Account ID</th>
+              <th>Status</th>
+              <th>Started</th>
+              <th>Duration</th>
+              <th>Worker</th>
+              <th>Result</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="8" class="loading-message">Click "Load History" to view job executions</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Job Details Modal -->
+  <div id="job-details-modal" class="modal">
+    <div class="modal-content large-modal">
+      <span class="close" id="job-details-close">&times;</span>
+      <h3 id="job-details-title">Job Details</h3>
+      <div id="job-details-content">
+        <div class="loading-state">
+          <p>Loading job details...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Action Confirmation Modal -->
+  <div id="job-action-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="job-action-close">&times;</span>
+      <h3 id="job-action-title">Confirm Action</h3>
+      <div id="job-action-details">
+        <p id="job-action-message"></p>
+        <div class="job-action-info">
+          <p><strong>Account:</strong> <span id="action-account-name"></span></p>
+          <p><strong>Account ID:</strong> <span id="action-account-id"></span></p>
+          <p><strong>Current Status:</strong> <span id="action-current-status"></span></p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="confirm-job-action" class="primary-button">Confirm</button>
+        <button id="cancel-job-action" class="secondary-button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Execution Details Modal -->
+  <div id="execution-details-modal" class="modal">
+    <div class="modal-content large-modal">
+      <span class="close" id="execution-details-close">&times;</span>
+      <h3>Job Execution Details</h3>
+      <div id="execution-details-content">
+        <div class="loading-state">
+          <p>Loading execution details...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="theme-manager.js?v=1"></script>
+  <script type="module" src="admin-jobs-manager.js?v=1.0"></script>
+</body>
+</html>
