@@ -46,6 +46,7 @@
     <div id="login-options" style="margin-top: 1rem;">
       <button type="button" id="magic-link-btn" class="secondary-btn">Send Magic Link</button>
       <button type="button" id="forgot-password-btn" class="secondary-btn">Forgot Password?</button>
+      <button type="button" id="resend-verification-btn" class="secondary-btn">Didn't receive verification email?</button>
     </div>
 
     <p id="toggle-text">
@@ -114,6 +115,25 @@
     </div>
   </div>
 
+  <!-- Resend Verification Modal -->
+  <div id="resend-verification-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" id="close-resend-modal">&times;</span>
+      <h2>📧 Resend Verification Email</h2>
+      <p>Enter your email address and we'll send you a new verification link.</p>
+      <form id="resend-verification-form">
+        <div class="input-group">
+          <label for="resend-email">Email</label>
+          <input type="email" id="resend-email" name="email" required />
+        </div>
+        <div class="input-group" id="resend-captcha-wrapper">
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAABo9zZnReMKrbMti"></div>
+        </div>
+        <button type="submit" id="resend-submit-btn">Send Verification Email</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Magic Link Loading Overlay -->
   <div id="magic-loading-overlay" class="loading-overlay" style="display: none;">
     <div class="loading-content">
@@ -160,9 +180,11 @@
     const magicLinkModal = document.getElementById('magic-link-modal');
     const resetModal = document.getElementById('reset-modal');
     const resetConfirmModal = document.getElementById('reset-confirm-modal');
+    const resendVerificationModal = document.getElementById('resend-verification-modal');
     const magicLinkForm = document.getElementById('magic-link-form');
     const resetForm = document.getElementById('reset-form');
     const resetConfirmForm = document.getElementById('reset-confirm-form');
+    const resendVerificationForm = document.getElementById('resend-verification-form');
 
     let isRegister = false;
     let isSubmitting = false;
@@ -256,6 +278,11 @@
       openModal(resetModal);
     });
 
+    // Resend Verification button
+    document.getElementById('resend-verification-btn').addEventListener('click', () => {
+      openModal(resendVerificationModal);
+    });
+
     // Close modal buttons
     document.getElementById('close-magic-modal').addEventListener('click', () => {
       closeModal(magicLinkModal);
@@ -265,11 +292,16 @@
       closeModal(resetModal);
     });
 
+    document.getElementById('close-resend-modal').addEventListener('click', () => {
+      closeModal(resendVerificationModal);
+    });
+
     // Close modals when clicking outside
     window.addEventListener('click', (e) => {
       if (e.target === magicLinkModal) closeModal(magicLinkModal);
       if (e.target === resetModal) closeModal(resetModal);
       if (e.target === resetConfirmModal) closeModal(resetConfirmModal);
+      if (e.target === resendVerificationModal) closeModal(resendVerificationModal);
     });
 
     // Magic Link form submission
@@ -395,6 +427,49 @@
       }
     });
 
+    // Resend Verification form submission
+    resendVerificationForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitButton = document.getElementById('resend-submit-btn');
+      const originalText = submitButton.textContent;
+      
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+      
+      const formData = new FormData(resendVerificationForm);
+      
+      try {
+        const response = await fetch(`${CONFIG.API_CONFIG.authUrl}/resend-verification`, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('New verification email sent! Check your inbox.', 'success');
+          closeModal(resendVerificationModal);
+          resendVerificationForm.reset();
+        } else {
+          showToast(result.detail || 'Failed to send verification email', 'error');
+        }
+      } catch (err) {
+        showToast('Network error. Please try again.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    });
+
+    // Check for hash fragment to open resend verification modal
+    if (window.location.hash === '#resend-verification') {
+      openModal(resendVerificationModal);
+      // Clear the hash from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // Handle magic token login
     if (magicToken) {
       // Show loading overlay and hide auth container
@@ -516,8 +591,47 @@
 
         if (!response.ok) {
           console.error('❌ API Error:', result.detail);
-          showToast(result.detail || 'Authentication failed', 'error');
-          showNote(result.detail || 'Authentication failed', false);
+          
+          // Check if error is about unverified email
+          if (result.detail && result.detail.includes('verify your email')) {
+            showToast(result.detail + ' - Click to resend verification email.', 'error', 8000);
+            
+            // Show enhanced error message with resend option
+            showNote(result.detail, false);
+            
+            // Add resend verification button to the error
+            setTimeout(() => {
+              const existingButton = document.querySelector('.resend-verification-inline-btn');
+              if (!existingButton) {
+                const resendBtn = document.createElement('button');
+                resendBtn.className = 'resend-verification-inline-btn secondary-btn';
+                resendBtn.style.marginTop = '10px';
+                resendBtn.textContent = '📧 Resend Verification Email';
+                resendBtn.onclick = () => {
+                  openModal(resendVerificationModal);
+                  // Pre-fill email if available
+                  const emailInput = document.getElementById('resend-email');
+                  const usernameInput = document.getElementById('username');
+                  if (emailInput && usernameInput.value.includes('@')) {
+                    emailInput.value = usernameInput.value;
+                  }
+                };
+                
+                // Insert after the note element
+                note.parentNode.insertBefore(resendBtn, note.nextSibling);
+                
+                // Remove button after 10 seconds
+                setTimeout(() => {
+                  if (resendBtn.parentNode) {
+                    resendBtn.parentNode.removeChild(resendBtn);
+                  }
+                }, 10000);
+              }
+            }, 100);
+          } else {
+            showToast(result.detail || 'Authentication failed', 'error');
+            showNote(result.detail || 'Authentication failed', false);
+          }
         } else {
           if (isRegister) {
             console.log('✅ Registration successful');
