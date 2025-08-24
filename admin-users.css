@@ -489,6 +489,17 @@
   background: #c82333;
 }
 
+.danger-btn:disabled {
+  background: #dc354580;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.danger-btn:disabled:hover {
+  background: #dc354580;
+}
+
 /* ===== PAGINATION ===== */
 .pagination-controls {
   display: flex;

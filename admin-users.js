@@ -789,6 +789,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
+    // Show toast message that enabling is in progress
+    showToast(`Enabling user "${username}"...`, 'info');
+    
     try {
       const response = await fetch(`${INVOICING_API_BASE}/admin/users/${userId}/enable`, {
         method: 'POST',
@@ -958,11 +961,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const userId = modal.getAttribute('data-user-id');
     const username = modal.getAttribute('data-username');
     const reason = document.getElementById('disable-reason').value.trim();
+    const confirmBtn = document.getElementById('confirm-disable-btn');
     
     if (!reason) {
       showToast('Please enter a reason for disabling the user', 'warning');
       return;
     }
+    
+    // Disable button and show loading state
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '🔄 Disabling...';
+    
+    // Show toast message that disabling is in progress
+    showToast(`Disabling user "${username}"...`, 'info');
     
     try {
       const response = await fetch(`${INVOICING_API_BASE}/admin/users/${userId}/disable`, {
@@ -978,10 +990,18 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         const error = await response.json();
         showToast(`Failed to disable user: ${error.detail}`, 'error');
+        
+        // Re-enable button on error
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
       }
     } catch (error) {
       console.error('Error disabling user:', error);
       showToast('Error disabling user', 'error');
+      
+      // Re-enable button on error
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = originalText;
     }
   };
   
@@ -1003,6 +1023,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById('delete-user-modal');
     const userId = modal.getAttribute('data-user-id');
     const username = modal.getAttribute('data-username');
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    
+    // Disable button and show loading state
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '🔄 Deleting...';
+    
+    // Show toast message that deletion is in progress
+    showToast(`Deleting user "${username}"...`, 'info');
     
     try {
       const response = await fetch(`${INVOICING_API_BASE}/admin/users/${userId}/delete`, {
@@ -1017,10 +1046,18 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         const error = await response.json();
         showToast(`Failed to delete user: ${error.detail}`, 'error');
+        
+        // Re-enable button on error
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
       }
     } catch (error) {
       console.error('Error deleting user:', error);
       showToast('Error deleting user', 'error');
+      
+      // Re-enable button on error
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = originalText;
     }
   };
   
@@ -1097,6 +1134,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+    const originalText = bulkDeleteBtn.innerHTML;
+    
+    // Disable button and show loading state
+    bulkDeleteBtn.disabled = true;
+    bulkDeleteBtn.innerHTML = '🔄 Deleting...';
+    
+    // Show progress toast
+    showToast(`Deleting ${selectedUsers.size} users in progress...`, 'info');
+    
     try {
       const promises = Array.from(selectedUsers).map(userId => 
         fetch(`${INVOICING_API_BASE}/admin/users/${userId}/delete`, {
@@ -1112,9 +1159,17 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedUsers.clear();
       await refreshCurrentView();
       
+      // Re-enable button
+      bulkDeleteBtn.disabled = false;
+      bulkDeleteBtn.innerHTML = originalText;
+      
     } catch (error) {
       console.error('Error in bulk delete:', error);
       showToast('Error during bulk delete operation', 'error');
+      
+      // Re-enable button on error
+      bulkDeleteBtn.disabled = false;
+      bulkDeleteBtn.innerHTML = originalText;
     }
   };
   

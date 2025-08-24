@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title id="page-title">Auth Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="auth.css?v=3.0" />
-  <script type="module" src="frontend-config.js?v=2"></script>
+  <link rel="stylesheet" href="auth.css?v=3.1" />
+  <script type="module" src="frontend-config.js?v=2.1"></script>
 </head>
 <body class="auth-page">
   <div class="auth-container">
@@ -132,7 +132,7 @@
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   
   <!-- Load theme manager first, then auth logic -->
-  <script src="theme-manager.js?v=1"></script>
+  <script src="theme-manager.js?v=1.1"></script>
   
   <script type="module">
     import CONFIG from './frontend-config.js';
@@ -525,6 +525,7 @@
             showNote('Registered! Please verify via email.');
             isRegister = false;
             updateFormMode();
+            // Don't restore original button text - let updateFormMode set the correct text
           } else {
             console.log('✅ Login successful');
             showToast('Login successful! Redirecting...', 'success');
@@ -543,7 +544,12 @@
       } finally {
         isSubmitting = false;
         submitBtn.disabled = false;
-        submitBtn.textContent = originalButtonText;
+        
+        // Only restore original button text if mode hasn't changed
+        // If we switched from register to login, updateFormMode already set correct text
+        if (isRegister === (originalButtonText === 'Register')) {
+          submitBtn.textContent = originalButtonText;
+        }
         
         console.log('🔄 Form submission completed');
       }
