@@ -886,7 +886,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedPeriod = periodSelect ? parseInt(periodSelect.value) : 30;
       
       // Update chart period for adaptive time axis
-      if (analyticsChart) {
+      if (analyticsChart && typeof analyticsChart.setPeriod === 'function') {
         analyticsChart.setPeriod(selectedPeriod);
       }
       

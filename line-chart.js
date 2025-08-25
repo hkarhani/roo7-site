@@ -744,9 +744,12 @@ class LineChart {
     this.options.periodDays = periodDays;
     this.options.dateFormat = 'adaptive';
     
-    // Trigger a re-render if data exists
-    if (this.data && this.data.length > 0) {
+    // Trigger a re-render if data exists and renderChart method is available
+    if (this.data && this.data.length > 0 && typeof this.renderChart === 'function') {
       this.renderChart();
+    } else if (this.data && this.data.length > 0) {
+      // Fallback: just update the chart data which will trigger a render
+      this.setData(this.data);
     }
   }
 
