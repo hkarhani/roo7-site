@@ -167,6 +167,23 @@
     // Update page title with brand config
     document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.auth;
     
+    // Helper function to extract error message from API response
+    function extractErrorMessage(result) {
+      if (Array.isArray(result.detail)) {
+        // FastAPI validation errors
+        return result.detail.map(err => `${err.loc?.join('.')} - ${err.msg}`).join(', ');
+      } else if (typeof result.detail === 'string') {
+        // Standard HTTPException detail
+        return result.detail;
+      } else if (result.message) {
+        // Alternative message field
+        return result.message;
+      } else {
+        // Fallback
+        return 'An error occurred';
+      }
+    }
+    
     const form = document.getElementById('auth-form');
     const formTitle = document.getElementById('form-title');
     const submitBtn = document.getElementById('submit-btn');
@@ -330,7 +347,8 @@
           closeModal(magicLinkModal);
           magicLinkForm.reset();
         } else {
-          showToast(result.detail || 'Failed to send magic link', 'error');
+          const errorMessage = extractErrorMessage(result);
+          showToast(errorMessage || 'Failed to send magic link', 'error');
         }
       } catch (err) {
         showToast('Network error. Please try again.', 'error');
@@ -366,7 +384,7 @@
           closeModal(resetModal);
           resetForm.reset();
         } else {
-          showToast(result.detail || 'Failed to send reset link', 'error');
+          showToast(extractErrorMessage(result) || 'Failed to send reset link', 'error');
         }
       } catch (err) {
         showToast('Network error. Please try again.', 'error');
@@ -417,7 +435,7 @@
           isRegister = false;
           updateFormMode();
         } else {
-          showToast(result.detail || 'Failed to update password', 'error');
+          showToast(extractErrorMessage(result) || 'Failed to update password', 'error');
         }
       } catch (err) {
         showToast('Network error. Please try again.', 'error');
@@ -453,7 +471,7 @@
           closeModal(resendVerificationModal);
           resendVerificationForm.reset();
         } else {
-          showToast(result.detail || 'Failed to send verification email', 'error');
+          showToast(extractErrorMessage(result) || 'Failed to send verification email', 'error');
         }
       } catch (err) {
         showToast('Network error. Please try again.', 'error');
@@ -590,14 +608,15 @@
         const result = await response.json();
 
         if (!response.ok) {
-          console.error('❌ API Error:', result.detail);
+          const errorMessage = extractErrorMessage(result);
+          console.error('❌ API Error:', errorMessage);
           
           // Check if error is about unverified email
-          if (result.detail && result.detail.includes('verify your email')) {
-            showToast(result.detail + ' - Click to resend verification email.', 'error', 8000);
+          if (errorMessage && errorMessage.includes('verify your email')) {
+            showToast(errorMessage + ' - Click to resend verification email.', 'error', 8000);
             
             // Show enhanced error message with resend option
-            showNote(result.detail, false);
+            showNote(errorMessage, false);
             
             // Add resend verification button to the error
             setTimeout(() => {
@@ -629,8 +648,8 @@
               }
             }, 100);
           } else {
-            showToast(result.detail || 'Authentication failed', 'error');
-            showNote(result.detail || 'Authentication failed', false);
+            showToast(errorMessage || 'Authentication failed', 'error');
+            showNote(errorMessage || 'Authentication failed', false);
           }
         } else {
           if (isRegister) {
