@@ -881,6 +881,15 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update summary cards
       updateAnalyticsSummary(data, selectedAccount);
       
+      // Get current period for adaptive time formatting
+      const periodSelect = document.getElementById('analytics-period-select');
+      const selectedPeriod = periodSelect ? parseInt(periodSelect.value) : 30;
+      
+      // Update chart period for adaptive time axis
+      if (analyticsChart) {
+        analyticsChart.setPeriod(selectedPeriod);
+      }
+      
       // Prepare chart data
       let chartData = [];
       

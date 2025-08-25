@@ -697,8 +697,56 @@ class LineChart {
         hour: '2-digit',
         minute: '2-digit'
       });
+    } else if (actualFormat === 'adaptive') {
+      return this.formatDateAdaptive(date);
     } else {
       return date.toLocaleDateString();
+    }
+  }
+
+  formatDateAdaptive(date) {
+    // Use period context for adaptive formatting
+    const periodDays = this.options.periodDays || 7;
+    
+    if (periodDays <= 1) {
+      // 1 day or less: show hours (e.g., "2:00 PM")
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } else if (periodDays <= 7) {
+      // 1-7 days: show day and hour (e.g., "Aug 25, 2:00 PM")
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } else if (periodDays <= 30) {
+      // 1-30 days: show day only (e.g., "Aug 25")
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } else {
+      // 30+ days: show month/year (e.g., "Aug 2025")
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    }
+  }
+
+  // Method to update the time period for adaptive formatting
+  setPeriod(periodDays) {
+    this.options.periodDays = periodDays;
+    this.options.dateFormat = 'adaptive';
+    
+    // Trigger a re-render if data exists
+    if (this.data && this.data.length > 0) {
+      this.render();
     }
   }
 
