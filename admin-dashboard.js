@@ -260,18 +260,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // === SYSTEM OVERVIEW FUNCTIONS ===
   async function loadSystemOverview() {
     try {
-      const response = await fetch(`${INVOICING_API_BASE}/admin/dashboard/summary`, {
-        headers: getAuthHeaders(token)
-      });
+      // Fetch both the original dashboard summary and the new total portfolio value
+      const [summaryResponse, portfolioResponse] = await Promise.all([
+        fetch(`${INVOICING_API_BASE}/admin/dashboard/summary`, {
+          headers: getAuthHeaders(token)
+        }),
+        fetch(`${AUTH_API_BASE}/admin/total-portfolio-value`, {
+          headers: getAuthHeaders(token)
+        })
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
-        // Handle different possible response structures
-        const summary = data.summary || data || {};
-        displaySystemOverview(summary);
+      let summary = {};
+      let totalPortfolioValue = 0;
+
+      // Handle summary response
+      if (summaryResponse.ok) {
+        const summaryData = await summaryResponse.json();
+        summary = summaryData.summary || summaryData || {};
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        console.warn('Failed to load dashboard summary, using defaults');
       }
+
+      // Handle portfolio value response
+      if (portfolioResponse.ok) {
+        const portfolioData = await portfolioResponse.json();
+        if (portfolioData.success && portfolioData.total_value) {
+          totalPortfolioValue = portfolioData.total_value;
+          console.log(`💰 Loaded total portfolio value: $${totalPortfolioValue.toLocaleString()}`);
+        }
+      } else {
+        console.warn('Failed to load total portfolio value, using 0');
+      }
+
+      // Add the total portfolio value to the summary object
+      summary.total_portfolio_value = totalPortfolioValue;
+      
+      displaySystemOverview(summary);
     } catch (error) {
       console.error('Error loading system overview:', error);
       document.getElementById('overview-stats').innerHTML = 
@@ -320,11 +344,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="stat-value">$${(invoices.total_revenue || invoices.revenue || 0).toLocaleString()}</div>
           <div class="stat-action">Click to manage →</div>
         </div>
-        <div class="stat-card admin clickable" onclick="window.location.href='/admin-users.html'">
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-accounts.html'">
           <div class="stat-icon">📈</div>
-          <div class="stat-label">Portfolio Value</div>
-          <div class="stat-value">$${(portfolio.total_value || portfolio.value || 0).toLocaleString()}</div>
-          <div class="stat-action">Click to manage →</div>
+          <div class="stat-label">Total Portfolio Value</div>
+          <div class="stat-value">$${(summary.total_portfolio_value || 0).toLocaleString()}</div>
+          <div class="stat-action">All account values combined →</div>
         </div>
       </div>
     `;
