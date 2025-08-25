@@ -930,6 +930,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Helper function to properly update badge classes without breaking theme support
+  function updateBadgeClasses(element, typeClass) {
+    if (!element) return;
+    
+    // Remove any existing type classes but keep base and theme classes
+    element.classList.remove('primary', 'positive', 'negative');
+    
+    // Ensure base class exists
+    if (!element.classList.contains('status-badge')) {
+      element.classList.add('status-badge');
+    }
+    
+    // Add the new type class
+    if (typeClass) {
+      element.classList.add(typeClass);
+    }
+  }
+
   function updateAnalyticsSummary(data, selectedAccount) {
     try {
       const currentTotalEl = document.getElementById('current-total-badge');
@@ -967,15 +985,15 @@ document.addEventListener("DOMContentLoaded", () => {
         changePercentage = earliestAmount > 0 ? (periodChange / earliestAmount) * 100 : 0;
       }
       
-      // Update UI
+      // Update UI with proper class management to preserve theme styling
       currentTotalEl.textContent = formatCurrency(currentTotal);
-      currentTotalEl.className = 'status-badge primary'; // Ensure primary class is always applied
+      updateBadgeClasses(currentTotalEl, 'primary');
       
       periodChangeEl.textContent = formatCurrency(periodChange);
-      periodChangeEl.className = 'status-badge ' + (periodChange >= 0 ? 'positive' : 'negative');
+      updateBadgeClasses(periodChangeEl, periodChange >= 0 ? 'positive' : 'negative');
       
       changePercentageEl.textContent = formatPercentage(changePercentage);
-      changePercentageEl.className = 'status-badge ' + (changePercentage >= 0 ? 'positive' : 'negative');
+      updateBadgeClasses(changePercentageEl, changePercentage >= 0 ? 'positive' : 'negative');
       
     } catch (error) {
       console.error('Error updating analytics summary:', error);
@@ -987,10 +1005,23 @@ document.addEventListener("DOMContentLoaded", () => {
       analyticsChart.clear();
     }
     
-    // Update summary cards with error state
-    document.getElementById('current-total-badge').textContent = 'Error';
-    document.getElementById('period-change-badge').textContent = 'Error';
-    document.getElementById('change-percentage-badge').textContent = 'Error';
+    // Update summary cards with error state while preserving styling
+    const currentTotalEl = document.getElementById('current-total-badge');
+    const periodChangeEl = document.getElementById('period-change-badge');
+    const changePercentageEl = document.getElementById('change-percentage-badge');
+    
+    if (currentTotalEl) {
+      currentTotalEl.textContent = 'Error';
+      updateBadgeClasses(currentTotalEl, 'primary');
+    }
+    if (periodChangeEl) {
+      periodChangeEl.textContent = 'Error';
+      updateBadgeClasses(periodChangeEl, 'negative'); // Error state as negative
+    }
+    if (changePercentageEl) {
+      changePercentageEl.textContent = 'Error';
+      updateBadgeClasses(changePercentageEl, 'negative'); // Error state as negative
+    }
     
     showToast(message, 'error');
   }
