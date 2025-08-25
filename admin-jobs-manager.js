@@ -355,7 +355,7 @@ class JobsManagerDashboard {
         if (!accounts || accounts.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="jobs-empty">
+                    <td colspan="11" class="jobs-empty">
                         <div class="jobs-empty-icon">📭</div>
                         <p>No active jobs found</p>
                     </td>
@@ -372,6 +372,10 @@ class JobsManagerDashboard {
             const statusClass = account.status ? account.status.toLowerCase() : 'active';
             const runStatusClass = account.run_status ? account.run_status.toLowerCase() : 'idle';
             
+            // Format account value - try multiple possible fields
+            const currentValue = account.current_total_value || account.last_value || account.account_value;
+            const formattedValue = currentValue ? `$${parseFloat(currentValue).toFixed(2)}` : 'N/A';
+            
             return `
             <tr>
                 <td>${this.truncateId(account.account_id)}</td>
@@ -380,6 +384,7 @@ class JobsManagerDashboard {
                 <td>${account.strategy || 'N/A'}</td>
                 <td><span class="status-badge ${statusClass}">${account.status || 'ACTIVE'}</span></td>
                 <td><span class="status-badge ${runStatusClass}">${account.run_status || 'IDLE'}</span></td>
+                <td class="account-value">${formattedValue}</td>
                 <td class="time-display">${nextRun}</td>
                 <td class="time-display">${lastRun}</td>
                 <td>${failures}</td>
