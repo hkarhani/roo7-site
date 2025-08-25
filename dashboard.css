@@ -2472,6 +2472,267 @@ select option[disabled] {
   .summary-card {
     padding: 10px;
   }
+}
+
+/* === PROFESSIONAL TRADING ANALYTICS WIDGET === */
+
+/* Professional Trading Analytics Section */
+.analytics-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark-theme .analytics-section {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+/* Analytics Header */
+.analytics-header {
+  padding: 20px 24px !important;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb !important;
+  margin-bottom: 0 !important;
+}
+
+.dark-theme .analytics-header {
+  background: #111827;
+  border-bottom-color: #374151 !important;
+}
+
+.analytics-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.analytics-title {
+  margin: 0 !important;
+  font-size: 18px !important;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark-theme .analytics-title {
+  color: #f9fafb;
+}
+
+/* Status Badges */
+.analytics-status-badges {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.status-badge.primary {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+.status-badge.positive {
+  background: #10b981;
+  color: #fff;
+  border-color: #10b981;
+}
+
+.status-badge.negative {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+.dark-theme .status-badge {
+  background: #374151;
+  color: #d1d5db;
+  border-color: #4b5563;
+}
+
+/* Analytics Toolbar */
+.analytics-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.analytics-selectors {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selector-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.dark-theme .selector-label {
+  color: #9ca3af;
+}
+
+.selector-input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 120px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.selector-input:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.selector-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dark-theme .selector-input {
+  background: #374151;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+.dark-theme .selector-input:hover {
+  border-color: #6b7280;
+}
+
+.dark-theme .selector-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.analytics-refresh-btn {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+}
+
+.analytics-refresh-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.analytics-refresh-btn:active {
+  transform: translateY(0);
+}
+
+.dark-theme .analytics-refresh-btn {
+  background: #374151;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+.dark-theme .analytics-refresh-btn:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+/* Chart Container */
+.analytics-chart-container {
+  padding: 24px;
+  background: #fff;
+  position: relative;
+  min-height: 320px;
+}
+
+.dark-theme .analytics-chart-container {
+  background: #1f2937;
+}
+
+.analytics-chart {
+  width: 100%;
+  height: 320px;
+  position: relative;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.dark-theme .analytics-chart {
+  background: #111827;
+  border-color: #374151;
+}
+
+/* Responsive Design for Professional Analytics */
+@media (max-width: 768px) {
+  .analytics-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .analytics-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .analytics-selectors {
+    justify-content: center;
+  }
+  
+  .selector-input {
+    min-width: 100px;
+  }
+  
+  .analytics-chart {
+    height: 280px;
+  }
+  
+  .analytics-chart-container {
+    padding: 16px;
+  }
   
   .summary-value {
     font-size: 18px;

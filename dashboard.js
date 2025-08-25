@@ -701,11 +701,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Initialize chart
       if (typeof LineChart !== 'undefined') {
         analyticsChart = new LineChart('analytics-chart', {
-          width: 800,
-          height: 300,
+          width: 900,
+          height: 320,
           animate: true,
           showGrid: true,
-          showTooltip: true
+          showTooltip: true,
+          margin: { top: 20, right: 30, bottom: 40, left: 60 }
         });
         console.log('📊 Analytics chart initialized');
       } else {
@@ -877,11 +878,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateAnalyticsSummary(data, selectedAccount) {
     try {
-      const currentTotalEl = document.getElementById('current-total');
-      const periodChangeEl = document.getElementById('period-change');
-      const changePercentageEl = document.getElementById('change-percentage');
-      const dataPointsEl = document.getElementById('data-points');
-      
+      const currentTotalEl = document.getElementById('current-total-badge');
+      const periodChangeEl = document.getElementById('period-change-badge');
+      const changePercentageEl = document.getElementById('change-percentage-badge');
       let values = [];
       let dataPoints = 0;
       
@@ -917,12 +916,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update UI
       currentTotalEl.textContent = formatCurrency(currentTotal);
       periodChangeEl.textContent = formatCurrency(periodChange);
-      periodChangeEl.className = 'summary-value ' + (periodChange >= 0 ? 'positive' : 'negative');
+      periodChangeEl.className = 'status-badge ' + (periodChange >= 0 ? 'positive' : 'negative');
       
       changePercentageEl.textContent = formatPercentage(changePercentage);
-      changePercentageEl.className = 'summary-value ' + (changePercentage >= 0 ? 'positive' : 'negative');
-      
-      dataPointsEl.textContent = dataPoints.toLocaleString();
+      changePercentageEl.className = 'status-badge ' + (changePercentage >= 0 ? 'positive' : 'negative');
       
     } catch (error) {
       console.error('Error updating analytics summary:', error);
@@ -935,10 +932,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     // Update summary cards with error state
-    document.getElementById('current-total').textContent = 'Error';
-    document.getElementById('period-change').textContent = 'Error';
-    document.getElementById('change-percentage').textContent = 'Error';
-    document.getElementById('data-points').textContent = 'Error';
+    document.getElementById('current-total-badge').textContent = 'Error';
+    document.getElementById('period-change-badge').textContent = 'Error';
+    document.getElementById('change-percentage-badge').textContent = 'Error';
     
     showToast(message, 'error');
   }
