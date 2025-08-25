@@ -2509,8 +2509,9 @@ select option[disabled] {
 .analytics-title-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 16px;
+  gap: 20px;
 }
 
 .analytics-title {
@@ -2530,24 +2531,29 @@ select option[disabled] {
 /* Status Badges */
 .analytics-status-badges {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-start;
+  flex-shrink: 0;
 }
 
 .analytics-status-badges .status-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
+  min-width: 80px;
 }
 
 .status-label {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  text-align: center;
 }
 
 .dark-theme .status-label {
@@ -2555,39 +2561,61 @@ select option[disabled] {
 }
 
 .status-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 6px;
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 70px;
+  text-align: center;
 }
 
 .status-badge.primary {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: #fff;
-  border-color: #3b82f6;
+  border-color: #1d4ed8;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .status-badge.positive {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
   color: #fff;
-  border-color: #10b981;
+  border-color: #059669;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .status-badge.negative {
-  background: #ef4444;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #fff;
-  border-color: #ef4444;
+  border-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .dark-theme .status-badge {
-  background: #374151;
-  color: #d1d5db;
-  border-color: #4b5563;
+  background: #1f2937;
+  color: #f9fafb;
+  border-color: #374151;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .status-badge.primary {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  border-color: #1e40af;
+}
+
+.dark-theme .status-badge.positive {
+  background: linear-gradient(135deg, #10b981, #047857);
+  border-color: #047857;
+}
+
+.dark-theme .status-badge.negative {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border-color: #b91c1c;
 }
 
 /* Analytics Toolbar */
@@ -2736,17 +2764,23 @@ select option[disabled] {
 @media (max-width: 768px) {
   .analytics-title-row {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .analytics-title {
+    align-self: flex-start;
   }
   
   .analytics-status-badges {
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 12px;
   }
   
   .analytics-status-badges .status-item {
     flex: 1;
+    max-width: 100px;
   }
   
   .analytics-toolbar {

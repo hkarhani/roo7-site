@@ -734,6 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadAnalyticsAccountsList() {
     try {
+      console.log('🔍 Loading analytics accounts list...');
       const response = await fetch(`${API_BASE}/analytics/user-accounts-list`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -741,6 +742,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
+      console.log('🔍 Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
         console.log('🔍 Analytics accounts response:', data);
@@ -756,19 +758,33 @@ document.addEventListener("DOMContentLoaded", () => {
         select.appendChild(allOption);
         
         // Add individual accounts
-        if (data.success && data.accounts) {
-          console.log('🔍 Processing accounts:', data.accounts);
+        if (data.success && data.accounts && Array.isArray(data.accounts)) {
+          console.log('🔍 Processing accounts:', data.accounts.length, 'accounts found');
           data.accounts.forEach((account, index) => {
-            console.log(`🔍 Account ${index}:`, account);
-            const option = document.createElement('option');
-            option.value = account.account_id;
-            option.textContent = account.account_name;
-            select.appendChild(option);
+            console.log(`🔍 Account ${index}:`, {
+              id: account.account_id,
+              name: account.account_name,
+              strategy: account.strategy,
+              value: account.latest_value
+            });
+            
+            if (account.account_id && account.account_name) {
+              const option = document.createElement('option');
+              option.value = account.account_id;
+              option.textContent = account.account_name;
+              select.appendChild(option);
+            } else {
+              console.warn('🔍 Skipping invalid account:', account);
+            }
           });
           
           console.log(`📊 Loaded ${data.accounts.length} accounts for analytics`);
         } else {
-          console.warn('🔍 No accounts found in response:', data);
+          console.warn('🔍 No accounts found in response or invalid format:', {
+            success: data.success,
+            accounts: data.accounts,
+            isArray: Array.isArray(data.accounts)
+          });
         }
         
         // Select "ALL" by default
