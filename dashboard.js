@@ -698,6 +698,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize analytics
   async function initializeAnalytics() {
     try {
+      console.log('🚀 Starting analytics initialization...');
+      console.log('🔍 Analytics section exists:', !!document.getElementById('section-analytics'));
+      console.log('🔍 Account select exists:', !!document.getElementById('analytics-account-select'));
+      console.log('🔍 Chart container exists:', !!document.getElementById('analytics-chart'));
+      
       // Initialize chart
       if (typeof LineChart !== 'undefined') {
         // Get container dimensions for responsive chart
@@ -735,6 +740,14 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadAnalyticsAccountsList() {
     try {
       console.log('🔍 Loading analytics accounts list...');
+      const select = document.getElementById('analytics-account-select');
+      console.log('🔍 Select element found:', !!select);
+      
+      if (!select) {
+        console.error('❌ analytics-account-select element not found in DOM');
+        return;
+      }
+      
       const response = await fetch(`${API_BASE}/analytics/user-accounts-list`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -745,17 +758,18 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('🔍 Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('🔍 Analytics accounts response:', data);
-        const select = document.getElementById('analytics-account-select');
+        console.log('🔍 Analytics accounts response:', JSON.stringify(data, null, 2));
         
         // Clear existing options
         select.innerHTML = '';
+        console.log('🔍 Cleared existing options, select innerHTML now:', select.innerHTML);
         
         // Add "ALL" option
         const allOption = document.createElement('option');
         allOption.value = 'ALL';
         allOption.textContent = 'All Accounts';
         select.appendChild(allOption);
+        console.log('🔍 Added ALL option, select now has', select.options.length, 'options');
         
         // Add individual accounts
         if (data.success && data.accounts && Array.isArray(data.accounts)) {
@@ -789,6 +803,11 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Select "ALL" by default
         select.value = 'ALL';
+        
+        // Final debugging - count options
+        const totalOptions = select.options.length;
+        console.log(`🔍 Final result: ${totalOptions} total options added to dropdown`);
+        console.log('🔍 Option values:', Array.from(select.options).map(opt => ({value: opt.value, text: opt.textContent})));
         
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1014,5 +1033,11 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAccounts();
   
   // Initialize analytics after a short delay to ensure DOM is ready
-  setTimeout(initializeAnalytics, 1000);
+  // Initialize analytics after ensuring DOM is ready
+  if (document.getElementById('section-analytics')) {
+    console.log('📊 Analytics section found, initializing...');
+    setTimeout(initializeAnalytics, 500);
+  } else {
+    console.log('❌ Analytics section not found in DOM');
+  }
 });

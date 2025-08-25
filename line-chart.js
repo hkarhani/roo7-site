@@ -523,7 +523,8 @@ class LineChart {
     if (!values || values.length === 0) return '';
     
     const chartHeight = this.options.height - this.options.margin.top - this.options.margin.bottom;
-    const baselineY = this.scales.y.scale(0); // Bottom of the chart
+    // Use actual chart bottom instead of scaling 0 (which may be outside domain)
+    const baselineY = chartHeight; // Bottom of the chart area
     
     let path = '';
     
