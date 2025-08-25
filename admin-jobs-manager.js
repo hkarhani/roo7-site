@@ -180,10 +180,20 @@ class JobsManagerDashboard {
             console.log('🔧 Jobs Manager: Loading active jobs list');
             
             const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs-list`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ API Response Error:', response.status, errorText);
+                throw new Error(`API Error: ${response.status} - ${errorText}`);
+            }
+            
             const data = await response.json();
+            console.log('📊 Active jobs response data:', data);
             
             // Store the jobs data for use in showJobDetails  
             this.currentActiveJobs = data.active_jobs || [];
+            
+            console.log(`📋 Found ${this.currentActiveJobs.length} active jobs`, this.currentActiveJobs);
             
             this.renderActiveJobsList(this.currentActiveJobs);
         } catch (error) {
@@ -457,7 +467,7 @@ class JobsManagerDashboard {
                 </td>
                 <td>
                     <button class="job-action-btn details" onclick="jobsManager.showExecutionDetails('${execution.id}')">
-                        Details
+                        📋 Details
                     </button>
                 </td>
             </tr>
