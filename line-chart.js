@@ -132,12 +132,12 @@ class LineChart {
     this.svg.innerHTML = `
       <g class="empty-state">
         <rect width="100%" height="100%" fill="transparent"/>
-        <text x="50%" y="50%" text-anchor="middle" dy="0.3em" 
-              fill="#6b7280" font-size="16" font-weight="500">
+        <text x="50%" y="50%" text-anchor="middle" dy="-0.5em" 
+              fill="#6b7280" font-size="14" font-weight="500">
           No data available
         </text>
-        <text x="50%" y="50%" text-anchor="middle" dy="1.8em" 
-              fill="#9ca3af" font-size="14">
+        <text x="50%" y="50%" text-anchor="middle" dy="1em" 
+              fill="#9ca3af" font-size="12">
           Account values will appear here once data is collected
         </text>
       </g>
@@ -375,22 +375,32 @@ class LineChart {
       if (!series.values || series.values.length < 2) return;
       
       const color = series.color || this.options.colors[index % this.options.colors.length];
-      const pathData = this.createLinePath(series.values);
       
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', pathData);
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', color);
-      path.setAttribute('stroke-width', 2);
-      path.setAttribute('stroke-linecap', 'round');
-      path.setAttribute('stroke-linejoin', 'round');
-      path.setAttribute('class', `line-series-${index}`);
+      // Create area path (fill under the line)
+      const areaPath = this.createAreaPath(series.values);
+      const areaElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      areaElement.setAttribute('d', areaPath);
+      areaElement.setAttribute('fill', this.hexToRgba(color, 0.2));
+      areaElement.setAttribute('stroke', 'none');
+      areaElement.setAttribute('class', `area-series-${index}`);
+      parent.appendChild(areaElement);
+      
+      // Create line path (stroke only)
+      const linePath = this.createLinePath(series.values);
+      const lineElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      lineElement.setAttribute('d', linePath);
+      lineElement.setAttribute('fill', 'none');
+      lineElement.setAttribute('stroke', color);
+      lineElement.setAttribute('stroke-width', 2);
+      lineElement.setAttribute('stroke-linecap', 'round');
+      lineElement.setAttribute('stroke-linejoin', 'round');
+      lineElement.setAttribute('class', `line-series-${index}`);
       
       if (this.options.animate) {
-        const length = path.getTotalLength();
-        path.style.strokeDasharray = length + ' ' + length;
-        path.style.strokeDashoffset = length;
-        path.animate([
+        const length = lineElement.getTotalLength();
+        lineElement.style.strokeDasharray = length + ' ' + length;
+        lineElement.style.strokeDashoffset = length;
+        lineElement.animate([
           { strokeDashoffset: length },
           { strokeDashoffset: 0 }
         ], {
@@ -399,7 +409,7 @@ class LineChart {
         });
       }
       
-      parent.appendChild(path);
+      parent.appendChild(lineElement);
     });
   }
 
@@ -467,6 +477,47 @@ class LineChart {
     });
     
     return path;
+  }
+
+  createAreaPath(values) {
+    if (!values || values.length === 0) return '';
+    
+    const chartHeight = this.options.height - this.options.margin.top - this.options.margin.bottom;
+    const baselineY = this.scales.y.scale(0); // Bottom of the chart
+    
+    let path = '';
+    
+    // Start from bottom left
+    const firstX = this.scales.x.scale(values[0].date);
+    const firstY = this.scales.y.scale(values[0].value);
+    path += `M ${firstX} ${baselineY}`;
+    path += ` L ${firstX} ${firstY}`;
+    
+    // Draw line to all points
+    values.slice(1).forEach((point) => {
+      const x = this.scales.x.scale(point.date);
+      const y = this.scales.y.scale(point.value);
+      path += ` L ${x} ${y}`;
+    });
+    
+    // Close the path back to baseline
+    const lastX = this.scales.x.scale(values[values.length - 1].date);
+    path += ` L ${lastX} ${baselineY}`;
+    path += ' Z'; // Close path
+    
+    return path;
+  }
+
+  hexToRgba(hex, alpha) {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    // Parse hex values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   generateYTicks() {
