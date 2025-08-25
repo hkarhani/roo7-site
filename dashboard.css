@@ -2565,9 +2565,9 @@ select option[disabled] {
   font-weight: 700;
   padding: 8px 12px;
   border-radius: 8px;
-  background: #1e293b;
-  color: #f1f5f9;
-  border: 2px solid #334155;
+  background: #f8fafc;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
