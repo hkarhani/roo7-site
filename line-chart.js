@@ -746,7 +746,7 @@ class LineChart {
     
     // Trigger a re-render if data exists
     if (this.data && this.data.length > 0) {
-      this.render();
+      this.renderChart();
     }
   }
 
