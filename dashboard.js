@@ -690,7 +690,307 @@ document.addEventListener("DOMContentLoaded", () => {
   // Add event listener for window resize
   window.addEventListener('resize', debounce(handleResize, 250));
 
+  // === ANALYTICS FUNCTIONALITY ===
+  
+  let analyticsChart = null;
+  let currentAnalyticsData = null;
+
+  // Initialize analytics
+  async function initializeAnalytics() {
+    try {
+      // Initialize chart
+      if (typeof LineChart !== 'undefined') {
+        analyticsChart = new LineChart('analytics-chart', {
+          width: 800,
+          height: 300,
+          animate: true,
+          showGrid: true,
+          showTooltip: true
+        });
+        console.log('📊 Analytics chart initialized');
+      } else {
+        console.warn('LineChart class not available');
+      }
+
+      // Load accounts list for dropdown
+      await loadAnalyticsAccountsList();
+      
+      // Load initial analytics data
+      await loadAnalyticsData();
+      
+      // Set up event listeners
+      setupAnalyticsEventListeners();
+      
+    } catch (error) {
+      console.error('Error initializing analytics:', error);
+    }
+  }
+
+  async function loadAnalyticsAccountsList() {
+    try {
+      const response = await fetch(`${API_BASE}/analytics/user-accounts-list`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const select = document.getElementById('analytics-account-select');
+        
+        // Clear existing options
+        select.innerHTML = '';
+        
+        // Add "ALL" option
+        const allOption = document.createElement('option');
+        allOption.value = 'ALL';
+        allOption.textContent = 'All Accounts';
+        select.appendChild(allOption);
+        
+        // Add individual accounts
+        if (data.success && data.accounts) {
+          data.accounts.forEach(account => {
+            const option = document.createElement('option');
+            option.value = account.account_id;
+            option.textContent = account.account_name;
+            select.appendChild(option);
+          });
+          
+          console.log(`📊 Loaded ${data.accounts.length} accounts for analytics`);
+        }
+        
+        // Select "ALL" by default
+        select.value = 'ALL';
+        
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading analytics accounts list:', error);
+      const select = document.getElementById('analytics-account-select');
+      select.innerHTML = '<option value="">Error loading accounts</option>';
+    }
+  }
+
+  async function loadAnalyticsData() {
+    const accountSelect = document.getElementById('analytics-account-select');
+    const periodSelect = document.getElementById('analytics-period-select');
+    
+    if (!accountSelect || !periodSelect) return;
+    
+    const selectedAccount = accountSelect.value;
+    const selectedPeriod = parseInt(periodSelect.value);
+    
+    if (!selectedAccount) return;
+    
+    try {
+      // Show loading state
+      if (analyticsChart) {
+        analyticsChart.showLoadingState();
+      }
+      
+      let response;
+      
+      if (selectedAccount === 'ALL') {
+        // Load aggregated data for all accounts
+        response = await fetch(`${API_BASE}/analytics/user-aggregated-values?days=${selectedPeriod}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } else {
+        // Load data for specific account
+        response = await fetch(`${API_BASE}/analytics/account-values/${selectedAccount}?days=${selectedPeriod}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success) {
+          currentAnalyticsData = data;
+          displayAnalyticsData(data, selectedAccount);
+          console.log(`📊 Loaded analytics data: ${data.data_points || 0} points`);
+        } else {
+          throw new Error('Invalid response data');
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+      showAnalyticsError('Failed to load analytics data');
+    }
+  }
+
+  function displayAnalyticsData(data, selectedAccount) {
+    try {
+      // Update summary cards
+      updateAnalyticsSummary(data, selectedAccount);
+      
+      // Prepare chart data
+      let chartData = [];
+      
+      if (selectedAccount === 'ALL') {
+        // Aggregated data format
+        if (data.values && data.values.length > 0) {
+          chartData = [{
+            name: 'Total Portfolio',
+            color: '#3b82f6',
+            values: data.values.map(point => ({
+              timestamp: point.timestamp,
+              value_usdt: point.total_value,
+              date: new Date(point.timestamp)
+            }))
+          }];
+        }
+      } else {
+        // Single account data format
+        if (data.values && data.values.length > 0) {
+          chartData = [{
+            name: data.account_name || 'Account',
+            color: '#10b981',
+            values: data.values
+          }];
+        }
+      }
+      
+      // Update chart
+      if (analyticsChart && chartData.length > 0) {
+        analyticsChart.setData(chartData);
+      } else if (analyticsChart) {
+        analyticsChart.showEmptyState();
+      }
+      
+    } catch (error) {
+      console.error('Error displaying analytics data:', error);
+      showAnalyticsError('Error displaying data');
+    }
+  }
+
+  function updateAnalyticsSummary(data, selectedAccount) {
+    try {
+      const currentTotalEl = document.getElementById('current-total');
+      const periodChangeEl = document.getElementById('period-change');
+      const changePercentageEl = document.getElementById('change-percentage');
+      const dataPointsEl = document.getElementById('data-points');
+      
+      let values = [];
+      let dataPoints = 0;
+      
+      if (selectedAccount === 'ALL') {
+        values = data.values || [];
+        dataPoints = data.data_points || 0;
+      } else {
+        values = data.values || [];
+        dataPoints = data.data_points || 0;
+      }
+      
+      // Calculate summary metrics
+      let currentTotal = 0;
+      let periodChange = 0;
+      let changePercentage = 0;
+      
+      if (values.length > 0) {
+        const latestValue = values[values.length - 1];
+        const earliestValue = values[0];
+        
+        currentTotal = selectedAccount === 'ALL' ? 
+          latestValue.total_value : 
+          latestValue.value_usdt || latestValue.value;
+          
+        const earliestAmount = selectedAccount === 'ALL' ? 
+          earliestValue.total_value : 
+          earliestValue.value_usdt || earliestValue.value;
+        
+        periodChange = currentTotal - earliestAmount;
+        changePercentage = earliestAmount > 0 ? (periodChange / earliestAmount) * 100 : 0;
+      }
+      
+      // Update UI
+      currentTotalEl.textContent = formatCurrency(currentTotal);
+      periodChangeEl.textContent = formatCurrency(periodChange);
+      periodChangeEl.className = 'summary-value ' + (periodChange >= 0 ? 'positive' : 'negative');
+      
+      changePercentageEl.textContent = formatPercentage(changePercentage);
+      changePercentageEl.className = 'summary-value ' + (changePercentage >= 0 ? 'positive' : 'negative');
+      
+      dataPointsEl.textContent = dataPoints.toLocaleString();
+      
+    } catch (error) {
+      console.error('Error updating analytics summary:', error);
+    }
+  }
+
+  function showAnalyticsError(message) {
+    if (analyticsChart) {
+      analyticsChart.clear();
+    }
+    
+    // Update summary cards with error state
+    document.getElementById('current-total').textContent = 'Error';
+    document.getElementById('period-change').textContent = 'Error';
+    document.getElementById('change-percentage').textContent = 'Error';
+    document.getElementById('data-points').textContent = 'Error';
+    
+    showToast(message, 'error');
+  }
+
+  function setupAnalyticsEventListeners() {
+    // Account selection change
+    const accountSelect = document.getElementById('analytics-account-select');
+    if (accountSelect) {
+      accountSelect.addEventListener('change', async () => {
+        console.log('📊 Account selection changed:', accountSelect.value);
+        await loadAnalyticsData();
+      });
+    }
+    
+    // Period selection change
+    const periodSelect = document.getElementById('analytics-period-select');
+    if (periodSelect) {
+      periodSelect.addEventListener('change', async () => {
+        console.log('📊 Period selection changed:', periodSelect.value);
+        await loadAnalyticsData();
+      });
+    }
+    
+    // Refresh button
+    const refreshBtn = document.getElementById('refresh-analytics');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        showToast('Refreshing analytics...', 'info', 1000);
+        await loadAnalyticsData();
+        showToast('Analytics refreshed', 'success');
+      });
+    }
+  }
+
+  // Utility functions
+  function formatCurrency(value) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value || 0);
+  }
+
+  function formatPercentage(value) {
+    return (value || 0).toFixed(2) + '%';
+  }
+
   // Initialize
   fetchUser();
   loadAccounts();
+  
+  // Initialize analytics after a short delay to ensure DOM is ready
+  setTimeout(initializeAnalytics, 1000);
 });
