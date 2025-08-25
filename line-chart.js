@@ -576,9 +576,11 @@ class LineChart {
     
     const [min, max] = this.scales.x.domain;
     const tickCount = 6;
+    
+    // min and max are already timestamps (numbers), not Date objects
     const step = (max - min) / (tickCount - 1);
     
-    return Array.from({ length: tickCount }, (_, i) => new Date(min.getTime() + (step * i)));
+    return Array.from({ length: tickCount }, (_, i) => new Date(min + (step * i)));
   }
 
   handleMouseMove(event, chartGroup) {
