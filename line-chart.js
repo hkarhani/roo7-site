@@ -207,46 +207,78 @@ class LineChart {
   }
 
   createScales(chartWidth, chartHeight) {
-    // Get all data points
-    const allPoints = this.data.flatMap(series => series.values || []);
+    // Get all data points and validate them
+    const allPoints = this.data.flatMap(series => series.values || [])
+      .filter(d => d && d.date != null && d.value != null && !isNaN(d.value))
+      .map(d => ({
+        date: new Date(d.date),
+        value: parseFloat(d.value)
+      }))
+      .filter(d => !isNaN(d.date.getTime()) && !isNaN(d.value));
     
     if (allPoints.length === 0) {
       this.scales = { x: null, y: null };
       return;
     }
     
-    // X scale (time)
-    const xExtent = d3.extent(allPoints, d => d.date);
+    // X scale (time) - manual extent calculation instead of d3.extent
+    const dates = allPoints.map(d => d.date.getTime());
+    const xMin = Math.min(...dates);
+    const xMax = Math.max(...dates);
+    const xExtent = [xMin, xMax];
+    
+    // Handle case where all dates are the same
+    const xDomain = xMax === xMin ? xMax - 86400000 : xMax - xMin; // 1 day fallback
+    
     this.scales.x = {
       domain: xExtent,
       range: [0, chartWidth],
       scale: (value) => {
-        const domain = xExtent[1] - xExtent[0];
-        const position = (value - xExtent[0]) / domain;
-        return position * chartWidth;
+        if (xDomain === 0) return chartWidth / 2; // Center if no range
+        const position = (value - xMin) / xDomain;
+        return Math.max(0, Math.min(chartWidth, position * chartWidth));
       }
     };
     
-    // Y scale (values)
-    const yExtent = d3.extent(allPoints, d => d.value);
-    const yPadding = (yExtent[1] - yExtent[0]) * 0.1; // 10% padding
-    const yDomain = [
-      Math.max(0, yExtent[0] - yPadding), // Don't go below 0 for currency
-      yExtent[1] + yPadding
-    ];
+    // Y scale (values) - manual extent calculation
+    const values = allPoints.map(d => d.value);
+    const yMin = Math.min(...values);
+    const yMax = Math.max(...values);
+    
+    // Handle edge cases
+    let yDomainMin, yDomainMax;
+    if (yMax === yMin) {
+      // All values are the same
+      if (yMax === 0) {
+        yDomainMin = 0;
+        yDomainMax = 100; // Default range for zero values
+      } else {
+        yDomainMin = Math.max(0, yMax * 0.9);
+        yDomainMax = yMax * 1.1;
+      }
+    } else {
+      const yPadding = (yMax - yMin) * 0.1;
+      yDomainMin = Math.max(0, yMin - yPadding);
+      yDomainMax = yMax + yPadding;
+    }
+    
+    const yDomain = [yDomainMin, yDomainMax];
+    const yRange = yDomainMax - yDomainMin;
     
     this.scales.y = {
       domain: yDomain,
       range: [chartHeight, 0],
       scale: (value) => {
-        const domain = yDomain[1] - yDomain[0];
-        const position = (value - yDomain[0]) / domain;
-        return chartHeight - (position * chartHeight);
+        if (yRange === 0) return chartHeight / 2; // Center if no range
+        const position = (value - yDomainMin) / yRange;
+        return Math.max(0, Math.min(chartHeight, chartHeight - (position * chartHeight)));
       }
     };
   }
 
   renderGrid(parent, chartWidth, chartHeight) {
+    if (!this.scales || !this.scales.x || !this.scales.y) return;
+    
     const grid = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     grid.setAttribute('class', 'grid');
     
@@ -254,6 +286,8 @@ class LineChart {
     const yTicks = this.generateYTicks();
     yTicks.forEach(tick => {
       const y = this.scales.y.scale(tick);
+      if (isNaN(y) || !isFinite(y)) return; // Skip invalid values
+      
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', 0);
       line.setAttribute('x2', chartWidth);
@@ -268,6 +302,8 @@ class LineChart {
     const xTicks = this.generateXTicks();
     xTicks.forEach(tick => {
       const x = this.scales.x.scale(tick);
+      if (isNaN(x) || !isFinite(x)) return; // Skip invalid values
+      
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', x);
       line.setAttribute('x2', x);
@@ -282,6 +318,8 @@ class LineChart {
   }
 
   renderAxes(parent, chartWidth, chartHeight) {
+    if (!this.scales || !this.scales.x || !this.scales.y) return;
+    
     // Y axis
     const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     yAxis.setAttribute('class', 'y-axis');
@@ -300,6 +338,7 @@ class LineChart {
     const yTicks = this.generateYTicks();
     yTicks.forEach(tick => {
       const y = this.scales.y.scale(tick);
+      if (isNaN(y) || !isFinite(y)) return; // Skip invalid values
       
       // Tick mark
       const tickLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -344,6 +383,7 @@ class LineChart {
     const xTicks = this.generateXTicks();
     xTicks.forEach(tick => {
       const x = this.scales.x.scale(tick);
+      if (isNaN(x) || !isFinite(x)) return; // Skip invalid values
       
       // Tick mark
       const tickLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
