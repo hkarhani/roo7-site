@@ -22,7 +22,8 @@ class ModalManager {
     this.currentHedgeAccountId = null;
     this.currentStrategyAccountId = null;
     this.useSameCredentials = false;
-    this.binanceSymbols = [];
+    this.binanceSymbols = []; // USDT pairs only
+    this.binanceSingleAssets = []; // Single assets (BTC, ETH, XRP, etc.)
     this.availableStrategies = [];
     this.currentStrategyConfig = null;
     
@@ -162,6 +163,17 @@ class ModalManager {
                    instrument.is_active === true; // Only active/tradable instruments
           })
           .map(instrument => instrument.symbol);
+          
+        // Extract single assets (base currencies) from USDT pairs for SPOT trading
+        this.binanceSingleAssets = data.data
+          .filter(instrument => {
+            return instrument.symbol && 
+                   typeof instrument.symbol === 'string' && 
+                   instrument.symbol.endsWith('USDT') && 
+                   instrument.is_active === true;
+          })
+          .map(instrument => instrument.symbol.replace('USDT', '')) // Remove USDT to get base asset
+          .filter((asset, index, array) => array.indexOf(asset) === index); // Remove duplicates
       } else {
         console.error('❌ Unexpected response format from /spot-instruments:', data);
         throw new Error('Invalid response format from market-data-service /spot-instruments');
@@ -642,9 +654,9 @@ class ModalManager {
         this.currentStrategyConfig.parameters.custom_instruments = {
           description: "Custom Portfolio Instruments",
           default: [
-            { symbol: "BTCUSDT", weight: 50 },
-            { symbol: "ETHUSDT", weight: 30 },
-            { symbol: "XRPUSDT", weight: 20 }
+            { symbol: "BTC", weight: 50 },
+            { symbol: "ETH", weight: 30 },
+            { symbol: "XRP", weight: 20 }
           ]
         };
       }
@@ -1026,10 +1038,10 @@ class ModalManager {
           this.addPortfolioInstrument(instrument.symbol, instrument.weight);
         });
       } else {
-        // Fallback to hardcoded defaults with proper USDT format
-        this.addPortfolioInstrument("BTCUSDT", 50);
-        this.addPortfolioInstrument("ETHUSDT", 30);
-        this.addPortfolioInstrument("XRPUSDT", 20);
+        // Fallback to hardcoded defaults with single assets for SPOT
+        this.addPortfolioInstrument("BTC", 50);
+        this.addPortfolioInstrument("ETH", 30);
+        this.addPortfolioInstrument("XRP", 20);
       }
     }
     
@@ -1212,7 +1224,7 @@ class ModalManager {
     div.className = "portfolio-instrument-field compact";
     div.innerHTML = `
       <div class="portfolio-row compact">
-        <input type="text" class="symbol-input compact" placeholder="BTCUSDT" value="${sym}" title="Trading Symbol">
+        <input type="text" class="symbol-input compact" placeholder="BTC" value="${sym}" title="Single Asset (BTC, ETH, XRP) or USDT Pair">
         <input type="number" class="weight-input compact" placeholder="50.00" value="${wt}" step="0.01" min="0.01" max="100" title="Weight (%)">
         <button type="button" class="remove-instrument compact" title="Remove instrument">🗑️</button>
       </div>
@@ -1239,14 +1251,18 @@ class ModalManager {
       const symbol = e.target.value.toUpperCase().trim();
       e.target.value = symbol;
       
-      // Validate symbol against loaded symbols
-      if (symbol && this.binanceSymbols.length > 0) {
-        if (this.binanceSymbols.includes(symbol)) {
+      // Validate symbol against loaded symbols (both USDT pairs and single assets for SPOT)
+      if (symbol && (this.binanceSymbols.length > 0 || this.binanceSingleAssets.length > 0)) {
+        const isValidPair = this.binanceSymbols.includes(symbol);
+        const isValidSingleAsset = this.binanceSingleAssets.includes(symbol);
+        
+        if (isValidPair || isValidSingleAsset) {
           e.target.style.borderColor = '#28a745'; // Green for valid
-          e.target.title = `✅ Valid SPOT symbol: ${symbol}`;
+          const type = isValidPair ? 'USDT pair' : 'single asset';
+          e.target.title = `✅ Valid SPOT ${type}: ${symbol}`;
         } else {
           e.target.style.borderColor = '#dc3545'; // Red for invalid
-          e.target.title = `❌ Invalid SPOT symbol: ${symbol}. Please use valid USDT pairs.`;
+          e.target.title = `❌ Invalid SPOT symbol: ${symbol}. Use valid single assets (BTC, ETH, XRP) or USDT pairs.`;
         }
       } else {
         e.target.style.borderColor = ''; // Reset if no symbols loaded yet
@@ -1293,11 +1309,16 @@ class ModalManager {
         } else {
           symbolsSeen.add(symbol);
           
-          // Validate against loaded SPOT symbols
-          if (this.binanceSymbols && this.binanceSymbols.length > 0) {
-            if (this.binanceSymbols.includes(symbol)) {
+          // Validate against loaded SPOT symbols (both pairs and single assets)
+          if ((this.binanceSymbols && this.binanceSymbols.length > 0) || 
+              (this.binanceSingleAssets && this.binanceSingleAssets.length > 0)) {
+            const isValidPair = this.binanceSymbols.includes(symbol);
+            const isValidSingleAsset = this.binanceSingleAssets.includes(symbol);
+            
+            if (isValidPair || isValidSingleAsset) {
               symbolInput.style.borderColor = '#28a745'; // Green for valid
-              symbolInput.title = `✅ Valid SPOT symbol: ${symbol}`;
+              const type = isValidPair ? 'USDT pair' : 'single asset';
+              symbolInput.title = `✅ Valid SPOT ${type}: ${symbol}`;
             } else {
               hasInvalidSymbols = true;
               symbolInput.style.borderColor = '#dc3545'; // Red for invalid
