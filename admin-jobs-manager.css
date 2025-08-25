@@ -495,3 +495,62 @@
   color: #e6edf3;
   border: 1px solid #30363d;
 }
+
+/* Job Count Styling */
+.job-count-success {
+  color: #10b981 !important;
+  font-weight: 600 !important;
+}
+
+.job-count-failure {
+  color: #ef4444 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="dark"] .job-count-success {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .job-count-failure {
+  color: #f87171 !important;
+}
+
+/* Table column width adjustments for the new columns */
+#active-jobs-table th:nth-child(10),
+#active-jobs-table td:nth-child(10) {
+  width: 80px;
+  text-align: center;
+}
+
+#active-jobs-table th:nth-child(11),
+#active-jobs-table td:nth-child(11) {
+  width: 80px;
+  text-align: center;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1200px) {
+  #active-jobs-table th:nth-child(10),
+  #active-jobs-table td:nth-child(10),
+  #active-jobs-table th:nth-child(11),
+  #active-jobs-table td:nth-child(11) {
+    font-size: 0.85rem;
+    width: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hide less critical columns on mobile to make room */
+  #active-jobs-table th:nth-child(2),
+  #active-jobs-table td:nth-child(2) {
+    display: none;
+  }
+  
+  #active-jobs-table th:nth-child(10),
+  #active-jobs-table td:nth-child(10),
+  #active-jobs-table th:nth-child(11),
+  #active-jobs-table td:nth-child(11) {
+    width: 60px;
+    font-size: 0.8rem;
+  }
+}

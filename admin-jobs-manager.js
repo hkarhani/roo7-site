@@ -367,7 +367,10 @@ class JobsManagerDashboard {
         tbody.innerHTML = accounts.map(account => {
             const nextRun = account.next_run_at ? this.formatDateTime(account.next_run_at) : 'Not scheduled';
             const lastRun = account.last_run_at ? this.formatDateTime(account.last_run_at) : 'Never';
-            const failures = account.consecutive_failures || 0;
+            
+            // Use actual failed jobs count from backend instead of consecutive_failures
+            const successfulJobs = account.successful_jobs_count || 0;
+            const failedJobs = account.failed_jobs_count || 0;
             
             const statusClass = account.status ? account.status.toLowerCase() : 'active';
             const runStatusClass = account.run_status ? account.run_status.toLowerCase() : 'idle';
@@ -375,6 +378,10 @@ class JobsManagerDashboard {
             // Format account value - try multiple possible fields
             const currentValue = account.current_total_value || account.last_value || account.account_value;
             const formattedValue = currentValue ? `$${parseFloat(currentValue).toFixed(2)}` : 'N/A';
+            
+            // Style the success and failure counts
+            const successfulStyle = successfulJobs > 0 ? 'color: #10b981; font-weight: 600;' : '';
+            const failedStyle = failedJobs > 0 ? 'color: #ef4444; font-weight: 600;' : '';
             
             return `
             <tr>
@@ -387,7 +394,8 @@ class JobsManagerDashboard {
                 <td class="account-value">${formattedValue}</td>
                 <td class="time-display">${nextRun}</td>
                 <td class="time-display">${lastRun}</td>
-                <td>${failures}</td>
+                <td><span style="${successfulStyle}">${successfulJobs}</span></td>
+                <td><span style="${failedStyle}">${failedJobs}</span></td>
                 <td>
                     <div class="job-actions">
                         <button class="job-action-btn force" onclick="jobsManager.showJobAction('${account.account_id}', 'force', '${account.account_name}')">
