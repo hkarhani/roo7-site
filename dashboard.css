@@ -2575,6 +2575,59 @@ select option[disabled] {
   text-align: center;
 }
 
+/* Primary badge (Current Value) - always blue */
+#current-total-badge {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  color: #fff !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Period Change badge - dynamically colored based on data attribute */
+#period-change-badge[data-value-type="positive"] {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #fff !important;
+  border-color: #059669 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+#period-change-badge[data-value-type="negative"] {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #fff !important;
+  border-color: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+}
+
+#period-change-badge[data-value-type="error"] {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Percentage Change badge - dynamically colored based on data attribute */
+#change-percentage-badge[data-value-type="positive"] {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #fff !important;
+  border-color: #059669 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+#change-percentage-badge[data-value-type="negative"] {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #fff !important;
+  border-color: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+}
+
+#change-percentage-badge[data-value-type="error"] {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Legacy class support (kept for compatibility) */
 .status-badge.primary {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: #fff;
@@ -2596,27 +2649,7 @@ select option[disabled] {
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
-.dark-theme .status-badge {
-  background: #1f2937;
-  color: #f9fafb;
-  border-color: #374151;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.dark-theme .status-badge.primary {
-  background: linear-gradient(135deg, #3b82f6, #1e40af);
-  border-color: #1e40af;
-}
-
-.dark-theme .status-badge.positive {
-  background: linear-gradient(135deg, #10b981, #047857);
-  border-color: #047857;
-}
-
-.dark-theme .status-badge.negative {
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
-  border-color: #b91c1c;
-}
+/* Dark theme styles removed - handled by specific ID selectors with !important */
 
 /* Analytics Toolbar */
 .analytics-toolbar {

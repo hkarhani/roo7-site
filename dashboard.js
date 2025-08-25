@@ -930,23 +930,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Helper function to properly update badge classes without breaking theme support
-  function updateBadgeClasses(element, typeClass) {
-    if (!element) return;
-    
-    // Remove any existing type classes but keep base and theme classes
-    element.classList.remove('primary', 'positive', 'negative');
-    
-    // Ensure base class exists
-    if (!element.classList.contains('status-badge')) {
-      element.classList.add('status-badge');
-    }
-    
-    // Add the new type class
-    if (typeClass) {
-      element.classList.add(typeClass);
-    }
-  }
 
   function updateAnalyticsSummary(data, selectedAccount) {
     try {
@@ -985,15 +968,14 @@ document.addEventListener("DOMContentLoaded", () => {
         changePercentage = earliestAmount > 0 ? (periodChange / earliestAmount) * 100 : 0;
       }
       
-      // Update UI with proper class management to preserve theme styling
+      // Update UI - ONLY change text content, let CSS handle all styling
       currentTotalEl.textContent = formatCurrency(currentTotal);
-      updateBadgeClasses(currentTotalEl, 'primary');
-      
-      periodChangeEl.textContent = formatCurrency(periodChange);
-      updateBadgeClasses(periodChangeEl, periodChange >= 0 ? 'positive' : 'negative');
-      
+      periodChangeEl.textContent = formatCurrency(periodChange);  
       changePercentageEl.textContent = formatPercentage(changePercentage);
-      updateBadgeClasses(changePercentageEl, changePercentage >= 0 ? 'positive' : 'negative');
+      
+      // Add data attributes for CSS to style based on positive/negative values
+      periodChangeEl.setAttribute('data-value-type', periodChange >= 0 ? 'positive' : 'negative');
+      changePercentageEl.setAttribute('data-value-type', changePercentage >= 0 ? 'positive' : 'negative');
       
     } catch (error) {
       console.error('Error updating analytics summary:', error);
@@ -1005,22 +987,19 @@ document.addEventListener("DOMContentLoaded", () => {
       analyticsChart.clear();
     }
     
-    // Update summary cards with error state while preserving styling
+    // Update summary cards with error state - ONLY change text, let CSS handle styling
     const currentTotalEl = document.getElementById('current-total-badge');
-    const periodChangeEl = document.getElementById('period-change-badge');
+    const periodChangeEl = document.getElementById('period-change-badge'); 
     const changePercentageEl = document.getElementById('change-percentage-badge');
     
-    if (currentTotalEl) {
-      currentTotalEl.textContent = 'Error';
-      updateBadgeClasses(currentTotalEl, 'primary');
-    }
+    if (currentTotalEl) currentTotalEl.textContent = 'Error';
     if (periodChangeEl) {
       periodChangeEl.textContent = 'Error';
-      updateBadgeClasses(periodChangeEl, 'negative'); // Error state as negative
+      periodChangeEl.setAttribute('data-value-type', 'error');
     }
     if (changePercentageEl) {
       changePercentageEl.textContent = 'Error';
-      updateBadgeClasses(changePercentageEl, 'negative'); // Error state as negative
+      changePercentageEl.setAttribute('data-value-type', 'error');
     }
     
     showToast(message, 'error');
