@@ -347,6 +347,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await response.json();
       console.log('👥 Active accounts response:', result);
+      
+      // Debug: Log account values to see what we're getting
+      if (result.accounts && result.accounts.length > 0) {
+        console.log('💰 Account values debug:', result.accounts.map(acc => ({
+          account_id: acc.account_id,
+          account_name: acc.account_name,
+          last_value: acc.last_value,
+          current_total_value: acc.current_total_value,
+          account_value: acc.account_value,
+          last_updated: acc.last_updated
+        })));
+      }
 
       displayActiveAccounts(result.accounts || []);
       
@@ -406,7 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
                 <td class="account-strategy">${account.strategy || 'None'}</td>
                 <td class="account-value" title="Last updated: ${formatLastUpdated(account.last_updated)}">
-                  ${formatAccountValue(account.last_value)}
+                  ${formatAccountValue(account.last_value || account.current_total_value || account.account_value)}
                 </td>
                 <td><span class="account-status">Active</span></td>
               </tr>
@@ -419,22 +431,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Helper function to format account values
   function formatAccountValue(value) {
-    if (!value || value === 0 || value === '0') {
+    // Debug logging
+    if (value !== null && value !== undefined) {
+      console.log(`💰 Formatting account value: ${value} (type: ${typeof value})`);
+    }
+    
+    if (!value || value === 0 || value === '0' || value === null || value === undefined) {
       return '<span class="no-value">N/A</span>';
     }
     
     const numValue = parseFloat(value);
-    if (isNaN(numValue)) {
+    if (isNaN(numValue) || numValue <= 0) {
       return '<span class="no-value">N/A</span>';
     }
     
     // Format based on value size
     if (numValue >= 1000000) {
-      return `$${(numValue / 1000000).toFixed(1)}M`;
+      return `<span class="account-value-amount">$${(numValue / 1000000).toFixed(1)}M</span>`;
     } else if (numValue >= 1000) {
-      return `$${(numValue / 1000).toFixed(1)}K`;
+      return `<span class="account-value-amount">$${(numValue / 1000).toFixed(1)}K</span>`;
     } else {
-      return `$${numValue.toFixed(2)}`;
+      return `<span class="account-value-amount">$${numValue.toFixed(2)}</span>`;
     }
   }
 
