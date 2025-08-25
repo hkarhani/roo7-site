@@ -2483,6 +2483,9 @@ select option[disabled] {
   background: #fff;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .dark-theme .analytics-section {
@@ -2527,8 +2530,28 @@ select option[disabled] {
 /* Status Badges */
 .analytics-status-badges {
   display: flex;
-  gap: 12px;
+  gap: 20px;
   flex-wrap: wrap;
+}
+
+.analytics-status-badges .status-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.status-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.dark-theme .status-label {
+  color: #9ca3af;
 }
 
 .status-badge {
@@ -2679,10 +2702,12 @@ select option[disabled] {
 
 /* Chart Container */
 .analytics-chart-container {
-  padding: 24px;
+  padding: 20px;
   background: #fff;
   position: relative;
-  min-height: 320px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .dark-theme .analytics-chart-container {
@@ -2691,7 +2716,9 @@ select option[disabled] {
 
 .analytics-chart {
   width: 100%;
-  height: 320px;
+  flex: 1;
+  min-height: 280px;
+  max-height: 350px;
   position: relative;
   border-radius: 8px;
   background: #fff;
@@ -2713,25 +2740,47 @@ select option[disabled] {
     gap: 12px;
   }
   
+  .analytics-status-badges {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .analytics-status-badges .status-item {
+    flex: 1;
+  }
+  
   .analytics-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
   
   .analytics-selectors {
-    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
   }
   
   .selector-input {
-    min-width: 100px;
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .analytics-refresh-btn {
+    width: 100%;
+    justify-self: center;
   }
   
   .analytics-chart {
-    height: 280px;
+    min-height: 250px;
+    max-height: 300px;
   }
   
   .analytics-chart-container {
     padding: 16px;
+  }
+  
+  .analytics-header {
+    padding: 16px 20px !important;
   }
   
   .summary-value {

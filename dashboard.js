@@ -700,13 +700,18 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Initialize chart
       if (typeof LineChart !== 'undefined') {
+        // Get container dimensions for responsive chart
+        const container = document.getElementById('analytics-chart');
+        const containerRect = container.getBoundingClientRect();
+        
         analyticsChart = new LineChart('analytics-chart', {
-          width: 900,
-          height: 320,
+          width: Math.max(300, containerRect.width - 40),
+          height: Math.min(320, Math.max(280, containerRect.height - 20)),
           animate: true,
           showGrid: true,
           showTooltip: true,
-          margin: { top: 20, right: 30, bottom: 40, left: 60 }
+          margin: { top: 20, right: 30, bottom: 40, left: 60 },
+          responsive: true
         });
         console.log('📊 Analytics chart initialized');
       } else {
@@ -738,6 +743,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Analytics accounts response:', data);
         const select = document.getElementById('analytics-account-select');
         
         // Clear existing options
@@ -751,7 +757,9 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Add individual accounts
         if (data.success && data.accounts) {
-          data.accounts.forEach(account => {
+          console.log('🔍 Processing accounts:', data.accounts);
+          data.accounts.forEach((account, index) => {
+            console.log(`🔍 Account ${index}:`, account);
             const option = document.createElement('option');
             option.value = account.account_id;
             option.textContent = account.account_name;
@@ -759,6 +767,8 @@ document.addEventListener("DOMContentLoaded", () => {
           });
           
           console.log(`📊 Loaded ${data.accounts.length} accounts for analytics`);
+        } else {
+          console.warn('🔍 No accounts found in response:', data);
         }
         
         // Select "ALL" by default
