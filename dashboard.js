@@ -960,6 +960,8 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Update UI
       currentTotalEl.textContent = formatCurrency(currentTotal);
+      currentTotalEl.className = 'status-badge primary'; // Ensure primary class is always applied
+      
       periodChangeEl.textContent = formatCurrency(periodChange);
       periodChangeEl.className = 'status-badge ' + (periodChange >= 0 ? 'positive' : 'negative');
       
