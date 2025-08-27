@@ -242,6 +242,13 @@ class JobsManagerDashboard {
                 }
                 
                 console.log(`📊 Loaded ${executions.length} job executions`);
+                
+                // Debug: Log first execution to see available fields
+                if (executions.length > 0) {
+                    console.log('🔍 Sample execution data:', executions[0]);
+                    console.log('🔍 Available fields:', Object.keys(executions[0]));
+                }
+                
                 this.renderJobHistory(executions);
             } else {
                 throw new Error(data.message || 'Failed to load job history');
@@ -477,10 +484,13 @@ class JobsManagerDashboard {
         // Show CSV button when data is loaded
         if (csvButton) csvButton.style.display = 'inline-block';
         
-        tbody.innerHTML = executions.map(execution => `
+        tbody.innerHTML = executions.map(execution => {
+            // Handle potential field name variations
+            const accountId = execution.account_id || execution.accountId || execution.account || 'N/A';
+            return `
             <tr>
                 <td title="${execution.id}">${this.truncateId(execution.id)}</td>
-                <td title="${execution.account_id}">${this.truncateId(execution.account_id)}</td>
+                <td title="${accountId}">${this.truncateId(accountId)}</td>
                 <td>
                     <span class="status-badge ${execution.status ? execution.status.toLowerCase() : 'unknown'}">
                         ${execution.status || 'N/A'}
@@ -509,7 +519,8 @@ class JobsManagerDashboard {
                     </button>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     async showExecutionDetails(executionId) {
@@ -1083,18 +1094,22 @@ class JobsManagerDashboard {
             ];
 
             // Convert data to CSV format
-            const csvData = this.currentJobHistoryData.map(execution => [
-                execution.id || '',
-                execution.account_id || '',
-                execution.account_name || '',
-                execution.status || '',
-                execution.started_at || '',
-                execution.completed_at || '',
-                execution.duration_seconds || '',
-                execution.worker_id || '',
-                execution.result_summary || '',
-                execution.error || ''
-            ]);
+            const csvData = this.currentJobHistoryData.map(execution => {
+                // Handle potential field name variations
+                const accountId = execution.account_id || execution.accountId || execution.account || '';
+                return [
+                    execution.id || '',
+                    accountId,
+                    execution.account_name || '',
+                    execution.status || '',
+                    execution.started_at || '',
+                    execution.completed_at || '',
+                    execution.duration_seconds || '',
+                    execution.worker_id || '',
+                    execution.result_summary || '',
+                    execution.error || ''
+                ];
+            });
 
             // Combine headers and data
             const csvContent = [headers, ...csvData]
