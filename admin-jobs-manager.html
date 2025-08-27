@@ -73,6 +73,7 @@
           </select>
           <button id="apply-filters" class="secondary-button">Apply Filters</button>
           <button id="refresh-active-jobs" class="secondary-button">🔄 Refresh</button>
+          <button id="audit-changes-btn" class="secondary-button">📋 Audit Changes</button>
         </div>
       </div>
       <div class="table-container">
@@ -191,8 +192,54 @@
     </div>
   </div>
 
+  <!-- Audit Changes Modal -->
+  <div id="audit-changes-modal" class="modal">
+    <div class="modal-content large-modal">
+      <span class="close" id="audit-changes-close">&times;</span>
+      <h3>📋 Active Jobs Audit Changes</h3>
+      <div class="audit-controls">
+        <div class="audit-filters">
+          <select id="audit-change-type-filter">
+            <option value="">All Change Types</option>
+            <option value="job_created">Job Created</option>
+            <option value="configuration_change">Configuration Change</option>
+            <option value="status_change">Status Change</option>
+            <option value="job_restored">Job Restored</option>
+            <option value="cadence_consistency_fix">Cadence Fix</option>
+          </select>
+          <select id="audit-account-filter">
+            <option value="">All Accounts</option>
+          </select>
+          <input type="number" id="audit-limit" placeholder="Limit" value="100" min="10" max="500" />
+          <button id="load-audit-changes" class="secondary-button">Load Changes</button>
+          <button id="download-audit-csv" class="secondary-button" title="Download audit changes as CSV" style="display: none;">📥 CSV</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="audit-changes-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Change Type</th>
+              <th>Account Name</th>
+              <th>Account ID</th>
+              <th>User ID</th>
+              <th>Details</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" class="loading-message">Click "Load Changes" to view audit log</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="theme-manager.js?v=1"></script>
-  <script type="module" src="admin-jobs-manager.js?v=10.5"></script>
+  <script type="module" src="admin-jobs-manager.js?v=10.6"></script>
 </body>
 </html>

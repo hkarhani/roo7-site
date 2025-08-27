@@ -99,6 +99,23 @@ class JobsManagerDashboard {
         document.getElementById('cancel-job-action')?.addEventListener('click', () => {
             document.getElementById('job-action-modal').style.display = 'none';
         });
+
+        // Audit Changes functionality
+        document.getElementById('audit-changes-btn')?.addEventListener('click', () => {
+            this.showAuditChanges();
+        });
+
+        document.getElementById('audit-changes-close')?.addEventListener('click', () => {
+            document.getElementById('audit-changes-modal').style.display = 'none';
+        });
+
+        document.getElementById('load-audit-changes')?.addEventListener('click', () => {
+            this.loadAuditChanges();
+        });
+
+        document.getElementById('download-audit-csv')?.addEventListener('click', () => {
+            this.downloadAuditChangesCSV();
+        });
     }
 
     setupAutoRefresh() {
@@ -1138,6 +1155,259 @@ class JobsManagerDashboard {
             }
         } catch (error) {
             console.error('❌ Error generating CSV:', error);
+            alert('Error generating CSV file. Please try again.');
+        }
+    }
+
+    showAuditChanges() {
+        // Populate account filter from current active jobs
+        const accountFilter = document.getElementById('audit-account-filter');
+        accountFilter.innerHTML = '<option value="">All Accounts</option>';
+        
+        this.currentActiveJobs.forEach(account => {
+            const option = document.createElement('option');
+            option.value = account.account_id;
+            option.textContent = `${account.account_name || account.account_id}`;
+            accountFilter.appendChild(option);
+        });
+        
+        document.getElementById('audit-changes-modal').style.display = 'block';
+    }
+
+    async loadAuditChanges() {
+        const tbody = document.querySelector('#audit-changes-table tbody');
+        const csvButton = document.getElementById('download-audit-csv');
+        
+        // Show loading state
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="loading-message">Loading audit changes...</td>
+            </tr>
+        `;
+        
+        // Hide CSV button during loading
+        if (csvButton) csvButton.style.display = 'none';
+        
+        try {
+            // Get filter values
+            const changeType = document.getElementById('audit-change-type-filter').value;
+            const accountId = document.getElementById('audit-account-filter').value;
+            const limit = parseInt(document.getElementById('audit-limit').value) || 100;
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (changeType) params.append('change_type', changeType);
+            if (accountId) params.append('account_id', accountId);
+            params.append('limit', limit.toString());
+            
+            const response = await this.makeAuthenticatedRequest(
+                `${getApiUrl()}/admin/jobs-manager/audit-changes?${params.toString()}`
+            );
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.currentAuditChanges = data.changes || [];
+                this.renderAuditChanges(this.currentAuditChanges);
+            } else {
+                throw new Error(data.message || 'Failed to load audit changes');
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to load audit changes:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="loading-message">Failed to load audit changes: ${error.message}</td>
+                </tr>
+            `;
+        }
+    }
+
+    renderAuditChanges(changes) {
+        const tbody = document.querySelector('#audit-changes-table tbody');
+        const csvButton = document.getElementById('download-audit-csv');
+        
+        if (!changes || changes.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="loading-message">No audit changes found</td>
+                </tr>
+            `;
+            // Hide CSV button when no data
+            if (csvButton) csvButton.style.display = 'none';
+            return;
+        }
+        
+        // Show CSV button when data is loaded
+        if (csvButton) csvButton.style.display = 'inline-block';
+        
+        tbody.innerHTML = changes.map(change => {
+            const changeTypeClass = this.getChangeTypeClass(change.change_type);
+            const detailsText = this.formatChangeDetails(change.details, change.change_type);
+            
+            return `
+            <tr>
+                <td class="time-display">${this.formatDateTime(change.timestamp)}</td>
+                <td>
+                    <span class="status-badge ${changeTypeClass}">${this.formatChangeType(change.change_type)}</span>
+                </td>
+                <td>${change.details.account_name || 'Unknown'}</td>
+                <td title="${change.account_id}">${this.truncateId(change.account_id)}</td>
+                <td title="${change.user_id}">${this.truncateId(change.user_id)}</td>
+                <td>
+                    <div class="change-details" title="${detailsText}">
+                        ${detailsText.length > 50 ? detailsText.substring(0, 50) + '...' : detailsText}
+                    </div>
+                </td>
+                <td>
+                    <button class="job-action-btn details" onclick="jobsManager.showChangeDetails('${change.id}')">
+                        📋 Details
+                    </button>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+
+    getChangeTypeClass(changeType) {
+        const classMap = {
+            'job_created': 'success',
+            'configuration_change': 'warning',
+            'status_change': 'info',
+            'job_restored': 'success',
+            'cadence_consistency_fix': 'warning'
+        };
+        return classMap[changeType] || 'unknown';
+    }
+
+    formatChangeType(changeType) {
+        const typeMap = {
+            'job_created': 'Job Created',
+            'configuration_change': 'Config Change',
+            'status_change': 'Status Change',
+            'job_restored': 'Job Restored',
+            'cadence_consistency_fix': 'Cadence Fix'
+        };
+        return typeMap[changeType] || changeType.replace('_', ' ');
+    }
+
+    formatChangeDetails(details, changeType) {
+        switch (changeType) {
+            case 'configuration_change':
+                const changes = details.changes || {};
+                const changeList = Object.keys(changes).map(key => 
+                    `${key}: ${JSON.stringify(changes[key].old)} → ${JSON.stringify(changes[key].new)}`
+                ).join(', ');
+                return changeList || 'Configuration updated';
+                
+            case 'status_change':
+                return `${details.old_status} → ${details.new_status}${details.liquidation_queued ? ' (Liquidation queued)' : ''}`;
+                
+            case 'job_created':
+                return `Strategy: ${details.strategy}, Type: ${details.job_type}, Cadence: ${details.cadence_minutes}min`;
+                
+            case 'job_restored':
+                return `Restored from ${details.restored_from} to ${details.restored_to}`;
+                
+            case 'cadence_consistency_fix':
+                return `Cadence: ${details.old_cadence_minutes}min → ${details.new_cadence_minutes}min`;
+                
+            default:
+                return JSON.stringify(details).substring(0, 100);
+        }
+    }
+
+    showChangeDetails(changeId) {
+        const change = this.currentAuditChanges?.find(c => c.id === changeId);
+        if (!change) return;
+        
+        const modal = document.getElementById('execution-details-modal');
+        const content = document.getElementById('execution-details-content');
+        
+        content.innerHTML = `
+            <div class="execution-details">
+                <div class="execution-section">
+                    <h4>Change Information</h4>
+                    <div class="execution-field">
+                        <strong>Change Type:</strong>
+                        <span class="status-badge ${this.getChangeTypeClass(change.change_type)}">${this.formatChangeType(change.change_type)}</span>
+                    </div>
+                    <div class="execution-field">
+                        <strong>Timestamp:</strong>
+                        <span>${new Date(change.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div class="execution-field">
+                        <strong>Account:</strong>
+                        <span>${change.details.account_name || 'Unknown'} (${change.account_id})</span>
+                    </div>
+                    <div class="execution-field">
+                        <strong>User ID:</strong>
+                        <span>${change.user_id}</span>
+                    </div>
+                </div>
+                
+                <div class="execution-section">
+                    <h4>Change Details</h4>
+                    <div class="json-display">
+                        ${JSON.stringify(change.details, null, 2)}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
+    }
+
+    downloadAuditChangesCSV() {
+        if (!this.currentAuditChanges || this.currentAuditChanges.length === 0) {
+            alert('No audit changes data to export');
+            return;
+        }
+        
+        try {
+            const headers = ['Timestamp', 'Change Type', 'Account ID', 'Account Name', 'User ID', 'Details Summary', 'Full Details'];
+            
+            const csvData = this.currentAuditChanges.map(change => {
+                const detailsText = this.formatChangeDetails(change.details, change.change_type);
+                const fullDetails = JSON.stringify(change.details);
+                
+                return [
+                    change.timestamp,
+                    this.formatChangeType(change.change_type),
+                    change.account_id || '',
+                    change.details.account_name || '',
+                    change.user_id || '',
+                    `"${detailsText.replace(/"/g, '""')}"`,
+                    `"${fullDetails.replace(/"/g, '""')}"`
+                ];
+            });
+            
+            // Create CSV content
+            const csvContent = [headers, ...csvData]
+                .map(row => row.join(','))
+                .join('\n');
+                
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `audit_changes_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                console.log('📥 Audit changes CSV downloaded successfully');
+            }
+        } catch (error) {
+            console.error('❌ Error generating audit CSV:', error);
             alert('Error generating CSV file. Please try again.');
         }
     }
