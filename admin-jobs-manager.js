@@ -1279,7 +1279,8 @@ class JobsManagerDashboard {
             'configuration_change': 'warning',
             'status_change': 'info',
             'job_restored': 'success',
-            'cadence_consistency_fix': 'warning'
+            'cadence_consistency_fix': 'warning',
+            'account_migration': 'info'
         };
         return classMap[changeType] || 'unknown';
     }
@@ -1290,7 +1291,8 @@ class JobsManagerDashboard {
             'configuration_change': 'Config Change',
             'status_change': 'Status Change',
             'job_restored': 'Job Restored',
-            'cadence_consistency_fix': 'Cadence Fix'
+            'cadence_consistency_fix': 'Cadence Fix',
+            'account_migration': 'Account Migration'
         };
         return typeMap[changeType] || changeType.replace('_', ' ');
     }
@@ -1315,6 +1317,9 @@ class JobsManagerDashboard {
                 
             case 'cadence_consistency_fix':
                 return `Cadence: ${details.old_cadence_minutes}min → ${details.new_cadence_minutes}min`;
+                
+            case 'account_migration':
+                return `Migration: ${details.migration_reason} - Set to ${details.default_value_set}`;
                 
             default:
                 return JSON.stringify(details).substring(0, 100);
