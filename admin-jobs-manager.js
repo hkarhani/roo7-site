@@ -73,6 +73,10 @@ class JobsManagerDashboard {
             this.loadJobHistory();
         });
 
+        document.getElementById('download-history-csv')?.addEventListener('click', () => {
+            this.downloadJobHistoryCSV();
+        });
+
         // Modal close buttons
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.addEventListener('click', (e) => {
@@ -435,6 +439,8 @@ class JobsManagerDashboard {
 
     renderJobHistoryLoading() {
         const tbody = document.querySelector('#job-history-table tbody');
+        const csvButton = document.getElementById('download-history-csv');
+        
         tbody.innerHTML = `
             <tr>
                 <td colspan="8" class="jobs-loading">
@@ -442,10 +448,14 @@ class JobsManagerDashboard {
                 </td>
             </tr>
         `;
+        
+        // Hide CSV button during loading
+        if (csvButton) csvButton.style.display = 'none';
     }
 
     renderJobHistory(executions) {
         const tbody = document.querySelector('#job-history-table tbody');
+        const csvButton = document.getElementById('download-history-csv');
         
         if (!executions || executions.length === 0) {
             tbody.innerHTML = `
@@ -456,8 +466,16 @@ class JobsManagerDashboard {
                     </td>
                 </tr>
             `;
+            // Hide CSV button when no data
+            if (csvButton) csvButton.style.display = 'none';
             return;
         }
+
+        // Store executions data for CSV export
+        this.currentJobHistoryData = executions;
+        
+        // Show CSV button when data is loaded
+        if (csvButton) csvButton.style.display = 'inline-block';
         
         tbody.innerHTML = executions.map(execution => `
             <tr>
@@ -994,6 +1012,8 @@ class JobsManagerDashboard {
 
     renderJobHistoryError() {
         const tbody = document.querySelector('#job-history-table tbody');
+        const csvButton = document.getElementById('download-history-csv');
+        
         tbody.innerHTML = `
             <tr>
                 <td colspan="8" class="jobs-error">
@@ -1001,6 +1021,9 @@ class JobsManagerDashboard {
                 </td>
             </tr>
         `;
+        
+        // Hide CSV button on error
+        if (csvButton) csvButton.style.display = 'none';
     }
 
     truncateId(id) {
@@ -1035,6 +1058,71 @@ class JobsManagerDashboard {
             });
         } catch (error) {
             return 'Invalid date';
+        }
+    }
+
+    downloadJobHistoryCSV() {
+        if (!this.currentJobHistoryData || this.currentJobHistoryData.length === 0) {
+            alert('No job history data available to export');
+            return;
+        }
+
+        try {
+            // Define CSV headers
+            const headers = [
+                'Execution ID',
+                'Account ID', 
+                'Account Name',
+                'Status',
+                'Started At',
+                'Completed At',
+                'Duration (seconds)',
+                'Worker ID',
+                'Result Summary',
+                'Error Message'
+            ];
+
+            // Convert data to CSV format
+            const csvData = this.currentJobHistoryData.map(execution => [
+                execution.id || '',
+                execution.account_id || '',
+                execution.account_name || '',
+                execution.status || '',
+                execution.started_at || '',
+                execution.completed_at || '',
+                execution.duration_seconds || '',
+                execution.worker_id || '',
+                execution.result_summary || '',
+                execution.error || ''
+            ]);
+
+            // Combine headers and data
+            const csvContent = [headers, ...csvData]
+                .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                
+                // Generate filename with current timestamp
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
+                link.setAttribute('download', `job-history-${timestamp}.csv`);
+                
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                console.log('📥 Job history CSV downloaded successfully');
+            }
+        } catch (error) {
+            console.error('❌ Error generating CSV:', error);
+            alert('Error generating CSV file. Please try again.');
         }
     }
 
