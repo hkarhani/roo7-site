@@ -21,10 +21,14 @@
     </div>
 
     <div class="actions">
+      <button id="getting-started-btn">🚀 Getting Started</button>
       <button id="invoices-btn">📄 Invoices</button>
       <button id="referrals-btn">🎯 Referrals</button>
       <button id="market-insights-btn">📊 Market Insights</button>
       <button id="admin-btn" class="admin-button" style="display: none;">🔧 Admin</button>
+      <a href="user-guide.html" target="_blank" style="color: #fff; text-decoration: none; padding: 8px 14px; background: #17a2b8; border-radius: 6px; font-size: 14px; white-space: nowrap;">
+        📚 Help
+      </a>
       <button id="toggle-theme">Toggle Theme</button>
       <button id="logout-btn">Logout</button>
     </div>
@@ -142,6 +146,11 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <h3>Add New Account</h3>
+      <div style="margin-bottom: 15px;">
+        <a href="user-guide.html#create-account" target="_blank" style="color: #0077cc; text-decoration: none; font-size: 14px;">
+          📚 Need help? View account creation guide →
+        </a>
+      </div>
       <form id="account-form" autocomplete="off">
         <input type="text" id="trading-account-name" name="trading_account_name" placeholder="Account Name" autocomplete="off" required />
         
@@ -188,6 +197,11 @@
     <div class="hedge-modal-content">
       <span class="close" id="hedge-close">&times;</span>
       <h3>Edit Account Settings</h3>
+      <div style="margin-bottom: 15px;">
+        <a href="user-guide.html#update-account" target="_blank" style="color: #0077cc; text-decoration: none; font-size: 14px;">
+          📚 Need help? View account settings guide →
+        </a>
+      </div>
       <form id="hedge-form" class="hedge-form" autocomplete="off">
         <input type="text" id="hedge-account-name" placeholder="Account Name" readonly />
         <input type="text" id="hedge-current-value" placeholder="Current Value" readonly />
@@ -221,6 +235,11 @@
     <div class="modal-content">
       <span class="close" id="strategy-close">&times;</span>
       <h3>Assign Strategy</h3>
+      <div style="margin-bottom: 15px;">
+        <a href="user-guide.html#assign-strategy" target="_blank" style="color: #0077cc; text-decoration: none; font-size: 14px;">
+          📚 Need help? View strategy assignment guide →
+        </a>
+      </div>
       <form id="strategy-form" class="strategy-form" autocomplete="off">
         <div class="strategy-assignment-info">
           <div class="account-info-display">
