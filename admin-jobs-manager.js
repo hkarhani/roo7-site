@@ -313,6 +313,9 @@ class JobsManagerDashboard {
     renderActiveJobsSummary(data) {
         const container = document.getElementById('active-jobs-stats');
         
+        // Debug: Log the actual data structure received
+        console.log('📊 Active Jobs Summary Data:', JSON.stringify(data, null, 2));
+        
         if (data.error) {
             container.innerHTML = `
                 <div class="jobs-error">
@@ -324,6 +327,10 @@ class JobsManagerDashboard {
 
         const jobsByStatus = data.active_jobs_by_status || {};
         const jobsByRunStatus = data.active_jobs_by_run_status || {};
+        
+        // Debug: Log the parsed data
+        console.log('📊 Jobs by Status:', jobsByStatus);
+        console.log('📊 Jobs by Run Status:', jobsByRunStatus);
         
         container.innerHTML = `
             <div class="stat-card">
