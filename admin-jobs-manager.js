@@ -487,10 +487,11 @@ class JobsManagerDashboard {
         tbody.innerHTML = executions.map(execution => {
             // Handle potential field name variations
             const accountId = execution.account_id || execution.accountId || execution.account || 'N/A';
+            const accountName = execution.account_name || 'Unknown';
             return `
             <tr>
                 <td title="${execution.id}">${this.truncateId(execution.id)}</td>
-                <td title="${accountId}">${this.truncateId(accountId)}</td>
+                <td title="${accountName} (${accountId})">${accountName}</td>
                 <td>
                     <span class="status-badge ${execution.status ? execution.status.toLowerCase() : 'unknown'}">
                         ${execution.status || 'N/A'}
