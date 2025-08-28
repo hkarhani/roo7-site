@@ -498,22 +498,56 @@ document.addEventListener("DOMContentLoaded", () => {
           const daysRemaining = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
           
           if (daysRemaining > 0) {
-            // Show subscription status
+            // Show active subscription status
             const statusElement = document.getElementById('subscription-status');
             const daysElement = document.getElementById('subscription-days');
             
             if (statusElement && daysElement) {
+              // Clear any no-subscription styling
+              statusElement.classList.remove('no-subscription');
+              statusElement.querySelector('.subscription-text').textContent = 'Active Subscription';
               daysElement.textContent = `(${daysRemaining} remaining days)`;
               statusElement.style.display = 'block';
             }
+          } else {
+            // Subscription expired - show no subscription message
+            showNoSubscriptionStatus();
           }
+        } else {
+          // No active subscription - show no subscription message
+          showNoSubscriptionStatus();
         }
       } else if (res.status === 404) {
-        // No subscription found - this is normal for users without subscriptions
+        // No subscription found - show no subscription message
         console.log('No subscription found for user');
+        showNoSubscriptionStatus();
       }
     } catch (error) {
       console.error("Error fetching subscription status:", error);
+      // Show no subscription status on error as well
+      showNoSubscriptionStatus();
+    }
+  }
+
+  // Function to display no subscription status with link to invoices
+  function showNoSubscriptionStatus() {
+    const statusElement = document.getElementById('subscription-status');
+    
+    if (statusElement) {
+      const subscriptionTextElement = statusElement.querySelector('.subscription-text');
+      const daysElement = statusElement.querySelector('.subscription-days');
+      
+      if (subscriptionTextElement && daysElement) {
+        // Update the text to show no subscription
+        subscriptionTextElement.innerHTML = 'No active subscription';
+        
+        // Create a clickable link to invoices page
+        daysElement.innerHTML = '<a href="/invoices.html" style="color: #0077cc; text-decoration: none; font-size: 12px;">(View subscription plans)</a>';
+        
+        // Add a different styling class for no subscription
+        statusElement.classList.add('no-subscription');
+        statusElement.style.display = 'block';
+      }
     }
   }
 

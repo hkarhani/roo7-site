@@ -61,6 +61,30 @@ body {
   color: #adb5bd;
 }
 
+/* No subscription styling */
+.subscription-status.no-subscription .subscription-text {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.dark-theme .subscription-status.no-subscription .subscription-text {
+  color: #ff6b6b;
+}
+
+/* No subscription link styling */
+.subscription-status.no-subscription .subscription-days a {
+  transition: color 0.2s ease;
+}
+
+.subscription-status.no-subscription .subscription-days a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.dark-theme .subscription-status.no-subscription .subscription-days a:hover {
+  color: #4dabf7;
+}
+
 .dashboard-header .actions {
   display: flex;
   gap: 10px;
