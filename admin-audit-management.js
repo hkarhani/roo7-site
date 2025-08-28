@@ -126,6 +126,46 @@ class AuditManagement {
         document.getElementById('date-to').value = today.toISOString().split('T')[0];
     }
 
+    formatDateTime(dateString) {
+        if (!dateString) return 'N/A';
+        if (typeof dateString !== 'string') return 'Invalid date';
+        
+        try {
+            // Handle both ISO strings with and without timezone indicators
+            let dateToFormat = dateString;
+            
+            // If the string doesn't end with 'Z' and doesn't contain timezone info,
+            // and it looks like an ISO string, treat it as UTC
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/) && 
+                !dateString.endsWith('Z') && 
+                !dateString.includes('+') && 
+                !dateString.includes('-', 10)) {
+                dateToFormat = dateString + 'Z';
+            }
+            
+            const date = new Date(dateToFormat);
+            
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+                console.warn('Invalid date string:', dateString);
+                return 'Invalid date';
+            }
+            
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+            });
+        } catch (error) {
+            console.error('Error formatting date:', dateString, error);
+            return 'Invalid date';
+        }
+    }
+
     async loadInitialData() {
         try {
             await Promise.all([
@@ -359,7 +399,7 @@ class AuditManagement {
 
     renderAuditRow(audit) {
         const isSelected = this.selectedAudits.has(audit._id);
-        const timestamp = new Date(audit.timestamp).toLocaleString();
+        const timestamp = this.formatDateTime(audit.timestamp);
         const changeTypeBadge = this.getChangeTypeBadge(audit.change_type);
         
         // Extract rebalance needed status
@@ -628,7 +668,7 @@ class AuditManagement {
                 <div class="detail-grid">
                     <div class="detail-item">
                         <div class="detail-label">Timestamp</div>
-                        <div class="detail-value">${new Date(audit.timestamp).toLocaleString()}</div>
+                        <div class="detail-value">${this.formatDateTime(audit.timestamp)}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Change Type</div>

@@ -311,7 +311,7 @@ class JobsManagerDashboard {
                         ${this.formatDuration(data.uptime_seconds || 0)}
                     </div>
                     <div class="status-meta">
-                        Started: ${data.started_at ? new Date(data.started_at).toLocaleString() : 'N/A'}
+                        Started: ${data.started_at ? this.formatDateTime(data.started_at) : 'N/A'}
                     </div>
                 </div>
                 
@@ -321,7 +321,7 @@ class JobsManagerDashboard {
                         ${data.cycles_completed || 0} cycles
                     </div>
                     <div class="status-meta">
-                        Last cycle: ${data.last_cycle_at ? new Date(data.last_cycle_at).toLocaleString() : 'N/A'}
+                        Last cycle: ${data.last_cycle_at ? this.formatDateTime(data.last_cycle_at) : 'N/A'}
                     </div>
                 </div>
                 
@@ -1075,17 +1075,40 @@ class JobsManagerDashboard {
 
     formatDateTime(dateString) {
         if (!dateString) return 'N/A';
+        if (typeof dateString !== 'string') return 'Invalid date';
+        
         try {
-            const date = new Date(dateString);
+            // Handle both ISO strings with and without timezone indicators
+            let dateToFormat = dateString;
+            
+            // If the string doesn't end with 'Z' and doesn't contain timezone info,
+            // and it looks like an ISO string, treat it as UTC
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/) && 
+                !dateString.endsWith('Z') && 
+                !dateString.includes('+') && 
+                !dateString.includes('-', 10)) {
+                dateToFormat = dateString + 'Z';
+            }
+            
+            const date = new Date(dateToFormat);
+            
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+                console.warn('Invalid date string:', dateString);
+                return 'Invalid date';
+            }
+            
             return date.toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit'
+                second: '2-digit',
+                timeZoneName: 'short'
             });
         } catch (error) {
+            console.error('Error formatting date:', dateString, error);
             return 'Invalid date';
         }
     }
@@ -1343,7 +1366,7 @@ class JobsManagerDashboard {
                     </div>
                     <div class="execution-field">
                         <strong>Timestamp:</strong>
-                        <span>${new Date(change.timestamp).toLocaleString()}</span>
+                        <span>${this.formatDateTime(change.timestamp)}</span>
                     </div>
                     <div class="execution-field">
                         <strong>Account:</strong>
