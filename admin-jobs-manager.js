@@ -782,6 +782,11 @@ class JobsManagerDashboard {
             console.error('JobsManagerDashboard', `Failed to execute job action ${action}`, error);
             this.showNotification('Failed to execute action', 'error');
         } finally {
+            // Reset button state before closing modal
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = confirmBtn.dataset.action === 'force' ? 'Force Execution' : 
+                                   confirmBtn.dataset.action === 'pause' ? 'Pause Job' : 'Resume Job';
+            
             document.getElementById('job-action-modal').style.display = 'none';
         }
     }
