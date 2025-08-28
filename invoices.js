@@ -152,10 +152,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentTier = userSubscription ? 
       getTierDisplayName(userSubscription.current_tier) : 'No Subscription';
 
-    document.getElementById('total-paid').textContent = `$${totalPaid.toFixed(2)}`;
-    document.getElementById('total-outstanding').textContent = `$${totalOutstanding.toFixed(2)}`;
-    document.getElementById('total-count').textContent = totalCount;
-    document.getElementById('current-tier').textContent = currentTier;
+    // Update stats with null checks to prevent DOM errors
+    const totalPaidElement = document.getElementById('total-paid');
+    const totalOutstandingElement = document.getElementById('total-outstanding');
+    const totalCountElement = document.getElementById('total-count');
+    
+    if (totalPaidElement) {
+      totalPaidElement.textContent = `$${totalPaid.toFixed(2)}`;
+    }
+    if (totalOutstandingElement) {
+      totalOutstandingElement.textContent = `$${totalOutstanding.toFixed(2)}`;
+    }
+    if (totalCountElement) {
+      totalCountElement.textContent = totalCount;
+    }
+    
+    // Update current AUM instead of tier (HTML has current-aum, not current-tier)
+    const currentAumElement = document.getElementById('current-aum');
+    if (currentAumElement) {
+      if (userSubscription && userSubscription.portfolio_value) {
+        currentAumElement.textContent = `$${userSubscription.portfolio_value.toFixed(2)}`;
+      } else {
+        currentAumElement.textContent = '$0.00';
+      }
+    }
   }
 
   // Update invoices table
@@ -225,12 +245,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return tierMap[tier] || tier;
   }
 
-  // Filter invoices
+  // Filter invoices with null checks
   function applyFilters() {
-    const statusFilter = document.getElementById('status-filter').value;
-    const typeFilter = document.getElementById('type-filter').value;
-    const dateFrom = document.getElementById('date-from').value;
-    const dateTo = document.getElementById('date-to').value;
+    const statusFilterEl = document.getElementById('status-filter');
+    const typeFilterEl = document.getElementById('type-filter');
+    const dateFromEl = document.getElementById('date-from');
+    const dateToEl = document.getElementById('date-to');
+    
+    const statusFilter = statusFilterEl ? statusFilterEl.value : '';
+    const typeFilter = typeFilterEl ? typeFilterEl.value : '';
+    const dateFrom = dateFromEl ? dateFromEl.value : '';
+    const dateTo = dateToEl ? dateToEl.value : '';
 
     filteredInvoices = allInvoices.filter(invoice => {
       if (statusFilter && invoice.status !== statusFilter) return false;
@@ -255,12 +280,17 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast(`Found ${filteredInvoices.length} matching invoices`, 'info', 2000);
   }
 
-  // Clear filters
+  // Clear filters with null checks
   function clearFilters() {
-    document.getElementById('status-filter').value = '';
-    document.getElementById('type-filter').value = '';
-    document.getElementById('date-from').value = '';
-    document.getElementById('date-to').value = '';
+    const statusFilterEl = document.getElementById('status-filter');
+    const typeFilterEl = document.getElementById('type-filter');
+    const dateFromEl = document.getElementById('date-from');
+    const dateToEl = document.getElementById('date-to');
+    
+    if (statusFilterEl) statusFilterEl.value = '';
+    if (typeFilterEl) typeFilterEl.value = '';
+    if (dateFromEl) dateFromEl.value = '';
+    if (dateToEl) dateToEl.value = '';
     
     filteredInvoices = [...allInvoices];
     updateInvoicesTable();
