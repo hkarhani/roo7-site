@@ -63,7 +63,7 @@ function addInteractivePricingExamples() {
                 
                 <div class="referral-incentive" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 1rem; border-radius: 8px; border: 2px solid #10b981;">
                     <div style="color: #047857; font-weight: 600; margin-bottom: 0.5rem;">💡 Referral Tip:</div>
-                    <div style="color: #065f46; font-size: 0.9rem;">Get a referral code from existing users to save 20% on your subscription!</div>
+                    <div style="color: #065f46; font-size: 0.9rem;">Get a referral code from existing users to save more on your subscription!</div>
                 </div>
             </div>
         </div>
