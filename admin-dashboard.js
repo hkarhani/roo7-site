@@ -2026,12 +2026,20 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log('📊 Initializing source accounts analytics chart...');
         const container = document.getElementById('source-analytics-chart');
         if (container) {
+          // Get container dimensions for responsive chart
+          const containerRect = container.getBoundingClientRect();
+          
           sourceAnalyticsChart = new LineChart('source-analytics-chart', {
-            height: 300,
-            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+            width: Math.max(300, containerRect.width - 40),
+            height: Math.min(320, Math.max(280, containerRect.height - 20)),
+            animate: true,
             showGrid: true,
-            showTooltip: true
+            showTooltip: true,
+            margin: { top: 20, right: 30, bottom: 40, left: 60 },
+            responsive: true,
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
           });
+          console.log('📊 Source analytics chart initialized successfully');
         } else {
           console.error('❌ Chart container not found');
         }
@@ -2152,7 +2160,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Prepare chart data
       const chartData = (data.chart_data || []).map(point => ({
-        timestamp: new Date(point.timestamp).getTime(),
+        date: new Date(point.timestamp),  // Changed from timestamp to date to match LineChart expected format
         value: point.value,
         label: '$' + formatNumber(point.value),
         breakdown: point.breakdown
@@ -2162,11 +2170,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (sourceAnalyticsChart && chartData.length > 0) {
         sourceAnalyticsChart.setData([{
           name: selectedAccount === 'ALL' ? 'All Source Accounts' : (data.account_name || 'Account'),
-          data: chartData,
+          values: chartData,  // Changed from 'data' to 'values' to match LineChart expected format
           color: '#3b82f6'
         }]);
+        console.log('📊 Chart data set successfully with', chartData.length, 'points');
       } else if (sourceAnalyticsChart) {
         sourceAnalyticsChart.showEmptyState();
+        console.log('📊 Showing empty state - no data available');
       }
 
     } catch (error) {
