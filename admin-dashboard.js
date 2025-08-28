@@ -2014,6 +2014,214 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // === SOURCE ACCOUNTS ANALYTICS FUNCTIONS ===
+  
+  let sourceAnalyticsChart = null;
+  let currentSourceAnalyticsData = null;
+
+  async function initializeSourceAnalytics() {
+    try {
+      // Initialize chart if LineChart is available
+      if (typeof LineChart !== 'undefined') {
+        console.log('📊 Initializing source accounts analytics chart...');
+        const container = document.getElementById('source-analytics-chart');
+        if (container) {
+          sourceAnalyticsChart = new LineChart('source-analytics-chart', {
+            height: 300,
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+            showGrid: true,
+            showTooltip: true
+          });
+        }
+      }
+
+      // Load source accounts list for dropdown
+      await loadSourceAccountsAnalyticsList();
+
+      // Load initial analytics data
+      await loadSourceAccountsAnalyticsData();
+
+      // Setup event listeners
+      setupSourceAnalyticsEventListeners();
+
+    } catch (error) {
+      console.error('❌ Error initializing source analytics:', error);
+    }
+  }
+
+  async function loadSourceAccountsAnalyticsList() {
+    const accountSelect = document.getElementById('source-analytics-account-select');
+    
+    if (!accountSelect) return;
+
+    try {
+      const response = await fetch(`${AUTH_API_BASE}/admin/analytics/source-accounts-list`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success) {
+          accountSelect.innerHTML = '<option value="ALL">All Source Accounts</option>';
+          
+          data.accounts.forEach(account => {
+            const option = document.createElement('option');
+            option.value = account.id;
+            option.textContent = `${account.name} (${account.strategy}) - ${account.account_type}`;
+            accountSelect.appendChild(option);
+          });
+
+          console.log(`📊 Loaded ${data.accounts.length} source accounts for analytics`);
+        } else {
+          throw new Error('Invalid response data');
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error loading source accounts list for analytics:', error);
+      accountSelect.innerHTML = '<option value="">Error loading accounts</option>';
+    }
+  }
+
+  async function loadSourceAccountsAnalyticsData() {
+    const accountSelect = document.getElementById('source-analytics-account-select');
+    const periodSelect = document.getElementById('source-analytics-period-select');
+    
+    if (!accountSelect || !periodSelect) return;
+    
+    const selectedAccount = accountSelect.value;
+    const selectedPeriod = parseInt(periodSelect.value);
+    
+    if (!selectedAccount) return;
+
+    try {
+      // Show loading state
+      if (sourceAnalyticsChart) {
+        sourceAnalyticsChart.showLoadingState();
+      }
+      
+      let response;
+      
+      if (selectedAccount === 'ALL') {
+        // Load aggregated data for all source accounts
+        response = await fetch(`${AUTH_API_BASE}/admin/analytics/source-accounts-aggregated?days=${selectedPeriod}`, {
+          headers: getAuthHeaders(token)
+        });
+      } else {
+        // Load data for specific source account
+        response = await fetch(`${AUTH_API_BASE}/admin/analytics/source-account-values/${selectedAccount}?days=${selectedPeriod}`, {
+          headers: getAuthHeaders(token)
+        });
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success) {
+          currentSourceAnalyticsData = data;
+          displaySourceAccountsAnalyticsData(data, selectedAccount);
+          console.log(`📊 Loaded source analytics data: ${data.data_points || 0} points`);
+        } else {
+          throw new Error('Invalid response data');
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+    } catch (error) {
+      console.error('Error loading source analytics data:', error);
+      showSourceAnalyticsError('Failed to load analytics data');
+    }
+  }
+
+  function displaySourceAccountsAnalyticsData(data, selectedAccount) {
+    try {
+      // Update status badges
+      updateSourceAnalyticsStatusBadges(data.summary || {});
+      
+      // Prepare chart data
+      const chartData = (data.chart_data || []).map(point => ({
+        timestamp: new Date(point.timestamp).getTime(),
+        value: point.value,
+        label: formatCurrency(point.value),
+        breakdown: point.breakdown
+      }));
+
+      // Display chart
+      if (sourceAnalyticsChart && chartData.length > 0) {
+        sourceAnalyticsChart.setData([{
+          name: selectedAccount === 'ALL' ? 'All Source Accounts' : (data.account_name || 'Account'),
+          data: chartData,
+          color: '#3b82f6'
+        }]);
+        sourceAnalyticsChart.render();
+      } else if (sourceAnalyticsChart) {
+        sourceAnalyticsChart.showEmptyState();
+      }
+
+    } catch (error) {
+      console.error('Error displaying source analytics data:', error);
+      showSourceAnalyticsError('Failed to display analytics data');
+    }
+  }
+
+  function updateSourceAnalyticsStatusBadges(summary) {
+    const currentTotalBadge = document.getElementById('source-current-total-badge');
+    const periodChangeBadge = document.getElementById('source-period-change-badge');
+    const changePercentageBadge = document.getElementById('source-change-percentage-badge');
+
+    if (currentTotalBadge) {
+      currentTotalBadge.textContent = formatCurrency(summary.current_value || 0);
+    }
+
+    if (periodChangeBadge) {
+      const periodChange = summary.period_change || 0;
+      periodChangeBadge.textContent = formatCurrency(periodChange);
+      periodChangeBadge.className = `status-badge ${periodChange >= 0 ? 'success' : 'danger'}`;
+    }
+
+    if (changePercentageBadge) {
+      const percentageChange = summary.percentage_change || 0;
+      changePercentageBadge.textContent = `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(2)}%`;
+      changePercentageBadge.className = `status-badge ${percentageChange >= 0 ? 'success' : 'danger'}`;
+    }
+  }
+
+  function showSourceAnalyticsError(message) {
+    if (sourceAnalyticsChart) {
+      sourceAnalyticsChart.showErrorState(message);
+    }
+    console.error('Source Analytics Error:', message);
+  }
+
+  function setupSourceAnalyticsEventListeners() {
+    // Account selector change
+    const accountSelect = document.getElementById('source-analytics-account-select');
+    if (accountSelect) {
+      accountSelect.addEventListener('change', async () => {
+        await loadSourceAccountsAnalyticsData();
+      });
+    }
+
+    // Period selector change  
+    const periodSelect = document.getElementById('source-analytics-period-select');
+    if (periodSelect) {
+      periodSelect.addEventListener('change', async () => {
+        await loadSourceAccountsAnalyticsData();
+      });
+    }
+
+    // Refresh button
+    const refreshButton = document.getElementById('refresh-source-analytics');
+    if (refreshButton) {
+      refreshButton.addEventListener('click', async () => {
+        await loadSourceAccountsAnalyticsData();
+      });
+    }
+  }
+
   // Initialize dashboard
   loadSystemOverview();
   loadActiveAccounts();
@@ -2025,6 +2233,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadActivity();
   loadSourceStrategies();
   loadSourceAccounts();
+  initializeSourceAnalytics();
   
   }); // End of authorization check
 });
