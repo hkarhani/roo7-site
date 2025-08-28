@@ -2156,7 +2156,6 @@ document.addEventListener("DOMContentLoaded", () => {
           data: chartData,
           color: '#3b82f6'
         }]);
-        sourceAnalyticsChart.render();
       } else if (sourceAnalyticsChart) {
         sourceAnalyticsChart.showEmptyState();
       }
