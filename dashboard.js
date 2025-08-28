@@ -782,6 +782,11 @@ document.addEventListener("DOMContentLoaded", () => {
                   `Conservative strategy for stable returns - ${strategy.note || '🔜 Coming Soon'}` :
                   'Conservative strategy for stable returns';
                 break;
+              case 'Market Neutral':
+                description = strategy.coming_soon === true ? 
+                  `Advanced market neutral strategy for FUTURES accounts - ${strategy.note || '🔜 Coming Soon'}` :
+                  'Advanced market neutral strategy for FUTURES accounts';
+                break;
               case 'Custom Portfolio Rebalance':
                 description = 'Fully customizable asset allocation';
                 break;
