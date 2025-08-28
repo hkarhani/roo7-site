@@ -2032,7 +2032,16 @@ document.addEventListener("DOMContentLoaded", () => {
             showGrid: true,
             showTooltip: true
           });
+        } else {
+          console.error('❌ Chart container not found');
         }
+      } else {
+        console.error('❌ LineChart not available - retrying in 1 second...');
+        // Retry after a short delay to allow scripts to load
+        setTimeout(async () => {
+          await initializeSourceAnalytics();
+        }, 1000);
+        return; // Exit early to avoid loading data without chart
       }
 
       // Load source accounts list for dropdown
