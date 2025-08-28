@@ -2145,7 +2145,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const chartData = (data.chart_data || []).map(point => ({
         timestamp: new Date(point.timestamp).getTime(),
         value: point.value,
-        label: formatCurrency(point.value),
+        label: '$' + formatNumber(point.value),
         breakdown: point.breakdown
       }));
 
@@ -2173,12 +2173,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const changePercentageBadge = document.getElementById('source-change-percentage-badge');
 
     if (currentTotalBadge) {
-      currentTotalBadge.textContent = formatCurrency(summary.current_value || 0);
+      currentTotalBadge.textContent = '$' + formatNumber(summary.current_value || 0);
     }
 
     if (periodChangeBadge) {
       const periodChange = summary.period_change || 0;
-      periodChangeBadge.textContent = formatCurrency(periodChange);
+      periodChangeBadge.textContent = '$' + formatNumber(periodChange);
       periodChangeBadge.className = `status-badge ${periodChange >= 0 ? 'success' : 'danger'}`;
     }
 
@@ -2191,7 +2191,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showSourceAnalyticsError(message) {
     if (sourceAnalyticsChart) {
-      sourceAnalyticsChart.showErrorState(message);
+      sourceAnalyticsChart.showEmptyState();
     }
     console.error('Source Analytics Error:', message);
   }
