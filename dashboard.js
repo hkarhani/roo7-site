@@ -490,6 +490,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res.ok) {
         const subscription = await res.json();
         console.log('Subscription data:', subscription);
+        console.log('Subscription status check:', {
+          hasSubscription: !!subscription,
+          status: subscription?.status,
+          isActive: subscription?.status === 'active',
+          expiresAt: subscription?.expires_at
+        });
         
         // Check if user has active subscription
         if (subscription && subscription.status === 'active') {
@@ -515,6 +521,26 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         } else {
           // No active subscription - show no subscription message
+          console.warn('No active subscription found, fetching debug info...');
+          
+          // Temporary: Fetch debug info to understand the issue
+          try {
+            const debugRes = await fetch(`${INVOICING_API_BASE}/debug/subscriptions/me`, {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+              }
+            });
+            
+            if (debugRes.ok) {
+              const debugData = await debugRes.json();
+              console.warn('DEBUG - Raw subscription data:', debugData);
+            }
+          } catch (debugError) {
+            console.warn('Could not fetch debug info:', debugError);
+          }
+          
           showNoSubscriptionStatus();
         }
       } else if (res.status === 404) {
