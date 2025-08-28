@@ -37,8 +37,8 @@ class AuditManagement {
         });
         
         document.getElementById('logout-btn')?.addEventListener('click', () => {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userRole');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userData');
             window.location.href = 'auth.html';
         });
 
@@ -172,6 +172,15 @@ class AuditManagement {
 
     async loadInitialData() {
         try {
+            // Check authentication first
+            const token = localStorage.getItem('token');
+            if (!token) {
+                logger.error('No authentication token found');
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            logger.info('Loading audit management data...');
             await Promise.all([
                 this.loadAccountOptions(),
                 this.loadUserOptions(),
@@ -186,22 +195,27 @@ class AuditManagement {
 
     async loadAccountOptions() {
         try {
-            const response = await fetch(`${getApiUrl()}/admin/accounts`, {
+            const response = await fetch(`${getApiUrl()}/admin/active-users-accounts`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
             if (response.ok) {
-                const accounts = await response.json();
+                const data = await response.json();
                 const select = document.getElementById('account-filter');
                 
-                accounts.forEach(account => {
-                    const option = document.createElement('option');
-                    option.value = account._id;
-                    option.textContent = `${account.account_name} (${account._id})`;
-                    select.appendChild(option);
-                });
+                if (data.accounts) {
+                    data.accounts.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.account_id;
+                        option.textContent = `${account.account_name || account.username} (${account.username})`;
+                        select.appendChild(option);
+                    });
+                }
+            } else {
+                const errorText = await response.text();
+                logger.error('Failed to load accounts:', response.status, response.statusText, errorText);
             }
         } catch (error) {
             logger.error('Failed to load account options:', error);
@@ -210,22 +224,35 @@ class AuditManagement {
 
     async loadUserOptions() {
         try {
-            const response = await fetch(`${getApiUrl()}/admin/users`, {
+            const response = await fetch(`${getApiUrl()}/admin/active-users-accounts`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
             if (response.ok) {
-                const users = await response.json();
+                const data = await response.json();
                 const select = document.getElementById('user-filter');
                 
-                users.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user._id;
-                    option.textContent = `${user.username} (${user._id})`;
-                    select.appendChild(option);
-                });
+                if (data.accounts) {
+                    // Extract unique users from accounts
+                    const uniqueUsers = new Map();
+                    data.accounts.forEach(account => {
+                        if (account.user_id && account.username) {
+                            uniqueUsers.set(account.user_id, account.username);
+                        }
+                    });
+                    
+                    uniqueUsers.forEach((username, userId) => {
+                        const option = document.createElement('option');
+                        option.value = userId;
+                        option.textContent = username;
+                        select.appendChild(option);
+                    });
+                }
+            } else {
+                const errorText = await response.text();
+                logger.error('Failed to load users:', response.status, response.statusText, errorText);
             }
         } catch (error) {
             logger.error('Failed to load user options:', error);
@@ -239,7 +266,7 @@ class AuditManagement {
 
             const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-stats`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
@@ -247,10 +274,18 @@ class AuditManagement {
                 const stats = await response.json();
                 this.renderAuditStats(stats);
             } else {
-                throw new Error('Failed to load stats');
+                const errorText = await response.text();
+                logger.error('API Error Response:', response.status, response.statusText, errorText);
+                throw new Error(`Failed to load stats: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             logger.error('Failed to load audit stats:', error);
+            if (error.message.includes('401')) {
+                // Unauthorized - redirect to login
+                localStorage.removeItem('token');
+                window.location.href = 'auth.html';
+                return;
+            }
             document.getElementById('audit-stats-container').innerHTML = 
                 '<div class="error-state">Failed to load statistics</div>';
         }
@@ -329,7 +364,7 @@ class AuditManagement {
 
             const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-logs?${queryParams}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
@@ -343,10 +378,18 @@ class AuditManagement {
                 this.renderPagination();
                 this.updateResultsCount();
             } else {
-                throw new Error('Failed to load audits');
+                const errorText = await response.text();
+                logger.error('API Error Response:', response.status, response.statusText, errorText);
+                throw new Error(`Failed to load audits: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             logger.error('Failed to load audits:', error);
+            if (error.message.includes('401')) {
+                // Unauthorized - redirect to login
+                localStorage.removeItem('token');
+                window.location.href = 'auth.html';
+                return;
+            }
             document.getElementById('audit-results-container').innerHTML = 
                 '<div class="error-state">Failed to load audit results</div>';
         }
@@ -646,7 +689,7 @@ class AuditManagement {
         try {
             const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-logs/${auditId}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
@@ -744,7 +787,7 @@ class AuditManagement {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify({ audit_ids: auditIds })
             });
@@ -781,7 +824,7 @@ class AuditManagement {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify({ audit_ids: auditIds })
             });
