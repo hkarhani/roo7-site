@@ -100,9 +100,9 @@ class JobsManagerDashboard {
             document.getElementById('job-action-modal').style.display = 'none';
         });
 
-        // Audit Changes functionality
+        // Audit Changes functionality - redirect to dedicated audit management page
         document.getElementById('audit-changes-btn')?.addEventListener('click', () => {
-            this.showAuditChanges();
+            window.location.href = 'admin-audit-management.html';
         });
 
         document.getElementById('audit-changes-close')?.addEventListener('click', () => {

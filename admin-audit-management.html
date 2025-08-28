@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Audit Management Dashboard</title>
+  <script type="module" src="frontend-config.js"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-audit-management.css?v=1.0" />
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>📋 Audit Management Dashboard</h1>
+    <div class="actions">
+      <button id="back-to-jobs">← Jobs Manager</button>
+      <button id="back-to-admin">← Admin Dashboard</button>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <main class="dashboard-grid audit-management-grid">
+    <!-- Audit Filters -->
+    <section id="section-audit-filters" class="dashboard-card full-width">
+      <div class="section-header">
+        <h2>🔍 Audit Filters</h2>
+        <div class="filter-actions">
+          <button id="clear-filters" class="secondary-button">Clear All</button>
+          <button id="apply-filters" class="primary-button">Apply Filters</button>
+        </div>
+      </div>
+      
+      <div class="filters-container">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="account-filter">Account</label>
+            <select id="account-filter" class="filter-select">
+              <option value="">All Accounts</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="change-type-filter">Change Type</label>
+            <select id="change-type-filter" class="filter-select">
+              <option value="">All Change Types</option>
+              <option value="configuration_change_analysis">Configuration Change Analysis</option>
+              <option value="configuration_change_analysis_legacy">Configuration Change Analysis (Legacy)</option>
+              <option value="job_created">Job Created</option>
+              <option value="status_change">Status Change</option>
+              <option value="job_restored">Job Restored</option>
+              <option value="cadence_consistency_fix">Cadence Fix</option>
+              <option value="account_migration">Account Migration</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="user-filter">User</label>
+            <select id="user-filter" class="filter-select">
+              <option value="">All Users</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="date-from">From Date</label>
+            <input type="date" id="date-from" class="filter-input">
+          </div>
+          
+          <div class="filter-group">
+            <label for="date-to">To Date</label>
+            <input type="date" id="date-to" class="filter-input">
+          </div>
+
+          <div class="filter-group">
+            <label for="search-text">Search</label>
+            <input type="text" id="search-text" class="filter-input" placeholder="Search in details...">
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="rebalance-needed-filter">Rebalance Status</label>
+            <select id="rebalance-needed-filter" class="filter-select">
+              <option value="">All</option>
+              <option value="true">Rebalance Needed</option>
+              <option value="false">No Rebalance Needed</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="significant-changes-filter">Significance</label>
+            <select id="significant-changes-filter" class="filter-select">
+              <option value="">All</option>
+              <option value="true">Significant Changes</option>
+              <option value="false">Minor Changes</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="results-per-page">Results per page</label>
+            <select id="results-per-page" class="filter-select">
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100" selected>100</option>
+              <option value="250">250</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audit Summary Stats -->
+    <section id="section-audit-stats" class="dashboard-card">
+      <div class="section-header">
+        <h2>📊 Audit Statistics</h2>
+        <button id="refresh-stats" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="audit-stats-container" id="audit-stats-container">
+        <div class="loading-state">
+          <p>Loading audit statistics...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bulk Actions -->
+    <section id="section-bulk-actions" class="dashboard-card">
+      <div class="section-header">
+        <h2>🗂️ Bulk Actions</h2>
+      </div>
+      <div class="bulk-actions-container">
+        <div class="bulk-action-group">
+          <button id="select-all-audits" class="secondary-button">Select All Visible</button>
+          <button id="deselect-all-audits" class="secondary-button">Deselect All</button>
+        </div>
+        <div class="bulk-action-group">
+          <button id="bulk-delete-selected" class="danger-button" disabled>
+            🗑️ Delete Selected (<span id="selected-count">0</span>)
+          </button>
+          <button id="export-selected" class="secondary-button" disabled>
+            📤 Export Selected
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audit Results -->
+    <section id="section-audit-results" class="dashboard-card full-width">
+      <div class="section-header">
+        <h2>📋 Audit Results</h2>
+        <div class="results-info">
+          <span id="results-count">Loading...</span>
+          <button id="refresh-audits" class="secondary-button">🔄 Refresh</button>
+        </div>
+      </div>
+      
+      <div class="audit-results-container" id="audit-results-container">
+        <div class="loading-state">
+          <p>Loading audit results...</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container" id="pagination-container">
+        <!-- Pagination controls will be inserted here -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-confirmation-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚠️ Confirm Deletion</h3>
+        <button class="modal-close" id="close-delete-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="delete-confirmation-text">Are you sure you want to delete the selected audit records?</p>
+        <p class="warning-text">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-delete" class="danger-button">Delete</button>
+        <button id="cancel-delete" class="secondary-button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Detail Modal -->
+  <div id="audit-detail-modal" class="modal" style="display: none;">
+    <div class="modal-content audit-detail-content">
+      <div class="modal-header">
+        <h3>📋 Audit Detail</h3>
+        <button class="modal-close" id="close-detail-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="audit-detail-body">
+        <!-- Audit details will be inserted here -->
+      </div>
+      <div class="modal-footer">
+        <button id="delete-single-audit" class="danger-button">Delete This Audit</button>
+        <button class="secondary-button" id="close-detail-modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin-audit-management.js?v=1.0"></script>
+</body>
+</html>
