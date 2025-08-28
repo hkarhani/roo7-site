@@ -83,7 +83,7 @@ function addHeroReferralCalculator() {
     // Add referral message before CTA
     const referralMessageHTML = `
         <div class="hero-referral-message" style="background: rgba(5, 150, 105, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 2px solid #059669;">
-            <div style="color: #047857; font-weight: 600; margin-bottom: 0.5rem;">🎯 Limited Time: 20% OFF with Referral Codes!</div>
+            <div style="color: #047857; font-weight: 600; margin-bottom: 0.5rem;">🎯 Limited Time: SAVE MORE with Referral Codes!</div>
             <div style="color: #065f46; font-size: 0.9rem;">Ask existing users for referral codes and save hundreds on your subscription</div>
         </div>
     `;
