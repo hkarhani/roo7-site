@@ -54,15 +54,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let allInvoices = [];
   let filteredInvoices = [];
   let userSubscription = null;
+  let currentAUMData = null;
 
   // Load initial data
   async function initializePage() {
     try {
-      await Promise.all([
+      const results = await Promise.all([
         loadUserSubscription(),
-        loadInvoices()
+        loadInvoices(),
+        loadCurrentAUM()
       ]);
+      
+      // Store AUM data from the third promise result
+      currentAUMData = results[2];
+      
       updateSummaryStats();
+      updateAUMDisplay();
+      updatePricingCalculator();
       checkSubscriptionStatus();
     } catch (error) {
       console.error('Failed to initialize page:', error);
@@ -100,6 +108,27 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error('Error loading subscription:', error);
       // Don't show error for subscription - it's optional
+    }
+  }
+
+  // Load current 7-day average AUM
+  async function loadCurrentAUM() {
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/subscriptions/aum`, {
+        headers: getAuthHeaders(token)
+      });
+      
+      if (response.ok) {
+        const aumData = await response.json();
+        console.log('7-day AUM data:', aumData);
+        return aumData;
+      } else {
+        console.warn('Failed to load AUM data:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error loading AUM data:', error);
+      return null;
     }
   }
 
@@ -167,13 +196,75 @@ document.addEventListener("DOMContentLoaded", () => {
       totalCountElement.textContent = totalCount;
     }
     
-    // Update current AUM instead of tier (HTML has current-aum, not current-tier)
+  }
+
+  // Update AUM displays with real 7-day average data
+  function updateAUMDisplay() {
     const currentAumElement = document.getElementById('current-aum');
-    if (currentAumElement) {
-      if (userSubscription && userSubscription.portfolio_value) {
-        currentAumElement.textContent = `$${userSubscription.portfolio_value.toFixed(2)}`;
-      } else {
+    const userAumDisplayElement = document.getElementById('user-aum-display');
+    
+    if (currentAUMData && currentAUMData.aum_7day_avg !== undefined) {
+      const aumValue = `$${currentAUMData.aum_7day_avg.toFixed(2)}`;
+      
+      // Update top stats display
+      if (currentAumElement) {
+        currentAumElement.textContent = aumValue;
+      }
+      
+      // Update pricing calculator display
+      if (userAumDisplayElement) {
+        userAumDisplayElement.textContent = aumValue;
+      }
+      
+      console.log('Updated AUM displays with 7-day average:', aumValue);
+    } else {
+      // Fallback to $0.00 if no AUM data
+      if (currentAumElement) {
         currentAumElement.textContent = '$0.00';
+      }
+      if (userAumDisplayElement) {
+        userAumDisplayElement.textContent = '$0.00';
+      }
+    }
+  }
+
+  // Update pricing calculator based on real AUM
+  function updatePricingCalculator() {
+    const baseFeeElement = document.getElementById('base-fee-display');
+    const referralFeeElement = document.getElementById('referral-fee-display');
+    
+    if (currentAUMData && currentAUMData.aum_7day_avg !== undefined) {
+      const aum = currentAUMData.aum_7day_avg;
+      
+      // Calculate pricing based on 2025 model
+      let baseFee, referralFee, savings;
+      
+      if (aum < 10000) {
+        baseFee = 600;
+        referralFee = 500;
+        savings = 100;
+      } else {
+        baseFee = Math.round(aum * 0.072);  // 7.2% of AUM
+        referralFee = Math.round(aum * 0.06);  // 6% of AUM with referral
+        savings = baseFee - referralFee;
+      }
+      
+      // Update displays
+      if (baseFeeElement) {
+        baseFeeElement.textContent = `$${baseFee.toLocaleString()}`;
+      }
+      if (referralFeeElement) {
+        referralFeeElement.innerHTML = `$${referralFee.toLocaleString()} <span style="color: #059669;">(Save $${savings.toLocaleString()})</span>`;
+      }
+      
+      console.log('Updated pricing calculator:', { aum, baseFee, referralFee, savings });
+    } else {
+      // Reset to $0 if no AUM data
+      if (baseFeeElement) {
+        baseFeeElement.textContent = '$0.00';
+      }
+      if (referralFeeElement) {
+        referralFeeElement.textContent = '$0.00';
       }
     }
   }

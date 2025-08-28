@@ -8,6 +8,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = CONFIG.API_CONFIG.authUrl;      // auth endpoints (port 443)
   const MARKET_DATA_API = CONFIG.API_CONFIG.marketUrl;
   
+  // Global user data storage
+  let currentUser = null;
+  
   // Update page title
   document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.dashboard;
 
@@ -451,6 +454,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (res.ok) {
         const data = await res.json();
+        currentUser = data; // Store user data globally
+        
         document.getElementById("user-fullname").textContent = data.full_name || data.username || "User";
         
         // Check if user is admin and show admin button
@@ -473,6 +478,50 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function checkSubscriptionStatus() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    // Check if user is admin
+    if (currentUser && currentUser.is_admin) {
+      console.log('Admin user detected, checking if they have trading accounts...');
+      
+      // Check if admin has any trading accounts
+      try {
+        const accountsRes = await fetch(`${API_BASE}/accounts`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (accountsRes.ok) {
+          const accounts = await accountsRes.json();
+          if (accounts && accounts.length > 0) {
+            // Admin has trading accounts - treat as paying customer
+            console.log(`Admin user has ${accounts.length} trading accounts, treating as paying customer`);
+            await checkRegularSubscriptionStatus();
+          } else {
+            // Admin has no accounts - show admin unlimited access
+            console.log('Admin user has no trading accounts, showing admin unlimited access');
+            showAdminUnlimitedAccess();
+          }
+        } else {
+          // Couldn't load accounts, default to admin unlimited
+          showAdminUnlimitedAccess();
+        }
+      } catch (error) {
+        console.warn('Error checking admin accounts:', error);
+        showAdminUnlimitedAccess();
+      }
+      return;
+    }
+
+    // Regular user - check normal subscription status
+    await checkRegularSubscriptionStatus();
+  }
+
+  async function checkRegularSubscriptionStatus() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -572,6 +621,27 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Add a different styling class for no subscription
         statusElement.classList.add('no-subscription');
+        statusElement.style.display = 'block';
+      }
+    }
+  }
+
+  // Function to display admin unlimited access status
+  function showAdminUnlimitedAccess() {
+    const statusElement = document.getElementById('subscription-status');
+    
+    if (statusElement) {
+      const subscriptionTextElement = statusElement.querySelector('.subscription-text');
+      const daysElement = statusElement.querySelector('.subscription-days');
+      
+      if (subscriptionTextElement && daysElement) {
+        // Show admin unlimited access
+        subscriptionTextElement.innerHTML = '<span style="color: #059669;">🔑 Admin Access - Unlimited</span>';
+        daysElement.innerHTML = '<span style="color: #6b7280; font-size: 12px;">(Full system access)</span>';
+        
+        // Remove no-subscription styling and add admin styling
+        statusElement.classList.remove('no-subscription');
+        statusElement.classList.add('admin-access');
         statusElement.style.display = 'block';
       }
     }
