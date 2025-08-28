@@ -1642,9 +1642,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <h4>📊 Account Breakdown</h4>
             
             <div class="breakdown-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-              <div><strong>SPOT Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.spot_value_usdt || data.spot_value || data.total_usdt_value || 0))}</div>
-              <div><strong>USDT-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.usdtm_value_usdt || data.futures_value || 0))}</div>
-              <div><strong>COIN-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.coinm_value_usdt || 0))}</div>
+              <div><strong>SPOT Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.spot_value_usdt ?? data.spot_value ?? 0))}</div>
+              <div><strong>USDT-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.usdtm_value_usdt ?? data.futures_value ?? 0))}</div>
+              <div><strong>COIN-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.coinm_value_usdt ?? 0))}</div>
             </div>
           ${(data.detailed_breakdown?.spot || data.balances || data.balance_details) ? `
             <div class="result-section">

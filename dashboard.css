@@ -1291,13 +1291,13 @@ input:checked + .toggle-slider:before {
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  padding: 8px;
+  padding: 6px 8px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   margin-bottom: 0;
   background: #f9f9f9;
   transition: all 0.2s ease;
-  min-height: 50px;
+  min-height: 40px;
 }
 
 .dark-theme .strategy-item {
@@ -1319,8 +1319,8 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
   color: #333;
   font-size: 13px;
-  margin-bottom: 3px;
-  line-height: 1.2;
+  margin-bottom: 2px;
+  line-height: 1.1;
 }
 
 .dark-theme .strategy-name {
@@ -1330,7 +1330,7 @@ input:checked + .toggle-slider:before {
 .strategy-description {
   font-size: 11px;
   color: #666;
-  line-height: 1.3;
+  line-height: 1.2;
   margin-top: auto;
 }
 
