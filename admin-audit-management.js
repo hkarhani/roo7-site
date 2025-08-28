@@ -507,6 +507,101 @@ class AuditManagement {
         return `<span class="change-type-badge ${badgeClass}">${displayName}</span>`;
     }
 
+    formatAuditDetails(details, changeType) {
+        if (changeType === 'configuration_change_analysis' || changeType === 'configuration_change_analysis_legacy') {
+            return this.formatConfigurationChangeAnalysis(details);
+        }
+        
+        // For other types, return formatted summary
+        return this.formatGenericDetails(details);
+    }
+
+    formatConfigurationChangeAnalysis(details) {
+        try {
+            const changes = details.changes || {};
+            const driftResult = details.portfolio_drift_result;
+            const isSignificant = details.is_significant;
+            const actionTaken = details.action_taken;
+            
+            let html = '<div class="audit-change-summary">';
+            
+            // Drift Analysis Summary
+            if (changes.target_portfolio && driftResult) {
+                const driftSummary = driftResult.summary;
+                if (driftSummary) {
+                    const needed = driftSummary.rebalance_decision === 'needed';
+                    const statusClass = needed ? 'drift-needed' : 'drift-ok';
+                    const statusIcon = needed ? '🔴' : '🟢';
+                    
+                    html += `
+                        <div class="drift-analysis ${statusClass}">
+                            <h5>${statusIcon} Portfolio Drift Analysis</h5>
+                            <div class="drift-stats">
+                                <span class="drift-decision">${needed ? 'REBALANCE NEEDED' : 'No rebalance needed'}</span>
+                                <span class="drift-details">
+                                    ${driftSummary.assets_needing_adjustment}/${driftSummary.total_assets} assets exceed ${driftSummary.threshold_percentage}% threshold
+                                </span>
+                                <span class="max-drift">Max drift: ${driftSummary.max_drift_percentage}%</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Show assets that need adjustment
+                    if (needed && driftResult.assets_to_adjust) {
+                        html += '<div class="assets-to-adjust"><h6>Assets needing adjustment:</h6><ul>';
+                        Object.entries(driftResult.assets_to_adjust).forEach(([asset, [applied, target, diff]]) => {
+                            html += `<li><strong>${asset}:</strong> ${(applied*100).toFixed(2)}% → ${(target*100).toFixed(2)}% (${diff > 0 ? '+' : ''}${(diff*100).toFixed(2)}%)</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+                }
+            }
+            
+            // Other Configuration Changes
+            const otherChanges = Object.keys(changes).filter(key => key !== 'target_portfolio');
+            if (otherChanges.length > 0) {
+                html += '<div class="config-changes"><h5>Configuration Changes:</h5><ul>';
+                otherChanges.forEach(key => {
+                    const change = changes[key];
+                    html += `<li><strong>${key}:</strong> ${JSON.stringify(change.old)} → ${JSON.stringify(change.new)}</li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            // Action Taken
+            if (actionTaken) {
+                const actionClass = actionTaken === 'job_updated' ? 'action-taken' : 'action-skipped';
+                const actionText = actionTaken === 'job_updated' ? '✅ Job updated for execution' : '⏸️ No action taken (within threshold)';
+                html += `<div class="action-taken ${actionClass}"><strong>Result:</strong> ${actionText}</div>`;
+            }
+            
+            html += '</div>';
+            return html;
+            
+        } catch (error) {
+            console.error('Error formatting configuration change analysis:', error);
+            return '<div class="format-error">Error formatting audit details</div>';
+        }
+    }
+
+    formatGenericDetails(details) {
+        // Format common fields in a more readable way
+        let html = '<div class="generic-details">';
+        
+        Object.entries(details).forEach(([key, value]) => {
+            if (key === 'account_name' || key === 'strategy') {
+                html += `<div class="detail-item"><strong>${key}:</strong> ${value}</div>`;
+            } else if (typeof value === 'object') {
+                html += `<div class="detail-item"><strong>${key}:</strong> <pre>${JSON.stringify(value, null, 2)}</pre></div>`;
+            } else {
+                html += `<div class="detail-item"><strong>${key}:</strong> ${value}</div>`;
+            }
+        });
+        
+        html += '</div>';
+        return html;
+    }
+
     renderPagination() {
         const container = document.getElementById('pagination-container');
         
@@ -734,7 +829,12 @@ class AuditManagement {
             
             <div class="audit-detail-section">
                 <h4>Details</h4>
-                <div class="json-display">${JSON.stringify(audit.details, null, 2)}</div>
+                <div class="formatted-details">${this.formatAuditDetails(audit.details, audit.change_type)}</div>
+                
+                <details class="raw-json-toggle">
+                    <summary>Show Raw JSON</summary>
+                    <div class="json-display">${JSON.stringify(audit.details, null, 2)}</div>
+                </details>
             </div>
         `;
         

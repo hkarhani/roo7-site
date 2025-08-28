@@ -1312,6 +1312,8 @@ class JobsManagerDashboard {
         const typeMap = {
             'job_created': 'Job Created',
             'configuration_change': 'Config Change',
+            'configuration_change_analysis': 'Config Analysis',
+            'configuration_change_analysis_legacy': 'Config Analysis (Legacy)',
             'status_change': 'Status Change',
             'job_restored': 'Job Restored',
             'cadence_consistency_fix': 'Cadence Fix',
@@ -1322,6 +1324,10 @@ class JobsManagerDashboard {
 
     formatChangeDetails(details, changeType) {
         switch (changeType) {
+            case 'configuration_change_analysis':
+            case 'configuration_change_analysis_legacy':
+                return this.formatConfigurationChangeAnalysis(details);
+                
             case 'configuration_change':
                 const changes = details.changes || {};
                 const changeList = Object.keys(changes).map(key => 
@@ -1346,6 +1352,61 @@ class JobsManagerDashboard {
                 
             default:
                 return JSON.stringify(details).substring(0, 100);
+        }
+    }
+
+    formatConfigurationChangeAnalysis(details) {
+        try {
+            const changes = details.changes || {};
+            const driftResult = details.portfolio_drift_result;
+            const isSignificant = details.is_significant;
+            const actionTaken = details.action_taken;
+            
+            // Start building summary
+            let summary = [];
+            
+            // Handle portfolio changes with drift analysis
+            if (changes.target_portfolio && driftResult) {
+                const driftSummary = driftResult.summary;
+                if (driftSummary) {
+                    const decision = driftSummary.rebalance_decision === 'needed' ? 'REBALANCE NEEDED' : 'No rebalance needed';
+                    const maxDrift = driftSummary.max_drift_percentage;
+                    const assetsNeedingAdjustment = driftSummary.assets_needing_adjustment;
+                    
+                    if (driftSummary.rebalance_decision === 'needed') {
+                        summary.push(`🔴 ${decision} - ${assetsNeedingAdjustment}/${driftSummary.total_assets} assets drift >${driftSummary.threshold_percentage}% (max: ${maxDrift}%)`);
+                    } else {
+                        summary.push(`🟢 ${decision} - Max drift: ${maxDrift}% (threshold: ${driftSummary.threshold_percentage}%)`);
+                    }
+                } else {
+                    summary.push('Portfolio updated - drift analysis included');
+                }
+            }
+            
+            // Handle other configuration changes
+            const otherChanges = Object.keys(changes).filter(key => key !== 'target_portfolio');
+            if (otherChanges.length > 0) {
+                const changeList = otherChanges.map(key => {
+                    const change = changes[key];
+                    if (key === 'rebalance_frequency') {
+                        return `${key}: ${change.old} → ${change.new}`;
+                    }
+                    return `${key}: ${JSON.stringify(change.old)} → ${JSON.stringify(change.new)}`;
+                });
+                summary.push(...changeList);
+            }
+            
+            // Add action taken
+            if (actionTaken) {
+                const actionText = actionTaken === 'job_updated' ? '✅ Job updated' : '⏸️ No action (within threshold)';
+                summary.push(actionText);
+            }
+            
+            return summary.length > 0 ? summary.join(' | ') : 'Configuration analyzed';
+            
+        } catch (error) {
+            console.error('Error formatting configuration change analysis:', error);
+            return 'Configuration change with analysis';
         }
     }
 
