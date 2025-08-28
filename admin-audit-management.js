@@ -1,7 +1,11 @@
 // Audit Management Dashboard JavaScript
 
-import { CONFIG } from './frontend-config.js';
-import logger from './logger.js';
+import CONFIG from './frontend-config.js';
+
+// Get API URL from config
+const getApiUrl = () => {
+    return CONFIG?.API_CONFIG?.authUrl || CONFIG?.API_URL || 'https://api.roo7.site:443';
+};
 
 class AuditManagement {
     constructor() {
@@ -182,7 +186,7 @@ class AuditManagement {
 
     async loadAccountOptions() {
         try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/accounts`, {
+            const response = await fetch(`${getApiUrl()}/admin/accounts`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
@@ -206,7 +210,7 @@ class AuditManagement {
 
     async loadUserOptions() {
         try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/users`, {
+            const response = await fetch(`${getApiUrl()}/admin/users`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
@@ -233,7 +237,7 @@ class AuditManagement {
             const container = document.getElementById('audit-stats-container');
             container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading statistics...</div>';
 
-            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/jobs-manager/audit-stats`, {
+            const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-stats`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
@@ -323,7 +327,7 @@ class AuditManagement {
                 ...filters
             });
 
-            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/jobs-manager/audit-logs?${queryParams}`, {
+            const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-logs?${queryParams}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
@@ -640,7 +644,7 @@ class AuditManagement {
 
     async viewAuditDetail(auditId) {
         try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/jobs-manager/audit-logs/${auditId}`, {
+            const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-logs/${auditId}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
@@ -736,7 +740,7 @@ class AuditManagement {
         try {
             const auditIds = Array.from(this.selectedAudits);
             
-            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/jobs-manager/audit-logs/bulk-delete`, {
+            const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-logs/bulk-delete`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -773,7 +777,7 @@ class AuditManagement {
         try {
             const auditIds = Array.from(this.selectedAudits);
             
-            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/jobs-manager/audit-logs/export`, {
+            const response = await fetch(`${getApiUrl()}/admin/jobs-manager/audit-logs/export`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
