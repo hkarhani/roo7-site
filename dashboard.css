@@ -1291,13 +1291,13 @@ input:checked + .toggle-slider:before {
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   margin-bottom: 0;
   background: #f9f9f9;
   transition: all 0.2s ease;
-  min-height: 70px;
+  min-height: 50px;
 }
 
 .dark-theme .strategy-item {
