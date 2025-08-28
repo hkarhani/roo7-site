@@ -101,84 +101,92 @@
     <!-- Pricing Section -->
     <section id="pricing" class="pricing">
         <div class="container">
-            <h2 class="section-title">Transparent Pricing</h2>
-            <p class="section-subtitle">Choose the plan that fits your trading capital. No hidden fees, just performance-driven results.</p>
-            <div class="pricing-grid">
-                <div class="pricing-card">
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <p class="section-subtitle">One plan covers all your trading accounts. No tiers, no limits, just results.</p>
+            
+            <!-- Main Pricing Card -->
+            <div class="unified-pricing">
+                <div class="pricing-card-unified featured">
+                    <div class="popular-badge">2025 Model</div>
                     <div class="pricing-header">
-                        <h3>Starter</h3>
-                        <p>Perfect for beginners</p>
-                        <div class="price">
-                            <span class="price-amount">$1,000</span>
-                            <span class="price-period">recurring fee</span>
-                            <span class="price-note">for portfolios up to $10K</span>
+                        <h3>Unlimited Accounts Plan</h3>
+                        <p>One subscription. All your accounts.</p>
+                        <div class="price-tiers">
+                            <div class="price-tier">
+                                <div class="price">
+                                    <span class="price-amount">$500</span>
+                                    <span class="price-period">per year</span>
+                                    <span class="price-note">Under $10K AUM (with referral)</span>
+                                </div>
+                            </div>
+                            <div class="price-tier">
+                                <div class="price">
+                                    <span class="price-amount">6%</span>
+                                    <span class="price-period">of AUM yearly</span>
+                                    <span class="price-note">$10K+ AUM (with referral)</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="pricing-discount">
-                        <span class="discount-badge">⭐ 50% OFF First Year</span>
-                        <span class="discount-note">for referred customers</span>
+                    
+                    <div class="referral-highlight">
+                        <div class="referral-badge">🎯 20% OFF with Referral Codes!</div>
+                        <p>Save big on your subscription - ask existing users for referral codes</p>
                     </div>
-                    <ul class="pricing-features">
-                        <li>✓ All trading strategies</li>
+                    
+                    <ul class="pricing-features-unified">
+                        <li>✓ <strong>Unlimited linked accounts</strong></li>
+                        <li>✓ All trading strategies (High/Med/Low risk)</li>
+                        <li>✓ Custom portfolio rebalancing</li>
                         <li>✓ Binance SPOT integration</li>
-                        <li>✓ Multiple sub-accounts</li>
-                        <li>✓ 24/7 bot monitoring</li>
-                        <li>✓ Email support</li>
+                        <li>✓ 24/7 automated monitoring</li>
+                        <li>✓ Real-time analytics & reporting</li>
+                        <li>✓ Email & priority support</li>
+                        <li>✓ 14-day money-back guarantee</li>
                     </ul>
-                    <button class="btn btn-primary btn-full" onclick="window.location.href='/auth'">Get Started</button>
-                </div>
-
-                <div class="pricing-card featured">
-                    <div class="popular-badge">Most Popular</div>
-                    <div class="pricing-header">
-                        <h3>Professional</h3>
-                        <p>For serious traders</p>
-                        <div class="price">
-                            <span class="price-amount">8%</span>
-                            <span class="price-period">of total funds</span>
-                            <span class="price-note">for portfolios up to $100K</span>
-                        </div>
-                    </div>
-                    <div class="pricing-discount">
-                        <span class="discount-badge">Performance-Based</span>
-                        <span class="discount-note">Pay only on your capital</span>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>✓ All Starter features</li>
-                        <li>✓ Advanced analytics</li>
-                        <li>✓ Custom rebalancing</li>
-                        <li>✓ Priority support</li>
-                        <li>✓ Multiple sub-accounts</li>
-                    </ul>
-                    <button class="btn btn-primary btn-full" onclick="window.location.href='/auth'">Choose Professional</button>
-                </div>
-
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3>Enterprise</h3>
-                        <p>For institutional clients</p>
-                        <div class="price">
-                            <span class="price-amount">Custom</span>
-                            <span class="price-period">pricing</span>
-                            <span class="price-note">for portfolios above $100K</span>
-                        </div>
-                    </div>
-                    <div class="pricing-discount">
-                        <span class="discount-badge">Tailored Solutions</span>
-                        <span class="discount-note">Custom terms & rates</span>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>✓ All Professional features</li>
-                        <li>✓ Dedicated account manager</li>
-                        <li>✓ Custom strategies</li>
-                        <li>✓ White-label options</li>
-                        <li>✓ 24/7 phone support</li>
-                    </ul>
-                    <button class="btn btn-outline btn-full" onclick="window.location.href='/auth'">Contact Sales</button>
+                    
+                    <button class="btn btn-primary btn-large" onclick="window.location.href='/auth'">Get Started Today</button>
                 </div>
             </div>
+            
+            <!-- Pricing Examples -->
+            <div class="pricing-examples">
+                <h3>Pricing Examples (with referral codes)</h3>
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <div class="example-aum">$6K AUM</div>
+                        <div class="example-price">$500/year</div>
+                        <div class="example-savings">Save $100</div>
+                    </div>
+                    <div class="example-card">
+                        <div class="example-aum">$25K AUM</div>
+                        <div class="example-price">$1,500/year</div>
+                        <div class="example-savings">Save $300</div>
+                    </div>
+                    <div class="example-card">
+                        <div class="example-aum">$100K AUM</div>
+                        <div class="example-price">$6,000/year</div>
+                        <div class="example-savings">Save $1,200</div>
+                    </div>
+                </div>
+                <p class="examples-note">
+                    <strong>AUM calculation:</strong> 7-day trailing average of all linked account values to smooth volatility.
+                    <br><strong>Without referral:</strong> $600/year under $10K, 7.2%/year above $10K.
+                </p>
+            </div>
+            
+            <!-- Referral Program -->
+            <div class="referral-program-info">
+                <h3>💰 Earn 20% Commissions</h3>
+                <p>Refer friends and earn 20% of their annual subscription fee for 12 months!</p>
+                <div class="referral-examples">
+                    <span>$25K referral = $300/year commission</span>
+                    <span>$100K referral = $1,200/year commission</span>
+                </div>
+            </div>
+            
             <div class="pricing-note">
-                <p>All plans include secure API integration, real-time monitoring, and transparent reporting.</p>
+                <p>Secure API integration • No withdrawal access • Bank-grade encryption • 99.9% uptime</p>
             </div>
         </div>
     </section>
@@ -238,5 +246,8 @@
             </div>
         </div>
     </footer>
+
+    <!-- Scripts -->
+    <script src="landingpage.js?v=1.0"></script>
 </body>
 </html>
