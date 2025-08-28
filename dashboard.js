@@ -481,6 +481,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    // Debug current user data
+    console.log('checkSubscriptionStatus called with currentUser:', currentUser);
+
     // Check if user is admin
     if (currentUser && currentUser.is_admin) {
       console.log('Admin user detected, checking if they have trading accounts...');
