@@ -27,6 +27,10 @@ class LogsManager {
 
   getAuthHeaders() {
     const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ No token available for API call");
+      throw new Error("Authentication token not available");
+    }
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -51,7 +55,8 @@ class LogsManager {
     }
 
     try {
-      const response = await fetch(`${backendBaseUrl}/verify-token`, {
+      // Get current user info to verify admin status (same as admin dashboard)
+      const response = await fetch(`${backendBaseUrl}/me`, {
         headers: this.getAuthHeaders()
       });
       
@@ -64,8 +69,10 @@ class LogsManager {
         return;
       }
 
-      const data = await response.json();
-      if (!data.is_admin) {
+      const userData = await response.json();
+      
+      // Check if user is admin
+      if (!userData.is_admin) {
         console.log("❌ Access denied. Admin privileges required.");
         alert('Access denied. Admin privileges required.');
         setTimeout(() => {
@@ -336,10 +343,23 @@ class LogsManager {
 
     } catch (error) {
       console.error('Failed to load log file:', error);
+      
+      // Check if it's an authentication error
+      if (error.message.includes("Authentication token not available") || 
+          error.message.includes("401") || 
+          error.message.includes("403")) {
+        console.log("❌ Authentication error when loading log file, redirecting to auth...");
+        setTimeout(() => {
+          window.location.href = "/auth.html";
+        }, 2000);
+        return;
+      }
+      
       container.innerHTML = `
         <div class="error-state">
           <h3>Failed to load log file</h3>
           <p>${error.message}</p>
+          <button onclick="logsManager.loadLogFile('${filename}')" class="retry-btn">🔄 Retry</button>
         </div>
       `;
     }
