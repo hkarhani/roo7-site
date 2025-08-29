@@ -1735,15 +1735,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Verify user account function - gets actual trading account details from API
+  // Verify user account function - uses same working approach as admin-accounts.js
   async function verifyUserAccount(accountId) {
     try {
-      showNotification('Starting user account verification...', 'info');
-      console.log('🔍 Verifying user trading account:', accountId);
+      showNotification('Starting user account troubleshoot...', 'info');
+      console.log('🔍 Troubleshooting user trading account:', accountId);
       
-      // Call the API to get actual trading account details (balances, positions, etc.)
-      const response = await fetch(`${AUTH_API_BASE}/admin/user-accounts/${accountId}/verify`, {
-        method: 'POST',
+      // Use the same working troubleshoot endpoint as admin-accounts.js
+      const troubleshootUrl = `${AUTH_API_BASE}/troubleshoot/${accountId}`;
+      console.log('🔧 Troubleshoot URL (User Account):', troubleshootUrl);
+      
+      const response = await fetch(troubleshootUrl, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -1753,7 +1756,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.ok) {
         const data = await response.json();
         showUserAccountTradingDetails(data);
-        showNotification('User account verification completed successfully', 'success');
+        showNotification('User account troubleshoot completed successfully!', 'success');
       } else {
         // Fallback - show basic account info from existing data
         console.log('❌ Verification API not available, showing basic account info');
@@ -1775,8 +1778,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (error) {
-      console.error('❌ Error verifying user account:', error);
-      showNotification('Error verifying user account', 'error');
+      console.error('❌ Error troubleshooting user account:', error);
+      showNotification('Error troubleshooting user account', 'error');
     }
   }
 

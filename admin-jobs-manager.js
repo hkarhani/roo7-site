@@ -522,9 +522,14 @@ class JobsManagerDashboard {
                 </td>
                 <td>${execution.worker_id || 'N/A'}</td>
                 <td>
-                    ${execution.spot_manager_result?.user_message 
+                    ${execution.status === 'RUNNING' ? '<span class="text-info">⏳ Running...</span>' :
+                      execution.status === 'SUCCEEDED' && execution.spot_manager_result?.user_message 
                         ? `<span title="${execution.spot_manager_result.user_message}">${execution.spot_manager_result.user_message.substring(0, 30)}${execution.spot_manager_result.user_message.length > 30 ? '...' : ''}</span>`
-                        : (execution.error_info ? '<span class="text-danger">Error</span>' : 'N/A')
+                        : execution.status === 'SUCCEEDED' && execution.spot_manager_result?.admin_message?.status === 'success'
+                        ? '<span class="text-success">✅ Replication Successful</span>'
+                        : execution.status === 'SUCCEEDED' 
+                        ? '<span class="text-success">✅ Completed</span>'
+                        : execution.error_info ? '<span class="text-danger">❌ Error</span>' : 'N/A'
                     }
                     ${execution.spot_manager_result?.current_total_value 
                         ? `<br><small class="text-success">$${execution.spot_manager_result.current_total_value.toFixed(2)}</small>`
@@ -607,12 +612,22 @@ class JobsManagerDashboard {
                             </div>
                         ` : ''}
                         
-                        ${execution.spot_manager_result ? `
+                        ${execution.status === 'RUNNING' ? `
+                            <div class="execution-section">
+                                <h4>Job Status</h4>
+                                <div class="execution-field">
+                                    <strong>Current Status:</strong>
+                                    <span class="text-info">⏳ Job is currently executing...</span>
+                                </div>
+                            </div>
+                        ` : execution.spot_manager_result ? `
                             <div class="execution-section">
                                 <h4>Execution Results</h4>
                                 <div class="execution-field">
                                     <strong>Result Message:</strong>
-                                    <span>${execution.spot_manager_result.user_message || 'N/A'}</span>
+                                    <span>${execution.spot_manager_result.user_message || 
+                                        (execution.spot_manager_result.admin_message?.status === 'success' ? '✅ Futures Replication Successful' : 
+                                         execution.status === 'SUCCEEDED' ? '✅ Job Completed Successfully' : 'N/A')}</span>
                                 </div>
                                 ${execution.spot_manager_result.current_total_value ? `
                                     <div class="execution-field">
@@ -954,10 +969,17 @@ class JobsManagerDashboard {
                                 <strong>Worker:</strong>
                                 <span>${lastExecution.worker_id || 'N/A'}</span>
                             </div>
-                            ${lastExecution.spot_manager_result ? `
+                            ${lastExecution.status === 'RUNNING' ? `
+                                <div class="execution-field">
+                                    <strong>Current Status:</strong>
+                                    <span class="text-info">⏳ Currently executing...</span>
+                                </div>
+                            ` : lastExecution.spot_manager_result ? `
                                 <div class="execution-field">
                                     <strong>Result Message:</strong>
-                                    <span>${lastExecution.spot_manager_result.user_message || 'N/A'}</span>
+                                    <span>${lastExecution.spot_manager_result.user_message || 
+                                        (lastExecution.spot_manager_result.admin_message?.status === 'success' ? '✅ Futures Replication Successful' : 
+                                         lastExecution.status === 'SUCCEEDED' ? '✅ Job Completed Successfully' : 'N/A')}</span>
                                 </div>
                                 ${lastExecution.spot_manager_result.current_total_value ? `
                                     <div class="execution-field">
