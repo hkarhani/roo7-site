@@ -1733,38 +1733,58 @@ document.addEventListener("DOMContentLoaded", () => {
   async function verifyUserAccount(accountId) {
     try {
       showNotification('Starting user account troubleshooting...', 'info');
+      console.log('🔍 Attempting to verify user account:', accountId);
       
-      // Try to use existing troubleshoot endpoint or account details
-      const response = await fetch(`${AUTH_API_BASE}/admin/accounts/${accountId}/troubleshoot`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      // Try different possible endpoints for user account details
+      const endpoints = [
+        `/admin/user-accounts/${accountId}`,
+        `/admin/accounts/${accountId}`,
+        `/admin/accounts/${accountId}/details`,
+        `/admin/user-accounts/${accountId}/details`
+      ];
+      
+      let accountData = null;
+      let successfulEndpoint = null;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`🔍 Trying endpoint: ${AUTH_API_BASE}${endpoint}`);
+          const response = await fetch(`${AUTH_API_BASE}${endpoint}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          console.log(`📡 Response status for ${endpoint}:`, response.status);
+          
+          if (response.ok) {
+            accountData = await response.json();
+            successfulEndpoint = endpoint;
+            console.log('✅ Successfully loaded data from:', endpoint, accountData);
+            break;
+          }
+        } catch (endpointError) {
+          console.log(`❌ Endpoint ${endpoint} failed:`, endpointError.message);
+          continue;
         }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        showUserAccountDetails(data);
+      }
+      
+      if (accountData) {
+        showUserAccountDetails(accountData, successfulEndpoint);
         showNotification('User account details loaded successfully', 'success');
       } else {
-        // Fallback to basic account info if troubleshoot endpoint doesn't exist
-        console.log('Troubleshoot endpoint not available, falling back to basic account info');
-        const basicResponse = await fetch(`${AUTH_API_BASE}/admin/accounts/${accountId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (basicResponse.ok) {
-          const basicData = await basicResponse.json();
-          showUserAccountDetails(basicData);
-          showNotification('User account details loaded', 'success');
-        } else {
-          throw new Error('Failed to load account details');
-        }
+        // If no endpoint works, show basic info from what we already have
+        console.log('🔄 No endpoints worked, showing basic account info');
+        const basicInfo = {
+          _id: accountId,
+          message: 'Account details endpoints not available',
+          note: 'This account exists but detailed information cannot be retrieved via API',
+          endpoints_tried: endpoints
+        };
+        showUserAccountDetails(basicInfo, 'fallback');
+        showNotification('Showing basic account info (API endpoints not available)', 'warning');
       }
     } catch (error) {
       console.error('❌ Error verifying user account:', error);
@@ -1773,7 +1793,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Show user account details in a modal
-  function showUserAccountDetails(data) {
+  function showUserAccountDetails(data, endpoint) {
     const modal = document.createElement('div');
     modal.className = 'modal verification-modal';
     modal.style.display = 'block';
@@ -1785,6 +1805,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         <div class="result-section">
           <h4>📊 Account Information</h4>
+          ${endpoint ? `<p style="font-size: 11px; color: #666; margin-bottom: 10px;"><strong>Data source:</strong> ${endpoint}</p>` : ''}
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
             <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
               <div style="margin-bottom: 8px;"><strong>Account ID:</strong> ${data.id || data._id || 'N/A'}</div>
