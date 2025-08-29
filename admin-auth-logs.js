@@ -25,6 +25,14 @@ class LogsManager {
     this.init();
   }
 
+  getAuthHeaders() {
+    const token = localStorage.getItem("token");
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
   async init() {
     await this.checkAuthentication();
     this.setupEventListeners();
@@ -33,32 +41,43 @@ class LogsManager {
   }
 
   async checkAuthentication() {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("token");
     if (!token) {
-      window.location.href = 'login.html';
+      console.log("❌ No token found, redirecting to auth...");
+      setTimeout(() => {
+        window.location.href = "/auth.html";
+      }, 2000);
       return;
     }
 
     try {
       const response = await fetch(`${backendBaseUrl}/verify-token`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: this.getAuthHeaders()
       });
       
       if (!response.ok) {
-        localStorage.removeItem('auth_token');
-        window.location.href = 'login.html';
+        console.log("❌ Token verification failed, redirecting to auth...");
+        localStorage.removeItem("token");
+        setTimeout(() => {
+          window.location.href = "/auth.html";
+        }, 2000);
         return;
       }
 
       const data = await response.json();
       if (!data.is_admin) {
+        console.log("❌ Access denied. Admin privileges required.");
         alert('Access denied. Admin privileges required.');
-        window.location.href = 'dashboard.html';
+        setTimeout(() => {
+          window.location.href = "/auth.html";
+        }, 2000);
         return;
       }
     } catch (error) {
       console.error('Authentication check failed:', error);
-      window.location.href = 'login.html';
+      setTimeout(() => {
+        window.location.href = "/auth.html";
+      }, 2000);
     }
   }
 
@@ -69,8 +88,8 @@ class LogsManager {
     };
 
     document.getElementById('logout-btn').onclick = () => {
-      localStorage.removeItem('auth_token');
-      window.location.href = 'login.html';
+      localStorage.removeItem("token");
+      window.location.href = "/auth.html";
     };
 
     // Actions
@@ -162,9 +181,8 @@ class LogsManager {
 
   async loadLogFilesList() {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`${backendBaseUrl}/admin/logs/files`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: this.getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -186,9 +204,8 @@ class LogsManager {
 
   async loadLogsSummary() {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`${backendBaseUrl}/admin/logs/summary`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: this.getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -237,9 +254,8 @@ class LogsManager {
 
   async loadFileInfo(filename) {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`${backendBaseUrl}/admin/logs/files/${filename}/info`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: this.getAuthHeaders()
       });
 
       if (response.ok) {
@@ -292,7 +308,6 @@ class LogsManager {
     container.innerHTML = '<div class="loading-state">Loading log entries...</div>';
 
     try {
-      const token = localStorage.getItem('auth_token');
       const params = new URLSearchParams({
         lines: this.currentFilters.lines.toString(),
         offset: (this.currentPage * this.currentFilters.lines).toString()
@@ -307,7 +322,7 @@ class LogsManager {
       }
 
       const response = await fetch(`${backendBaseUrl}/admin/logs/files/${filename}?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: this.getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -412,10 +427,9 @@ class LogsManager {
 
   async clearLogFile(filename) {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`${backendBaseUrl}/admin/logs/files/${filename}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: this.getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -438,10 +452,9 @@ class LogsManager {
 
   async clearAllLogs() {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`${backendBaseUrl}/admin/logs/clear-all`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: this.getAuthHeaders()
       });
 
       if (!response.ok) {
