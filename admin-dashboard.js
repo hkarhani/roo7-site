@@ -384,6 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })));
       }
 
+      currentActiveAccounts = result.accounts || [];
       displayActiveAccounts(result.accounts || []);
       attachUserAccountVerifyListeners();
       
@@ -536,6 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
       console.log('👤 Users accounts response:', result);
       
+      currentUsersAccounts = result.accounts || [];
       displayUsersAccounts(result.accounts || []);
       attachUserAccountVerifyListeners();
       
@@ -1722,6 +1724,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Store account data for verification
+  let currentActiveAccounts = [];
+  let currentUsersAccounts = [];
+
   // Add event listeners for user account verify buttons
   function attachUserAccountVerifyListeners() {
     document.querySelectorAll('.verify-user-account-btn').forEach(btn => {
@@ -1729,62 +1735,36 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Verify user account function - separate from source accounts
-  async function verifyUserAccount(accountId) {
+  // Verify user account function - uses existing loaded data
+  function verifyUserAccount(accountId) {
     try {
-      showNotification('Starting user account troubleshooting...', 'info');
-      console.log('🔍 Attempting to verify user account:', accountId);
+      showNotification('Loading user account details...', 'info');
+      console.log('🔍 Looking for user account:', accountId);
       
-      // Try different possible endpoints for user account details
-      const endpoints = [
-        `/admin/user-accounts/${accountId}`,
-        `/admin/accounts/${accountId}`,
-        `/admin/accounts/${accountId}/details`,
-        `/admin/user-accounts/${accountId}/details`
-      ];
+      // Find the account in our existing data
+      let accountData = currentActiveAccounts.find(acc => 
+        (acc.account_id === accountId) || (acc._id === accountId) || (acc.id === accountId)
+      );
       
-      let accountData = null;
-      let successfulEndpoint = null;
-      
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`🔍 Trying endpoint: ${AUTH_API_BASE}${endpoint}`);
-          const response = await fetch(`${AUTH_API_BASE}${endpoint}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          console.log(`📡 Response status for ${endpoint}:`, response.status);
-          
-          if (response.ok) {
-            accountData = await response.json();
-            successfulEndpoint = endpoint;
-            console.log('✅ Successfully loaded data from:', endpoint, accountData);
-            break;
-          }
-        } catch (endpointError) {
-          console.log(`❌ Endpoint ${endpoint} failed:`, endpointError.message);
-          continue;
-        }
+      if (!accountData) {
+        accountData = currentUsersAccounts.find(acc => 
+          (acc.account_id === accountId) || (acc._id === accountId) || (acc.id === accountId)
+        );
       }
       
       if (accountData) {
-        showUserAccountDetails(accountData, successfulEndpoint);
+        console.log('✅ Found account data:', accountData);
+        showUserAccountDetails(accountData, 'existing-data');
         showNotification('User account details loaded successfully', 'success');
       } else {
-        // If no endpoint works, show basic info from what we already have
-        console.log('🔄 No endpoints worked, showing basic account info');
+        console.log('❌ Account not found in existing data');
         const basicInfo = {
           _id: accountId,
-          message: 'Account details endpoints not available',
-          note: 'This account exists but detailed information cannot be retrieved via API',
-          endpoints_tried: endpoints
+          message: 'Account not found in loaded data',
+          note: 'This account ID exists but was not found in the current active or users accounts data'
         };
-        showUserAccountDetails(basicInfo, 'fallback');
-        showNotification('Showing basic account info (API endpoints not available)', 'warning');
+        showUserAccountDetails(basicInfo, 'not-found');
+        showNotification('Account not found in current data', 'warning');
       }
     } catch (error) {
       console.error('❌ Error verifying user account:', error);
