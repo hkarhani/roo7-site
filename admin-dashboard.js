@@ -385,6 +385,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       displayActiveAccounts(result.accounts || []);
+      attachUserAccountVerifyListeners();
       
     } catch (error) {
       console.error('❌ Error loading active accounts:', error);
@@ -536,6 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('👤 Users accounts response:', result);
       
       displayUsersAccounts(result.accounts || []);
+      attachUserAccountVerifyListeners();
       
     } catch (error) {
       console.error('❌ Error loading users accounts:', error);
@@ -1718,6 +1720,103 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.delete-source-btn').forEach(btn => {
       btn.onclick = () => deleteSourceAccount(btn.dataset.id);
     });
+  }
+
+  // Add event listeners for user account verify buttons
+  function attachUserAccountVerifyListeners() {
+    document.querySelectorAll('.verify-user-account-btn').forEach(btn => {
+      btn.onclick = () => verifyUserAccount(btn.dataset.accountId);
+    });
+  }
+
+  // Verify user account function - separate from source accounts
+  async function verifyUserAccount(accountId) {
+    try {
+      showNotification('Starting user account troubleshooting...', 'info');
+      
+      // Try to use existing troubleshoot endpoint or account details
+      const response = await fetch(`${AUTH_API_BASE}/admin/accounts/${accountId}/troubleshoot`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showUserAccountDetails(data);
+        showNotification('User account details loaded successfully', 'success');
+      } else {
+        // Fallback to basic account info if troubleshoot endpoint doesn't exist
+        console.log('Troubleshoot endpoint not available, falling back to basic account info');
+        const basicResponse = await fetch(`${AUTH_API_BASE}/admin/accounts/${accountId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (basicResponse.ok) {
+          const basicData = await basicResponse.json();
+          showUserAccountDetails(basicData);
+          showNotification('User account details loaded', 'success');
+        } else {
+          throw new Error('Failed to load account details');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error verifying user account:', error);
+      showNotification('Error loading user account details', 'error');
+    }
+  }
+
+  // Show user account details in a modal
+  function showUserAccountDetails(data) {
+    const modal = document.createElement('div');
+    modal.className = 'modal verification-modal';
+    modal.style.display = 'block';
+    
+    const content = `
+      <div class="modal-content verification-content">
+        <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+        <h3>👤 User Account Details</h3>
+        
+        <div class="result-section">
+          <h4>📊 Account Information</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
+              <div style="margin-bottom: 8px;"><strong>Account ID:</strong> ${data.id || data._id || 'N/A'}</div>
+              <div style="margin-bottom: 8px;"><strong>Account Name:</strong> ${data.account_name || 'N/A'}</div>
+              <div><strong>Exchange:</strong> ${data.exchange || 'N/A'}</div>
+            </div>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
+              <div style="margin-bottom: 8px;"><strong>User ID:</strong> ${data.user_id || data._user_id || 'N/A'}</div>
+              <div style="margin-bottom: 8px;"><strong>Account Type:</strong> ${data.account_type || 'N/A'}</div>
+              <div><strong>Status:</strong> ${data.is_active ? '✅ Active' : '❌ Inactive'}</div>
+            </div>
+          </div>
+          
+          ${data.created_at ? `<p><strong>Created:</strong> ${new Date(data.created_at).toLocaleString()}</p>` : ''}
+          ${data.last_updated ? `<p><strong>Last Updated:</strong> ${new Date(data.last_updated).toLocaleString()}</p>` : ''}
+          
+          <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 5px;">
+            <pre style="margin: 0; font-size: 11px; white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(data, null, 2)}</pre>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    };
   }
 
   // Load strategies for dropdown
