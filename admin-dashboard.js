@@ -1735,44 +1735,145 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Verify user account function - uses existing loaded data
-  function verifyUserAccount(accountId) {
+  // Verify user account function - gets actual trading account details from API
+  async function verifyUserAccount(accountId) {
     try {
-      showNotification('Loading user account details...', 'info');
-      console.log('🔍 Looking for user account:', accountId);
+      showNotification('Starting user account verification...', 'info');
+      console.log('🔍 Verifying user trading account:', accountId);
       
-      // Find the account in our existing data
-      let accountData = currentActiveAccounts.find(acc => 
-        (acc.account_id === accountId) || (acc._id === accountId) || (acc.id === accountId)
-      );
-      
-      if (!accountData) {
-        accountData = currentUsersAccounts.find(acc => 
+      // Call the API to get actual trading account details (balances, positions, etc.)
+      const response = await fetch(`${AUTH_API_BASE}/admin/user-accounts/${accountId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showUserAccountTradingDetails(data);
+        showNotification('User account verification completed successfully', 'success');
+      } else {
+        // Fallback - show basic account info from existing data
+        console.log('❌ Verification API not available, showing basic account info');
+        let accountData = currentActiveAccounts.find(acc => 
           (acc.account_id === accountId) || (acc._id === accountId) || (acc.id === accountId)
         );
-      }
-      
-      if (accountData) {
-        console.log('✅ Found account data:', accountData);
-        showUserAccountDetails(accountData, 'existing-data');
-        showNotification('User account details loaded successfully', 'success');
-      } else {
-        console.log('❌ Account not found in existing data');
-        const basicInfo = {
-          _id: accountId,
-          message: 'Account not found in loaded data',
-          note: 'This account ID exists but was not found in the current active or users accounts data'
-        };
-        showUserAccountDetails(basicInfo, 'not-found');
-        showNotification('Account not found in current data', 'warning');
+        
+        if (!accountData) {
+          accountData = currentUsersAccounts.find(acc => 
+            (acc.account_id === accountId) || (acc._id === accountId) || (acc.id === accountId)
+          );
+        }
+        
+        if (accountData) {
+          showUserAccountDetails(accountData, 'fallback-no-api');
+          showNotification('Verification API unavailable - showing basic account info', 'warning');
+        } else {
+          throw new Error('Account not found and verification API unavailable');
+        }
       }
     } catch (error) {
       console.error('❌ Error verifying user account:', error);
-      showNotification('Error loading user account details', 'error');
+      showNotification('Error verifying user account', 'error');
     }
   }
 
-  // Show user account details in a modal
+  // Show user trading account verification results (like source accounts)
+  function showUserAccountTradingDetails(data) {
+    const modal = document.createElement('div');
+    modal.className = 'modal verification-modal';
+    modal.style.display = 'block';
+    
+    const statusClass = data.verification_success ? 'result-success' : 'result-error';
+    
+    const content = `
+      <div class="modal-content verification-content">
+        <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+        <h3>🔧 User Account Trading Verification</h3>
+        
+        <div class="result-section ${statusClass}">
+          <h4>📊 Account Verification Summary</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
+              <div style="margin-bottom: 8px;"><strong>Account:</strong> ${data.account_name || 'N/A'}</div>
+              <div style="margin-bottom: 8px;"><strong>User:</strong> ${data.username || data.full_name || 'N/A'}</div>
+              <div><strong>Exchange:</strong> ${data.exchange || 'N/A'}</div>
+            </div>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
+              <div style="margin-bottom: 8px;"><strong>API Status:</strong> <span style="color: ${data.api_key_valid ? '#28a745' : '#dc3545'};">${data.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
+              <div style="margin-bottom: 8px;"><strong>Connection:</strong> <span style="color: ${data.connection_success ? '#28a745' : '#dc3545'};">${data.connection_success ? '✅ Connected' : '❌ Failed'}</span></div>
+              <div><strong>Overall:</strong> <span style="color: ${data.verification_success ? '#28a745' : '#dc3545'};">${data.verification_success ? '✅ Success' : '❌ Failed'}</span></div>
+            </div>
+          </div>
+
+          ${data.spot_balances ? `
+          <div style="margin-top: 20px;">
+            <h4>💰 Spot Balances</h4>
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; font-size: 12px;">
+                <thead><tr><th>Asset</th><th>Free</th><th>Locked</th><th>Total</th></tr></thead>
+                <tbody>
+                  ${(data.spot_balances || []).map(bal => `
+                    <tr>
+                      <td><strong>${bal.asset}</strong></td>
+                      <td>${bal.free}</td>
+                      <td>${bal.locked}</td>
+                      <td><strong>${bal.total}</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          ` : ''}
+
+          ${data.futures_positions ? `
+          <div style="margin-top: 20px;">
+            <h4>📈 Futures Positions</h4>
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; font-size: 12px;">
+                <thead><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th></tr></thead>
+                <tbody>
+                  ${(data.futures_positions || []).map(pos => `
+                    <tr>
+                      <td><strong>${pos.symbol}</strong></td>
+                      <td><span style="color: ${pos.positionAmt > 0 ? '#28a745' : '#dc3545'};">${pos.positionAmt > 0 ? 'LONG' : 'SHORT'}</span></td>
+                      <td>${Math.abs(pos.positionAmt)}</td>
+                      <td>${pos.entryPrice}</td>
+                      <td>${pos.markPrice}</td>
+                      <td style="color: ${pos.unRealizedProfit >= 0 ? '#28a745' : '#dc3545'};">${pos.unRealizedProfit}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          ` : ''}
+
+          ${data.account_info ? `
+          <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 5px;">
+            <h5>🔍 Full Response Data</h5>
+            <pre style="margin: 0; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; max-height: 300px; overflow-y: auto;">${JSON.stringify(data, null, 2)}</pre>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    };
+  }
+
+  // Show user account details in a modal (fallback)
   function showUserAccountDetails(data, endpoint) {
     const modal = document.createElement('div');
     modal.className = 'modal verification-modal';
