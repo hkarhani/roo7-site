@@ -429,6 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <th>Strategy</th>
               <th>Last Value</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -445,6 +446,9 @@ document.addEventListener("DOMContentLoaded", () => {
                   ${formatAccountValue(account.last_value || account.current_total_value || account.account_value)}
                 </td>
                 <td><span class="account-status">Active</span></td>
+                <td>
+                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
+                </td>
               </tr>
             `).join('')}
           </tbody>
@@ -582,6 +586,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <th>Exchange</th>
               <th>Account Type</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -596,6 +601,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-exchange">${account.exchange || 'Unknown'}</td>
                 <td class="account-type">${account.account_type || 'Unknown'}</td>
                 <td><span class="account-status no-strategy">No Strategy</span></td>
+                <td>
+                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
+                </td>
               </tr>
             `).join('')}
           </tbody>
