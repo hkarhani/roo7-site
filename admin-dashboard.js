@@ -1755,7 +1755,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         const data = await response.json();
-        showUserAccountTradingDetails(data);
+        showTroubleshootResults(data);
         showNotification('User account troubleshoot completed successfully!', 'success');
       } else {
         // Fallback - show basic account info from existing data
@@ -1783,97 +1783,68 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Show user trading account verification results (like source accounts)
-  function showUserAccountTradingDetails(data) {
-    const modal = document.createElement('div');
-    modal.className = 'modal verification-modal';
-    modal.style.display = 'block';
+  // Helper formatting functions
+  function formatNumber(num, decimals = 2) {
+    if (!num && num !== 0) return '0.00';
+    return parseFloat(num).toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+  }
+
+  function formatCrypto(num, decimals = 8) {
+    if (!num && num !== 0) return '0';
+    const formatted = parseFloat(num).toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals
+    });
+    return formatted;
+  }
+
+  // Show troubleshoot results (replicated from admin-accounts.js)
+  function showTroubleshootResults(result) {
+    const modal = document.getElementById('troubleshoot-modal');
+    const resultsContainer = document.getElementById('troubleshoot-results');
     
-    const statusClass = data.verification_success ? 'result-success' : 'result-error';
+    const statusClass = result.success ? 'result-success' : 'result-error';
     
-    const content = `
-      <div class="modal-content verification-content">
-        <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
-        <h3>🔧 User Account Trading Verification</h3>
-        
-        <div class="result-section ${statusClass}">
-          <h4>📊 Account Verification Summary</h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
-              <div style="margin-bottom: 8px;"><strong>Account:</strong> ${data.account_name || 'N/A'}</div>
-              <div style="margin-bottom: 8px;"><strong>User:</strong> ${data.username || data.full_name || 'N/A'}</div>
-              <div><strong>Exchange:</strong> ${data.exchange || 'N/A'}</div>
-            </div>
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
-              <div style="margin-bottom: 8px;"><strong>API Status:</strong> <span style="color: ${data.api_key_valid ? '#28a745' : '#dc3545'};">${data.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
-              <div style="margin-bottom: 8px;"><strong>Connection:</strong> <span style="color: ${data.connection_success ? '#28a745' : '#dc3545'};">${data.connection_success ? '✅ Connected' : '❌ Failed'}</span></div>
-              <div><strong>Overall:</strong> <span style="color: ${data.verification_success ? '#28a745' : '#dc3545'};">${data.verification_success ? '✅ Success' : '❌ Failed'}</span></div>
-            </div>
+    resultsContainer.innerHTML = `
+      ${result.account_status_message ? `
+        <div class="result-section result-warning" style="margin-bottom: 15px;">
+          <div style="padding: 12px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; color: #856404;">
+            <strong>${result.account_status_message}</strong>
           </div>
-
-          ${data.spot_balances ? `
-          <div style="margin-top: 20px;">
-            <h4>💰 Spot Balances</h4>
-            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;">
-              <table style="width: 100%; font-size: 12px;">
-                <thead><tr><th>Asset</th><th>Free</th><th>Locked</th><th>Total</th></tr></thead>
-                <tbody>
-                  ${(data.spot_balances || []).map(bal => `
-                    <tr>
-                      <td><strong>${bal.asset}</strong></td>
-                      <td>${bal.free}</td>
-                      <td>${bal.locked}</td>
-                      <td><strong>${bal.total}</strong></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
+        </div>
+      ` : ''}
+      
+      <div class="result-section ${statusClass}">
+        <h4>📊 Troubleshoot Summary</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
+          <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
+            <div style="margin-bottom: 8px;"><strong>Account:</strong> ${result.account_name || 'N/A'}</div>
+            <div style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: ${result.success ? '#28a745' : '#dc3545'};">${result.success ? '✅ Success' : '❌ Failed'}</span></div>
+            <div style="margin-bottom: 8px;"><strong>Active:</strong> <span style="color: ${result.is_account_active !== false ? '#28a745' : '#dc3545'};">${result.is_account_active !== false ? '✅ Yes' : '❌ Disabled'}</span></div>
+            <div><strong>Status Updated:</strong> <span style="color: ${result.status_updated !== false ? '#28a745' : '#6c757d'};">${result.status_updated !== false ? '✅ Yes' : '❌ No (Disabled)'}</span></div>
           </div>
-          ` : ''}
-
-          ${data.futures_positions ? `
-          <div style="margin-top: 20px;">
-            <h4>📈 Futures Positions</h4>
-            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;">
-              <table style="width: 100%; font-size: 12px;">
-                <thead><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Entry Price</th><th>Mark Price</th><th>PnL</th></tr></thead>
-                <tbody>
-                  ${(data.futures_positions || []).map(pos => `
-                    <tr>
-                      <td><strong>${pos.symbol}</strong></td>
-                      <td><span style="color: ${pos.positionAmt > 0 ? '#28a745' : '#dc3545'};">${pos.positionAmt > 0 ? 'LONG' : 'SHORT'}</span></td>
-                      <td>${Math.abs(pos.positionAmt)}</td>
-                      <td>${pos.entryPrice}</td>
-                      <td>${pos.markPrice}</td>
-                      <td style="color: ${pos.unRealizedProfit >= 0 ? '#28a745' : '#dc3545'};">${pos.unRealizedProfit}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
+          <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
+            <div style="margin-bottom: 8px;"><strong>API Key:</strong> <span style="color: ${result.api_key_valid ? '#28a745' : '#dc3545'};">${result.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
+            <div style="margin-bottom: 8px;"><strong>IP Whitelist:</strong> <span style="color: ${result.ip_whitelisted ? '#28a745' : '#dc3545'};">${result.ip_whitelisted ? '✅ Yes' : '❌ No'}</span></div>
+            <div><strong>Total Value:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">$${formatNumber(result.total_usdt_value || 0)}</span></div>
           </div>
-          ` : ''}
-
-          ${data.account_info ? `
-          <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 5px;">
-            <h5>🔍 Full Response Data</h5>
-            <pre style="margin: 0; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; max-height: 300px; overflow-y: auto;">${JSON.stringify(data, null, 2)}</pre>
-          </div>
-          ` : ''}
         </div>
       </div>
+      
+      ${result.recommendations && result.recommendations.length > 0 ? `
+        <div class="result-section result-warning">
+          <h4>Recommendations</h4>
+          <ul>
+            ${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
     `;
-    
-    modal.innerHTML = content;
-    document.body.appendChild(modal);
-    
-    // Close modal when clicking outside
-    modal.onclick = (e) => {
-      if (e.target === modal) {
-        modal.remove();
-      }
-    };
+
+    modal.style.display = 'block';
   }
 
   // Show user account details in a modal (fallback)
@@ -2512,6 +2483,11 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.getElementById('cancel-delete-source-account').onclick = () => {
     document.getElementById('source-account-delete-modal').style.display = 'none';
+  };
+  
+  // Troubleshoot modal close handler
+  document.getElementById('troubleshoot-modal-close').onclick = () => {
+    document.getElementById('troubleshoot-modal').style.display = 'none';
   };
   
   document.getElementById('confirm-delete-source-account').onclick = (event) => {
