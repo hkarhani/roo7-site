@@ -551,7 +551,6 @@ class LogsManager {
 let logsManager;
 document.addEventListener('DOMContentLoaded', () => {
   logsManager = new LogsManager();
+  // Make it available globally for onclick handlers
+  window.logsManager = logsManager;
 });
-
-// Make it available globally for onclick handlers
-window.logsManager = logsManager;
