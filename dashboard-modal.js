@@ -668,8 +668,19 @@ class ModalManager {
           options: ["default", "hourly", "daily", "weekly"]
         };
       }
+    } else if (this.currentStrategyConfig.strategy_type === "FUTURES") {
+      // FUTURES strategies - only rebalance frequency with fixed defaults
+      if (!this.currentStrategyConfig.parameters.rebalance_frequency) {
+        this.currentStrategyConfig.parameters.rebalance_frequency = {
+          description: "Rebalance Frequency",
+          default: "hourly",
+          options: ["hourly"],
+          disabled: true  // Disable dropdown, show only hourly
+        };
+      }
+      // Do NOT add top_x_count for FUTURES strategies
     } else {
-      // Non-Custom Portfolio strategies get top_x_count and rebalance_frequency only
+      // SPOT strategies get top_x_count and rebalance_frequency
       if (!this.currentStrategyConfig.parameters.top_x_count) {
         this.currentStrategyConfig.parameters.top_x_count = {
           description: "Number of top instruments to trade (0 = algorithm default)",
@@ -857,11 +868,15 @@ class ModalManager {
           return `<option value="${opt}" ${isSelected}>${displayText}</option>`;
         }).join('');
         
+        const disabledAttr = param.disabled ? 'disabled' : '';
+        const helpText = param.disabled ? '<small style="color: #666;">Fixed for FUTURES strategies</small>' : '';
+        
         wrapper.innerHTML = `
           <label for="strategy-param-${paramName}">${param.description || 'Rebalance Frequency'}</label>
-          <select id="strategy-param-${paramName}" name="${paramName}">
+          <select id="strategy-param-${paramName}" name="${paramName}" ${disabledAttr}>
             ${options}
           </select>
+          ${helpText}
         `;
         this.strategyParametersForm.appendChild(wrapper);
       } else {
