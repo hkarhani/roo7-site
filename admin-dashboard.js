@@ -1147,6 +1147,203 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === JOBS MANAGER FUNCTIONS ===
+  async function loadLogsOverview() {
+    try {
+      const container = document.getElementById('logs-overview');
+      
+      // Show loading state
+      container.innerHTML = '<div class="loading-state"><p>Loading logs overview...</p></div>';
+      
+      // Fetch logs summary
+      const summaryResponse = await fetch(`${AUTH_API_BASE}/admin/logs/summary`, {
+        headers: getAuthHeaders(token)
+      });
+      
+      if (!summaryResponse.ok) {
+        throw new Error(`HTTP ${summaryResponse.status}: ${summaryResponse.statusText}`);
+      }
+      
+      const summaryData = await summaryResponse.json();
+      
+      // Fetch recent errors (last 24 hours) from different log files
+      const errorData = await fetchRecentLogActivity();
+      
+      renderLogsOverview(summaryData, errorData);
+      
+    } catch (error) {
+      console.error('Error loading Logs overview:', error);
+      const container = document.getElementById('logs-overview');
+      container.innerHTML = `
+        <div class="error-state">
+          <p>❌ Failed to load Logs: ${error.message}</p>
+          <button onclick="loadLogsOverview()" class="retry-btn">🔄 Retry</button>
+        </div>
+      `;
+    }
+  }
+
+  async function fetchRecentLogActivity() {
+    const logFiles = ['futures_jobs.log', 'spot_jobs.log', 'active_jobs.log', 'auth-api-errors.log'];
+    const activityData = {
+      totalErrors: 0,
+      totalWarnings: 0,
+      totalEntries: 0,
+      mostActiveFile: '',
+      maxActivity: 0,
+      recentIssues: []
+    };
+
+    try {
+      for (const logFile of logFiles) {
+        try {
+          const response = await fetch(`${AUTH_API_BASE}/admin/logs/files/${logFile}/recent?minutes=1440`, {
+            headers: getAuthHeaders(token)
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const entries = data.entries || [];
+            
+            // Count by log level
+            const errors = entries.filter(e => e.level === 'ERROR').length;
+            const warnings = entries.filter(e => e.level === 'WARNING').length;
+            
+            activityData.totalErrors += errors;
+            activityData.totalWarnings += warnings;
+            activityData.totalEntries += entries.length;
+            
+            if (entries.length > activityData.maxActivity) {
+              activityData.maxActivity = entries.length;
+              activityData.mostActiveFile = logFile;
+            }
+            
+            // Collect recent critical issues
+            const criticalEntries = entries.filter(e => 
+              e.level === 'ERROR' || e.level === 'CRITICAL'
+            ).slice(0, 3);
+            
+            activityData.recentIssues.push(...criticalEntries);
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch activity from ${logFile}:`, err);
+        }
+      }
+      
+      // Limit recent issues to top 5
+      activityData.recentIssues = activityData.recentIssues.slice(0, 5);
+      
+    } catch (error) {
+      console.error('Error fetching log activity:', error);
+    }
+    
+    return activityData;
+  }
+
+  function renderLogsOverview(summaryData, errorData) {
+    const container = document.getElementById('logs-overview');
+    
+    const totalFiles = summaryData.total_files || 0;
+    const totalSizeMB = summaryData.total_size_mb || 0;
+    const storageStatus = totalSizeMB > 100 ? 'warning' : 'success';
+    const storageIcon = totalSizeMB > 100 ? '⚠️' : '💾';
+    
+    // Calculate activity level
+    const activityLevel = errorData.totalEntries > 1000 ? 'high' : 
+                         errorData.totalEntries > 500 ? 'medium' : 'low';
+    const activityIcon = activityLevel === 'high' ? '🔥' : 
+                        activityLevel === 'medium' ? '📊' : '📈';
+    const activityClass = activityLevel === 'high' ? 'danger' : 
+                         activityLevel === 'medium' ? 'warning' : 'success';
+    
+    container.innerHTML = `
+      <div class="overview-grid">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-icon">📁</span>
+            <span class="kpi-title">Log Files</span>
+          </div>
+          <div class="kpi-value">${totalFiles}</div>
+          <div class="kpi-subtitle">Active log files</div>
+        </div>
+        
+        <div class="kpi-card ${storageStatus}">
+          <div class="kpi-header">
+            <span class="kpi-icon">${storageIcon}</span>
+            <span class="kpi-title">Storage</span>
+          </div>
+          <div class="kpi-value">${totalSizeMB.toFixed(1)} MB</div>
+          <div class="kpi-subtitle">${storageStatus === 'warning' ? 'High usage' : 'Normal usage'}</div>
+        </div>
+        
+        <div class="kpi-card ${errorData.totalErrors > 0 ? 'danger' : 'success'}">
+          <div class="kpi-header">
+            <span class="kpi-icon">${errorData.totalErrors > 0 ? '❌' : '✅'}</span>
+            <span class="kpi-title">Errors (24h)</span>
+          </div>
+          <div class="kpi-value">${errorData.totalErrors}</div>
+          <div class="kpi-subtitle">Recent error count</div>
+        </div>
+        
+        <div class="kpi-card ${errorData.totalWarnings > 10 ? 'warning' : 'success'}">
+          <div class="kpi-header">
+            <span class="kpi-icon">${errorData.totalWarnings > 10 ? '⚠️' : '✅'}</span>
+            <span class="kpi-title">Warnings (24h)</span>
+          </div>
+          <div class="kpi-value">${errorData.totalWarnings}</div>
+          <div class="kpi-subtitle">Recent warning count</div>
+        </div>
+        
+        <div class="kpi-card ${activityClass}">
+          <div class="kpi-header">
+            <span class="kpi-icon">${activityIcon}</span>
+            <span class="kpi-title">Activity Level</span>
+          </div>
+          <div class="kpi-value">${activityLevel.toUpperCase()}</div>
+          <div class="kpi-subtitle">${errorData.totalEntries} entries (24h)</div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-icon">📊</span>
+            <span class="kpi-title">Most Active</span>
+          </div>
+          <div class="kpi-value" style="font-size: 14px;">${errorData.mostActiveFile || 'N/A'}</div>
+          <div class="kpi-subtitle">${errorData.maxActivity} entries</div>
+        </div>
+      </div>
+      
+      ${errorData.recentIssues.length > 0 ? `
+      <div class="recent-issues">
+        <h4 style="margin: 20px 0 10px 0; color: var(--text-primary);">🚨 Recent Critical Issues</h4>
+        <div class="issues-list">
+          ${errorData.recentIssues.map(issue => `
+            <div class="issue-item ${issue.level.toLowerCase()}">
+              <span class="issue-level">${issue.level}</span>
+              <span class="issue-message">${issue.message}</span>
+              <span class="issue-time">${formatTimestamp(issue.timestamp)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : '<div class="no-issues"><p>✅ No critical issues in the last 24 hours</p></div>'}
+    `;
+  }
+
+  function formatTimestamp(timestamp) {
+    if (!timestamp) return 'N/A';
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMinutes = Math.floor((now - date) / 60000);
+      
+      if (diffMinutes < 60) return `${diffMinutes}m ago`;
+      if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
+      return `${Math.floor(diffMinutes / 1440)}d ago`;
+    } catch (error) {
+      return timestamp;
+    }
+  }
+
   async function loadJobsManagerOverview() {
     try {
       const container = document.getElementById('jobs-manager-overview');
@@ -1254,6 +1451,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('refresh-activity').onclick = loadActivity;
   document.getElementById('scan-upgrades').onclick = scanUpgrades;
   document.getElementById('refresh-jobs-manager').onclick = loadJobsManagerOverview;
+  document.getElementById('refresh-logs-overview').onclick = loadLogsOverview;
   
   // Jobs Manager button
   document.getElementById('open-jobs-dashboard').onclick = () => {
@@ -2253,6 +2451,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTierUpgrades();
   loadReferrals();
   loadJobsManagerOverview();
+  loadLogsOverview();
   loadActivity();
   loadSourceStrategies();
   loadSourceAccounts();

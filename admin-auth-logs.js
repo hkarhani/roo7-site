@@ -6,7 +6,8 @@
  * Supports both enhanced JSON logs and standard system logs with color coding.
  */
 
-import { backendBaseUrl } from './frontend-config.js';
+import { API_URL } from './frontend-config.js';
+const backendBaseUrl = API_URL;
 
 class LogsManager {
   constructor() {
