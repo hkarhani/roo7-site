@@ -1741,12 +1741,12 @@ document.addEventListener("DOMContentLoaded", () => {
       showNotification('Starting user account troubleshoot...', 'info');
       console.log('🔍 Troubleshooting user trading account:', accountId);
       
-      // Use the same working troubleshoot endpoint as admin-accounts.js
-      const troubleshootUrl = `${AUTH_API_BASE}/troubleshoot/${accountId}`;
-      console.log('🔧 Troubleshoot URL (User Account):', troubleshootUrl);
+      // Use the admin troubleshoot endpoint for admin authentication
+      const troubleshootUrl = `${AUTH_API_BASE}/admin/troubleshoot/${accountId}`;
+      console.log('🔧 Admin Troubleshoot URL (User Account):', troubleshootUrl);
       
       const response = await fetch(troubleshootUrl, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
