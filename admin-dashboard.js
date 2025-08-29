@@ -1260,6 +1260,11 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = 'admin-jobs-manager.html';
   };
 
+  // Logs Management button
+  document.getElementById('open-logs-management').onclick = () => {
+    window.location.href = 'admin-auth-logs.html';
+  };
+
   // Filter invoices
   document.getElementById('filter-invoices').onclick = () => {
     const status = document.getElementById('invoice-status-filter').value;
