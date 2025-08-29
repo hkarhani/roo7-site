@@ -428,6 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <tr>
               <th>User</th>
               <th>Account Name</th>
+              <th>Account Type</th>
               <th>Strategy</th>
               <th>Last Value</th>
               <th>Status</th>
@@ -442,6 +443,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
                 <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
                   ${account.account_name || 'Unnamed Account'}
+                </td>
+                <td class="account-type">
+                  <span class="account-type-badge ${(account.account_type || 'SPOT').toLowerCase()}">${account.account_type || 'SPOT'}</span>
                 </td>
                 <td class="account-strategy">${account.strategy || 'None'}</td>
                 <td class="account-value" title="Last updated: ${formatLastUpdated(account.last_updated)}">
