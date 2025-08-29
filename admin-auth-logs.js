@@ -434,7 +434,8 @@ class LogsManager {
     metaElement.innerHTML = `
       ${isEnhanced ? 'Enhanced JSON Format' : 'Standard Log Format'} • 
       ${fileInfo.size_mb} MB • 
-      Modified: ${this.formatTimestamp(fileInfo.modified)}
+      Modified: ${this.formatTimestamp(fileInfo.modified)} • 
+      <span style="color: var(--primary-color); font-weight: 500;">📅 Newest First</span>
     `;
   }
 

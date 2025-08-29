@@ -24,39 +24,44 @@
   grid-row: 2;
 }
 
-#section-invoices {
+#section-users-accounts {
   grid-column: 1 / -1;
   grid-row: 3;
 }
 
+#section-invoices {
+  grid-column: 1 / -1;
+  grid-row: 4;
+}
+
 #section-wallets {
   grid-column: 1;
-  grid-row: 4;
+  grid-row: 5;
 }
 
 #section-referrals {
   grid-column: 2;
-  grid-row: 4;
+  grid-row: 5;
 }
 
 #section-logs-management {
   grid-column: 3;
-  grid-row: 4;
+  grid-row: 5;
 }
 
 #section-upgrades {
   grid-column: 1;
-  grid-row: 5;
+  grid-row: 6;
 }
 
 #section-activity {
   grid-column: 2;
-  grid-row: 5;
+  grid-row: 6;
 }
 
 #section-source-accounts {
   grid-column: 1 / -1;
-  grid-row: 6;
+  grid-row: 7;
 }
 
 /* ADMIN OVERVIEW STATS */
@@ -527,6 +532,201 @@
 
 .dark-theme .stat-card.admin .stat-value {
   color: #60a5fa;
+}
+
+/* USERS ACCOUNTS SECTION (WITHOUT STRATEGIES) */
+.users-accounts-container {
+  margin-top: 15px;
+}
+
+.users-accounts-summary {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+}
+
+.dark-theme .users-accounts-summary {
+  background: #332a1a;
+  border-left-color: #ffc107;
+}
+
+.users-accounts-summary span {
+  font-weight: 600;
+  color: #856404;
+}
+
+.dark-theme .users-accounts-summary span {
+  color: #ffeb3b;
+}
+
+.exchanges-breakdown {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.exchange-tag {
+  background: rgba(255, 193, 7, 0.1);
+  color: #856404;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dark-theme .exchange-tag {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffeb3b;
+}
+
+.users-accounts-container .empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.dark-theme .users-accounts-container .empty-state {
+  color: #ccc;
+}
+
+.users-accounts-container .empty-state small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.users-accounts-container .error-state {
+  text-align: center;
+  padding: 20px;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+  color: #c62828;
+}
+
+.dark-theme .users-accounts-container .error-state {
+  background: #2d1b1b;
+  border-color: #5d4037;
+  color: #ff8a80;
+}
+
+/* USERS ACCOUNTS TABLE */
+.users-accounts-table-container {
+  margin-top: 15px;
+  overflow-x: auto;
+}
+
+.users-accounts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.users-accounts-table th {
+  background: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dark-theme .users-accounts-table th {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-bottom-color: #444;
+}
+
+.users-accounts-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.dark-theme .users-accounts-table td {
+  border-bottom-color: #333;
+}
+
+.users-accounts-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.users-accounts-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.dark-theme .users-accounts-table tbody tr:hover {
+  background: #2a2a2a;
+}
+
+.users-accounts-table .user-name {
+  font-weight: 600;
+  color: var(--primary-color);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.users-accounts-table .account-name {
+  font-weight: 500;
+  color: var(--text-color);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.users-accounts-table .account-exchange {
+  color: #666;
+  font-size: 12px;
+  background: rgba(0,0,0,0.05);
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark-theme .users-accounts-table .account-exchange {
+  background: rgba(255,255,255,0.1);
+  color: #ccc;
+}
+
+.users-accounts-table .account-type {
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dark-theme .users-accounts-table .account-type {
+  color: #ccc;
+}
+
+.users-accounts-table .account-status.no-strategy {
+  background: #ffc107;
+  color: #856404;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.dark-theme .users-accounts-table .account-status.no-strategy {
+  background: #ff9800;
+  color: #fff;
 }
 
 /* WALLET VERIFICATIONS */

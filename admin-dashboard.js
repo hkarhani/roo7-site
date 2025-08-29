@@ -513,6 +513,97 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // === USERS ACCOUNTS FUNCTIONS ===
+  async function loadUsersAccounts() {
+    try {
+      console.log('👤 Loading users accounts without strategies...');
+      const response = await fetch(`${AUTH_API_BASE}/admin/users-accounts-without-strategies`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('👤 Users accounts response:', result);
+      
+      displayUsersAccounts(result.accounts || []);
+      
+    } catch (error) {
+      console.error('❌ Error loading users accounts:', error);
+      document.getElementById('users-accounts-container').innerHTML = `
+        <div class="error-state">
+          <p>❌ Failed to load users accounts: ${error.message}</p>
+          <button onclick="loadUsersAccounts()" class="retry-btn">🔄 Retry</button>
+        </div>
+      `;
+    }
+  }
+
+  function displayUsersAccounts(accounts) {
+    const container = document.getElementById('users-accounts-container');
+    
+    if (!accounts || accounts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <p>📭 No accounts without strategies found</p>
+          <small>All paying users have strategies assigned to their accounts</small>
+        </div>
+      `;
+      return;
+    }
+
+    // Create summary
+    const totalAccounts = accounts.length;
+    const uniqueUsers = new Set(accounts.map(acc => acc._user_id)).size;
+    const exchangeCounts = accounts.reduce((acc, account) => {
+      const exchange = account.exchange || 'Unknown';
+      acc[exchange] = (acc[exchange] || 0) + 1;
+      return acc;
+    }, {});
+
+    container.innerHTML = `
+      <div class="users-accounts-summary">
+        <span>${totalAccounts}</span> accounts without strategies from <span>${uniqueUsers}</span> paying users
+        <div class="exchanges-breakdown">
+          ${Object.entries(exchangeCounts).map(([exchange, count]) => `<span class="exchange-tag">${exchange}: ${count}</span>`).join(' ')}
+        </div>
+      </div>
+      <div class="users-accounts-table-container">
+        <table class="users-accounts-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Account Name</th>
+              <th>Exchange</th>
+              <th>Account Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${accounts.map(account => `
+              <tr>
+                <td class="user-name" title="${account.full_name || account.username || account._user_id}">
+                  ${account.full_name || account.username || account._user_id || 'Unknown User'}
+                </td>
+                <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
+                  ${account.account_name || 'Unnamed Account'}
+                </td>
+                <td class="account-exchange">${account.exchange || 'Unknown'}</td>
+                <td class="account-type">${account.account_type || 'Unknown'}</td>
+                <td><span class="account-status no-strategy">No Strategy</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   // === WALLET VERIFICATION FUNCTIONS ===
   async function loadWalletVerifications() {
     try {
@@ -1446,6 +1537,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Refresh buttons
   document.getElementById('refresh-overview').onclick = loadSystemOverview;
   document.getElementById('refresh-active-accounts').onclick = loadActiveAccounts;
+  document.getElementById('refresh-users-accounts').onclick = loadUsersAccounts;
   document.getElementById('refresh-wallets').onclick = loadWalletVerifications;
   document.getElementById('refresh-referrals').onclick = loadReferrals;
   document.getElementById('refresh-activity').onclick = loadActivity;
@@ -2446,6 +2538,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize dashboard
   loadSystemOverview();
   loadActiveAccounts();
+  loadUsersAccounts();
   loadWalletVerifications();
   loadInvoices();
   loadTierUpgrades();
