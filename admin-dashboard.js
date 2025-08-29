@@ -448,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
                 <td><span class="account-status">Active</span></td>
                 <td>
-                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
+                  <button class="verify-user-account-btn action-btn success" data-account-id="${account.account_id || account._id || account.id}">🔍 Verify</button>
                 </td>
               </tr>
             `).join('')}
@@ -604,7 +604,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-type">${account.account_type || 'Unknown'}</td>
                 <td><span class="account-status no-strategy">No Strategy</span></td>
                 <td>
-                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
+                  <button class="verify-user-account-btn action-btn success" data-account-id="${account.account_id || account._id || account.id}">🔍 Verify</button>
                 </td>
               </tr>
             `).join('')}
