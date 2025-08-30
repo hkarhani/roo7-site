@@ -427,8 +427,16 @@ class JobsManagerDashboard {
                 <td><span class="status-badge ${statusClass}">${account.status || 'ACTIVE'}</span></td>
                 <td><span class="status-badge ${runStatusClass}">${account.run_status || 'IDLE'}</span></td>
                 <td class="account-value">${formattedValue}</td>
-                <td class="time-display">${nextRun}</td>
-                <td class="time-display">${lastRun}</td>
+                <td class="schedule-display">
+                    <div class="schedule-item next-run">
+                        <span class="schedule-label">Next:</span>
+                        <span class="schedule-time">${nextRun}</span>
+                    </div>
+                    <div class="schedule-item last-run">
+                        <span class="schedule-label">Last:</span>
+                        <span class="schedule-time">${lastRun}</span>
+                    </div>
+                </td>
                 <td><span style="${successfulStyle}">${successfulJobs}</span></td>
                 <td><span style="${failedStyle}">${failedJobs}</span></td>
                 <td>

@@ -398,6 +398,40 @@
   font-style: italic;
 }
 
+/* Combined Schedule Display */
+.schedule-display {
+  font-size: 0.8rem;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.schedule-item:last-child {
+  margin-bottom: 0;
+}
+
+.schedule-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 2.5rem;
+  margin-right: 0.5rem;
+}
+
+.schedule-time {
+  color: var(--text-primary);
+}
+
+.schedule-item.next-run .schedule-label {
+  color: #3b82f6; /* Blue for next run */
+}
+
+.schedule-item.last-run .schedule-label {
+  color: #6b7280; /* Gray for last run */
+}
+
 /* Loading States */
 .jobs-loading {
   display: flex;
