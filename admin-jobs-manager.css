@@ -162,6 +162,15 @@
   font-size: 0.8rem;
 }
 
+.stat-number.stalled {
+  color: var(--warning-color);
+}
+
+.stat-number.stalled::after {
+  content: "⚠";
+  font-size: 0.8rem;
+}
+
 .stat-number.failed {
   color: var(--danger-color);
 }
@@ -263,6 +272,12 @@
   background: rgba(239, 68, 68, 0.1);
   color: var(--danger-color);
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.stalled {
+  background: rgba(251, 146, 60, 0.1);
+  color: var(--warning-color);
+  border: 1px solid rgba(251, 146, 60, 0.3);
 }
 
 .status-badge.running {

@@ -380,6 +380,10 @@ class JobsManagerDashboard {
                 <div class="stat-label">Disabled Jobs</div>
             </div>
             <div class="stat-card">
+                <div class="stat-number stalled">${jobsByStatus.STALLED || 0}</div>
+                <div class="stat-label">Stalled Jobs</div>
+            </div>
+            <div class="stat-card">
                 <div class="stat-number running">${jobsByRunStatus.RUNNING || 0}</div>
                 <div class="stat-label">Currently Running</div>
             </div>
