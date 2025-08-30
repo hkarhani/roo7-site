@@ -326,6 +326,11 @@
   color: white;
 }
 
+.job-action-btn.kill {
+  background: var(--danger-color);
+  color: white;
+}
+
 .job-action-btn:hover {
   opacity: 0.8;
 }

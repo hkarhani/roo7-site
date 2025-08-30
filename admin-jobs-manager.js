@@ -551,9 +551,16 @@ class JobsManagerDashboard {
                     }
                 </td>
                 <td>
-                    <button class="job-action-btn details" onclick="jobsManager.showExecutionDetails('${execution.id}')">
-                        📋 Details
-                    </button>
+                    <div class="job-actions">
+                        <button class="job-action-btn details" onclick="jobsManager.showExecutionDetails('${execution.id}')">
+                            📋 Details
+                        </button>
+                        ${execution.status === 'RUNNING' ? `
+                            <button class="job-action-btn kill" onclick="jobsManager.killJobExecution('${execution.id}', '${accountName}')">
+                                🛑 Kill
+                            </button>
+                        ` : ''}
+                    </div>
                 </td>
             </tr>
             `;
@@ -698,6 +705,45 @@ class JobsManagerDashboard {
                     <p>Failed to load execution details: ${error.message}</p>
                 </div>
             `;
+        }
+    }
+
+    async killJobExecution(executionId, accountName) {
+        try {
+            const confirmed = confirm(`Are you sure you want to kill the running job execution for account "${accountName}"?\n\nExecution ID: ${executionId}\n\nThis action cannot be undone.`);
+            
+            if (!confirmed) {
+                return;
+            }
+            
+            console.log('🛑 Killing job execution:', executionId);
+            
+            const response = await this.makeAuthenticatedRequest(
+                `${getApiUrl()}/admin/jobs-manager/kill-execution/${executionId}`,
+                {
+                    method: 'POST'
+                }
+            );
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                console.log('✅ Job execution killed successfully');
+                
+                // Show success message
+                this.showMessage('success', `Job execution for ${accountName} has been terminated`);
+                
+                // Refresh the job history to show updated status
+                await this.loadJobHistory();
+                
+            } else {
+                console.error('❌ Failed to kill job execution:', data.message);
+                this.showMessage('error', `Failed to kill job execution: ${data.message || 'Unknown error'}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error killing job execution:', error);
+            this.showMessage('error', `Error killing job execution: ${error.message}`);
         }
     }
 
