@@ -10,7 +10,7 @@
   <script type="module" src="frontend-config.js"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
-  <link rel="stylesheet" href="admin-jobs-manager.css?v=2.2" />
+  <link rel="stylesheet" href="admin-jobs-manager.css?v=2.3" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -54,6 +54,8 @@
       <div class="section-header">
         <h2>📄 Active Jobs</h2>
         <div class="jobs-filters">
+          <input type="text" id="user-name-filter" placeholder="🔍 Filter by User..." class="filter-input">
+          <input type="text" id="account-name-filter" placeholder="🔍 Filter by Account..." class="filter-input">
           <select id="job-status-filter">
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>

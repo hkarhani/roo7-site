@@ -198,6 +198,7 @@
 }
 
 .jobs-filters select,
+.jobs-filters .filter-input,
 .history-controls select,
 .history-controls input {
   padding: 0.4rem 0.8rem;
@@ -206,6 +207,15 @@
   background: var(--input-background);
   color: var(--text-primary);
   font-size: 0.85rem;
+}
+
+.jobs-filters .filter-input {
+  min-width: 160px;
+}
+
+.jobs-filters .filter-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
 }
 
 .history-controls {

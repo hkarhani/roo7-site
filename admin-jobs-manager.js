@@ -17,6 +17,8 @@ class JobsManagerDashboard {
         this.currentFilters = {
             jobStatus: '',
             runStatus: '',
+            userName: '',
+            accountName: '',
             historyAccount: '',
             historyStatus: '',
             historyLimit: 50
@@ -216,7 +218,11 @@ class JobsManagerDashboard {
             
             console.log(`📋 Found ${this.currentActiveJobs.length} active jobs`, this.currentActiveJobs);
             
-            this.renderActiveJobsList(this.currentActiveJobs);
+            // Apply filters before rendering
+            const filteredJobs = this.filterActiveJobs(this.currentActiveJobs);
+            console.log(`📋 After filtering: ${filteredJobs.length} jobs displayed`);
+            
+            this.renderActiveJobsList(filteredJobs);
         } catch (error) {
             console.error('❌ Jobs Manager: Failed to load active jobs', error);
             this.renderActiveJobsError();
@@ -719,7 +725,43 @@ class JobsManagerDashboard {
     applyJobFilters() {
         this.currentFilters.jobStatus = document.getElementById('job-status-filter').value;
         this.currentFilters.runStatus = document.getElementById('run-status-filter').value;
+        this.currentFilters.userName = document.getElementById('user-name-filter').value.toLowerCase();
+        this.currentFilters.accountName = document.getElementById('account-name-filter').value.toLowerCase();
         this.loadActiveJobs();
+    }
+
+    filterActiveJobs(jobs) {
+        if (!jobs) return [];
+        
+        return jobs.filter(job => {
+            // Filter by job status
+            if (this.currentFilters.jobStatus && job.status !== this.currentFilters.jobStatus) {
+                return false;
+            }
+            
+            // Filter by run status
+            if (this.currentFilters.runStatus && job.run_status !== this.currentFilters.runStatus) {
+                return false;
+            }
+            
+            // Filter by user name
+            if (this.currentFilters.userName) {
+                const userName = (job.username || '').toLowerCase();
+                if (!userName.includes(this.currentFilters.userName)) {
+                    return false;
+                }
+            }
+            
+            // Filter by account name
+            if (this.currentFilters.accountName) {
+                const accountName = (job.account_name || '').toLowerCase();
+                if (!accountName.includes(this.currentFilters.accountName)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
     }
 
     showJobAction(accountId, action, accountName) {
