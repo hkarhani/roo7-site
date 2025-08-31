@@ -295,7 +295,7 @@
       <ul class="toc-list">
         <li><a href="#create-account">1. Creating a New Trading Account</a></li>
         <li><a href="#troubleshoot-account">2. Troubleshooting Your Account</a></li>
-        <li><a href="#update-account">3. Updating Account Settings</a></li>
+        <li><a href="#update-account">3. Managing Account Settings & Liquidation</a></li>
         <li><a href="#assign-strategy">4. Assigning Trading Strategies</a></li>
         <li><a href="#referrals">5. Referrals Program</a></li>
         <li><a href="#invoices">6. Invoice & Subscription Process</a></li>
@@ -315,8 +315,8 @@
         <li>Select your <strong>Exchange</strong> (currently Binance is supported)</li>
         <li>Choose your <strong>Account Type</strong>:
           <ul style="margin-top: 10px;">
-            <li><strong>SPOT:</strong> For regular cryptocurrency trading</li>
-            <li><strong>FUTURES:</strong> For futures trading (coming soon)</li>
+            <li><strong>SPOT:</strong> For regular cryptocurrency trading with direct asset ownership</li>
+            <li><strong>FUTURES:</strong> For leveraged futures trading with advanced strategies</li>
           </ul>
         </li>
         <li>Set up your Exchange API credentials (see below)</li>
@@ -330,7 +330,12 @@
         <li>Click <strong>"Create API"</strong> and choose "System generated"</li>
         <li>Enter a label like "ROO7 Trading Bot"</li>
         <li>Complete security verification (2FA, email, etc.)</li>
-        <li>Enable <strong>"Enable Spot & Margin Trading"</strong> permission</li>
+        <li>Enable required permissions:
+          <ul style="margin-top: 5px;">
+            <li><strong>SPOT accounts:</strong> "Enable Spot & Margin Trading"</li>
+            <li><strong>FUTURES accounts:</strong> "Enable Futures Trading"</li>
+          </ul>
+        </li>
         <li>Copy your <strong>API Key</strong> and <strong>Secret Key</strong></li>
         <li>Paste both keys into the ROO7 form</li>
       </ol>
@@ -389,7 +394,7 @@
 
     <!-- Section 3: Updating Account Settings -->
     <div id="update-account" class="guide-section">
-      <h2>3. ⚙️ Updating Account Settings</h2>
+      <h2>3. ⚙️ Managing Account Settings & Liquidation</h2>
       
       <p>You can modify your account settings at any time to adjust risk management and account status.</p>
       
@@ -423,12 +428,38 @@
         </div>
         <div class="feature-card">
           <h4>🔴 Revoke Access</h4>
-          <p>Liquidates all positions to USDT and then disables the account permanently.</p>
+          <p><strong>SPOT:</strong> Sells all assets to USDT and disables the account.<br>
+          <strong>FUTURES:</strong> Closes all positions, converts assets to USDT, then disables the account.</p>
         </div>
       </div>
 
       <div class="tip-box warning">
         <strong>⚠️ Warning:</strong> "Revoke Access" will sell all your holdings and convert them to USDT. This action cannot be undone easily - only use this if you want to completely stop trading and cash out.
+      </div>
+
+      <h3>Understanding the Revoke Access Process:</h3>
+      <p>The "Revoke Access" function performs automatic liquidation to safely exit all trading positions:</p>
+      
+      <h4>🏦 For SPOT Accounts:</h4>
+      <ol class="step-list">
+        <li><strong>Asset Liquidation:</strong> All cryptocurrencies are sold at current market prices</li>
+        <li><strong>USDT Conversion:</strong> Proceeds are converted to USDT (stable currency)</li>
+        <li><strong>Account Disable:</strong> Account status changes to "Disabled" - no more trading</li>
+        <li><strong>Data Collection:</strong> Account switches to data collection mode for analytics</li>
+      </ol>
+
+      <h4>🚀 For FUTURES Accounts:</h4>
+      <ol class="step-list">
+        <li><strong>Position Closure:</strong> All open futures positions are closed immediately</li>
+        <li><strong>Order Cancellation:</strong> All pending orders are cancelled</li>
+        <li><strong>Multi-Market Liquidation:</strong> Assets converted across SPOT, USDT-M, and COIN-M markets</li>
+        <li><strong>Complete Conversion:</strong> Everything converted to USDT with zero reserves</li>
+        <li><strong>Account Disable:</strong> Account permanently disabled for trading</li>
+        <li><strong>Data Collection:</strong> Switches to data-only mode for historical tracking</li>
+      </ol>
+
+      <div class="tip-box important">
+        <strong>🔒 Important:</strong> The liquidation process has a 10-minute timeout and uses conservative settings to ensure complete execution. The process is logged in detail for audit purposes.
       </div>
 
       <h3>Making Changes:</h3>
@@ -446,23 +477,35 @@
       
       <p>ROO7 offers multiple trading strategies to match your risk tolerance and investment goals.</p>
       
-      <h3>Available Strategies:</h3>
+      <h3>SPOT Trading Strategies:</h3>
       <div class="feature-grid">
         <div class="feature-card">
-          <h4>🔥 HRR (High Risk Return)</h4>
-          <p>Aggressive strategy targeting higher returns with increased volatility. Best for risk-tolerant investors.</p>
+          <h4>🔥 High Risk / High Returns Long SPOT</h4>
+          <p>Aggressive growth strategy targeting high-volatility cryptocurrencies with maximum return potential.</p>
         </div>
         <div class="feature-card">
-          <h4>⚖️ MRR (Medium Risk Return)</h4>
-          <p>Balanced approach with moderate risk and steady growth potential. Good for most investors.</p>
+          <h4>⚖️ Medium Risk / Medium Returns Long SPOT</h4>
+          <p>Balanced growth strategy with moderate risk exposure and steady return expectations.</p>
         </div>
         <div class="feature-card">
-          <h4>🛡️ LRR (Low Risk Return)</h4>
-          <p>Conservative strategy focusing on capital preservation with lower volatility.</p>
+          <h4>🛡️ Low Risk / Low Returns Fixed Income</h4>
+          <p>Conservative strategy focusing on stable cryptocurrencies and yield-generating assets.</p>
         </div>
         <div class="feature-card">
-          <h4>🎯 Custom Portfolio</h4>
-          <p>Create your own asset allocation with specific cryptocurrencies and weightings.</p>
+          <h4>🎯 Custom Portfolio Rebalance</h4>
+          <p>Fully customizable portfolio with manual asset selection and weight allocation.</p>
+        </div>
+      </div>
+
+      <h3>FUTURES Trading Strategies:</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>💎 Fixed Income FUTURES</h4>
+          <p>Conservative futures strategy focusing on stable, yield-generating positions with lower volatility and consistent returns.</p>
+        </div>
+        <div class="feature-card">
+          <h4>⚡ Market Neutral FUTURES</h4>
+          <p>Advanced hedging strategy that maintains market-neutral positions to profit from price differences while minimizing market risk.</p>
         </div>
       </div>
 
@@ -487,13 +530,22 @@
         <li>Once validated, click <strong>"Assign Strategy"</strong></li>
       </ol>
 
-      <h3>Rebalancing Frequency:</h3>
-      <p>Some strategies offer rebalancing options:</p>
+      <h3>Strategy-Specific Features:</h3>
+      
+      <h4>📊 SPOT Strategy Features:</h4>
       <ul style="margin: 15px 0; padding-left: 20px;">
-        <li><strong>Daily:</strong> Portfolio rebalances every day</li>
-        <li><strong>Weekly:</strong> Portfolio rebalances every week</li>
-        <li><strong>Monthly:</strong> Portfolio rebalances monthly</li>
-        <li><strong>Manual:</strong> Only rebalances when you request it</li>
+        <li><strong>Rebalancing Frequency:</strong> Daily, weekly, or monthly portfolio rebalancing</li>
+        <li><strong>Top X Instruments:</strong> Algorithm-driven asset selection (High Risk: up to 50, Medium Risk: up to 30, Low Risk: up to 20)</li>
+        <li><strong>Custom Allocation:</strong> Manual asset selection and weight distribution</li>
+        <li><strong>Risk Management:</strong> Hedge percentage controls cash reserves</li>
+      </ul>
+
+      <h4>🚀 FUTURES Strategy Features:</h4>
+      <ul style="margin: 15px 0; padding-left: 20px;">
+        <li><strong>Multi-Market Trading:</strong> Operates across SPOT, USDT-M, and COIN-M futures</li>
+        <li><strong>Advanced Hedging:</strong> Market-neutral positions minimize directional risk</li>
+        <li><strong>Leverage Management:</strong> Conservative position sizing with controlled risk</li>
+        <li><strong>Yield Generation:</strong> Fixed income strategies focus on consistent returns</li>
       </ul>
 
       <div class="tip-box">
