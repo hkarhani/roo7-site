@@ -265,6 +265,50 @@ h6 {
   font-weight: 500;
 }
 
+/* Features Section */
+.features {
+  padding: 80px 0;
+  background-color: #ffffff;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #1f2937;
+  text-align: center;
+}
+
+.feature-card p {
+  color: #6b7280;
+  line-height: 1.6;
+  text-align: center;
+}
+
 /* Pricing Section */
 .pricing {
   padding: 80px 0;
@@ -275,6 +319,9 @@ h6 {
 .unified-pricing {
   max-width: 800px;
   margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .pricing-card-unified {
