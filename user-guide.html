@@ -323,17 +323,44 @@
         <li>Click <strong>"Save Account"</strong> to create your account</li>
       </ol>
 
-      <h3>Setting Up Exchange API Keys (Binance Example):</h3>
+      <h3>Creating Binance Sub-Accounts (Recommended):</h3>
+      <div class="tip-box">
+        <strong>💡 Best Practice:</strong> We strongly recommend creating a dedicated sub-account for ROO7 trading to keep your trading activities organized and secure.
+      </div>
       <ol class="step-list">
-        <li>Log into your Binance account</li>
+        <li>Log into your main Binance account</li>
+        <li>Go to <strong>Sub-Account</strong> in your account menu</li>
+        <li>Click <strong>"Create Sub Account"</strong></li>
+        <li>Enter a descriptive name like "ROO7-Trading"</li>
+        <li>Complete the creation process</li>
+        <li><strong>For FUTURES accounts:</strong> Enable futures trading on the sub-account:
+          <ul style="margin-top: 5px;">
+            <li>Go to <strong>Futures</strong> → <strong>USD-M Futures</strong> in the sub-account</li>
+            <li>Complete the futures agreement and verification</li>
+            <li>This must be done before creating API keys with futures permissions</li>
+          </ul>
+        </li>
+        <li>Transfer funds to your sub-account for trading</li>
+      </ol>
+
+      <h3>Setting Up Exchange API Keys (Binance):</h3>
+      <ol class="step-list">
+        <li>Log into your Binance account (main account or sub-account)</li>
         <li>Go to <strong>API Management</strong> in your account settings</li>
         <li>Click <strong>"Create API"</strong> and choose "System generated"</li>
         <li>Enter a label like "ROO7 Trading Bot"</li>
         <li>Complete security verification (2FA, email, etc.)</li>
         <li>Enable required permissions:
           <ul style="margin-top: 5px;">
-            <li><strong>SPOT accounts:</strong> "Enable Spot & Margin Trading"</li>
-            <li><strong>FUTURES accounts:</strong> "Enable Futures Trading"</li>
+            <li><strong>SPOT accounts:</strong> Enable "Spot & Margin Trading"</li>
+            <li><strong>FUTURES accounts:</strong> Enable "Spot & Margin Trading", "Permits Universal Transfer", and "Enable Futures"</li>
+          </ul>
+        </li>
+        <li><strong>Configure IP Access Restrictions:</strong>
+          <ul style="margin-top: 5px;">
+            <li>Select "Restrict access to trusted IPs only"</li>
+            <li>Add these ROO7 server IPs: <code>152.42.233.187</code> and <code>139.59.193.141</code></li>
+            <li>This ensures only ROO7 servers can access your API</li>
           </ul>
         </li>
         <li>Copy your <strong>API Key</strong> and <strong>Secret Key</strong></li>
