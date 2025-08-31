@@ -41,10 +41,8 @@ h6 {
   font-size: 1.25rem;
   text-align: center;
   color: #6b7280;
-  margin-bottom: 3rem;
+  margin: 0 auto 3rem auto;
   max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* Buttons */
@@ -713,17 +711,75 @@ h6 {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
   }
 
   .hero-stats {
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat {
+    padding: 1rem;
   }
 
   .nav-links {
     display: none;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .strategies-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .strategy-card {
+    padding: 1.5rem;
+  }
+
+  .pricing {
+    padding: 60px 0;
+  }
+
+  .unified-pricing {
+    margin: 0 10px;
   }
 
   .footer-content {
