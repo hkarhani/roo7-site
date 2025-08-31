@@ -19,7 +19,7 @@ Welcome to ROO7, your professional cryptocurrency trading automation platform. T
 
 ### Platform Access
 - **Website**: https://roo7.site
-- **Landing Page**: https://roo7.site/landingpage.html
+- **Landing Page**: https://roo7.site/index.html
 - **Dashboard**: https://roo7.site/dashboard.html
 
 ### System Requirements

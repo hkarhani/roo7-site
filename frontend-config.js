@@ -223,7 +223,7 @@ export const PAGE_CONFIG = {
         auth: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.primary}/auth.html`,
         troubleshoot: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.primary}/troubleshoot.html`,
         marketInsights: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.primary}/market-insights.html`,
-        landing: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.primary}/landingpage.html`
+        landing: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.primary}/index.html`
     },
     
     // Page Titles

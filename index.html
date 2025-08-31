@@ -1,99 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title id="page-title">Coming Soon</title>
-  <script type="module" src="frontend-config.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-      padding: 0 1rem;
-    }
-    .logo {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-    .tagline {
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
-      color: #e0e0e0;
-    }
-    .highlight {
-      color: #00d4ff;
-    }
-    .box {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 2rem;
-      border-radius: 1rem;
-      max-width: 500px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    }
-    .message {
-      font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-    .coming {
-      font-size: 1rem;
-      color: #bbbbbb;
-    }
-    footer {
-      position: absolute;
-      bottom: 1rem;
-      font-size: 0.9rem;
-      color: #888;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROO7 - Advanced Cryptocurrency Trading Automation</title>
+    <link rel="stylesheet" href="landingpage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="logo">roo7.site</div>
-  <div class="tagline">Unleashing <span class="highlight">Limitless Digital Services</span></div>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav">
+                <div class="logo">
+                    <span class="logo-icon">🚀</span>
+                    <span class="logo-text">ROO7</span>
+                </div>
+                <nav class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#strategies">Strategies</a>
+                    <a href="#pricing">Pricing</a>
+                    <a href="#security">Security</a>
+                </nav>
+                <button class="btn btn-primary" onclick="window.location.href='auth.html'">Get Started</button>
+            </div>
+        </div>
+    </header>
 
-  <div class="box">
-    <div class="message">
-      A new digital experience is on the horizon — designed to <strong>connect, simplify, and inspire</strong>.
-    </div>
-    <div class="message">
-      🚀 Smart Tools · 📱 Mobile Utilities · 🧠 AI Assistants · 🌐 Web Wizards
-    </div>
-    <div class="message">
-      <a href="qr.html" target="_blank" rel="noopener noreferrer" style="padding:10px 20px; background-color:#333; color:#ffcc80; text-decoration:none; border:1px solid #ffcc80; border-radius:5px;">vCard QR CodeGen</a>
-    </div>
-      <div class="message">
-      <a href="landingpage.html" target="_blank" rel="noopener noreferrer" style="padding:10px 20px; background-color:#333; color:#ffcc80; text-decoration:none; border:1px solid #ffcc80; border-radius:5px;">CryptoBot Pro</a>
-    </div>
-    <div class="coming">Stay tuned — we're launching soon.</div>
-  </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Automate Your Crypto Trading with AI-Powered Precision</h1>
+                <p class="hero-subtitle">Professional-grade trading automation for Binance SPOT & FUTURES accounts. Multiple risk strategies, 24/7 monitoring, and institutional-level security.</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">💎</div>
+                        <div class="stat-label">Premium Trading</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Active Monitoring</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">🚀</div>
+                        <div class="stat-label">Automated Execution</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-large" onclick="window.location.href='auth.html'">Start Trading Now</button>
+            </div>
+        </div>
+    </section>
 
-  <footer id="footer-text">
-    &copy; 2025 roo7.site. All rights reserved.
-  </footer>
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose ROO7?</h2>
+            <p class="section-subtitle">Professional-grade features designed for serious cryptocurrency traders</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI-Powered Trading</h3>
+                    <p>Advanced algorithms analyze market conditions 24/7 to execute optimal trading decisions</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Multi-Account Management</h3>
+                    <p>Connect unlimited SPOT and FUTURES accounts under one subscription</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Bank-Grade Security</h3>
+                    <p>Your funds remain secure with read-only API access and encrypted key storage</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Risk Management</h3>
+                    <p>Customizable risk levels from conservative to aggressive trading strategies</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Advanced Analytics</h3>
+                    <p>Real-time performance tracking and detailed trading analytics</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Instant Execution</h3>
+                    <p>Lightning-fast trade execution with minimal latency and maximum uptime</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <script type="module">
-    // Initialize page with brand configuration
-    import CONFIG from './frontend-config.js';
-    
-    // Update page elements with brand info
-    document.getElementById('page-title').textContent = `${CONFIG.DOMAIN_CONFIG.primary} | Coming Soon`;
-    document.querySelector('.logo').textContent = CONFIG.DOMAIN_CONFIG.primary;
-    document.getElementById('footer-text').textContent = `© 2025 ${CONFIG.DOMAIN_CONFIG.primary}. All rights reserved.`;
-  </script>
+    <!-- Trading Strategies -->
+    <section id="strategies" class="strategies">
+        <div class="container">
+            <h2 class="section-title">Advanced Trading Strategies</h2>
+            <p class="section-subtitle">Choose from our proven algorithmic strategies for SPOT and FUTURES trading designed for different risk profiles</p>
+            
+            <h3 style="color: #00d4ff; margin: 30px 0 20px 0; text-align: center;">SPOT Trading Strategies</h3>
+            <div class="strategies-grid">
+                <div class="strategy-card">
+                    <div class="strategy-icon high-risk">📈</div>
+                    <h3>High Risk / High Returns Long SPOT</h3>
+                    <p>Aggressive growth strategy targeting high-volatility cryptocurrencies with maximum return potential</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Risk Level: High</span>
+                        <span class="stat-item">Returns: High</span>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="strategy-icon med-risk">📊</div>
+                    <h3>Medium Risk / Medium Returns Long SPOT</h3>
+                    <p>Balanced growth strategy with moderate risk exposure and steady return expectations</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Risk Level: Medium</span>
+                        <span class="stat-item">Returns: Medium</span>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="strategy-icon low-risk">🛡️</div>
+                    <h3>Low Risk / Low Returns Fixed Income</h3>
+                    <p>Conservative strategy focusing on stable cryptocurrencies and yield-generating assets</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Risk Level: Low</span>
+                        <span class="stat-item">Returns: Fixed Income Focus</span>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="strategy-icon custom">⚙️</div>
+                    <h3>Custom Portfolio Rebalancing</h3>
+                    <p>Automated portfolio rebalancing based on your custom allocation preferences and market conditions</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Customizable Risk</span>
+                        <span class="stat-item">Dynamic Allocation</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="color: #00d4ff; margin: 40px 0 20px 0; text-align: center;">FUTURES Trading Strategies</h3>
+            <div class="strategies-grid">
+                <div class="strategy-card">
+                    <div class="strategy-icon low-risk">💎</div>
+                    <h3>Fixed Income FUTURES</h3>
+                    <p>Conservative futures strategy focusing on stable, yield-generating positions with lower volatility and consistent returns</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Target: Steady Income</span>
+                        <span class="stat-item">Focus: Yield Generation</span>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="strategy-icon custom">⚡</div>
+                    <h3>Market Neutral FUTURES</h3>
+                    <p>Advanced hedging strategy that maintains market-neutral positions to profit from price differences while minimizing market risk</p>
+                    <div class="strategy-stats">
+                        <span class="stat-item">Risk: Market Neutral</span>
+                        <span class="stat-item">Focus: Price Arbitrage</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <p class="section-subtitle">One plan covers all your trading accounts. No tiers, no limits, just results.</p>
+            
+            <!-- Main Pricing Card -->
+            <div class="unified-pricing">
+                <div class="pricing-card-unified featured">
+                    <div class="popular-badge">2025 Model</div>
+                    <div class="pricing-header">
+                        <h3>Unlimited Accounts Plan</h3>
+                        <p>One subscription. All your accounts.</p>
+                        <div class="price-tiers">
+                            <div class="price-tier">
+                                <div class="price">
+                                    <span class="price-amount">Competitive</span>
+                                    <span class="price-period">Pricing</span>
+                                    <span class="price-note">Contact for pricing details</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="referral-highlight">
+                        <div class="referral-badge">🎯 SAVE with Referral Codes!</div>
+                        <p>Get exclusive discounts with referral codes from existing users</p>
+                    </div>
+                    
+                    <ul class="pricing-features-unified">
+                        <li>✓ <strong>Unlimited linked accounts</strong></li>
+                        <li>✓ All trading strategies (High/Med/Low risk)</li>
+                        <li>✓ Custom portfolio rebalancing</li>
+                        <li>✓ Binance SPOT integration</li>
+                        <li>✓ 24/7 automated monitoring</li>
+                        <li>✓ Real-time analytics & reporting</li>
+                        <li>✓ Email & priority support</li>
+                        <li>✓ 14-day money-back guarantee</li>
+                    </ul>
+                    
+                    <button class="btn btn-primary btn-large" onclick="window.location.href='auth.html'">Get Started Today</button>
+                </div>
+            </div>
+            
+            <!-- Referral Program -->
+            <div class="referral-program-info">
+                <h3>💰 Earn Referral Commissions</h3>
+                <p>Refer friends and earn competitive commissions on their annual subscription fees!</p>
+                <p>Join our referral program to start earning passive income from your network.</p>
+            </div>
+            
+            <div class="pricing-note">
+                <p>Secure API integration • No withdrawal access • Bank-grade encryption • 99.9% uptime</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section id="security" class="security">
+        <div class="container">
+            <h2 class="section-title">Bank-Grade Security</h2>
+            <div class="security-grid">
+                <div class="security-feature">
+                    <div class="security-icon">🔐</div>
+                    <h3>API Key Protection</h3>
+                    <p>Your API keys are encrypted and never stored in plain text. We use industry-standard AES-256 encryption.</p>
+                </div>
+                <div class="security-feature">
+                    <div class="security-icon">🛡️</div>
+                    <h3>Read-Only Access</h3>
+                    <p>Our bots only require trading permissions. We never request withdrawal access to your funds.</p>
+                </div>
+                <div class="security-feature">
+                    <div class="security-icon">🔍</div>
+                    <h3>Real-Time Monitoring</h3>
+                    <p>24/7 system monitoring with instant alerts for any unusual activity or performance deviations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="logo-icon">🚀</span>
+                        <span class="logo-text">ROO7</span>
+                    </div>
+                    <p>Professional cryptocurrency trading automation for the modern investor.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#strategies">Strategies</a>
+                        <a href="#pricing">Pricing</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <a href="#">Documentation</a>
+                        <a href="#">Help Center</a>
+                        <a href="#">Contact</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ROO7. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="landingpage.js?v=1.0"></script>
 </body>
 </html>
