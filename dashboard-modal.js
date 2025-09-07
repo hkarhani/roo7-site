@@ -1488,6 +1488,7 @@ class ModalManager {
 
 
       console.log("📤 Submitting account data:", data);
+      console.log("🔍 Strategy debug - value:", `"${data.strategy}"`, "length:", data.strategy.length, "type:", typeof data.strategy);
 
       const method = this.currentEditingId ? "PUT" : "POST";
       const url = this.currentEditingId 
