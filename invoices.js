@@ -852,6 +852,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Store preliminary invoice data for later use
     window.preliminaryInvoiceData = preliminaryInvoice;
     
+    // Show activation button when invoice preview is ready
+    const activateBtn = document.getElementById('activate-with-pricing-btn');
+    if (activateBtn) {
+      activateBtn.style.display = 'inline-block';
+    }
+    
     invoiceSection.style.display = 'block';
   }
 
@@ -871,6 +877,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Reset to original pricing
       if (window.preliminaryInvoiceData) {
         displayUpdatedPricing(null, window.preliminaryInvoiceData);
+      }
+      // Ensure activation button is still visible for non-referral activation
+      const activateBtn = document.getElementById('activate-with-pricing-btn');
+      if (activateBtn) {
+        activateBtn.style.display = 'inline-block';
       }
       return;
     }
