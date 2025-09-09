@@ -22,6 +22,44 @@
   </div>
 
   <main class="dashboard-grid admin-grid">
+    <!-- System Overview -->
+    <section id="section-overview" class="dashboard-card">
+      <div class="section-header">
+        <h2>📊 System Overview</h2>
+        <button id="refresh-overview" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="overview-stats" id="overview-stats">
+        <div class="loading-state">
+          <p>Loading system overview...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Trading Accounts -->
+    <section id="section-active-accounts" class="dashboard-card">
+      <div class="section-header">
+        <h2>👥 Active Trading Accounts</h2>
+        <button id="refresh-active-accounts" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="active-accounts-container" id="active-accounts-container">
+        <div class="loading-state">
+          <p>Loading active accounts...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users Accounts (Without Strategies) -->
+    <section id="section-users-accounts" class="dashboard-card">
+      <div class="section-header">
+        <h2>👤 Users Accounts</h2>
+        <button id="refresh-users-accounts" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <div class="users-accounts-container" id="users-accounts-container">
+        <div class="loading-state">
+          <p>Loading users accounts...</p>
+        </div>
+      </div>
+    </section>
 
     <!-- Wallet Verifications -->
     <section id="section-wallets" class="dashboard-card">
@@ -63,7 +101,120 @@
       </div>
     </section>
 
+    <!-- Logs Management Overview -->
+    <section id="section-logs-management" class="dashboard-card">
+      <div class="section-header">
+        <h2>📋 Logs Management</h2>
+        <div class="logs-actions">
+          <button id="refresh-logs-overview" class="secondary-button">🔄 Refresh</button>
+          <button id="open-logs-management" class="primary-button">📊 Detailed Logs</button>
+        </div>
+      </div>
+      <div class="logs-overview" id="logs-overview">
+        <div class="loading-state">
+          <p>Loading logs overview...</p>
+        </div>
+      </div>
+    </section>
 
+    <!-- Source Accounts Management -->
+    <section id="section-source-accounts" class="dashboard-card">
+      <div class="section-header">
+        <h2>🔐 Source Accounts</h2>
+        <button id="add-source-account" class="primary-button">+ Add Source Account</button>
+      </div>
+      <div class="table-container">
+        <table id="source-accounts-table">
+          <thead>
+            <tr>
+              <th>Account Name</th>
+              <th>Exchange</th>
+              <th>Type</th>
+              <th>Strategy</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" class="loading-message">Loading source accounts...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Jobs Management -->
+    <section id="section-jobs-manager" class="dashboard-card">
+      <div class="section-header">
+        <h2>⚙️ Jobs Management</h2>
+        <div class="jobs-manager-actions">
+          <button id="refresh-jobs-manager" class="secondary-button">🔄 Refresh</button>
+          <button id="open-jobs-dashboard" class="primary-button">📊 Jobs Dashboard</button>
+        </div>
+      </div>
+      <div class="jobs-manager-overview" id="jobs-manager-overview">
+        <div class="loading-state">
+          <p>Loading Jobs Manager status...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Source Accounts Analytics Section - Full Width -->
+    <section id="section-source-analytics" class="dashboard-card analytics-section">
+      <div class="analytics-header">
+        <div class="analytics-title-row">
+          <h2 class="analytics-title">📊 Source Accounts Trading Analytics</h2>
+          <div class="analytics-status-badges" id="source-analytics-status-badges">
+            <div class="status-item">
+              <span class="status-label">Current Value</span>
+              <span class="status-badge primary" id="source-current-total-badge">$0.00</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Period Change</span>
+              <span class="status-badge" id="source-period-change-badge">$0.00</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">% Change</span>
+              <span class="status-badge" id="source-change-percentage-badge">0.00%</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="analytics-toolbar">
+          <div class="analytics-selectors">
+            <div class="selector-group">
+              <label class="selector-label">Source Account</label>
+              <select id="source-analytics-account-select" class="selector-input">
+                <option value="">Loading accounts...</option>
+              </select>
+            </div>
+            <div class="selector-group">
+              <label class="selector-label">Period</label>
+              <select id="source-analytics-period-select" class="selector-input">
+                <option value="1">Last 24h</option>
+                <option value="7">7 Days</option>
+                <option value="30" selected>30 Days</option>
+                <option value="90">90 Days</option>
+                <option value="365">1 Year</option>
+              </select>
+            </div>
+          </div>
+          <button id="refresh-source-analytics" class="analytics-refresh-btn">🔄 Refresh</button>
+        </div>
+      </div>
+      
+      <!-- Chart Container -->
+      <div class="analytics-chart-container">
+        <div id="source-analytics-chart" class="analytics-chart"></div>
+      </div>
+      
+      <!-- Legend -->
+      <div class="analytics-legend" id="source-analytics-legend" style="display: none;">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
 
     <!-- Recent Activity -->
     <section id="section-activity" class="dashboard-card">
@@ -134,22 +285,6 @@
             </tr>
           </tbody>
         </table>
-      </div>
-    </section>
-
-    <!-- Jobs Management -->
-    <section id="section-jobs-manager" class="dashboard-card">
-      <div class="section-header">
-        <h2>⚙️ Jobs Management</h2>
-        <div class="jobs-manager-actions">
-          <button id="refresh-jobs-manager" class="secondary-button">🔄 Refresh</button>
-          <button id="open-jobs-dashboard" class="primary-button">📊 Jobs Dashboard</button>
-        </div>
-      </div>
-      <div class="jobs-manager-overview" id="jobs-manager-overview">
-        <div class="loading-state">
-          <p>Loading Jobs Manager status...</p>
-        </div>
       </div>
     </section>
 
