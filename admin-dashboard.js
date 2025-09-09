@@ -1639,7 +1639,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadJobsManagerOverview() {
     try {
-      const container = document.getElementById('jobs-manager-overview');
+      const container = document.getElementById('jobs-overview');
       
       // Show loading state
       container.innerHTML = '<div class="loading-state"><p>Loading Jobs Manager status...</p></div>';
@@ -1666,7 +1666,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
     } catch (error) {
       console.error('Error loading Jobs Manager overview:', error);
-      const container = document.getElementById('jobs-manager-overview');
+      const container = document.getElementById('jobs-overview');
       container.innerHTML = `
         <div class="error-state">
           <p>❌ Failed to load Jobs Manager: ${error.message}</p>
@@ -1677,7 +1677,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   function renderJobsManagerOverview(statusData, summaryData) {
-    const container = document.getElementById('jobs-manager-overview');
+    const container = document.getElementById('jobs-overview');
     
     const isRunning = statusData.available && statusData.running;
     const statusIcon = isRunning ? '🟢' : '🔴';
@@ -1744,7 +1744,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('refresh-referrals').onclick = loadReferrals;
   document.getElementById('refresh-activity').onclick = loadActivity;
   document.getElementById('scan-upgrades').onclick = scanUpgrades;
-  document.getElementById('refresh-jobs-manager').onclick = loadJobsManagerOverview;
+  document.getElementById('refresh-jobs').onclick = loadJobsManagerOverview;
   document.getElementById('refresh-logs-overview').onclick = loadLogsOverview;
   
   // Jobs Manager button
