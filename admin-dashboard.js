@@ -744,26 +744,44 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadInvoices(status = '') {
     try {
       console.log('📄 Loading invoices...');
+      console.log('📄 INVOICING_API_BASE:', INVOICING_API_BASE);
+      console.log('📄 Token available:', !!token);
+      
       let url = `${INVOICING_API_BASE}/admin/invoices`;
       if (status) url += `?status=${status}`;
+      
+      console.log('📄 Full URL:', url);
+
+      const headers = getAuthHeaders(token);
+      console.log('📄 Headers:', headers);
 
       const response = await fetch(url, {
-        headers: getAuthHeaders(token)
+        headers: headers
       });
+
+      console.log('📄 Response status:', response.status);
+      console.log('📄 Response ok:', response.ok);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('📄 Invoice data received:', data);
+        
         // Handle different possible response structures
         const invoices = data.invoices || data || [];
+        console.log('📄 Invoices array:', invoices);
+        console.log('📄 Number of invoices:', invoices.length);
+        
         displayInvoices(invoices);
         updateInvoiceStats(invoices);
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('📄 Error response text:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
     } catch (error) {
       console.error('Error loading invoices:', error);
       document.querySelector('#admin-invoices-table tbody').innerHTML = 
-        '<tr><td colspan="9" class="loading-message">Failed to load invoices</td></tr>';
+        `<tr><td colspan="9" class="loading-message">Failed to load invoices: ${error.message}</td></tr>`;
     }
   }
 
@@ -789,7 +807,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return `
         <tr>
           <td title="${invoice._id}">${invoice.invoice_id || invoice._id?.slice(-8) || 'N/A'}</td>
-          <td>${invoice.username || 'N/A'}</td>
+          <td>${invoice.user_name || invoice.username || 'N/A'}</td>
           <td>${invoice.user_email || 'N/A'}</td>
           <td><strong>$${(invoice.amount || 0).toFixed(2)}</strong></td>
           <td>$${(invoice.portfolio_value || 0).toLocaleString()}</td>
@@ -3166,10 +3184,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Initialize dashboard
+  console.log('🚀 Admin Dashboard: Starting initialization...');
   loadSystemOverview();
   loadActiveAccounts();
   loadUsersAccounts();
   loadWalletVerifications();
+  console.log('📄 Admin Dashboard: About to load invoices...');
   loadInvoices();
   loadTierUpgrades();
   loadReferrals();
