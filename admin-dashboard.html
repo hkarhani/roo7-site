@@ -9,7 +9,7 @@
   <title>Admin Dashboard</title>
   <script type="module" src="frontend-config.js"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
-  <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=3.0" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -81,29 +81,52 @@
         <div class="filter-controls">
           <select id="invoice-status-filter">
             <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
+            <option value="pending">Pending Approval</option>
             <option value="paid">Paid</option>
+            <option value="approved">Approved</option>
             <option value="overdue">Overdue</option>
             <option value="cancelled">Cancelled</option>
+            <option value="rejected">Rejected</option>
           </select>
-          <button id="filter-invoices" class="secondary-button">Filter</button>
+          <button id="filter-invoices" class="secondary-button">🔍 Filter</button>
+          <button id="refresh-invoices" class="secondary-button">🔄 Refresh</button>
         </div>
       </div>
+      
+      <!-- Invoice Summary Stats -->
+      <div class="invoice-stats" id="invoice-stats">
+        <div class="stat-card">
+          <div class="stat-label">Pending Approval</div>
+          <div class="stat-value warning" id="pending-invoices-count">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Approved Today</div>
+          <div class="stat-value success" id="approved-today-count">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value primary" id="total-revenue-amount">$0.00</div>
+        </div>
+      </div>
+
       <div class="table-container">
         <table id="admin-invoices-table">
           <thead>
             <tr>
               <th>Invoice ID</th>
               <th>User</th>
+              <th>Email</th>
               <th>Amount</th>
+              <th>Portfolio</th>
               <th>Status</th>
               <th>Date</th>
+              <th>Referral</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colspan="6" class="loading-message">Loading invoices...</td>
+              <td colspan="9" class="loading-message">Loading invoices...</td>
             </tr>
           </tbody>
         </table>
@@ -389,6 +412,6 @@
   <!-- Scripts -->
   <script src="line-chart.js?v=1.0"></script>
   <script src="theme-manager.js?v=1"></script>
-  <script type="module" src="admin-dashboard.js?v=5.4"></script>
+  <script type="module" src="admin-dashboard.js?v=6.0"></script>
 </body>
 </html>

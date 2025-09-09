@@ -756,13 +756,14 @@ document.addEventListener("DOMContentLoaded", () => {
         // Handle different possible response structures
         const invoices = data.invoices || data || [];
         displayInvoices(invoices);
+        updateInvoiceStats(invoices);
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error loading invoices:', error);
       document.querySelector('#admin-invoices-table tbody').innerHTML = 
-        '<tr><td colspan="6" class="loading-message">Failed to load invoices</td></tr>';
+        '<tr><td colspan="9" class="loading-message">Failed to load invoices</td></tr>';
     }
   }
 
@@ -772,38 +773,95 @@ document.addEventListener("DOMContentLoaded", () => {
     // Ensure invoices is an array
     if (!Array.isArray(invoices)) {
       console.error('Invoices data is not an array:', invoices);
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-message">Invalid invoice data format</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-message">Invalid invoice data format</td></tr>';
       return;
     }
     
     if (invoices.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No invoices found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-message">No invoices found</td></tr>';
       return;
     }
 
-    tbody.innerHTML = invoices.map(invoice => `
-      <tr>
-        <td>${invoice.invoice_id}</td>
-        <td>${invoice.user_email || 'N/A'}</td>
-        <td>$${invoice.amount.toFixed(2)}</td>
-        <td><span class="status-badge status-${invoice.status}">${invoice.status}</span></td>
-        <td>${new Date(invoice.created_at).toLocaleDateString()}</td>
-        <td>
-          ${invoice.status === 'pending' ? 
-            `<button class="success-btn" onclick="approveInvoice('${invoice._id}')">✅ Approve</button>` : 
-            '<span class="text-muted">No actions</span>'
-          }
-        </td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = invoices.map(invoice => {
+      const statusClass = getStatusClass(invoice.status);
+      const referralInfo = invoice.referral_code ? `${invoice.referral_code} (${invoice.referrer_username || 'Unknown'})` : 'None';
+      
+      return `
+        <tr>
+          <td title="${invoice._id}">${invoice.invoice_id || invoice._id?.slice(-8) || 'N/A'}</td>
+          <td>${invoice.username || 'N/A'}</td>
+          <td>${invoice.user_email || 'N/A'}</td>
+          <td><strong>$${(invoice.amount || 0).toFixed(2)}</strong></td>
+          <td>$${(invoice.portfolio_value || 0).toLocaleString()}</td>
+          <td><span class="status-badge ${statusClass}">${invoice.status || 'unknown'}</span></td>
+          <td>${formatDate(invoice.created_at)}</td>
+          <td title="Referral: ${referralInfo}">${invoice.referral_code || 'None'}</td>
+          <td class="actions-cell">
+            ${getInvoiceActions(invoice)}
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
-  // Make function global for onclick
+  function getStatusClass(status) {
+    switch(status) {
+      case 'pending': return 'status-warning';
+      case 'paid': return 'status-success';
+      case 'approved': return 'status-success';
+      case 'overdue': return 'status-danger';
+      case 'cancelled': return 'status-danger';
+      case 'rejected': return 'status-danger';
+      default: return 'status-neutral';
+    }
+  }
+
+  function getInvoiceActions(invoice) {
+    const actions = [];
+    
+    if (invoice.status === 'pending') {
+      actions.push(`<button class="success-btn small" onclick="approveInvoice('${invoice._id}')" title="Approve Invoice">✅ Approve</button>`);
+      actions.push(`<button class="danger-btn small" onclick="rejectInvoice('${invoice._id}')" title="Reject Invoice">❌ Reject</button>`);
+    } else if (invoice.status === 'approved' && !invoice.paid_at) {
+      actions.push(`<button class="primary-btn small" onclick="markInvoicePaid('${invoice._id}')" title="Mark as Paid">💰 Mark Paid</button>`);
+    }
+    
+    actions.push(`<button class="secondary-btn small" onclick="viewInvoiceDetails('${invoice._id}')" title="View Details">👁️ View</button>`);
+    
+    return actions.length > 0 ? actions.join(' ') : '<span class="text-muted">No actions</span>';
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  }
+
+  function updateInvoiceStats(invoices) {
+    const stats = invoices.reduce((acc, invoice) => {
+      if (invoice.status === 'pending') acc.pending++;
+      if (invoice.status === 'approved' && isToday(invoice.updated_at)) acc.approvedToday++;
+      if (invoice.status === 'paid') acc.totalRevenue += invoice.amount || 0;
+      return acc;
+    }, { pending: 0, approvedToday: 0, totalRevenue: 0 });
+
+    document.getElementById('pending-invoices-count').textContent = stats.pending;
+    document.getElementById('approved-today-count').textContent = stats.approvedToday;
+    document.getElementById('total-revenue-amount').textContent = `$${stats.totalRevenue.toLocaleString()}`;
+  }
+
+  function isToday(dateString) {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  }
+
+  // Make functions global for onclick
   window.approveInvoice = async function(invoiceId) {
     if (!confirm('Are you sure you want to approve this invoice?')) return;
     
     try {
-      // Log the invoice ID for debugging
       console.log('Approving invoice with ID:', invoiceId);
       
       const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/approve`, {
@@ -816,17 +874,127 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        showToast('Invoice approved successfully!', 'success');
+        showToast('✅ Invoice approved successfully!', 'success');
         loadInvoices();
       } else {
         const error = await response.json();
-        showToast(`Failed to approve invoice: ${error.detail}`, 'error');
+        showToast(`Failed to approve invoice: ${error.detail || error.message}`, 'error');
       }
     } catch (error) {
       console.error('Error approving invoice:', error);
       showToast('Error approving invoice', 'error');
     }
   };
+
+  window.rejectInvoice = async function(invoiceId) {
+    const reason = prompt('Please provide a reason for rejecting this invoice:');
+    if (!reason) return;
+    
+    try {
+      console.log('Rejecting invoice with ID:', invoiceId);
+      
+      const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/cancel`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          reason: reason,
+          notes: 'Rejected via admin dashboard'
+        })
+      });
+
+      if (response.ok) {
+        showToast('❌ Invoice rejected successfully!', 'success');
+        loadInvoices();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to reject invoice: ${error.detail || error.message}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error rejecting invoice:', error);
+      showToast('Error rejecting invoice', 'error');
+    }
+  };
+
+  window.markInvoicePaid = async function(invoiceId) {
+    if (!confirm('Mark this invoice as paid? This should only be done after payment has been received.')) return;
+    
+    try {
+      console.log('Marking invoice as paid, ID:', invoiceId);
+      
+      const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/mark-paid`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          payment_method: 'manual_admin_confirmation',
+          notes: 'Marked as paid via admin dashboard'
+        })
+      });
+
+      if (response.ok) {
+        showToast('💰 Invoice marked as paid!', 'success');
+        loadInvoices();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to mark invoice as paid: ${error.detail || error.message}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error marking invoice as paid:', error);
+      showToast('Error marking invoice as paid', 'error');
+    }
+  };
+
+  window.viewInvoiceDetails = async function(invoiceId) {
+    try {
+      const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}`, {
+        headers: getAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const invoice = await response.json();
+        showInvoiceModal(invoice);
+      } else {
+        showToast('Failed to load invoice details', 'error');
+      }
+    } catch (error) {
+      console.error('Error loading invoice details:', error);
+      showToast('Error loading invoice details', 'error');
+    }
+  };
+
+  function showInvoiceModal(invoice) {
+    const modal = document.getElementById('invoice-modal');
+    const detailsDiv = document.getElementById('invoice-details');
+    
+    detailsDiv.innerHTML = `
+      <div class="invoice-detail-grid">
+        <div class="detail-group">
+          <h4>Invoice Information</h4>
+          <p><strong>ID:</strong> ${invoice.invoice_id || invoice._id}</p>
+          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(invoice.status)}">${invoice.status}</span></p>
+          <p><strong>Amount:</strong> $${(invoice.amount || 0).toFixed(2)}</p>
+          <p><strong>Created:</strong> ${formatDate(invoice.created_at)}</p>
+          ${invoice.updated_at ? `<p><strong>Updated:</strong> ${formatDate(invoice.updated_at)}</p>` : ''}
+        </div>
+        
+        <div class="detail-group">
+          <h4>User Information</h4>
+          <p><strong>Username:</strong> ${invoice.username || 'N/A'}</p>
+          <p><strong>Email:</strong> ${invoice.user_email || 'N/A'}</p>
+          <p><strong>Portfolio Value:</strong> $${(invoice.portfolio_value || 0).toLocaleString()}</p>
+          ${invoice.referral_code ? `<p><strong>Referral Code:</strong> ${invoice.referral_code}</p>` : ''}
+        </div>
+        
+        ${invoice.notes ? `
+          <div class="detail-group">
+            <h4>Notes</h4>
+            <p>${invoice.notes}</p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    
+    modal.style.display = 'block';
+  }
 
   // === TIER UPGRADES FUNCTIONS ===
   async function loadTierUpgrades() {
@@ -1575,6 +1743,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('filter-invoices').onclick = () => {
     const status = document.getElementById('invoice-status-filter').value;
     loadInvoices(status);
+  };
+
+  // Refresh invoices
+  document.getElementById('refresh-invoices').onclick = () => {
+    const status = document.getElementById('invoice-status-filter').value;
+    loadInvoices(status);
+    showToast('🔄 Invoices refreshed', 'info');
   };
 
   // Modal event listeners
