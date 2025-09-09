@@ -9,7 +9,7 @@
   <title>Admin Dashboard</title>
   <script type="module" src="frontend-config.js"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
-  <link rel="stylesheet" href="admin-dashboard.css?v=3.0" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=3.1" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -145,21 +145,6 @@
       </div>
     </section>
 
-    <!-- Jobs Management -->
-    <section id="section-jobs-manager" class="dashboard-card">
-      <div class="section-header">
-        <h2>⚙️ Jobs Management</h2>
-        <div class="jobs-manager-actions">
-          <button id="refresh-jobs-manager" class="secondary-button">🔄 Refresh</button>
-          <button id="open-jobs-dashboard" class="primary-button">📊 Jobs Dashboard</button>
-        </div>
-      </div>
-      <div class="jobs-manager-overview" id="jobs-manager-overview">
-        <div class="loading-state">
-          <p>Loading Jobs Manager status...</p>
-        </div>
-      </div>
-    </section>
 
     <!-- Source Accounts Analytics Section - Full Width -->
     <section id="section-source-analytics" class="dashboard-card analytics-section">
@@ -233,7 +218,10 @@
     <section id="section-jobs" class="dashboard-card">
       <div class="section-header">
         <h2>⚙️ Jobs Management</h2>
-        <button id="refresh-jobs" class="secondary-button">🔄 Refresh</button>
+        <div class="jobs-manager-actions">
+          <button id="refresh-jobs" class="secondary-button">🔄 Refresh</button>
+          <button id="open-jobs-dashboard" class="primary-button">📊 Jobs Dashboard</button>
+        </div>
       </div>
       <div class="jobs-overview" id="jobs-overview">
         <div class="loading-state">

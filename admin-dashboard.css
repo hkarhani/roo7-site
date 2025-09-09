@@ -246,6 +246,11 @@
   grid-row: 6;
 }
 
+#section-jobs {
+  grid-column: 3;
+  grid-row: 6;
+}
+
 #section-source-accounts {
   grid-column: 1 / -1;
   grid-row: 4;
