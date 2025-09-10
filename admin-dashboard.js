@@ -1646,6 +1646,9 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Fetch Jobs Manager status (routes to jobs-manager container automatically)
       const statusResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/status'), {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
         headers: getAuthHeaders(token)
       });
       
@@ -1657,6 +1660,9 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Fetch active jobs summary (routes to jobs-manager container automatically)
       const summaryResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/active-jobs'), {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
         headers: getAuthHeaders(token)
       });
       
