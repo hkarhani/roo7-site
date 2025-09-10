@@ -6,9 +6,17 @@ import CONFIG from './frontend-config.js';
 
 console.log('🔧 Jobs Manager Debug: Config loaded:', CONFIG);
 
-// Get API URL from config
-const getApiUrl = () => {
-    return CONFIG?.API_CONFIG?.authUrl || CONFIG?.API_URL || 'https://api.roo7.site:443';
+// Get API URL from config with proper routing for jobs endpoints
+const getApiUrl = (endpoint = '') => {
+    // Use the routing function from CONFIG that handles jobs-manager endpoints
+    if (CONFIG?.CONFIG_UTILS?.getApiUrl) {
+        return CONFIG.CONFIG_UTILS.getApiUrl(endpoint);
+    }
+    // Fallback: manual routing if CONFIG_UTILS not available
+    if (endpoint.includes('/admin/jobs-manager/')) {
+        return `https://api.roo7.site:8004${endpoint}`;
+    }
+    return `https://api.roo7.site:443${endpoint}`;
 };
 
 class JobsManagerDashboard {
@@ -174,7 +182,7 @@ class JobsManagerDashboard {
         try {
             console.log('🔧 Jobs Manager: Loading Jobs Manager status');
             
-            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/status`);
+            const response = await this.makeAuthenticatedRequest(getApiUrl('/admin/jobs-manager/status'));
             const data = await response.json();
             
             this.renderJobsManagerStatus(data);
@@ -188,7 +196,7 @@ class JobsManagerDashboard {
         try {
             console.log('🔧 Jobs Manager: Loading active jobs summary');
             
-            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs`);
+            const response = await this.makeAuthenticatedRequest(getApiUrl('/admin/jobs-manager/active-jobs'));
             const data = await response.json();
             
             this.renderActiveJobsSummary(data);
@@ -202,7 +210,7 @@ class JobsManagerDashboard {
         try {
             console.log('🔧 Jobs Manager: Loading active jobs list');
             
-            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/jobs-manager/active-jobs-list`);
+            const response = await this.makeAuthenticatedRequest(getApiUrl('/admin/jobs-manager/active-jobs-list'));
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -243,10 +251,10 @@ class JobsManagerDashboard {
             let apiUrl;
             if (accountFilter) {
                 // Get executions for specific account
-                apiUrl = `${getApiUrl()}/admin/jobs-manager/job-executions/${accountFilter}?limit=${limit}`;
+                apiUrl = getApiUrl(`/admin/jobs-manager/job-executions/${accountFilter}?limit=${limit}`);
             } else {
                 // Get recent executions across all accounts
-                apiUrl = `${getApiUrl()}/admin/jobs-manager/job-executions?limit=${limit}`;
+                apiUrl = getApiUrl(`/admin/jobs-manager/job-executions?limit=${limit}`);
             }
             
             console.log('📡 Fetching job history from:', apiUrl);
@@ -583,7 +591,7 @@ class JobsManagerDashboard {
             console.log('📊 Fetching execution details for:', executionId);
             
             const response = await this.makeAuthenticatedRequest(
-                `${getApiUrl()}/admin/jobs-manager/job-execution/${executionId}`
+                getApiUrl(`/admin/jobs-manager/job-execution/${executionId}`)
             );
             const data = await response.json();
             
@@ -723,7 +731,7 @@ class JobsManagerDashboard {
             console.log('🛑 Killing job execution:', executionId);
             
             const response = await this.makeAuthenticatedRequest(
-                `${getApiUrl()}/admin/jobs-manager/kill-execution/${executionId}`,
+                getApiUrl(`/admin/jobs-manager/kill-execution/${executionId}`),
                 {
                     method: 'POST'
                 }
@@ -879,7 +887,7 @@ class JobsManagerDashboard {
                     throw new Error('Unknown action');
             }
             
-            const response = await this.makeAuthenticatedRequest(`${getApiUrl()}${endpoint}`, {
+            const response = await this.makeAuthenticatedRequest(getApiUrl(endpoint), {
                 method: 'POST'
             });
             
@@ -934,7 +942,7 @@ class JobsManagerDashboard {
             
             // Get job configuration from jobs manager active jobs endpoint
             const jobConfigResponse = await this.makeAuthenticatedRequest(
-                `${getApiUrl()}/admin/jobs-manager/active-jobs`
+                getApiUrl('/admin/jobs-manager/active-jobs')
             );
             const jobConfigData = await jobConfigResponse.json();
             
@@ -950,7 +958,7 @@ class JobsManagerDashboard {
                 // Fetch the specific last execution using last_job_id
                 try {
                     const lastExecutionResponse = await this.makeAuthenticatedRequest(
-                        `${getApiUrl()}/admin/jobs-manager/job-execution/${jobConfig.last_job_id}`
+                        getApiUrl(`/admin/jobs-manager/job-execution/${jobConfig.last_job_id}`)
                     );
                     const lastExecutionData = await lastExecutionResponse.json();
                     
@@ -966,7 +974,7 @@ class JobsManagerDashboard {
             // Fallback: get recent executions if specific fetch failed
             if (!lastExecution) {
                 const executionsResponse = await this.makeAuthenticatedRequest(
-                    `${getApiUrl()}/admin/jobs-manager/job-executions/${accountId}?limit=5`
+                    getApiUrl(`/admin/jobs-manager/job-executions/${accountId}?limit=5`)
                 );
                 const executionsData = await executionsResponse.json();
                 
@@ -1351,7 +1359,7 @@ class JobsManagerDashboard {
             params.append('limit', limit.toString());
             
             const response = await this.makeAuthenticatedRequest(
-                `${getApiUrl()}/admin/jobs-manager/audit-changes?${params.toString()}`
+                getApiUrl(`/admin/jobs-manager/audit-changes?${params.toString()}`)
             );
             
             if (!response.ok) {
