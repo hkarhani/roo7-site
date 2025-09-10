@@ -1644,8 +1644,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Show loading state
       container.innerHTML = '<div class="loading-state"><p>Loading Jobs Manager status...</p></div>';
       
-      // Fetch Jobs Manager status
-      const statusResponse = await fetch(`${AUTH_API_BASE}/admin/jobs-manager/status`, {
+      // Fetch Jobs Manager status (routes to jobs-manager container automatically)
+      const statusResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/status'), {
         headers: getAuthHeaders(token)
       });
       
@@ -1655,8 +1655,8 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const statusData = await statusResponse.json();
       
-      // Fetch active jobs summary
-      const summaryResponse = await fetch(`${AUTH_API_BASE}/admin/jobs-manager/active-jobs`, {
+      // Fetch active jobs summary (routes to jobs-manager container automatically)
+      const summaryResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/active-jobs'), {
         headers: getAuthHeaders(token)
       });
       
