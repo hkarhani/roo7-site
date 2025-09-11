@@ -1648,7 +1648,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const statusResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/status'), {
         method: 'GET',
         mode: 'cors',
-        credentials: 'omit',
+        credentials: 'include',
         headers: getAuthHeaders(token)
       });
       
