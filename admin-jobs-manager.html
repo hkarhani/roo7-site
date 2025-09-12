@@ -7,242 +7,697 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Jobs Manager Dashboard</title>
-  <script type="module" src="frontend-config.js?v=2.2"></script>
+  <script type="module" src="frontend-config.js?v=2.3"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
-  <link rel="stylesheet" href="admin-jobs-manager.css?v=2.5" />
+  <link rel="stylesheet" href="admin-jobs-manager.css?v=2.6" />
+  <style>
+    /* Enhanced Jobs Manager Styles */
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .job-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border-left: 5px solid transparent;
+    }
+
+    .job-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .job-card.healthy {
+      border-left-color: #28a745;
+    }
+
+    .job-card.needs-attention {
+      border-left-color: #ffc107;
+    }
+
+    .job-card.failed {
+      border-left-color: #dc3545;
+    }
+
+    .job-card.running {
+      border-left-color: #007bff;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+      50% { box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3); }
+      100% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+    }
+
+    .job-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .job-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .job-status {
+      display: flex;
+      gap: 10px;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .status-healthy { background: #d4edda; color: #155724; }
+    .status-attention { background: #fff3cd; color: #856404; }
+    .status-failed { background: #f8d7da; color: #721c24; }
+    .status-running { background: #d1ecf1; color: #0c5460; }
+
+    .job-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .detail-label {
+      font-size: 0.85rem;
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .detail-value {
+      font-size: 1rem;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .job-metrics {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.02);
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .metric {
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+
+    .job-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: stretch;
+    }
+
+    .job-actions button {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary { background: #007bff; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #1e7e34; }
+
+    .btn-warning { background: #ffc107; color: #212529; }
+    .btn-warning:hover { background: #e0a800; }
+
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+
+    .filters-bar {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #495057;
+    }
+
+    .filter-group select, .filter-group input {
+      padding: 6px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .stat-healthy .stat-number { color: #28a745; }
+    .stat-attention .stat-number { color: #ffc107; }
+    .stat-running .stat-number { color: #007bff; }
+    .stat-total .stat-number { color: #6c757d; }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .refresh-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+  </style>
 </head>
 <body>
   <div class="dashboard-header">
     <h1>⚙️ Jobs Manager Dashboard</h1>
     <div class="actions">
       <button id="back-to-admin">← Admin Dashboard</button>
+      <div class="refresh-indicator">
+        <span id="last-refresh">Never</span>
+        <button id="refresh-all" class="secondary-button">🔄 Refresh</button>
+      </div>
       <button id="toggle-theme">Toggle Theme</button>
       <button id="logout-btn">Logout</button>
     </div>
   </div>
 
-  <main class="dashboard-grid jobs-manager-grid">
-    <!-- Jobs Manager Status -->
-    <section id="section-jobs-status" class="dashboard-card">
-      <div class="section-header">
-        <h2>📊 Jobs Manager Status</h2>
-        <button id="refresh-jobs-status" class="secondary-button">🔄 Refresh</button>
+  <main class="dashboard-container">
+    <!-- Summary Statistics -->
+    <section class="summary-stats" id="summary-stats">
+      <div class="stat-card stat-total">
+        <div class="stat-number" id="total-jobs">-</div>
+        <div class="stat-label">Total Jobs</div>
       </div>
-      <div class="jobs-status-container" id="jobs-status-container">
-        <div class="loading-state">
-          <p>Loading Jobs Manager status...</p>
-        </div>
+      <div class="stat-card stat-healthy">
+        <div class="stat-number" id="healthy-jobs">-</div>
+        <div class="stat-label">Healthy</div>
       </div>
-    </section>
-
-    <!-- Active Jobs Summary -->
-    <section id="section-active-jobs-summary" class="dashboard-card">
-      <div class="section-header">
-        <h2>📋 Active Jobs Summary</h2>
-        <button id="refresh-active-jobs-summary" class="secondary-button">🔄 Refresh</button>
+      <div class="stat-card stat-attention">
+        <div class="stat-number" id="attention-jobs">-</div>
+        <div class="stat-label">Need Attention</div>
       </div>
-      <div class="active-jobs-stats" id="active-jobs-stats">
-        <div class="loading-state">
-          <p>Loading active jobs summary...</p>
-        </div>
+      <div class="stat-card stat-running">
+        <div class="stat-number" id="running-jobs">-</div>
+        <div class="stat-label">Running</div>
       </div>
     </section>
 
-    <!-- Active Jobs List -->
-    <section id="section-active-jobs-list" class="dashboard-card full-width">
-      <div class="section-header">
-        <h2>📄 Active Jobs</h2>
-        <div class="jobs-filters">
-          <input type="text" id="user-name-filter" placeholder="🔍 Filter by User..." class="filter-input">
-          <input type="text" id="account-name-filter" placeholder="🔍 Filter by Account..." class="filter-input">
-          <select id="job-status-filter">
-            <option value="">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PAUSED">Paused</option>
-            <option value="DISABLED">Disabled</option>
-            <option value="REVOKED">Revoked</option>
-            <option value="STALE">Stale</option>
-            <option value="STALLED">Stalled</option>
-          </select>
-          <select id="run-status-filter">
-            <option value="">All Run Statuses</option>
-            <option value="IDLE">Idle</option>
-            <option value="DUE">Due</option>
-            <option value="RUNNING">Running</option>
-            <option value="SUCCEEDED">Succeeded</option>
-            <option value="FAILED">Failed</option>
-            <option value="BACKOFF">Backoff</option>
-          </select>
-          <button id="apply-filters" class="secondary-button">Apply Filters</button>
-          <button id="refresh-active-jobs" class="secondary-button">🔄 Refresh</button>
-          <button id="audit-changes-btn" class="secondary-button">📋 Audit Changes</button>
-        </div>
+    <!-- Filters and Controls -->
+    <section class="filters-bar">
+      <div class="filter-group">
+        <label for="filter-status">Status:</label>
+        <select id="filter-status">
+          <option value="">All</option>
+          <option value="healthy">Healthy</option>
+          <option value="needs-attention">Need Attention</option>
+          <option value="running">Running</option>
+        </select>
       </div>
-      <div class="table-container">
-        <table id="active-jobs-table">
-          <thead>
-            <tr>
-              <th>Account ID</th>
-              <th>User</th>
-              <th>Account Name</th>
-              <th>Strategy</th>
-              <th>Status</th>
-              <th>Run Status</th>
-              <th>Account Value</th>
-              <th>Schedule</th>
-              <th>Successful</th>
-              <th>Failures</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="12" class="loading-message">Loading active jobs...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="filter-group">
+        <label for="filter-type">Type:</label>
+        <select id="filter-type">
+          <option value="">All Types</option>
+          <option value="TRADING">Trading</option>
+          <option value="DATA_COLLECTION">Data Collection</option>
+          <option value="FUTURES_TRADING">Futures Trading</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="search-account">Search:</label>
+        <input type="text" id="search-account" placeholder="Account name..." />
+      </div>
+      <div class="filter-group">
+        <button id="reset-filters" class="secondary-button">Reset</button>
+        <button id="auto-refresh-toggle" class="secondary-button">Auto-refresh: Off</button>
       </div>
     </section>
 
-    <!-- Job Execution History -->
-    <section id="section-job-history" class="dashboard-card full-width">
-      <div class="section-header">
-        <h2>📈 Job Execution History</h2>
-        <div class="history-controls">
-          <select id="history-account-filter">
-            <option value="">All Accounts</option>
-          </select>
-          <select id="history-status-filter">
-            <option value="">All Statuses</option>
-            <option value="SUCCEEDED">Succeeded</option>
-            <option value="FAILED">Failed</option>
-            <option value="RUNNING">Running</option>
-          </select>
-          <input type="number" id="history-limit" placeholder="Limit" value="50" min="1" max="200" />
-          <button id="load-job-history" class="secondary-button">Load History</button>
-          <button id="download-history-csv" class="secondary-button" title="Download visible history as CSV" style="display: none;">📥 CSV</button>
-        </div>
+    <!-- Active Jobs Grid -->
+    <section id="active-jobs-section">
+      <div id="jobs-loading" class="text-center" style="padding: 40px;">
+        <div class="loading-spinner"></div>
+        <p style="margin-top: 10px;">Loading active jobs...</p>
       </div>
-      <div class="table-container">
-        <table id="job-history-table">
-          <thead>
-            <tr>
-              <th>Execution ID</th>
-              <th>Account Name</th>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Duration</th>
-              <th>Worker</th>
-              <th>Result</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="8" class="loading-message">Click "Load History" to view job executions</td>
-            </tr>
-          </tbody>
-        </table>
+      
+      <div id="jobs-grid" class="jobs-grid" style="display: none;">
+        <!-- Jobs will be populated here -->
+      </div>
+      
+      <div id="jobs-empty" class="empty-state" style="display: none;">
+        <div class="empty-state-icon">📋</div>
+        <h3>No Active Jobs Found</h3>
+        <p>No jobs match the current filters or there are no active jobs in the system.</p>
       </div>
     </section>
   </main>
 
-  <!-- Job Details Modal -->
-  <div id="job-details-modal" class="modal">
-    <div class="modal-content large-modal">
-      <span class="close" id="job-details-close">&times;</span>
-      <h3 id="job-details-title">Job Details</h3>
-      <div id="job-details-content">
-        <div class="loading-state">
-          <p>Loading job details...</p>
-        </div>
-      </div>
-    </div>
-  </div>
+  <script>
+    let activeJobs = [];
+    let filteredJobs = [];
+    let autoRefreshInterval = null;
+    let lastRefreshTime = null;
 
-  <!-- Job Action Confirmation Modal -->
-  <div id="job-action-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="job-action-close">&times;</span>
-      <h3 id="job-action-title">Confirm Action</h3>
-      <div id="job-action-details">
-        <p id="job-action-message"></p>
-        <div class="job-action-info">
-          <p><strong>Account:</strong> <span id="action-account-name"></span></p>
-          <p><strong>Account ID:</strong> <span id="action-account-id"></span></p>
-          <p><strong>Current Status:</strong> <span id="action-current-status"></span></p>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button id="confirm-job-action" class="primary-button">Confirm</button>
-        <button id="cancel-job-action" class="secondary-button">Cancel</button>
-      </div>
-    </div>
-  </div>
+    // Configuration
+    const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+    const API_BASE = window.API_ENDPOINTS?.JOBS_MANAGER || '/admin/jobs-manager';
 
-  <!-- Job Execution Details Modal -->
-  <div id="execution-details-modal" class="modal">
-    <div class="modal-content large-modal">
-      <span class="close" id="execution-details-close">&times;</span>
-      <h3>Job Execution Details</h3>
-      <div id="execution-details-content">
-        <div class="loading-state">
-          <p>Loading execution details...</p>
-        </div>
-      </div>
-    </div>
-  </div>
+    // Initialize the dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+      setupEventListeners();
+      loadActiveJobs();
+    });
 
-  <!-- Audit Changes Modal -->
-  <div id="audit-changes-modal" class="modal">
-    <div class="modal-content large-modal">
-      <span class="close" id="audit-changes-close">&times;</span>
-      <h3>📋 Active Jobs Audit Changes</h3>
-      <div class="audit-controls">
-        <div class="audit-filters">
-          <select id="audit-change-type-filter">
-            <option value="">All Change Types</option>
-            <option value="job_created">Job Created</option>
-            <option value="configuration_change">Configuration Change</option>
-            <option value="status_change">Status Change</option>
-            <option value="job_restored">Job Restored</option>
-            <option value="cadence_consistency_fix">Cadence Fix</option>
-            <option value="account_migration">Account Migration</option>
-          </select>
-          <select id="audit-account-filter">
-            <option value="">All Accounts</option>
-          </select>
-          <input type="number" id="audit-limit" placeholder="Limit" value="100" min="10" max="500" />
-          <button id="load-audit-changes" class="secondary-button">Load Changes</button>
-          <button id="download-audit-csv" class="secondary-button" title="Download audit changes as CSV" style="display: none;">📥 CSV</button>
-        </div>
-      </div>
-      <div class="table-container">
-        <table id="audit-changes-table">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Change Type</th>
-              <th>Account Name</th>
-              <th>Account ID</th>
-              <th>User ID</th>
-              <th>Details</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="7" class="loading-message">Click "Load Changes" to view audit log</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+    function setupEventListeners() {
+      // Navigation
+      document.getElementById('back-to-admin').addEventListener('click', () => {
+        window.location.href = 'admin-dashboard.html';
+      });
 
-  <!-- Scripts -->
-  <script src="theme-manager.js?v=1"></script>
-  <script type="module" src="admin-jobs-manager.js?v=10.10"></script>
+      // Refresh controls
+      document.getElementById('refresh-all').addEventListener('click', loadActiveJobs);
+      document.getElementById('auto-refresh-toggle').addEventListener('click', toggleAutoRefresh);
+
+      // Filters
+      document.getElementById('filter-status').addEventListener('change', applyFilters);
+      document.getElementById('filter-type').addEventListener('change', applyFilters);
+      document.getElementById('search-account').addEventListener('input', debounce(applyFilters, 300));
+      document.getElementById('reset-filters').addEventListener('click', resetFilters);
+
+      // Theme and logout
+      document.getElementById('toggle-theme').addEventListener('click', toggleTheme);
+      document.getElementById('logout-btn').addEventListener('click', logout);
+    }
+
+    async function loadActiveJobs() {
+      try {
+        showLoading();
+        
+        const response = await fetch(`${API_BASE}/frontend/active-jobs-enhanced`, {
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        activeJobs = data.jobs || [];
+        
+        updateSummaryStats(data.summary || {});
+        applyFilters();
+        updateLastRefreshTime();
+        
+      } catch (error) {
+        console.error('Error loading active jobs:', error);
+        showError('Failed to load active jobs: ' + error.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function updateSummaryStats(summary) {
+      document.getElementById('total-jobs').textContent = summary.total || 0;
+      document.getElementById('healthy-jobs').textContent = summary.healthy || 0;
+      document.getElementById('attention-jobs').textContent = summary.needs_attention || 0;
+      document.getElementById('running-jobs').textContent = summary.running || 0;
+    }
+
+    function applyFilters() {
+      const statusFilter = document.getElementById('filter-status').value;
+      const typeFilter = document.getElementById('filter-type').value;
+      const searchFilter = document.getElementById('search-account').value.toLowerCase();
+
+      filteredJobs = activeJobs.filter(job => {
+        const statusMatch = !statusFilter || 
+          (statusFilter === 'healthy' && job.is_healthy) ||
+          (statusFilter === 'needs-attention' && job.needs_attention) ||
+          (statusFilter === 'running' && job.is_running);
+
+        const typeMatch = !typeFilter || job.job_type === typeFilter;
+        const searchMatch = !searchFilter || 
+          job.account_name.toLowerCase().includes(searchFilter) ||
+          job.account_id.toLowerCase().includes(searchFilter);
+
+        return statusMatch && typeMatch && searchMatch;
+      });
+
+      renderJobsGrid();
+    }
+
+    function renderJobsGrid() {
+      const container = document.getElementById('jobs-grid');
+      const emptyState = document.getElementById('jobs-empty');
+      
+      if (filteredJobs.length === 0) {
+        container.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      container.style.display = 'grid';
+      emptyState.style.display = 'none';
+      
+      container.innerHTML = filteredJobs.map(job => createJobCard(job)).join('');
+      
+      // Add event listeners to job cards
+      filteredJobs.forEach(job => {
+        const card = document.getElementById(`job-${job.account_id}`);
+        if (card) {
+          setupJobCardListeners(card, job);
+        }
+      });
+    }
+
+    function createJobCard(job) {
+      const cardClass = job.is_running ? 'running' : 
+                       job.needs_attention ? 'needs-attention' : 
+                       job.is_healthy ? 'healthy' : 'failed';
+
+      const statusBadge = job.is_running ? 'status-running' : 
+                         job.needs_attention ? 'status-attention' : 
+                         job.is_healthy ? 'status-healthy' : 'status-failed';
+
+      const statusText = job.is_running ? '🔄 Running' : 
+                        job.needs_attention ? '⚠️ Attention' : 
+                        job.is_healthy ? '✅ Healthy' : '❌ Failed';
+
+      const lastExecution = job.last_execution || {};
+      const nextRun = job.next_run_at ? new Date(job.next_run_at) : null;
+      const lastRun = job.last_run_at ? new Date(job.last_run_at) : null;
+
+      return `
+        <div class="job-card ${cardClass}" id="job-${job.account_id}">
+          <div class="job-header">
+            <h3 class="job-title">${escapeHtml(job.account_name)}</h3>
+            <div class="job-status">
+              <span class="status-badge ${statusBadge}">${statusText}</span>
+            </div>
+          </div>
+          
+          <div class="job-details">
+            <div class="detail-item">
+              <span class="detail-label">Strategy</span>
+              <span class="detail-value">${escapeHtml(job.strategy)}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Hedge %</span>
+              <span class="detail-value">${job.hedge_percent}%</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Cadence</span>
+              <span class="detail-value">${job.cadence_minutes} min</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Job Type</span>
+              <span class="detail-value">${job.job_type}</span>
+            </div>
+          </div>
+
+          <div class="job-metrics">
+            <div class="metric">
+              <div class="metric-value">${job.success_rate_percent || 0}%</div>
+              <div class="metric-label">Success Rate</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">${job.consecutive_failures || 0}</div>
+              <div class="metric-label">Failures</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">${job.recent_executions_count || 0}</div>
+              <div class="metric-label">Recent Runs</div>
+            </div>
+          </div>
+
+          <div class="job-details">
+            <div class="detail-item">
+              <span class="detail-label">Next Run</span>
+              <span class="detail-value">${nextRun ? formatRelativeTime(nextRun) : 'Not scheduled'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Last Run</span>
+              <span class="detail-value">${lastRun ? formatRelativeTime(lastRun) : 'Never'}</span>
+            </div>
+          </div>
+
+          <div class="job-actions">
+            <button class="btn-primary view-details-btn" data-account-id="${job.account_id}">
+              📊 View Details
+            </button>
+            <button class="btn-success force-run-btn" data-account-id="${job.account_id}" 
+                    ${job.is_running ? 'disabled' : ''}>
+              ▶️ ${job.is_running ? 'Running...' : 'Force Run'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function setupJobCardListeners(card, job) {
+      // View details button
+      const viewDetailsBtn = card.querySelector('.view-details-btn');
+      if (viewDetailsBtn) {
+        viewDetailsBtn.addEventListener('click', () => {
+          window.location.href = `active_job_details.html?account_id=${encodeURIComponent(job.account_id)}`;
+        });
+      }
+
+      // Force run button
+      const forceRunBtn = card.querySelector('.force-run-btn');
+      if (forceRunBtn && !job.is_running) {
+        forceRunBtn.addEventListener('click', () => forceJobExecution(job.account_id));
+      }
+    }
+
+    async function forceJobExecution(accountId) {
+      try {
+        const response = await fetch(`${API_BASE}/force-execution/${accountId}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+          showSuccess('Job execution started successfully');
+          setTimeout(loadActiveJobs, 2000); // Refresh after 2 seconds
+        } else {
+          const error = await response.text();
+          throw new Error(error);
+        }
+      } catch (error) {
+        console.error('Error forcing job execution:', error);
+        showError('Failed to start job execution: ' + error.message);
+      }
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-type').value = '';
+      document.getElementById('search-account').value = '';
+      applyFilters();
+    }
+
+    function toggleAutoRefresh() {
+      const button = document.getElementById('auto-refresh-toggle');
+      
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        button.textContent = 'Auto-refresh: Off';
+        button.classList.remove('active');
+      } else {
+        autoRefreshInterval = setInterval(loadActiveJobs, AUTO_REFRESH_INTERVAL);
+        button.textContent = 'Auto-refresh: On';
+        button.classList.add('active');
+      }
+    }
+
+    function updateLastRefreshTime() {
+      lastRefreshTime = new Date();
+      document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime);
+    }
+
+    function showLoading() {
+      document.getElementById('jobs-loading').style.display = 'block';
+      document.getElementById('jobs-grid').style.display = 'none';
+      document.getElementById('jobs-empty').style.display = 'none';
+    }
+
+    function hideLoading() {
+      document.getElementById('jobs-loading').style.display = 'none';
+    }
+
+    // Utility functions
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      });
+    }
+
+    function formatRelativeTime(date) {
+      const now = new Date();
+      const diff = date.getTime() - now.getTime();
+      const absDiff = Math.abs(diff);
+      
+      if (absDiff < 60000) return diff > 0 ? 'Soon' : 'Just now';
+      if (absDiff < 3600000) {
+        const mins = Math.floor(absDiff / 60000);
+        return diff > 0 ? `In ${mins}m` : `${mins}m ago`;
+      }
+      if (absDiff < 86400000) {
+        const hours = Math.floor(absDiff / 3600000);
+        return diff > 0 ? `In ${hours}h` : `${hours}h ago`;
+      }
+      
+      return date.toLocaleDateString();
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    function getAuthToken() {
+      return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+    }
+
+    function showSuccess(message) {
+      // Implement success notification
+      console.log('Success:', message);
+    }
+
+    function showError(message) {
+      // Implement error notification
+      console.error('Error:', message);
+    }
+
+    function toggleTheme() {
+      // Implement theme toggle
+      console.log('Toggle theme');
+    }
+
+    function logout() {
+      localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_token');
+      window.location.href = 'login.html';
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+    });
+  </script>
 </body>
 </html>
