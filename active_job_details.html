@@ -7,9 +7,10 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
-  <script type="module" src="frontend-config.js?v=2.6"></script>
-  <link rel="stylesheet" href="dashboard.css?v=2.6" />
-  <link rel="stylesheet" href="admin-dashboard.css?v=2.6" />
+  <script type="module" src="frontend-config.js?v=2.5"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-jobs-manager.css?v=3.0" />
   <style>
     /* Job Details Specific Styles */
     .page-container {
@@ -466,57 +467,67 @@
   </style>
 </head>
 <body>
-  <div class="page-container">
-    <!-- Breadcrumb Navigation -->
-    <nav class="breadcrumb">
-      <a href="admin-dashboard.html">Admin Dashboard</a>
-      <span> → </span>
-      <a href="admin-jobs-manager.html">Jobs Manager</a>
-      <span> → </span>
-      <span id="breadcrumb-job-name">Job Details</span>
-    </nav>
+  <div class="dashboard-header">
+    <h1 id="page-title">📋 Job Details</h1>
+    <div class="actions">
+      <button id="back-to-jobs">← Jobs Manager</button>
+      <button id="back-to-admin">← Admin Dashboard</button>
+      <div class="refresh-indicator">
+        <span id="last-refresh">Never</span>
+        <button id="refresh-job" class="secondary-button">🔄 Refresh</button>
+      </div>
+      <button id="toggle-theme">Toggle Theme</button>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </div>
 
-    <!-- Job Header -->
-    <section class="job-header" id="job-header">
-      <div class="job-header-content">
-        <div class="job-title">
-          <span id="job-account-name">Loading...</span>
-          <div class="job-status-badge" id="job-status-badge">
-            <div class="loading-spinner"></div>
-          </div>
+  <main class="dashboard-container">
+    <!-- Job Header Info -->
+    <section class="dashboard-card" id="job-header">
+      <div class="section-header">
+        <h2 id="job-account-name">Loading...</h2>
+        <div class="job-status-badge" id="job-status-badge">
+          <div class="loading-spinner"></div>
         </div>
-        <p class="job-subtitle" id="job-subtitle">Account ID: <span id="job-account-id">-</span></p>
-        <div class="job-actions" id="job-actions">
-          <button id="force-run-btn">▶️ Force Run</button>
-          <button id="pause-job-btn">⏸️ Pause Job</button>
-          <button id="view-logs-btn">📄 View All Logs</button>
-        </div>
+      </div>
+      <p id="job-subtitle">Account ID: <span id="job-account-id">-</span></p>
+      <div class="job-actions" id="job-actions" style="margin-top: 15px;">
+        <button id="force-run-btn" class="primary-button">▶️ Force Run</button>
+        <button id="pause-job-btn" class="secondary-button">⏸️ Pause Job</button>
+        <button id="view-logs-btn" class="secondary-button">📄 View All Logs</button>
       </div>
     </section>
 
     <!-- Statistics Row -->
-    <section class="stats-row" id="job-stats">
-      <div class="stat-card">
-        <div class="stat-number" id="success-rate">-%</div>
-        <div class="stat-label">Success Rate</div>
+    <section class="dashboard-card" id="job-stats">
+      <div class="section-header">
+        <h2>📊 Job Statistics</h2>
       </div>
-      <div class="stat-card">
-        <div class="stat-number" id="total-executions">-</div>
-        <div class="stat-label">Total Executions</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="avg-duration">-</div>
-        <div class="stat-label">Avg Duration</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="consecutive-failures">-</div>
-        <div class="stat-label">Consecutive Failures</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-number" id="success-rate">-%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="total-executions">-</div>
+          <div class="stat-label">Total Executions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="avg-duration">-</div>
+          <div class="stat-label">Avg Duration</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="consecutive-failures">-</div>
+          <div class="stat-label">Consecutive Failures</div>
+        </div>
       </div>
     </section>
 
     <!-- Job Configuration -->
-    <section class="config-section" id="job-config">
-      <h2>🔧 Job Configuration</h2>
+    <section class="dashboard-card" id="job-config">
+      <div class="section-header">
+        <h2>🔧 Job Configuration</h2>
+      </div>
       <div class="config-grid">
         <div class="config-group">
           <h3>⚙️ Basic Settings</h3>
@@ -546,8 +557,10 @@
     </section>
 
     <!-- Portfolio Details -->
-    <section class="portfolio-section" id="portfolio-section">
-      <h2>📈 Portfolio Configuration</h2>
+    <section class="dashboard-card" id="portfolio-section">
+      <div class="section-header">
+        <h2>📈 Portfolio Configuration</h2>
+      </div>
       <div class="portfolio-tabs">
         <button class="portfolio-tab active" data-tab="target">Target Portfolio</button>
         <button class="portfolio-tab" data-tab="source">Source Portfolio</button>
@@ -567,9 +580,13 @@
     </section>
 
     <!-- Execution History with Split View -->
-    <section class="execution-section">
-      <div class="execution-header">
+    <section class="dashboard-card execution-section">
+      <div class="section-header">
         <h2>📋 Execution History & Logs</h2>
+        <div class="logs-actions">
+          <button id="download-logs-btn" class="secondary-button" style="display: none;">💾 Download Logs</button>
+          <button id="view-full-logs-btn" class="secondary-button" style="display: none;">📄 View Full Logs</button>
+        </div>
       </div>
       <div class="execution-body">
         <!-- Left Side: Execution List -->
@@ -596,7 +613,7 @@
         </div>
       </div>
     </section>
-  </div>
+  </main>
 
   <script>
     let currentAccountId = null;
@@ -630,6 +647,17 @@
     }
 
     function setupEventListeners() {
+      // Navigation
+      document.getElementById('back-to-jobs').addEventListener('click', () => {
+        window.location.href = 'admin-jobs-manager.html';
+      });
+      document.getElementById('back-to-admin').addEventListener('click', () => {
+        window.location.href = 'admin-dashboard.html';
+      });
+
+      // Refresh controls
+      document.getElementById('refresh-job').addEventListener('click', () => loadJobDetails(true));
+
       // Portfolio tabs
       document.querySelectorAll('.portfolio-tab').forEach(tab => {
         tab.addEventListener('click', () => switchPortfolioTab(tab.dataset.tab));
@@ -639,6 +667,14 @@
       document.getElementById('force-run-btn').addEventListener('click', () => forceJobExecution());
       document.getElementById('pause-job-btn').addEventListener('click', () => pauseJob());
       document.getElementById('view-logs-btn').addEventListener('click', () => viewAllLogs());
+
+      // New log viewing actions
+      document.getElementById('download-logs-btn').addEventListener('click', () => downloadCurrentLogs());
+      document.getElementById('view-full-logs-btn').addEventListener('click', () => viewFullLogs());
+
+      // Theme and logout
+      document.getElementById('toggle-theme').addEventListener('click', toggleTheme);
+      document.getElementById('logout-btn').addEventListener('click', logout);
     }
 
     async function loadJobDetails(forceRefresh = false) {
@@ -694,6 +730,7 @@
         renderJobConfiguration(jobDetails);
         renderPortfolioDetails(jobDetails);
         renderExecutionHistory(executionHistory);
+        updateLastRefreshTime();
 
       } catch (error) {
         console.error('Error loading job details:', error);
@@ -931,7 +968,24 @@
         }
 
         const logData = await response.json();
+        
+        // Store current log data for expand functionality
+        window.currentLogData = logData;
+        
         renderExecutionDetails(selectedExecution, logData);
+
+        // Show log action buttons when logs are available
+        const hasLogs = logData.unified_logs?.logs?.length > 0;
+        document.getElementById('download-logs-btn').style.display = hasLogs ? 'inline-block' : 'none';
+        document.getElementById('view-full-logs-btn').style.display = hasLogs ? 'inline-block' : 'none';
+
+        // Add event listener for expand logs button (if it exists)
+        setTimeout(() => {
+          const expandBtn = document.getElementById('expand-logs-btn');
+          if (expandBtn) {
+            expandBtn.addEventListener('click', expandAllLogs);
+          }
+        }, 100);
 
       } catch (error) {
         console.error('Error loading execution logs:', error);
@@ -942,6 +996,9 @@
             <p>${error.message}</p>
           </div>
         `;
+        // Hide log action buttons on error
+        document.getElementById('download-logs-btn').style.display = 'none';
+        document.getElementById('view-full-logs-btn').style.display = 'none';
       }
     }
 
@@ -1033,7 +1090,11 @@
         return '<div class="empty-state"><p>No logs available for this execution</p></div>';
       }
 
-      return logs.slice(0, 20).map(log => `
+      // Show first 10 logs by default
+      const displayLogs = logs.slice(0, 10);
+      const hasMore = logs.length > 10;
+
+      return displayLogs.map(log => `
         <div class="timeline-item">
           <div class="timeline-marker ${log.level.toLowerCase()}">
             ${log.level_emoji}
@@ -1044,12 +1105,15 @@
             <div class="timeline-message">${escapeHtml(log.message)}</div>
           </div>
         </div>
-      `).join('') + (logs.length > 20 ? `
+      `).join('') + (hasMore ? `
         <div class="timeline-item">
-          <div class="timeline-marker info">...</div>
+          <div class="timeline-marker info">📄</div>
           <div class="timeline-content">
             <div class="timeline-message">
-              And ${logs.length - 20} more log entries...
+              <strong>Showing first 10 of ${logs.length} log entries</strong><br>
+              <button id="expand-logs-btn" class="primary-button" style="margin-top: 10px;">
+                📄 View All ${logs.length} Log Entries
+              </button>
             </div>
           </div>
         </div>
@@ -1124,6 +1188,89 @@
       alert('Feature coming soon: Comprehensive logs viewer');
     }
 
+    async function downloadCurrentLogs() {
+      if (!selectedExecution) {
+        showError('No execution selected');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE}/frontend/execution-logs/${selectedExecution._id}?format=raw`, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: { 
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Accept': 'text/plain'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const logContent = await response.text();
+        
+        // Create download
+        const blob = new Blob([logContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `job-execution-${selectedExecution._id}-logs.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showSuccess('Logs downloaded successfully');
+        
+      } catch (error) {
+        console.error('Error downloading logs:', error);
+        showError('Failed to download logs: ' + error.message);
+      }
+    }
+
+    function viewFullLogs() {
+      if (!selectedExecution) {
+        showError('No execution selected');
+        return;
+      }
+      
+      // Open a new window/tab with full logs view
+      const url = `job-execution-logs.html?execution_id=${encodeURIComponent(selectedExecution._id)}&account_id=${encodeURIComponent(currentAccountId)}`;
+      window.open(url, '_blank');
+    }
+
+    function expandAllLogs() {
+      // Re-render the timeline with all logs
+      if (selectedExecution && window.currentLogData) {
+        const logs = window.currentLogData.unified_logs?.logs || [];
+        const fullTimeline = logs.map(log => `
+          <div class="timeline-item">
+            <div class="timeline-marker ${log.level.toLowerCase()}">
+              ${log.level_emoji}
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-title">${log.component}</div>
+              <div class="timeline-time">${formatDateTime(log.timestamp)} | ${log.source}</div>
+              <div class="timeline-message">${escapeHtml(log.message)}</div>
+            </div>
+          </div>
+        `).join('');
+        
+        // Update the timeline section
+        const timelineContainer = document.querySelector('.log-timeline');
+        timelineContainer.innerHTML = `
+          <h4 style="margin-bottom: 20px;">📋 Complete Execution Timeline (${logs.length} entries)</h4>
+          ${fullTimeline}
+        `;
+      }
+    }
+
+    function updateLastRefreshTime() {
+      document.getElementById('last-refresh').textContent = formatTime(new Date());
+    }
+
     // Utility functions
     function formatDateTime(dateStr) {
       const date = new Date(dateStr);
@@ -1157,6 +1304,28 @@
     function showError(message) {
       console.error('Error:', message);
       // Implement error notification
+    }
+
+    function toggleTheme() {
+      // Implement theme toggle similar to other admin pages
+      console.log('Toggle theme');
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_token');
+      window.location.href = 'auth.html';
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      });
     }
   </script>
 </body>
