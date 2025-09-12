@@ -365,7 +365,19 @@
     // Initialize the dashboard
     document.addEventListener('DOMContentLoaded', function() {
       setupEventListeners();
-      loadActiveJobs();
+      // Wait for config to be available before loading
+      setTimeout(() => {
+        if (window.CONFIG_UTILS) {
+          CONFIG = window;
+          loadActiveJobs();
+        } else {
+          console.error('Config not loaded, retrying...');
+          setTimeout(() => {
+            CONFIG = window;
+            loadActiveJobs();
+          }, 1000);
+        }
+      }, 100);
     });
 
     function setupEventListeners() {
