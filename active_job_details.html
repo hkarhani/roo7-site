@@ -1024,8 +1024,20 @@
                 } else {
                   displayValue = value.toFixed(2);
                 }
+              } else if (Array.isArray(value)) {
+                if (value.length === 0) {
+                  displayValue = 'None';
+                } else if (value.length <= 3) {
+                  displayValue = value.map(item => typeof item === 'object' ? JSON.stringify(item) : item).join(', ');
+                } else {
+                  displayValue = `${value.length} items`;
+                }
+              } else if (typeof value === 'object' && value !== null) {
+                displayValue = JSON.stringify(value);
+              } else if (typeof value === 'boolean') {
+                displayValue = value ? 'Yes' : 'No';
               } else {
-                displayValue = String(value);
+                displayValue = String(value) || 'N/A';
               }
               
               return `
