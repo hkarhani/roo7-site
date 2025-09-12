@@ -77,6 +77,12 @@
       gap: 15px;
     }
 
+    .status-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .job-status-badge {
       padding: 8px 16px;
       border-radius: 20px;
@@ -85,12 +91,17 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      color: white;
     }
 
     .status-healthy { background: #28a745; }
     .status-attention { background: #ffc107; color: #212529; }
     .status-running { background: #007bff; }
     .status-failed { background: #dc3545; }
+
+    .job-header-details {
+      margin-top: 15px;
+    }
 
     .job-subtitle {
       font-size: 1.1rem;
@@ -486,15 +497,19 @@
     <section class="dashboard-card" id="job-header">
       <div class="section-header">
         <h2 id="job-account-name">Loading...</h2>
-        <div class="job-status-badge" id="job-status-badge">
-          <div class="loading-spinner"></div>
+        <div class="status-badges">
+          <span class="job-status-badge" id="job-status-badge">
+            <div class="loading-spinner"></div>
+          </span>
         </div>
       </div>
-      <p id="job-subtitle">Account ID: <span id="job-account-id">-</span></p>
-      <div class="job-actions" id="job-actions" style="margin-top: 15px;">
-        <button id="force-run-btn" class="primary-button">▶️ Force Run</button>
-        <button id="pause-job-btn" class="secondary-button">⏸️ Pause Job</button>
-        <button id="view-logs-btn" class="secondary-button">📄 View All Logs</button>
+      <div class="job-header-details">
+        <p id="job-subtitle">Account ID: <span id="job-account-id">-</span></p>
+        <div class="job-actions" id="job-actions" style="margin-top: 15px;">
+          <button id="force-run-btn" class="primary-button">▶️ Force Run</button>
+          <button id="pause-job-btn" class="secondary-button">⏸️ Pause Job</button>
+          <button id="view-logs-btn" class="secondary-button">📄 View All Logs</button>
+        </div>
       </div>
     </section>
 
@@ -739,7 +754,8 @@
     }
 
     function renderJobHeader(job) {
-      document.getElementById('breadcrumb-job-name').textContent = job.account_name;
+      // Update page title
+      document.getElementById('page-title').textContent = `📋 ${job.account_name} - Job Details`;
       document.getElementById('job-account-name').textContent = job.account_name;
       document.getElementById('job-account-id').textContent = job.account_id;
       
