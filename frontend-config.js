@@ -363,6 +363,15 @@ export const CONFIG_UTILS = {
 // Export API_URL for legacy frontend compatibility  
 export const API_URL = API_CONFIG.authUrl;
 
+// Make configuration available globally for compatibility with existing frontend files
+window.BRAND_CONFIG = BRAND_CONFIG;
+window.DOMAIN_CONFIG = DOMAIN_CONFIG;
+window.API_CONFIG = API_CONFIG;
+window.EMAIL_CONFIG = EMAIL_CONFIG;
+window.PAGE_CONFIG = PAGE_CONFIG;
+window.TIER_CONFIG = TIER_CONFIG;
+window.CONFIG_UTILS = CONFIG_UTILS;
+
 // =============================================================================
 // EXPORT DEFAULT CONFIGURATION
 // =============================================================================
