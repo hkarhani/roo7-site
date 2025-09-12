@@ -1247,14 +1247,16 @@
     }
 
     function viewFullLogs() {
-      if (!selectedExecution) {
-        showError('No execution selected');
+      if (!selectedExecution || !window.currentLogData) {
+        showError('No execution or log data selected');
         return;
       }
       
-      // Open a new window/tab with full logs view
-      const url = `job-execution-logs.html?execution_id=${encodeURIComponent(selectedExecution._id)}&account_id=${encodeURIComponent(currentAccountId)}`;
-      window.open(url, '_blank');
+      // Expand all logs inline instead of opening new window
+      expandAllLogs();
+      
+      // Hide the full logs button after expanding
+      document.getElementById('view-full-logs-btn').style.display = 'none';
     }
 
     function expandAllLogs() {
