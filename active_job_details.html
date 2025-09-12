@@ -7,9 +7,9 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
-  <script type="module" src="frontend-config.js?v=2.5"></script>
-  <link rel="stylesheet" href="dashboard.css?v=2.5" />
-  <link rel="stylesheet" href="admin-dashboard.css?v=2.5" />
+  <script type="module" src="frontend-config.js?v=2.6"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.6" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=2.6" />
   <style>
     /* Job Details Specific Styles */
     .page-container {
@@ -658,13 +658,20 @@
           return;
         }
 
+        const token = getAuthToken();
+        if (!token) {
+          throw new Error('No authentication token found. Please login again.');
+        }
+        
         console.log('Fetching fresh job details from API:', `${API_BASE}/frontend/job-details/${encodeURIComponent(currentAccountId)}`);
+        console.log('Using token:', token ? '***' + token.slice(-8) : 'None');
+        
         const response = await fetch(`${API_BASE}/frontend/job-details/${encodeURIComponent(currentAccountId)}`, {
           method: 'GET',
           mode: 'cors',
           credentials: 'include',
           headers: { 
-            'Authorization': `Bearer ${getAuthToken()}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
@@ -1137,7 +1144,9 @@
     }
 
     function getAuthToken() {
-      return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      // Use same token key as admin-dashboard.js
+      return localStorage.getItem('token') || sessionStorage.getItem('token') || 
+             localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     }
 
     function showSuccess(message) {
