@@ -493,6 +493,96 @@
       opacity: 0.5;
     }
 
+    .report-action-btn {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: #495057;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .report-action-btn:hover {
+      background: #e9ecef;
+      border-color: #adb5bd;
+      color: #212529;
+    }
+
+    .report-action-btn:active {
+      background: #dee2e6;
+      transform: scale(0.98);
+    }
+
+    .report-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .report-modal-content {
+      background: white;
+      margin: 2% auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 1200px;
+      border-radius: 8px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .report-modal-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .report-modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .report-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6c757d;
+      padding: 5px;
+      margin-left: auto;
+    }
+
+    .report-modal-close:hover {
+      color: #dc3545;
+    }
+
+    .report-json-viewer {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
     .loading-spinner {
       display: inline-block;
       width: 24px;
@@ -1105,6 +1195,18 @@
               ${execution.duration_formatted}
             </div>
             ${execution.has_error ? '<div style="color: #dc3545; font-size: 0.8rem;">⚠️ Has errors</div>' : ''}
+            <div class="execution-actions" style="margin-top: 8px; display: flex; gap: 5px;">
+              <button onclick="downloadExecutionReport('${execution._id}')" 
+                      class="report-action-btn" 
+                      title="Download comprehensive execution report">
+                💾 Report
+              </button>
+              <button onclick="viewExecutionReport('${execution._id}')" 
+                      class="report-action-btn" 
+                      title="View execution report details">
+                📋 View
+              </button>
+            </div>
           </div>
         `;
       }).join('');
@@ -1556,5 +1658,18 @@
       });
     }
   </script>
+  <!-- Execution Report Modal -->
+  <div id="reportModal" class="report-modal">
+    <div class="report-modal-content">
+      <div class="report-modal-header">
+        <h2 class="report-modal-title">📋 Comprehensive Execution Report</h2>
+        <button class="report-modal-close" onclick="closeReportModal()">&times;</button>
+      </div>
+      <div id="reportModalBody">
+        <!-- Report content will be loaded here -->
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
