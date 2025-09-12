@@ -1694,18 +1694,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeJobs = jobsArray.length;
     const uniqueAccounts = [...new Set(jobsArray.map(job => job.account_id))].length;
     
-    // Job health analysis
-    const healthyJobs = jobsArray.filter(job => job.is_healthy === true).length;
-    const warningJobs = jobsArray.filter(job => job.needs_attention === true).length;
-    const runningJobs = jobsArray.filter(job => job.is_running === true).length;
-    const criticalJobs = activeJobs - healthyJobs - warningJobs;
+    // Job health analysis - use API summary if available
+    const healthyJobs = summaryData.summary?.healthy || jobsArray.filter(job => job.is_healthy === true).length;
+    const warningJobs = summaryData.summary?.needs_attention || jobsArray.filter(job => job.needs_attention === true).length;
+    const runningJobs = summaryData.summary?.running || jobsArray.filter(job => job.is_running === true).length;
     
     // Execution performance metrics
     const avgExecutionTime = jobsArray.length > 0 ? 
       Math.round(jobsArray.reduce((sum, job) => sum + (job.avg_execution_time || 0), 0) / jobsArray.length) : 0;
     const totalExecutions = jobsArray.reduce((sum, job) => sum + (job.execution_count || 0), 0);
-    const successRate = jobsArray.length > 0 ? 
-      Math.round((healthyJobs / jobsArray.length) * 100) : 0;
+    const successRate = activeJobs > 0 ? 
+      Math.round((healthyJobs / activeJobs) * 100) : 0;
     
     // Financial metrics
     const totalManaged = jobsArray.reduce((sum, job) => sum + (job.account_value || 0), 0);
@@ -1750,11 +1749,11 @@ document.addEventListener("DOMContentLoaded", () => {
           </span>
         </div>
         
-        ${warningJobs > 0 || criticalJobs > 0 ? `
+        ${warningJobs > 0 ? `
         <div class="jobs-alerts-compact">
           <div class="alert-compact">
             <span class="alert-icon">⚠️</span>
-            <span class="alert-text">${warningJobs + criticalJobs} jobs need attention</span>
+            <span class="alert-text">${warningJobs} jobs need attention</span>
             <button class="alert-link" onclick="window.location.href='admin-jobs-manager.html'">View →</button>
           </div>
         </div>

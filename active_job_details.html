@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
-  <script type="module" src="frontend-config.js?v=2.3"></script>
+  <script type="module" src="frontend-config.js?v=2.5"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
   <style>
@@ -604,8 +604,13 @@
     let executionHistory = [];
     let selectedExecution = null;
 
-    // Configuration
-    const API_BASE = window.API_ENDPOINTS?.JOBS_MANAGER || '/admin/jobs-manager';
+    // Configuration - Direct port 8004 access to jobs-manager service
+    const API_BASE = 'https://api.roo7.site:8004/admin/jobs-manager';
+    
+    // Simple caching to reduce API calls
+    const CACHE_DURATION = 30000; // 30 seconds
+    let jobDetailsCache = null;
+    let jobDetailsCacheTime = 0;
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
@@ -636,10 +641,32 @@
       document.getElementById('view-logs-btn').addEventListener('click', () => viewAllLogs());
     }
 
-    async function loadJobDetails() {
+    async function loadJobDetails(forceRefresh = false) {
       try {
+        // Check cache first if not forced refresh
+        const now = Date.now();
+        if (!forceRefresh && jobDetailsCache && (now - jobDetailsCacheTime) < CACHE_DURATION) {
+          console.log('Using cached job details');
+          const data = jobDetailsCache;
+          jobDetails = data.active_job;
+          executionHistory = data.execution_history || [];
+          renderJobHeader(jobDetails);
+          renderJobStats(data.statistics || {});
+          renderJobConfiguration(jobDetails);
+          renderPortfolioDetails(jobDetails);
+          renderExecutionHistory(executionHistory);
+          return;
+        }
+
+        console.log('Fetching fresh job details from API');
         const response = await fetch(`${API_BASE}/frontend/job-details/${encodeURIComponent(currentAccountId)}`, {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: { 
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Content-Type': 'application/json'
+          }
         });
 
         if (!response.ok) {
@@ -647,6 +674,11 @@
         }
 
         const data = await response.json();
+        
+        // Update cache
+        jobDetailsCache = data;
+        jobDetailsCacheTime = now;
+        
         jobDetails = data.active_job;
         executionHistory = data.execution_history || [];
 
@@ -878,7 +910,13 @@
       try {
         // Load detailed logs for this execution
         const response = await fetch(`${API_BASE}/frontend/execution-logs/${executionId}`, {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: { 
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Content-Type': 'application/json'
+          }
         });
 
         if (!response.ok) {
@@ -1027,13 +1065,18 @@
       try {
         const response = await fetch(`${API_BASE}/force-execution/${currentAccountId}`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+          mode: 'cors',
+          credentials: 'include',
+          headers: { 
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Content-Type': 'application/json'
+          }
         });
 
         if (response.ok) {
           showSuccess('Job execution started successfully');
           setTimeout(() => {
-            loadJobDetails();
+            loadJobDetails(true); // Force refresh after action
           }, 2000);
         } else {
           throw new Error(await response.text());
@@ -1050,12 +1093,17 @@
         
         const response = await fetch(`${API_BASE}/${endpoint}/${currentAccountId}`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+          mode: 'cors',
+          credentials: 'include',
+          headers: { 
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Content-Type': 'application/json'
+          }
         });
 
         if (response.ok) {
           showSuccess(`Job ${isPaused ? 'resumed' : 'paused'} successfully`);
-          loadJobDetails();
+          loadJobDetails(true); // Force refresh after action
         } else {
           throw new Error(await response.text());
         }

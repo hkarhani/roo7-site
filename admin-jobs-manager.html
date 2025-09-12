@@ -352,6 +352,11 @@
     let filteredJobs = [];
     let autoRefreshInterval = null;
     let lastRefreshTime = null;
+    
+    // Caching to reduce API calls
+    const CACHE_DURATION = 15000; // 15 seconds for jobs list
+    let jobsCache = null;
+    let jobsCacheTime = 0;
 
     // Configuration
     const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
@@ -387,7 +392,7 @@
       });
 
       // Refresh controls
-      document.getElementById('refresh-all').addEventListener('click', loadActiveJobs);
+      document.getElementById('refresh-all').addEventListener('click', () => loadActiveJobs(true));
       document.getElementById('auto-refresh-toggle').addEventListener('click', toggleAutoRefresh);
 
       // Filters
@@ -401,9 +406,21 @@
       document.getElementById('logout-btn').addEventListener('click', logout);
     }
 
-    async function loadActiveJobs() {
+    async function loadActiveJobs(forceRefresh = false) {
       try {
+        // Check cache first if not forced refresh
+        const now = Date.now();
+        if (!forceRefresh && jobsCache && (now - jobsCacheTime) < CACHE_DURATION) {
+          console.log('Using cached jobs data');
+          const data = jobsCache;
+          activeJobs = data.active_jobs || [];
+          updateSummaryStats(data.summary || {});
+          applyFilters();
+          return;
+        }
+        
         showLoading();
+        console.log('Fetching fresh jobs data from API');
         
         const token = getAuthToken();
         const response = await fetch(`https://api.roo7.site:8004/admin/jobs-manager/frontend/active-jobs-enhanced`, {
@@ -418,6 +435,11 @@
         }
 
         const data = await response.json();
+        
+        // Update cache
+        jobsCache = data;
+        jobsCacheTime = now;
+        
         activeJobs = data.active_jobs || [];
         
         updateSummaryStats(data.summary || {});
