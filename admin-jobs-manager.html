@@ -8,6 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Jobs Manager Dashboard</title>
   <script type="module" src="frontend-config.js?v=2.5"></script>
+  <script src="theme-manager.js?v=1.1"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-jobs-manager.css?v=3.0" />
@@ -736,8 +737,11 @@
     }
 
     function toggleTheme() {
-      // Implement theme toggle
-      console.log('Toggle theme');
+      if (window.themeManager) {
+        window.themeManager.toggleTheme();
+      } else {
+        console.error('Theme manager not available');
+      }
     }
 
     function logout() {

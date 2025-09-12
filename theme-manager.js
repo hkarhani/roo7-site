@@ -38,6 +38,12 @@ class ThemeManager {
     const isDark = this.getThemePreference();
     const body = document.body;
     
+    // Check if body is available (DOM loaded)
+    if (!body) {
+      console.warn('⚠️ Document body not available, deferring theme application');
+      return;
+    }
+    
     // Detect page type and apply appropriate class
     if (this.isAuthPage()) {
       // Auth page uses 'dark-mode' class
