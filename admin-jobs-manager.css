@@ -1,17 +1,44 @@
-/* Jobs Manager Dashboard Specific Styles */
+/* Jobs Manager Dashboard - Professional Theme Matching Admin Dashboard */
 
+/* Main container styling to match admin dashboard */
+body {
+  background: #f4f4f4;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  color: #333;
+}
+
+/* Jobs Manager Grid Layout */
 .jobs-manager-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto auto;
-  gap: 1.5rem;
+  gap: 20px;
+  padding: 0 20px 40px;
   grid-template-areas:
     "status summary"
     "active-jobs active-jobs"
     "job-history job-history";
 }
 
-/* First Row - Status and Summary spread across full width */
+/* Header styling to match admin dashboard */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Section positioning */
 #section-jobs-status {
   grid-area: status;
 }
@@ -20,7 +47,6 @@
   grid-area: summary;
 }
 
-/* Full width sections */
 #section-active-jobs-list {
   grid-area: active-jobs;
 }
@@ -33,19 +59,92 @@
   grid-column: 1 / -1;
 }
 
-/* Jobs Manager Status */
+/* All sections use dashboard-card styling for consistency */
+.dashboard-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+/* Jobs Manager Status Cards */
 .jobs-status-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
+  gap: 15px;
 }
 
 .status-card {
-  background: var(--card-background);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 0.75rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 15px;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Button styling to match admin theme */
+button, .button, .primary-button, .secondary-button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.primary-button, button:not(.secondary-button):not(.btn-danger):not(.btn-warning) {
+  background: #0077cc;
+  color: #fff;
+}
+
+.primary-button:hover, button:not(.secondary-button):not(.btn-danger):not(.btn-warning):hover {
+  background: #005fa3;
+  transform: translateY(-1px);
+}
+
+.secondary-button {
+  background: #fff;
+  color: #0077cc;
+  border: 2px solid #0077cc;
+}
+
+.secondary-button:hover {
+  background: #0077cc;
+  color: #fff;
+}
+
+.btn-success {
+  background: #28a745;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: #1e7e34;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
 }
 
 .status-card:hover {
@@ -55,7 +154,7 @@
 
 .status-card h4 {
   margin: 0 0 0.4rem 0;
-  color: var(--text-primary);
+  color: #333;
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -72,7 +171,7 @@
 }
 
 .status-value.running {
-  color: var(--success-color);
+  color: #28a745;
 }
 
 .status-value.running::before {
@@ -81,7 +180,7 @@
 }
 
 .status-value.stopped {
-  color: var(--danger-color);
+  color: #dc3545;
 }
 
 .status-value.stopped::before {
@@ -90,7 +189,7 @@
 }
 
 .status-value.error {
-  color: var(--warning-color);
+  color: #ffc107;
 }
 
 .status-value.error::before {
@@ -100,7 +199,7 @@
 
 .status-meta {
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: #666;
   margin: 0;
 }
 
@@ -112,8 +211,8 @@
 }
 
 .stat-card {
-  background: var(--card-background);
-  border: 1px solid var(--border-color);
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
   padding: 0.75rem;
   text-align: center;
@@ -136,7 +235,7 @@
 }
 
 .stat-number.active {
-  color: var(--success-color);
+  color: #28a745;
 }
 
 .stat-number.active::after {
@@ -145,7 +244,7 @@
 }
 
 .stat-number.paused {
-  color: var(--warning-color);
+  color: #ffc107;
 }
 
 .stat-number.paused::after {
@@ -154,7 +253,7 @@
 }
 
 .stat-number.disabled {
-  color: var(--danger-color);
+  color: #dc3545;
 }
 
 .stat-number.disabled::after {
@@ -163,7 +262,7 @@
 }
 
 .stat-number.stalled {
-  color: var(--warning-color);
+  color: #ffc107;
 }
 
 .stat-number.stalled::after {
@@ -172,7 +271,7 @@
 }
 
 .stat-number.failed {
-  color: var(--danger-color);
+  color: #dc3545;
 }
 
 .stat-number.failed::after {
@@ -181,7 +280,7 @@
 }
 
 .stat-number.running {
-  color: var(--info-color);
+  color: #17a2b8;
 }
 
 .stat-number.running::after {
@@ -191,7 +290,7 @@
 
 .stat-label {
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: #666;
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -206,16 +305,26 @@
   flex-wrap: wrap;
 }
 
+/* Form inputs to match admin theme */
 .jobs-filters select,
 .jobs-filters .filter-input,
 .history-controls select,
-.history-controls input {
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--input-background);
-  color: var(--text-primary);
-  font-size: 0.85rem;
+.history-controls input,
+input, select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #0077cc;
+  box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.1);
 }
 
 .jobs-filters .filter-input {
@@ -223,7 +332,7 @@
 }
 
 .jobs-filters .filter-input::placeholder {
-  color: var(--text-secondary);
+  color: #666;
   opacity: 0.7;
 }
 
@@ -256,52 +365,70 @@
 }
 
 .status-badge.active {
-  background: rgba(34, 197, 94, 0.1);
-  color: var(--success-color);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.status-badge.attention {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.status-badge.failed {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.status-badge.running {
+  background: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+  border: 1px solid rgba(23, 162, 184, 0.3);
 }
 
 .status-badge.paused {
   background: rgba(251, 146, 60, 0.1);
-  color: var(--warning-color);
+  color: #ffc107;
   border: 1px solid rgba(251, 146, 60, 0.3);
 }
 
 .status-badge.disabled,
 .status-badge.failed {
   background: rgba(239, 68, 68, 0.1);
-  color: var(--danger-color);
+  color: #dc3545;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .status-badge.stalled {
   background: rgba(251, 146, 60, 0.1);
-  color: var(--warning-color);
+  color: #ffc107;
   border: 1px solid rgba(251, 146, 60, 0.3);
 }
 
 .status-badge.running {
   background: rgba(59, 130, 246, 0.1);
-  color: var(--info-color);
+  color: #17a2b8;
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .status-badge.succeeded {
   background: rgba(34, 197, 94, 0.1);
-  color: var(--success-color);
+  color: #28a745;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .status-badge.idle,
 .status-badge.due {
   background: rgba(107, 114, 128, 0.1);
-  color: var(--text-secondary);
+  color: #666;
   border: 1px solid rgba(107, 114, 128, 0.3);
 }
 
 .status-badge.backoff {
   background: rgba(251, 146, 60, 0.1);
-  color: var(--warning-color);
+  color: #ffc107;
   border: 1px solid rgba(251, 146, 60, 0.3);
 }
 
@@ -322,17 +449,17 @@
 }
 
 .job-action-btn.force {
-  background: var(--info-color);
+  background: #17a2b8;
   color: white;
 }
 
 .job-action-btn.pause {
-  background: var(--warning-color);
+  background: #ffc107;
   color: white;
 }
 
 .job-action-btn.resume {
-  background: var(--success-color);
+  background: #28a745;
   color: white;
 }
 
@@ -342,7 +469,7 @@
 }
 
 .job-action-btn.kill {
-  background: var(--danger-color);
+  background: #dc3545;
   color: white;
 }
 
@@ -362,15 +489,15 @@
 }
 
 .execution-section {
-  background: var(--input-background);
+  background: #fff;
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #e5e7eb;
 }
 
 .execution-section h4 {
   margin: 0 0 0.5rem 0;
-  color: var(--text-primary);
+  color: #333;
   font-size: 1rem;
 }
 
@@ -387,19 +514,19 @@
 }
 
 .execution-field strong {
-  color: var(--text-primary);
+  color: #333;
   font-size: 0.9rem;
 }
 
 .execution-field span {
-  color: var(--text-secondary);
+  color: #666;
   font-size: 0.85rem;
 }
 
 /* JSON Display */
 .json-display {
-  background: var(--code-background, #1e1e1e);
-  color: var(--code-text, #d4d4d4);
+  background: #1e1e1e;
+  color: #d4d4d4;
   padding: 1rem;
   border-radius: 8px;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -421,7 +548,7 @@
 /* Time Display */
 .time-display {
   font-size: 0.8rem;
-  color: var(--text-secondary);
+  color: #666;
 }
 
 .time-relative {
@@ -445,13 +572,13 @@
 
 .schedule-label {
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #666;
   min-width: 2.5rem;
   margin-right: 0.5rem;
 }
 
 .schedule-time {
-  color: var(--text-primary);
+  color: #333;
 }
 
 .schedule-item.next-run .schedule-label {
@@ -468,14 +595,14 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  color: var(--text-secondary);
+  color: #666;
 }
 
 /* Error States */
 .jobs-error {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  color: var(--danger-color);
+  color: #dc3545;
   padding: 1rem;
   border-radius: 8px;
   text-align: center;
@@ -484,7 +611,7 @@
 /* Empty States */
 .jobs-empty {
   text-align: center;
-  color: var(--text-secondary);
+  color: #666;
   padding: 2rem;
 }
 
@@ -550,7 +677,7 @@
 [data-theme="dark"] .status-card,
 [data-theme="dark"] .stat-card,
 [data-theme="dark"] .execution-section {
-  background: var(--card-background);
+  background: #fff;
   border-color: var(--border-color);
 }
 
