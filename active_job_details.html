@@ -8,8 +8,8 @@
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
   <script type="module" src="frontend-config.js?v=2.5"></script>
-  <link rel="stylesheet" href="dashboard.css?v=2.4" />
-  <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="dashboard.css?v=2.5" />
+  <link rel="stylesheet" href="admin-dashboard.css?v=2.5" />
   <style>
     /* Job Details Specific Styles */
     .page-container {
@@ -658,7 +658,7 @@
           return;
         }
 
-        console.log('Fetching fresh job details from API');
+        console.log('Fetching fresh job details from API:', `${API_BASE}/frontend/job-details/${encodeURIComponent(currentAccountId)}`);
         const response = await fetch(`${API_BASE}/frontend/job-details/${encodeURIComponent(currentAccountId)}`, {
           method: 'GET',
           mode: 'cors',
