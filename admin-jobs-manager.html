@@ -353,17 +353,9 @@
     let autoRefreshInterval = null;
     let lastRefreshTime = null;
 
-    // Configuration
+    // Configuration - Route directly to jobs-manager on port 8004
     const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
-    // Import configuration from frontend-config.js
-    let API_BASE = '/admin/jobs-manager'; // fallback
-    
-    // Wait for config to load and set proper API base
-    window.addEventListener('load', () => {
-      if (window.API_CONFIG && window.CONFIG_UTILS) {
-        API_BASE = window.CONFIG_UTILS.getApiUrl('/admin/jobs-manager');
-      }
-    });
+    const API_BASE = 'https://api.roo7.site:8004/admin/jobs-manager';
 
     // Initialize the dashboard
     document.addEventListener('DOMContentLoaded', function() {
