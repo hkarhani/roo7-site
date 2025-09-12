@@ -1657,12 +1657,84 @@
         second: '2-digit' 
       });
     }
+
+    // Execution Report Functions
+    async function downloadExecutionReport(executionId) {
+      try {
+        const accountId = getAccountIdFromURL();
+        const response = await fetch(`/api/admin/jobs-manager/execution-report/${accountId}/${executionId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `execution_report_${executionId}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+      } catch (error) {
+        console.error('Error downloading report:', error);
+        alert(`Failed to download report: ${error.message}`);
+      }
+    }
+
+    async function viewExecutionReport(executionId) {
+      try {
+        const accountId = getAccountIdFromURL();
+        const response = await fetch(`/api/admin/jobs-manager/execution-report/${accountId}/${executionId}?format=json`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const reportData = await response.json();
+        
+        // Display in modal
+        document.getElementById('reportModalTitle').textContent = `Execution Report - ${executionId}`;
+        document.getElementById('reportModalBody').innerHTML = `
+          <pre style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; max-height: 500px;">${JSON.stringify(reportData, null, 2)}</pre>
+        `;
+        document.getElementById('reportModal').style.display = 'block';
+        
+      } catch (error) {
+        console.error('Error viewing report:', error);
+        alert(`Failed to view report: ${error.message}`);
+      }
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+      const modal = document.getElementById('reportModal');
+      if (event.target === modal) {
+        closeReportModal();
+      }
+    }
   </script>
   <!-- Execution Report Modal -->
   <div id="reportModal" class="report-modal">
     <div class="report-modal-content">
       <div class="report-modal-header">
-        <h2 class="report-modal-title">📋 Comprehensive Execution Report</h2>
+        <h2 id="reportModalTitle" class="report-modal-title">📋 Comprehensive Execution Report</h2>
         <button class="report-modal-close" onclick="closeReportModal()">&times;</button>
       </div>
       <div id="reportModalBody">
