@@ -353,9 +353,14 @@
     let autoRefreshInterval = null;
     let lastRefreshTime = null;
 
-    // Configuration - Route directly to jobs-manager on port 8004
+    // Configuration
     const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
-    const API_BASE = 'https://api.roo7.site:8004/admin/jobs-manager';
+    
+    // Wait for config to load
+    let CONFIG = null;
+    window.addEventListener('load', () => {
+      CONFIG = window;
+    });
 
     // Initialize the dashboard
     document.addEventListener('DOMContentLoaded', function() {
@@ -389,7 +394,7 @@
         showLoading();
         
         const token = getAuthToken();
-        const response = await fetch(`${API_BASE}/frontend/active-jobs-enhanced`, {
+        const response = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/frontend/active-jobs-enhanced'), {
           method: 'GET',
           mode: 'cors',
           credentials: 'include',
@@ -571,7 +576,7 @@
     async function forceJobExecution(accountId) {
       try {
         const token = getAuthToken();
-        const response = await fetch(`${API_BASE}/force-execution/${accountId}`, {
+        const response = await fetch(CONFIG.CONFIG_UTILS.getApiUrl(`/admin/jobs-manager/force-execution/${accountId}`), {
           method: 'POST',
           mode: 'cors',
           credentials: 'include',
