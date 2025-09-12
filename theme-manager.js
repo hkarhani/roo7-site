@@ -75,7 +75,7 @@ class ThemeManager {
 
   // Detect if this is the auth page
   isAuthPage() {
-    return document.body.classList.contains('auth-page') || 
+    return (document.body && document.body.classList.contains('auth-page')) || 
            document.querySelector('.auth-container') !== null ||
            window.location.pathname.includes('auth.html');
   }
