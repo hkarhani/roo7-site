@@ -7,6 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
+  <!-- JS Functions Fixed v1.1 - Clear Browser Cache -->
   <script type="module" src="frontend-config.js?v=2.5"></script>
   <script src="theme-manager.js?v=1.1"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
@@ -1661,7 +1662,7 @@
     // Execution Report Functions
     async function downloadExecutionReport(executionId) {
       try {
-        const accountId = getAccountIdFromURL();
+        const accountId = getAccountIdFromUrl();
         const response = await fetch(`/api/admin/jobs-manager/execution-report/${accountId}/${executionId}`, {
           method: 'GET',
           headers: {
@@ -1691,7 +1692,7 @@
 
     async function viewExecutionReport(executionId) {
       try {
-        const accountId = getAccountIdFromURL();
+        const accountId = getAccountIdFromUrl();
         const response = await fetch(`/api/admin/jobs-manager/execution-report/${accountId}/${executionId}?format=json`, {
           method: 'GET',
           headers: {
