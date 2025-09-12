@@ -1719,50 +1719,43 @@ document.addEventListener("DOMContentLoaded", () => {
     }).length;
     
     container.innerHTML = `
-      <div class="jobs-manager-section">
-        <div class="jobs-status-row">
-          <div class="status-indicator">
-            <span class="status-icon ${statusClass}">${statusIcon}</span>
-            <span class="status-text">Jobs Manager ${statusText}</span>
-          </div>
-          <div class="jobs-count">
-            ${activeJobs} jobs • ${uniqueAccounts} accounts
-          </div>
-          <div class="action-buttons">
-            <button class="btn-secondary" onclick="loadJobsManagerOverview()">🔄</button>
-            <button class="btn-primary" onclick="window.location.href='admin-jobs-manager.html'">Dashboard</button>
-          </div>
+      <div class="overview-summary">
+        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
+          <div class="stat-icon">${statusIcon}</div>
+          <div class="stat-label">Jobs Manager</div>
+          <div class="stat-value">${statusText}</div>
+          <div class="stat-action">Click to manage →</div>
         </div>
-        
-        <div class="jobs-stats-row">
-          <span class="stat-item">
-            <span class="stat-value success">${healthyJobs}</span> Healthy
-          </span>
-          <span class="stat-item">
-            <span class="stat-value warning">${warningJobs}</span> Warnings
-          </span>
-          <span class="stat-item">
-            <span class="stat-value info">${runningJobs}</span> Running
-          </span>
-          <span class="stat-item">
-            <span class="stat-value">${successRate}%</span> Success
-          </span>
+        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
+          <div class="stat-icon">🔧</div>
+          <div class="stat-label">Active Jobs</div>
+          <div class="stat-value">${activeJobs}</div>
+          <div class="stat-action">View details →</div>
         </div>
-        
-        ${warningJobs > 0 ? `
-        <div class="jobs-alerts-compact">
-          <div class="alert-compact">
-            <span class="alert-icon">⚠️</span>
-            <span class="alert-text">${warningJobs} jobs need attention</span>
-            <button class="alert-link" onclick="window.location.href='admin-jobs-manager.html'">View →</button>
-          </div>
+        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Healthy Jobs</div>
+          <div class="stat-value">${healthyJobs}</div>
+          <div class="stat-action">Success rate: ${successRate}% →</div>
         </div>
-        ` : `
-        <div class="jobs-status-ok">
-          <span class="ok-icon">✅</span>
-          <span class="ok-text">All systems operational</span>
+        <div class="stat-card admin ${warningJobs > 0 ? 'warning' : ''} clickable" onclick="window.location.href='admin-jobs-manager.html'">
+          <div class="stat-icon">${warningJobs > 0 ? '⚠️' : '👍'}</div>
+          <div class="stat-label">${warningJobs > 0 ? 'Need Attention' : 'All Systems OK'}</div>
+          <div class="stat-value">${warningJobs > 0 ? warningJobs : '0'}</div>
+          <div class="stat-action">${warningJobs > 0 ? 'Fix issues →' : 'All operational →'}</div>
         </div>
-        `}
+        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Trading Accounts</div>
+          <div class="stat-value">${uniqueAccounts}</div>
+          <div class="stat-action">Manage accounts →</div>
+        </div>
+        <div class="stat-card admin clickable" onclick="loadJobsManagerOverview()">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-label">Quick Refresh</div>
+          <div class="stat-value">Now</div>
+          <div class="stat-action">Refresh data →</div>
+        </div>
       </div>
     `;
   }
