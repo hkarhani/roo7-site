@@ -103,6 +103,16 @@
       margin-top: 15px;
     }
 
+    .text-danger {
+      color: #dc3545 !important;
+      font-weight: 600;
+    }
+
+    .text-warning {
+      color: #ffc107 !important;
+      font-weight: 600;
+    }
+
     .job-subtitle {
       font-size: 1.1rem;
       opacity: 0.9;
@@ -848,19 +858,46 @@
         </div>
       `;
 
+      // Calculate scheduling health
+      const now = new Date();
+      const lastRun = job.last_run_at ? new Date(job.last_run_at) : null;
+      const nextRun = job.next_run_at ? new Date(job.next_run_at) : null;
+      const cadenceMs = job.cadence_minutes * 60 * 1000;
+      
+      let schedulingStatus = 'healthy';
+      let schedulingMessage = '';
+      
+      if (lastRun) {
+        const timeSinceLastRun = now - lastRun;
+        const expectedNextRun = new Date(lastRun.getTime() + cadenceMs);
+        
+        if (timeSinceLastRun > cadenceMs * 3) { // More than 3 cadence periods
+          schedulingStatus = 'critical';
+          schedulingMessage = `⚠️ Job hasn't run for ${Math.floor(timeSinceLastRun / (1000 * 60 * 60 * 24))} days (expected every ${job.cadence_minutes} min)`;
+        } else if (timeSinceLastRun > cadenceMs * 1.5) { // More than 1.5x the cadence
+          schedulingStatus = 'warning';
+          schedulingMessage = `⚠️ Job is ${Math.floor((timeSinceLastRun - cadenceMs) / (1000 * 60))} minutes overdue`;
+        }
+      }
+
       // Scheduling
       document.getElementById('scheduling-config').innerHTML = `
+        ${schedulingStatus !== 'healthy' ? `
+          <div class="config-item" style="grid-column: 1 / -1; background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+            <span style="color: #856404; font-weight: 600;">${schedulingMessage}</span>
+          </div>
+        ` : ''}
         <div class="config-item">
           <span class="config-label">Cadence</span>
           <span class="config-value">${job.cadence_minutes} minutes</span>
         </div>
         <div class="config-item">
           <span class="config-label">Next Run</span>
-          <span class="config-value">${job.next_run_at ? formatDateTime(job.next_run_at) : 'Not scheduled'}</span>
+          <span class="config-value ${schedulingStatus === 'critical' ? 'text-danger' : ''}">${job.next_run_at ? formatDateTime(job.next_run_at) : 'Not scheduled'}</span>
         </div>
         <div class="config-item">
           <span class="config-label">Last Run</span>
-          <span class="config-value">${job.last_run_at ? formatDateTime(job.last_run_at) : 'Never'}</span>
+          <span class="config-value ${schedulingStatus === 'critical' ? 'text-danger' : ''}">${job.last_run_at ? formatDateTime(job.last_run_at) : 'Never'}</span>
         </div>
         <div class="config-item">
           <span class="config-label">Created</span>
@@ -890,26 +927,47 @@
     }
 
     function renderPortfolioDetails(job) {
-      // Target portfolio
+      // Debug: Log the job object to see what portfolio data is available
+      console.log('Job data for portfolio rendering:', {
+        target_portfolio: job.target_portfolio,
+        source_portfolio: job.source_portfolio,
+        portfolio: job.portfolio,
+        target_weights: job.target_weights,
+        current_weights: job.current_weights,
+        all_keys: Object.keys(job)
+      });
+
+      // Target portfolio - try multiple possible field names
       const targetGrid = document.getElementById('target-portfolio-grid');
-      if (job.target_portfolio && Object.keys(job.target_portfolio).length > 0) {
-        targetGrid.innerHTML = Object.entries(job.target_portfolio)
-          .map(([symbol, weight]) => `
-            <div class="portfolio-item">
-              <div class="portfolio-symbol">${symbol}</div>
-              <div class="portfolio-weight">${(weight * 100).toFixed(2)}%</div>
-            </div>
-          `).join('');
+      const targetPortfolio = job.target_portfolio || job.target_weights || job.portfolio?.target;
+      
+      if (targetPortfolio && typeof targetPortfolio === 'object' && Object.keys(targetPortfolio).length > 0) {
+        targetGrid.innerHTML = Object.entries(targetPortfolio)
+          .map(([symbol, weight]) => {
+            // Handle different weight formats
+            const weightValue = typeof weight === 'object' ? 
+              (weight.weight || weight.target_weight || weight.value || 0) : weight;
+            return `
+              <div class="portfolio-item">
+                <div class="portfolio-symbol">${symbol}</div>
+                <div class="portfolio-weight">${(weightValue * 100).toFixed(2)}%</div>
+              </div>
+            `;
+          }).join('');
       } else {
         targetGrid.innerHTML = '<div class="empty-state"><p>No target portfolio configured</p></div>';
       }
 
-      // Source portfolio
+      // Source portfolio - try multiple possible field names
       const sourceGrid = document.getElementById('source-portfolio-grid');
-      if (job.source_portfolio && Object.keys(job.source_portfolio).length > 0) {
-        sourceGrid.innerHTML = Object.entries(job.source_portfolio)
+      const sourcePortfolio = job.source_portfolio || job.current_weights || job.portfolio?.current || job.portfolio?.source;
+      
+      if (sourcePortfolio && typeof sourcePortfolio === 'object' && Object.keys(sourcePortfolio).length > 0) {
+        sourceGrid.innerHTML = Object.entries(sourcePortfolio)
           .map(([symbol, data]) => {
-            const weight = typeof data === 'object' ? (data.weight || 0) : data;
+            // Handle different weight formats
+            const weight = typeof data === 'object' ? 
+              (data.weight || data.current_weight || data.value || 0) : data;
             return `
               <div class="portfolio-item">
                 <div class="portfolio-symbol">${symbol}</div>
@@ -1101,6 +1159,18 @@
       `).join('');
     }
 
+    function getLogLevelEmoji(level) {
+      const levelMap = {
+        'ERROR': '❌',
+        'WARNING': '⚠️',
+        'WARN': '⚠️',
+        'INFO': 'ℹ️',
+        'DEBUG': '🐛',
+        'SUCCESS': '✅'
+      };
+      return levelMap[level?.toUpperCase()] || 'ℹ️';
+    }
+
     function renderLogTimeline(logs) {
       if (!logs || logs.length === 0) {
         return '<div class="empty-state"><p>No logs available for this execution</p></div>';
@@ -1113,7 +1183,7 @@
       return displayLogs.map(log => `
         <div class="timeline-item">
           <div class="timeline-marker ${log.level.toLowerCase()}">
-            ${log.level_emoji}
+            ${log.level_emoji || getLogLevelEmoji(log.level)}
           </div>
           <div class="timeline-content">
             <div class="timeline-title">${log.component}</div>
@@ -1278,7 +1348,7 @@
         const fullTimeline = logs.map(log => `
           <div class="timeline-item">
             <div class="timeline-marker ${log.level.toLowerCase()}">
-              ${log.level_emoji}
+              ${log.level_emoji || getLogLevelEmoji(log.level)}
             </div>
             <div class="timeline-content">
               <div class="timeline-title">${log.component}</div>
@@ -1293,6 +1363,9 @@
         timelineContainer.innerHTML = `
           <h4 style="margin-bottom: 20px;">📋 Complete Execution Timeline (${logs.length} entries)</h4>
           ${fullTimeline}
+          <div style="margin-top: 20px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <strong>✅ Showing all ${logs.length} log entries</strong>
+          </div>
         `;
       }
     }
