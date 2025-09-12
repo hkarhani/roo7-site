@@ -1204,28 +1204,40 @@
       alert('Feature coming soon: Comprehensive logs viewer');
     }
 
-    async function downloadCurrentLogs() {
-      if (!selectedExecution) {
-        showError('No execution selected');
+    function downloadCurrentLogs() {
+      if (!selectedExecution || !window.currentLogData) {
+        showError('No execution or log data selected');
         return;
       }
       
       try {
-        const response = await fetch(`${API_BASE}/frontend/execution-logs/${selectedExecution._id}?format=raw`, {
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'include',
-          headers: { 
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Accept': 'text/plain'
+        const logs = window.currentLogData.unified_logs?.logs || [];
+        const summary = window.currentLogData.summary || {};
+        
+        // Create formatted log content
+        let logContent = `=== Job Execution Logs ===\n`;
+        logContent += `Execution ID: ${selectedExecution._id}\n`;
+        logContent += `Account: ${jobDetails?.account_name || 'Unknown'}\n`;
+        logContent += `Status: ${selectedExecution.status}\n`;
+        logContent += `Duration: ${selectedExecution.duration_formatted}\n`;
+        logContent += `Started: ${formatDateTime(selectedExecution.started_at)}\n`;
+        logContent += `Worker: ${selectedExecution.worker_id}\n`;
+        logContent += `\n=== Summary ===\n`;
+        logContent += `Total Log Entries: ${summary.total_log_entries || 0}\n`;
+        logContent += `Errors: ${summary.error_count || 0}\n`;
+        logContent += `Warnings: ${summary.warning_count || 0}\n`;
+        logContent += `Sources: ${window.currentLogData.unified_logs?.sources_used?.join(', ') || 'None'}\n`;
+        logContent += `\n=== Detailed Logs ===\n\n`;
+        
+        // Add each log entry
+        logs.forEach((log, index) => {
+          logContent += `[${index + 1}] ${formatDateTime(log.timestamp)} | ${log.level} | ${log.component} | ${log.source}\n`;
+          logContent += `    ${log.message}\n`;
+          if (log.level_emoji) {
+            logContent += `    ${log.level_emoji}\n`;
           }
+          logContent += `\n`;
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const logContent = await response.text();
         
         // Create download
         const blob = new Blob([logContent], { type: 'text/plain' });
