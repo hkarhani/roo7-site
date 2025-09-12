@@ -1000,18 +1000,56 @@
       const sourcePortfolio = job.source_portfolio || job.current_weights || job.portfolio?.current || job.portfolio?.source;
       
       if (sourcePortfolio && typeof sourcePortfolio === 'object' && Object.keys(sourcePortfolio).length > 0) {
-        sourceGrid.innerHTML = Object.entries(sourcePortfolio)
-          .map(([symbol, data]) => {
-            // Handle different weight formats
-            const weight = typeof data === 'object' ? 
-              (data.weight || data.current_weight || data.value || 0) : data;
-            return `
-              <div class="portfolio-item">
-                <div class="portfolio-symbol">${symbol}</div>
-                <div class="portfolio-weight">${(weight * 100).toFixed(2)}%</div>
-              </div>
-            `;
-          }).join('');
+        // Check if this looks like portfolio snapshot data vs. weights
+        const isPortfolioSnapshot = Object.keys(sourcePortfolio).some(key => 
+          ['total_value_usdt', 'spot_assets', 'usdtm_assets', 'coinm_assets', 'snapshot_timestamp'].includes(key)
+        );
+        
+        if (isPortfolioSnapshot) {
+          // Handle portfolio snapshot data - filter and format appropriately
+          sourceGrid.innerHTML = Object.entries(sourcePortfolio)
+            .filter(([key, value]) => {
+              // Only show meaningful fields, skip metadata and zero values
+              if (['snapshot_timestamp', 'source_sync_timestamp', 'source_account_name', 'source_last_portfolio_update'].includes(key)) return false;
+              if (typeof value === 'number' && value === 0) return false;
+              return true;
+            })
+            .map(([key, value]) => {
+              let displayValue;
+              if (typeof value === 'number') {
+                if (key.includes('value') || key.includes('pnl')) {
+                  displayValue = `$${value.toFixed(2)}`;
+                } else if (key.includes('mode') && (value === 0 || value === 1)) {
+                  displayValue = value === 1 ? 'Enabled' : 'Disabled';
+                } else {
+                  displayValue = value.toFixed(2);
+                }
+              } else {
+                displayValue = String(value);
+              }
+              
+              return `
+                <div class="portfolio-item">
+                  <div class="portfolio-symbol">${key.replace(/_/g, ' ').toUpperCase()}</div>
+                  <div class="portfolio-weight">${displayValue}</div>
+                </div>
+              `;
+            }).join('');
+        } else {
+          // Handle weight data as before
+          sourceGrid.innerHTML = Object.entries(sourcePortfolio)
+            .map(([symbol, data]) => {
+              // Handle different weight formats
+              const weight = typeof data === 'object' ? 
+                (data.weight || data.current_weight || data.value || 0) : data;
+              return `
+                <div class="portfolio-item">
+                  <div class="portfolio-symbol">${symbol}</div>
+                  <div class="portfolio-weight">${(weight * 100).toFixed(2)}%</div>
+                </div>
+              `;
+            }).join('');
+        }
       } else {
         sourceGrid.innerHTML = '<div class="empty-state"><p>No source portfolio available</p></div>';
       }
@@ -1445,6 +1483,24 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function formatRelativeTime(date) {
+      const now = new Date();
+      const diff = date.getTime() - now.getTime();
+      const absDiff = Math.abs(diff);
+      
+      if (absDiff < 60000) return diff > 0 ? 'Soon' : 'Just now';
+      if (absDiff < 3600000) {
+        const mins = Math.floor(absDiff / 60000);
+        return diff > 0 ? `In ${mins}m` : `${mins}m ago`;
+      }
+      if (absDiff < 86400000) {
+        const hours = Math.floor(absDiff / 3600000);
+        return diff > 0 ? `In ${hours}h` : `${hours}h ago`;
+      }
+      
+      return date.toLocaleDateString();
     }
 
     function getAuthToken() {
