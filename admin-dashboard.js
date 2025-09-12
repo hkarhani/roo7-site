@@ -1644,29 +1644,28 @@ document.addEventListener("DOMContentLoaded", () => {
       // Show loading state
       container.innerHTML = '<div class="loading-state"><p>Loading Jobs Manager status...</p></div>';
       
-      // Fetch Jobs Manager status (routes to jobs-manager container automatically)
-      const statusResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/status'), {
+      // Fetch Jobs Manager enhanced active jobs data (routes to jobs-manager container automatically)
+      const enhancedResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/frontend/active-jobs-enhanced'), {
         method: 'GET',
         mode: 'cors',
         credentials: 'include',
         headers: getAuthHeaders(token)
       });
       
-      if (!statusResponse.ok) {
-        throw new Error(`HTTP ${statusResponse.status}: ${statusResponse.statusText}`);
+      if (!enhancedResponse.ok) {
+        throw new Error(`HTTP ${enhancedResponse.status}: ${enhancedResponse.statusText}`);
       }
       
-      const statusData = await statusResponse.json();
+      const enhancedData = await enhancedResponse.json();
       
-      // Fetch active jobs summary (routes to jobs-manager container automatically)
-      const summaryResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/active-jobs'), {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'omit',
-        headers: getAuthHeaders(token)
-      });
+      // Extract status and summary data from enhanced response
+      const statusData = {
+        available: true,
+        running: enhancedData.active_jobs && enhancedData.active_jobs.length > 0,
+        active_jobs_count: enhancedData.active_jobs ? enhancedData.active_jobs.length : 0
+      };
       
-      const summaryData = summaryResponse.ok ? await summaryResponse.json() : { error: 'Failed to fetch summary' };
+      const summaryData = enhancedData;
       
       renderJobsManagerOverview(statusData, summaryData);
       
@@ -1690,10 +1689,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusText = isRunning ? 'Running' : 'Stopped';
     const statusClass = isRunning ? 'success' : 'danger';
     
-    // Get job counts from summary data
-    const activeJobs = summaryData.active_jobs_by_status?.ACTIVE || 0;
-    const runningJobs = summaryData.active_jobs_by_run_status?.RUNNING || 0;
-    const failedJobs = summaryData.active_jobs_by_run_status?.FAILED || 0;
+    // Get job counts from enhanced active jobs data
+    const jobsArray = summaryData.active_jobs || [];
+    const activeJobs = jobsArray.length;
+    const runningJobs = jobsArray.filter(job => job.status === 'active').length;
+    const failedJobs = jobsArray.filter(job => job.last_status === 'error').length;
     
     container.innerHTML = `
       <div class="jobs-manager-status">
@@ -1704,9 +1704,9 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           ${isRunning ? `
             <div class="status-details">
-              <p><strong>Worker:</strong> ${statusData.worker_id || 'Unknown'}</p>
-              <p><strong>Cycles:</strong> ${statusData.cycles_completed || 0}</p>
-              <p><strong>Jobs Processed:</strong> ${statusData.jobs_processed || 0}</p>
+              <p><strong>Active Accounts:</strong> ${[...new Set(jobsArray.map(job => job.account_id))].length || 0}</p>
+              <p><strong>Healthy Jobs:</strong> ${jobsArray.filter(job => (job.health_score || 0) >= 70).length}</p>
+              <p><strong>Total Jobs:</strong> ${activeJobs}</p>
             </div>
           ` : ''}
         </div>
