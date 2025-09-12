@@ -3476,3 +3476,78 @@
   }
 }
 
+/* === TIMEZONE INDICATOR STYLES === */
+
+.timezone-indicator {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #2196f3;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1565c0;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.timezone-indicator:before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.dark-theme .timezone-indicator {
+  background: linear-gradient(135deg, #263238 0%, #37474f 100%);
+  border-color: #546e7a;
+  color: #90a4ae;
+}
+
+.dark-theme .timezone-indicator:before {
+  background: #81c784;
+}
+
+/* Responsive timezone indicator */
+@media (max-width: 768px) {
+  .timezone-indicator {
+    font-size: 11px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timezone-indicator {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+}
+

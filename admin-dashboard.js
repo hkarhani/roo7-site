@@ -3148,9 +3148,30 @@ document.addEventListener("DOMContentLoaded", () => {
             animate: true,
             showGrid: true,
             showTooltip: true,
-            margin: { top: 20, right: 30, bottom: 40, left: 60 },
+            margin: { top: 40, right: 30, bottom: 40, left: 60 },
             responsive: true,
-            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+            tooltipFormatter: function(data) {
+              const date = new Date(data.x);
+              const localTime = date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+              });
+              return `${localTime}<br/>Value: ${data.label || data.y}`;
+            },
+            xAxisFormatter: function(value) {
+              const date = new Date(value);
+              return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            }
           });
           console.log('📊 Source analytics chart initialized successfully');
         } else {
@@ -3287,6 +3308,9 @@ document.addEventListener("DOMContentLoaded", () => {
           color: '#3b82f6'
         }]);
         console.log('📊 Chart data set successfully with', chartData.length, 'points');
+        
+        // Add timezone indicator
+        addTimezoneIndicator();
       } else if (sourceAnalyticsChart) {
         sourceAnalyticsChart.showEmptyState();
         console.log('📊 Showing empty state - no data available');
@@ -3295,6 +3319,31 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error('Error displaying source analytics data:', error);
       showSourceAnalyticsError('Failed to display analytics data');
+    }
+  }
+
+  // Add timezone indicator to chart
+  function addTimezoneIndicator() {
+    // Remove existing indicator
+    const existing = document.querySelector('.timezone-indicator');
+    if (existing) {
+      existing.remove();
+    }
+    
+    // Get user's timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const now = new Date();
+    const timezoneName = now.toLocaleDateString('en-US', {timeZoneName: 'short'}).split(', ')[1];
+    
+    // Create indicator element
+    const indicator = document.createElement('div');
+    indicator.className = 'timezone-indicator';
+    indicator.innerHTML = `📍 Times shown in your timezone (${timezoneName})`;
+    
+    // Find chart container and add indicator
+    const chartContainer = document.getElementById('source-analytics-chart');
+    if (chartContainer && chartContainer.parentNode) {
+      chartContainer.parentNode.insertBefore(indicator, chartContainer);
     }
   }
 
