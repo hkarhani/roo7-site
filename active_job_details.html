@@ -8,6 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
   <script type="module" src="frontend-config.js?v=2.5"></script>
+  <script src="theme-manager.js?v=1.1"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-jobs-manager.css?v=3.0" />
@@ -125,7 +126,43 @@
       gap: 15px;
     }
 
-    .job-actions button {
+    /* Override job-actions button styles for specific button classes */
+    .job-actions .primary-button {
+      padding: 10px 20px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .job-actions .primary-button:hover {
+      background: #005fa3;
+      transform: translateY(-1px);
+    }
+
+    .job-actions .secondary-button {
+      padding: 10px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .job-actions .secondary-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Fallback for buttons without specific classes */
+    .job-actions button:not(.primary-button):not(.secondary-button) {
       padding: 10px 20px;
       border: 2px solid rgba(255, 255, 255, 0.3);
       background: rgba(255, 255, 255, 0.2);
@@ -137,7 +174,7 @@
       backdrop-filter: blur(5px);
     }
 
-    .job-actions button:hover {
+    .job-actions button:not(.primary-button):not(.secondary-button):hover {
       background: rgba(255, 255, 255, 0.3);
       border-color: rgba(255, 255, 255, 0.5);
     }
@@ -989,21 +1026,38 @@
         return;
       }
 
-      container.innerHTML = executions.map(execution => `
-        <div class="execution-item" data-execution-id="${execution._id}" onclick="selectExecution('${execution._id}')">
-          <div class="execution-status">
-            <span>${execution.status_emoji}</span>
-            <strong>${execution.status}</strong>
+      // Calculate time gaps between executions for diagnostic purposes
+      const executionsWithGaps = executions.map((execution, index) => {
+        const current = new Date(execution.started_at);
+        const next = index > 0 ? new Date(executions[index - 1].started_at) : new Date();
+        const gapHours = Math.floor((next - current) / (1000 * 60 * 60));
+        return { ...execution, gapHours };
+      });
+
+      container.innerHTML = executionsWithGaps.map((execution, index) => {
+        const gapWarning = execution.gapHours > (jobDetails?.cadence_minutes / 60 * 2) ? 
+          `<div style="color: #dc3545; font-size: 0.75rem; margin-top: 2px;">⏰ ${execution.gapHours}h gap to next</div>` : '';
+        
+        return `
+          <div class="execution-item" data-execution-id="${execution._id}" onclick="selectExecution('${execution._id}')">
+            <div class="execution-status">
+              <span>${execution.status_emoji}</span>
+              <strong>${execution.status}</strong>
+            </div>
+            <div class="execution-meta">
+              <div style="font-weight: 600;">${formatDateTime(execution.started_at)}</div>
+              <div style="font-size: 0.75rem; color: #6c757d; margin-top: 2px;">
+                ${formatRelativeTime(new Date(execution.started_at))}
+              </div>
+              ${gapWarning}
+            </div>
+            <div class="execution-duration">
+              ${execution.duration_formatted}
+            </div>
+            ${execution.has_error ? '<div style="color: #dc3545; font-size: 0.8rem;">⚠️ Has errors</div>' : ''}
           </div>
-          <div class="execution-meta">
-            ${formatDateTime(execution.started_at)}
-          </div>
-          <div class="execution-duration">
-            ${execution.duration_formatted}
-          </div>
-          ${execution.has_error ? '<div style="color: #dc3545; font-size: 0.8rem;">⚠️ Has errors</div>' : ''}
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     async function selectExecution(executionId) {
@@ -1410,8 +1464,11 @@
     }
 
     function toggleTheme() {
-      // Implement theme toggle similar to other admin pages
-      console.log('Toggle theme');
+      if (window.themeManager) {
+        window.themeManager.toggleTheme();
+      } else {
+        console.error('Theme manager not available');
+      }
     }
 
     function logout() {
