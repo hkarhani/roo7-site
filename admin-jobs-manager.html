@@ -388,8 +388,12 @@
       try {
         showLoading();
         
+        const token = getAuthToken();
         const response = await fetch(`${API_BASE}/frontend/active-jobs-enhanced`, {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: getAuthHeaders(token)
         });
 
         if (!response.ok) {
@@ -566,9 +570,12 @@
 
     async function forceJobExecution(accountId) {
       try {
+        const token = getAuthToken();
         const response = await fetch(`${API_BASE}/force-execution/${accountId}`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+          mode: 'cors',
+          credentials: 'include',
+          headers: getAuthHeaders(token)
         });
 
         if (response.ok) {
@@ -668,7 +675,15 @@
     }
 
     function getAuthToken() {
-      return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      return localStorage.getItem("token");
+    }
+    
+    function getAuthHeaders(token) {
+      return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
     }
 
     function showSuccess(message) {
