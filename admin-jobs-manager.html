@@ -406,7 +406,7 @@
         showLoading();
         
         const token = getAuthToken();
-        const response = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/frontend/active-jobs-enhanced'), {
+        const response = await fetch(`https://api.roo7.site:8004/admin/jobs-manager/frontend/active-jobs-enhanced`, {
           method: 'GET',
           mode: 'cors',
           credentials: 'include',
@@ -418,7 +418,7 @@
         }
 
         const data = await response.json();
-        activeJobs = data.jobs || [];
+        activeJobs = data.active_jobs || [];
         
         updateSummaryStats(data.summary || {});
         applyFilters();
@@ -588,7 +588,7 @@
     async function forceJobExecution(accountId) {
       try {
         const token = getAuthToken();
-        const response = await fetch(CONFIG.CONFIG_UTILS.getApiUrl(`/admin/jobs-manager/force-execution/${accountId}`), {
+        const response = await fetch(`https://api.roo7.site:8004/admin/jobs-manager/force-execution/${accountId}`, {
           method: 'POST',
           mode: 'cors',
           credentials: 'include',

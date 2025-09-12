@@ -1689,101 +1689,81 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusText = isRunning ? 'Running' : 'Stopped';
     const statusClass = isRunning ? 'success' : 'danger';
     
-    // Enhanced data processing
+    // Enhanced comprehensive data processing
     const jobsArray = summaryData.active_jobs || [];
     const activeJobs = jobsArray.length;
     const uniqueAccounts = [...new Set(jobsArray.map(job => job.account_id))].length;
     
     // Job health analysis
-    const healthyJobs = jobsArray.filter(job => (job.health_score || 0) >= 80).length;
-    const warningJobs = jobsArray.filter(job => {
-      const score = job.health_score || 0;
-      return score >= 50 && score < 80;
-    }).length;
-    const criticalJobs = jobsArray.filter(job => (job.health_score || 0) < 50).length;
+    const healthyJobs = jobsArray.filter(job => job.is_healthy === true).length;
+    const warningJobs = jobsArray.filter(job => job.needs_attention === true).length;
+    const runningJobs = jobsArray.filter(job => job.is_running === true).length;
+    const criticalJobs = activeJobs - healthyJobs - warningJobs;
     
-    // Performance metrics
+    // Execution performance metrics
+    const avgExecutionTime = jobsArray.length > 0 ? 
+      Math.round(jobsArray.reduce((sum, job) => sum + (job.avg_execution_time || 0), 0) / jobsArray.length) : 0;
+    const totalExecutions = jobsArray.reduce((sum, job) => sum + (job.execution_count || 0), 0);
     const successRate = jobsArray.length > 0 ? 
       Math.round((healthyJobs / jobsArray.length) * 100) : 0;
-    const totalManaged = jobsArray.reduce((sum, job) => sum + (job.account_value || 0), 0);
     
-    // Beautiful template with KPIs
+    // Financial metrics
+    const totalManaged = jobsArray.reduce((sum, job) => sum + (job.account_value || 0), 0);
+    const highValueAccounts = jobsArray.filter(job => (job.account_value || 0) > 10000).length;
+    
+    // Recent activity analysis
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const recentExecutions = jobsArray.filter(job => {
+      const lastRun = job.last_run_at ? new Date(job.last_run_at) : null;
+      return lastRun && lastRun > last24h;
+    }).length;
+    
     container.innerHTML = `
-      <div class="jobs-manager-overview">
-        <!-- Status Header -->
-        <div class="jobs-status-header">
-          <div class="service-status-display">
+      <div class="jobs-manager-section">
+        <div class="jobs-status-row">
+          <div class="status-indicator">
             <span class="status-icon ${statusClass}">${statusIcon}</span>
-            <div class="service-details">
-              <h3>Jobs Manager ${statusText}</h3>
-              <p class="service-subtitle">${activeJobs} active jobs • ${uniqueAccounts} trading accounts</p>
-            </div>
+            <span class="status-text">Jobs Manager ${statusText}</span>
           </div>
-          <div class="quick-actions">
-            <button class="action-btn primary" onclick="window.location.href='admin-jobs-manager.html'">
-              📊 Jobs Dashboard
-            </button>
-            <button class="action-btn secondary" onclick="loadJobsManagerOverview()">
-              🔄 Refresh
-            </button>
+          <div class="jobs-count">
+            ${activeJobs} jobs • ${uniqueAccounts} accounts
+          </div>
+          <div class="action-buttons">
+            <button class="btn-secondary" onclick="loadJobsManagerOverview()">🔄</button>
+            <button class="btn-primary" onclick="window.location.href='admin-jobs-manager.html'">Dashboard</button>
           </div>
         </div>
         
-        <!-- KPI Grid -->
-        <div class="jobs-kpi-grid">
-          <div class="kpi-card success">
-            <div class="kpi-icon">✅</div>
-            <div class="kpi-content">
-              <div class="kpi-value">${successRate}%</div>
-              <div class="kpi-label">Success Rate</div>
-            </div>
-          </div>
-          
-          <div class="kpi-card info">
-            <div class="kpi-icon">💰</div>
-            <div class="kpi-content">
-              <div class="kpi-value">$${(totalManaged / 1000).toFixed(1)}K</div>
-              <div class="kpi-label">Assets Managed</div>
-            </div>
-          </div>
-          
-          <div class="kpi-card ${healthyJobs === activeJobs ? 'success' : 'warning'}">
-            <div class="kpi-icon">🎯</div>
-            <div class="kpi-content">
-              <div class="kpi-value">${healthyJobs}/${activeJobs}</div>
-              <div class="kpi-label">Healthy Jobs</div>
-            </div>
-          </div>
-          
-          <div class="kpi-card ${warningJobs > 0 ? 'warning' : 'success'}">
-            <div class="kpi-icon">⚠️</div>
-            <div class="kpi-content">
-              <div class="kpi-value">${warningJobs}</div>
-              <div class="kpi-label">Need Attention</div>
-            </div>
-          </div>
+        <div class="jobs-stats-row">
+          <span class="stat-item">
+            <span class="stat-value success">${healthyJobs}</span> Healthy
+          </span>
+          <span class="stat-item">
+            <span class="stat-value warning">${warningJobs}</span> Warnings
+          </span>
+          <span class="stat-item">
+            <span class="stat-value info">${runningJobs}</span> Running
+          </span>
+          <span class="stat-item">
+            <span class="stat-value">${successRate}%</span> Success
+          </span>
         </div>
         
-        <!-- System Health Bar -->
-        <div class="system-health">
-          <div class="health-label">System Health Distribution</div>
-          <div class="health-bar">
-            <div class="health-segment healthy" style="width: ${activeJobs > 0 ? (healthyJobs / activeJobs * 100) : 0}%">
-              ${healthyJobs}
-            </div>
-            <div class="health-segment warning" style="width: ${activeJobs > 0 ? (warningJobs / activeJobs * 100) : 0}%">
-              ${warningJobs}
-            </div>
-            <div class="health-segment critical" style="width: ${activeJobs > 0 ? (criticalJobs / activeJobs * 100) : 0}%">
-              ${criticalJobs}
-            </div>
-          </div>
-          <div class="health-legend">
-            <span class="legend-item healthy">■ Healthy (${healthyJobs})</span>
-            <span class="legend-item warning">■ Warning (${warningJobs})</span>
-            <span class="legend-item critical">■ Critical (${criticalJobs})</span>
+        ${warningJobs > 0 || criticalJobs > 0 ? `
+        <div class="jobs-alerts-compact">
+          <div class="alert-compact">
+            <span class="alert-icon">⚠️</span>
+            <span class="alert-text">${warningJobs + criticalJobs} jobs need attention</span>
+            <button class="alert-link" onclick="window.location.href='admin-jobs-manager.html'">View →</button>
           </div>
         </div>
+        ` : `
+        <div class="jobs-status-ok">
+          <span class="ok-icon">✅</span>
+          <span class="ok-text">All systems operational</span>
+        </div>
+        `}
       </div>
     `;
   }
