@@ -509,17 +509,21 @@
     }
 
     function createJobCard(job) {
+      // Determine card color based on job running status and last execution result
       const cardClass = job.is_running ? 'running' : 
-                       job.needs_attention ? 'needs-attention' : 
-                       job.is_healthy ? 'healthy' : 'failed';
+                       job.last_execution_status === 'SUCCEEDED' ? 'healthy' : 
+                       job.last_execution_status === 'FAILED' ? 'failed' : 
+                       job.needs_attention ? 'needs-attention' : 'healthy';
 
       const statusBadge = job.is_running ? 'status-running' : 
-                         job.needs_attention ? 'status-attention' : 
-                         job.is_healthy ? 'status-healthy' : 'status-failed';
+                         job.last_execution_status === 'SUCCEEDED' ? 'status-healthy' : 
+                         job.last_execution_status === 'FAILED' ? 'status-failed' : 
+                         job.needs_attention ? 'status-attention' : 'status-healthy';
 
       const statusText = job.is_running ? '🔄 Running' : 
-                        job.needs_attention ? '⚠️ Attention' : 
-                        job.is_healthy ? '✅ Healthy' : '❌ Failed';
+                        job.last_execution_status === 'SUCCEEDED' ? '✅ Success' : 
+                        job.last_execution_status === 'FAILED' ? '❌ Failed' : 
+                        job.needs_attention ? '⚠️ Attention' : '✅ Ready';
 
       const lastExecution = job.last_execution || {};
       const nextRun = job.next_run_at ? new Date(job.next_run_at) : null;
