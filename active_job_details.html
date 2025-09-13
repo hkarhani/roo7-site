@@ -1663,7 +1663,7 @@
     async function downloadExecutionReport(executionId) {
       try {
         const accountId = getAccountIdFromUrl();
-        const response = await fetch(`/admin/jobs-manager/execution-report/${accountId}/${executionId}`, {
+        const response = await fetch(`${API_BASE}/execution-report/${accountId}/${executionId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${getAuthToken()}`
@@ -1693,7 +1693,7 @@
     async function viewExecutionReport(executionId) {
       try {
         const accountId = getAccountIdFromUrl();
-        const response = await fetch(`/admin/jobs-manager/execution-report/${accountId}/${executionId}?format=json`, {
+        const response = await fetch(`${API_BASE}/execution-report-view/${accountId}/${executionId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${getAuthToken()}`
