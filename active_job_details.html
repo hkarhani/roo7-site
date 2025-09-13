@@ -1663,10 +1663,10 @@
     async function downloadExecutionReport(executionId) {
       try {
         const accountId = getAccountIdFromUrl();
-        const response = await fetch(`/api/admin/jobs-manager/execution-report/${accountId}/${executionId}`, {
+        const response = await fetch(`/admin/jobs-manager/execution-report/${accountId}/${executionId}`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            'Authorization': `Bearer ${getAuthToken()}`
           }
         });
         
@@ -1693,10 +1693,10 @@
     async function viewExecutionReport(executionId) {
       try {
         const accountId = getAccountIdFromUrl();
-        const response = await fetch(`/api/admin/jobs-manager/execution-report/${accountId}/${executionId}?format=json`, {
+        const response = await fetch(`/admin/jobs-manager/execution-report/${accountId}/${executionId}?format=json`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            'Authorization': `Bearer ${getAuthToken()}`
           }
         });
         
