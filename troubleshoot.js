@@ -1496,6 +1496,63 @@ function initializeTroubleshootPage() {
     return `${parseFloat(value).toFixed(1)}%`;
   }
 
+  // Display basic account summary from auth-api troubleshoot endpoint
+  function displayBasicAccountSummary(troubleshootData) {
+    const summaryPlaceholder = document.querySelector('.summary-placeholder');
+    const summaryMetrics = document.getElementById('summary-metrics');
+    
+    if (!troubleshootData) {
+      summaryPlaceholder.style.display = 'block';
+      summaryMetrics.style.display = 'none';
+      return;
+    }
+
+    // Hide placeholder and show metrics
+    summaryPlaceholder.style.display = 'none';
+    summaryMetrics.style.display = 'grid';
+
+    // Get summary data from auth-api response
+    const summary = troubleshootData.detailed_breakdown?.summary || {};
+    const totalValue = troubleshootData.total_usdt_value || 0;
+    const spotValue = summary.spot_value_usdt || 0;
+    const usdtmValue = summary.usdtm_value_usdt || 0;
+    const coinmValue = summary.coinm_value_usdt || 0;
+    const unrealizedPnL = summary.total_unrealized_pnl_usdt || 0;
+
+    // Update total value and unrealized PnL
+    document.getElementById('total-value-display').textContent = formatCurrency(totalValue);
+    
+    const pnlElement = document.getElementById('unrealized-pnl-display');
+    pnlElement.textContent = formatCurrency(unrealizedPnL);
+    pnlElement.className = `metric-value ${unrealizedPnL >= 0 ? 'positive' : 'negative'}`;
+    
+    // Show ONLY user portfolio breakdown (no admin fields)
+    const allocationBreakdown = document.getElementById('allocation-breakdown');
+    const spotPercent = totalValue > 0 ? (spotValue / totalValue * 100) : 0;
+    const usdtmPercent = totalValue > 0 ? (usdtmValue / totalValue * 100) : 0;
+    const coinmPercent = totalValue > 0 ? (coinmValue / totalValue * 100) : 0;
+
+    allocationBreakdown.innerHTML = `
+      <div class="allocation-item">
+        <span class="allocation-label">SPOT:</span>
+        <span class="allocation-value">${formatCurrency(spotValue)} (${formatPercent(spotPercent)})</span>
+      </div>
+      <div class="allocation-item">
+        <span class="allocation-label">USDT-M:</span>
+        <span class="allocation-value">${formatCurrency(usdtmValue)} (${formatPercent(usdtmPercent)})</span>
+      </div>
+      <div class="allocation-item">
+        <span class="allocation-label">COIN-M:</span>
+        <span class="allocation-value">${formatCurrency(coinmValue)} (${formatPercent(coinmPercent)})</span>
+      </div>
+    `;
+    
+    // Display test results if available
+    if (troubleshootData.test_results && troubleshootData.test_results.length > 0) {
+      displayTestResults(troubleshootData.test_results);
+    }
+  }
+
   // Display portfolio summary from new API
   function displayPortfolioSummary(summary) {
     const summaryPlaceholder = document.querySelector('.summary-placeholder');
@@ -1641,8 +1698,8 @@ function initializeTroubleshootPage() {
       
       console.log("🔍 Using account ID:", accountId);
 
-      // Call the new simplified troubleshoot endpoint
-      const response = await fetch(`${API_BASE}/troubleshoot-simple/${accountId}`, {
+      // Call the auth-api troubleshoot endpoint
+      const response = await fetch(`${API_BASE}/troubleshoot/${accountId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1656,22 +1713,17 @@ function initializeTroubleshootPage() {
 
       const result = await response.json();
       
-      if (result.success) {
-        // Update progress
-        testProgress.textContent = 'Analysis complete!';
-        
-        // Display results
-        displayPortfolioSummary(result.summary);
-        displayTestResults(result.test_results);
-        
-        // Update API key status
-        updateAPIKeyStatus(true, true);
-        updateAPIConnectionStatus('connected', `Account analysis completed successfully. Health: ${result.account_health}`);
-        
-        showToast('Account analysis completed successfully!', 'success');
-      } else {
-        throw new Error(result.error || 'Analysis failed');
-      }
+      // Update progress
+      testProgress.textContent = 'Analysis complete!';
+      
+      // Show basic account information in summary section
+      displayBasicAccountSummary(result);
+      
+      // Update API key status
+      updateAPIKeyStatus(true, true);
+      updateAPIConnectionStatus('connected', 'Account troubleshoot completed successfully');
+      
+      showToast('Account analysis completed successfully!', 'success');
 
     } catch (error) {
       console.error('❌ Analysis error:', error);
