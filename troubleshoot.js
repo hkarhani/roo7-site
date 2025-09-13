@@ -1441,6 +1441,27 @@ function initializeTroubleshootPage() {
     ).join(' ');
   }
 
+  // Map auth-api stage names to display categories
+  function mapStageToCategory(stage) {
+    switch (stage.toLowerCase()) {
+      case 'network_connectivity':
+        return 'Connectivity';
+      case 'api_key_validation':
+      case 'signature_validation':
+      case 'ip_whitelist_check':
+        return 'Authentication';
+      case 'permissions_check':
+      case 'account_access':
+        return 'Security';
+      case 'balance_retrieval':
+        return 'Balance Retrieval';
+      case 'price_data_access':
+        return 'Price Data Access';
+      default:
+        return 'General';
+    }
+  }
+
   function getTimeoutDiagnostics() {
     return `<div class="diagnostic-results">
       <div class="diagnostic-item error">
@@ -1619,14 +1640,25 @@ function initializeTroubleshootPage() {
     testPlaceholder.style.display = 'none';
     compactTestGrid.style.display = 'grid';
 
-    // Group tests by category
+    // Group tests by category - convert auth-api format to expected format
     const categories = {};
     testResults.forEach(test => {
-      const category = test.category || 'General';
+      // Map stage names to categories
+      const stage = test.stage || test.category || 'unknown';
+      const category = mapStageToCategory(stage);
+      const status = test.success !== undefined ? (test.success ? 'success' : 'failed') : (test.status || 'failed');
+      const name = formatStageTitle(stage);
+      
       if (!categories[category]) {
         categories[category] = [];
       }
-      categories[category].push(test);
+      
+      categories[category].push({
+        ...test,
+        status: status,
+        name: name,
+        category: category
+      });
     });
 
     // Generate HTML for each category with enhanced details
