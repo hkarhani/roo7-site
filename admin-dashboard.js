@@ -3203,9 +3203,6 @@ document.addEventListener("DOMContentLoaded", () => {
           color: '#3b82f6'
         }]);
         console.log('📊 Chart data set successfully with', chartData.length, 'points');
-        
-        // Add timezone indicator
-        addTimezoneIndicator();
       } else if (sourceAnalyticsChart) {
         sourceAnalyticsChart.showEmptyState();
         console.log('📊 Showing empty state - no data available');
@@ -3217,30 +3214,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Add timezone indicator to chart
-  function addTimezoneIndicator() {
-    // Remove existing indicator
-    const existing = document.querySelector('.timezone-indicator');
-    if (existing) {
-      existing.remove();
-    }
-    
-    // Get user's timezone
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const now = new Date();
-    const timezoneName = now.toLocaleDateString('en-US', {timeZoneName: 'short'}).split(', ')[1];
-    
-    // Create indicator element
-    const indicator = document.createElement('div');
-    indicator.className = 'timezone-indicator';
-    indicator.innerHTML = `📍 Times shown in your timezone (${timezoneName})`;
-    
-    // Find chart container and add indicator
-    const chartContainer = document.getElementById('source-analytics-chart');
-    if (chartContainer && chartContainer.parentNode) {
-      chartContainer.parentNode.insertBefore(indicator, chartContainer);
-    }
-  }
 
   function updateSourceAnalyticsStatusBadges(summary) {
     const currentTotalBadge = document.getElementById('source-current-total-badge');
