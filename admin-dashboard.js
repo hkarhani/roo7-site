@@ -2581,7 +2581,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function verifySourceAccount(accountId) {
     try {
       showNotification('Starting comprehensive account verification...', 'info');
-      
+
       const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}/verify`, {
         method: 'POST',
         headers: {
@@ -2591,10 +2591,31 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
-        showVerificationResults(data);
-        showNotification('Account verification completed successfully', 'success');
+        // Map source account data structure to match troubleshoot format for consistent display
+        const mappedData = {
+          success: data.success || data.verification_success,
+          account_name: data.account_info?.account_name || data.account_name || 'Source Account',
+          account_id: data.account_id,
+          account_type: data.account_type,
+          exchange: data.account_info?.exchange || 'binance',
+          is_account_active: !data.account_info?.is_disabled,
+          status_updated: true,
+          total_usdt_value: data.total_usdt_value,
+          api_key_valid: data.api_key_valid,
+          ip_whitelisted: data.ip_whitelisted,
+          execution_time_ms: data.execution_time_ms || 1000,
+          test_results: data.test_results || [],
+          balances: data.balances || [],
+          detailed_breakdown: data.detailed_breakdown,
+          recommendations: data.recommendations || [],
+          verified_at: data.verified_at,
+          admin_verification: data.admin_verification
+        };
+
+        showTroubleshootResults(mappedData);
+        showNotification('Source account verification completed successfully!', 'success');
       } else {
         console.error('❌ Failed to verify source account:', data.detail);
         showNotification('Failed to verify source account', 'error');
