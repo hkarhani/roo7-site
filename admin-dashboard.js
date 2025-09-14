@@ -2593,15 +2593,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        // DEBUG: Log the complete response structure
-        console.log('🔍 SOURCE ACCOUNT API RESPONSE:', JSON.stringify(data, null, 2));
-        console.log('🔍 DETAILED BREAKDOWN:', data.detailed_breakdown);
-        if (data.detailed_breakdown) {
-          console.log('🔍 SPOT DATA:', data.detailed_breakdown.SPOT);
-          console.log('🔍 USDT-M DATA:', data.detailed_breakdown['USDT-M']);
-          console.log('🔍 COIN-M DATA:', data.detailed_breakdown['COIN-M']);
-        }
-
         showVerificationResults(data);
         showNotification('Account verification completed successfully', 'success');
       } else {
@@ -2631,7 +2622,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h4>📊 Verification Summary</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 10px 0;">
             <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">
-              <div style="margin-bottom: 8px;"><strong>Account:</strong> ${data.account_name || 'N/A'}</div>
+              <div style="margin-bottom: 8px;"><strong>Account:</strong> ${data.account_info?.account_name || data.account_name || 'Source Account'}</div>
               <div style="margin-bottom: 8px;"><strong>Type:</strong> ${data.account_type || 'N/A'}</div>
               <div><strong>Status:</strong> <span style="color: ${data.verification_success ? '#28a745' : '#dc3545'};">${data.verification_success ? '✅ Success' : '❌ Failed'}</span></div>
             </div>
@@ -2648,14 +2639,14 @@ document.addEventListener("DOMContentLoaded", () => {
             <h4>📊 Account Breakdown</h4>
             
             <div class="breakdown-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-              <div><strong>SPOT Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.spot_value_usdt ?? data.spot_value ?? 0))}</div>
-              <div><strong>USDT-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.usdtm_value_usdt ?? data.futures_value ?? 0))}</div>
-              <div><strong>COIN-M Value:</strong> $${formatNumber((data.detailed_breakdown?.summary?.coinm_value_usdt ?? 0))}</div>
+              <div><strong>SPOT Value:</strong> $${formatNumber((data.detailed_breakdown?.SPOT?.assets || []).reduce((sum, asset) => sum + (asset.usdt_value || 0), 0))}</div>
+              <div><strong>USDT-M Value:</strong> $${formatNumber((data.detailed_breakdown?.['USDT-M']?.assets || []).reduce((sum, asset) => sum + (asset.usdt_value || 0), 0))}</div>
+              <div><strong>COIN-M Value:</strong> $${formatNumber((data.detailed_breakdown?.['COIN-M']?.assets || []).reduce((sum, asset) => sum + (asset.usdt_value || 0), 0))}</div>
             </div>
-          ${(data.detailed_breakdown?.spot || data.balances || data.balance_details) ? `
+          ${(data.detailed_breakdown?.SPOT || data.balances || data.balance_details) ? `
             <div class="result-section">
               <h5>💰 SPOT Account</h5>
-              ${(data.detailed_breakdown?.spot?.assets || data.balances || data.balance_details) && (data.detailed_breakdown?.spot?.assets?.length > 0 || data.balances?.length > 0 || data.balance_details?.length > 0) ? `
+              ${(data.detailed_breakdown?.SPOT?.assets || data.balances || data.balance_details) && (data.detailed_breakdown?.SPOT?.assets?.length > 0 || data.balances?.length > 0 || data.balance_details?.length > 0) ? `
                 <div style="max-height: 300px; overflow-y: auto; margin: 10px 0;">
                   <table style="width: 100%; border-collapse: collapse; font-size: 1em;">
                     <thead>
@@ -2667,7 +2658,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       </tr>
                     </thead>
                     <tbody>
-                      ${((data.detailed_breakdown?.spot?.assets || data.balances || data.balance_details || [])
+                      ${((data.detailed_breakdown?.SPOT?.assets || data.balances || data.balance_details || [])
                         .map(asset => {
                           const totalValue = data.total_usdt_value || data.detailed_breakdown?.summary?.total_value_usdt || 1;
                           const usdt_value = asset.usdt_value || asset.value_usdt || (asset.total * (asset.price || 1)) || 0;
