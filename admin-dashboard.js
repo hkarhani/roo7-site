@@ -2593,6 +2593,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
+        // DEBUG: Log the complete response structure
+        console.log('🔍 SOURCE ACCOUNT API RESPONSE:', JSON.stringify(data, null, 2));
+        console.log('🔍 DETAILED BREAKDOWN:', data.detailed_breakdown);
+        if (data.detailed_breakdown) {
+          console.log('🔍 SPOT DATA:', data.detailed_breakdown.SPOT);
+          console.log('🔍 USDT-M DATA:', data.detailed_breakdown['USDT-M']);
+          console.log('🔍 COIN-M DATA:', data.detailed_breakdown['COIN-M']);
+        }
+
         showVerificationResults(data);
         showNotification('Account verification completed successfully', 'success');
       } else {
