@@ -280,260 +280,539 @@
   </div>
 
   <main class="dashboard-container">
-    <!-- Jobs Manager Status -->
-    <section class="dashboard-card">
-      <div class="section-header">
-        <h2>📊 Jobs Manager Status</h2>
-        <button id="refresh-jobs-status" class="secondary-button">🔄 Refresh</button>
+    <!-- Summary Statistics -->
+    <section class="summary-stats" id="summary-stats">
+      <div class="stat-card stat-total">
+        <div class="stat-number" id="total-jobs">-</div>
+        <div class="stat-label">Total Jobs</div>
       </div>
-      <div id="jobs-status-container">
-        <div class="loading-state">
-          <p>Loading Jobs Manager status...</p>
-        </div>
+      <div class="stat-card stat-healthy">
+        <div class="stat-number" id="healthy-jobs">-</div>
+        <div class="stat-label">Healthy</div>
       </div>
-    </section>
-
-    <!-- Active Jobs Summary Stats -->
-    <section class="dashboard-card">
-      <div class="section-header">
-        <h2>📈 Active Jobs Summary</h2>
-        <button id="refresh-active-jobs-summary" class="secondary-button">🔄 Refresh</button>
+      <div class="stat-card stat-attention">
+        <div class="stat-number" id="attention-jobs">-</div>
+        <div class="stat-label">Need Attention</div>
       </div>
-      <div id="active-jobs-stats">
-        <div class="loading-state">
-          <p>Loading active jobs summary...</p>
-        </div>
+      <div class="stat-card stat-running">
+        <div class="stat-number" id="running-jobs">-</div>
+        <div class="stat-label">Running</div>
       </div>
     </section>
 
-    <!-- Active Jobs List -->
-    <section class="dashboard-card">
-      <div class="section-header">
-        <h2>⚡ Active Jobs</h2>
-        <div class="filters-bar">
-          <div class="filter-group">
-            <label for="job-status-filter">Job Status:</label>
-            <select id="job-status-filter">
-              <option value="">All</option>
-              <option value="ACTIVE">Active</option>
-              <option value="PAUSED">Paused</option>
-              <option value="DISABLED">Disabled</option>
-              <option value="STALLED">Stalled</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="run-status-filter">Run Status:</label>
-            <select id="run-status-filter">
-              <option value="">All</option>
-              <option value="IDLE">Idle</option>
-              <option value="RUNNING">Running</option>
-              <option value="FAILED">Failed</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="user-name-filter">User:</label>
-            <input type="text" id="user-name-filter" placeholder="Username..." />
-          </div>
-          <div class="filter-group">
-            <label for="account-name-filter">Account:</label>
-            <input type="text" id="account-name-filter" placeholder="Account name..." />
-          </div>
-          <button id="apply-filters" class="secondary-button">Apply Filters</button>
-          <button id="refresh-active-jobs" class="secondary-button">🔄 Refresh</button>
-        </div>
+    <!-- Filters and Controls -->
+    <section class="filters-bar">
+      <div class="filter-group">
+        <label for="filter-status">Status:</label>
+        <select id="filter-status">
+          <option value="">All</option>
+          <option value="healthy">Healthy</option>
+          <option value="needs-attention">Need Attention</option>
+          <option value="running">Running</option>
+        </select>
       </div>
-
-      <div class="table-container">
-        <table id="active-jobs-table">
-          <thead>
-            <tr>
-              <th>Account ID</th>
-              <th>User</th>
-              <th>Account Name</th>
-              <th>Strategy</th>
-              <th>Job Status</th>
-              <th>Run Status</th>
-              <th>Value</th>
-              <th>Schedule</th>
-              <th>Success</th>
-              <th>Failures</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="11" class="loading-message">Loading active jobs...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="filter-group">
+        <label for="filter-type">Type:</label>
+        <select id="filter-type">
+          <option value="">All Types</option>
+          <option value="TRADING">Trading</option>
+          <option value="DATA_COLLECTION">Data Collection</option>
+          <option value="FUTURES_TRADING">Futures Trading</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="search-account">Search:</label>
+        <input type="text" id="search-account" placeholder="Account name..." />
+      </div>
+      <div class="filter-group">
+        <button id="reset-filters" class="secondary-button">Reset</button>
+        <button id="auto-refresh-toggle" class="secondary-button">Auto-refresh: Off</button>
       </div>
     </section>
 
-    <!-- Job Execution History -->
-    <section class="dashboard-card">
-      <div class="section-header">
-        <h2>📋 Job Execution History</h2>
-        <div class="filters-bar">
-          <div class="filter-group">
-            <label for="history-account-filter">Account:</label>
-            <select id="history-account-filter">
-              <option value="">All Accounts</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="history-status-filter">Status:</label>
-            <select id="history-status-filter">
-              <option value="">All</option>
-              <option value="SUCCEEDED">Succeeded</option>
-              <option value="FAILED">Failed</option>
-              <option value="RUNNING">Running</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="history-limit">Limit:</label>
-            <input type="number" id="history-limit" value="50" min="10" max="500" />
-          </div>
-          <button id="load-job-history" class="secondary-button">Load History</button>
-          <button id="download-history-csv" class="secondary-button" style="display: none;">📥 Download CSV</button>
-        </div>
+    <!-- Active Jobs Grid -->
+    <section id="active-jobs-section">
+      <div id="jobs-loading" class="text-center" style="padding: 40px;">
+        <div class="loading-spinner"></div>
+        <p style="margin-top: 10px;">Loading active jobs...</p>
       </div>
-
-      <div class="table-container">
-        <table id="job-history-table">
-          <thead>
-            <tr>
-              <th>Execution ID</th>
-              <th>Account</th>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Duration</th>
-              <th>Worker</th>
-              <th>Result</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="8" class="loading-message">Job execution history will appear here</td>
-            </tr>
-          </tbody>
-        </table>
+      
+      <div id="jobs-grid" class="jobs-grid" style="display: none;">
+        <!-- Jobs will be populated here -->
+      </div>
+      
+      <div id="jobs-empty" class="empty-state" style="display: none;">
+        <div class="empty-state-icon">📋</div>
+        <h3>No Active Jobs Found</h3>
+        <p>No jobs match the current filters or there are no active jobs in the system.</p>
       </div>
     </section>
   </main>
 
+  <script>
+    let activeJobs = [];
+    let filteredJobs = [];
+    let autoRefreshInterval = null;
+    let lastRefreshTime = null;
+    
+    // Caching to reduce API calls
+    const CACHE_DURATION = 15000; // 15 seconds for jobs list
+    let jobsCache = null;
+    let jobsCacheTime = 0;
 
-  <!-- Modals -->
-  <!-- Job Action Confirmation Modal -->
-  <div id="job-action-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="job-action-title">Confirm Action</h3>
-        <span class="close">&times;</span>
-      </div>
-      <div class="modal-body">
-        <p id="job-action-message">Are you sure you want to perform this action?</p>
-        <div class="action-details">
-          <p><strong>Account ID:</strong> <span id="action-account-id"></span></p>
-          <p><strong>Account Name:</strong> <span id="action-account-name"></span></p>
-          <p><strong>Current Status:</strong> <span id="action-current-status"></span></p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="confirm-job-action" class="primary-button">Confirm</button>
-        <button id="cancel-job-action" class="secondary-button">Cancel</button>
-      </div>
-    </div>
-  </div>
+    // Configuration
+    const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+    
+    // Wait for config to load
+    let CONFIG = null;
+    window.addEventListener('load', () => {
+      CONFIG = window;
+    });
 
-  <!-- Job Details Modal -->
-  <div id="job-details-modal" class="modal" style="display: none;">
-    <div class="modal-content large">
-      <div class="modal-header">
-        <h3 id="job-details-title">Job Details</h3>
-        <span class="close">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div id="job-details-content">
-          <div class="loading-state">
-            <p>Loading job details...</p>
+    // Initialize the dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+      setupEventListeners();
+      // Wait for config to be available before loading
+      setTimeout(() => {
+        if (window.CONFIG_UTILS) {
+          CONFIG = window;
+          loadActiveJobs();
+        } else {
+          console.error('Config not loaded, retrying...');
+          setTimeout(() => {
+            CONFIG = window;
+            loadActiveJobs();
+          }, 1000);
+        }
+      }, 100);
+    });
+
+    function setupEventListeners() {
+      // Navigation
+      document.getElementById('back-to-admin').addEventListener('click', () => {
+        window.location.href = 'admin-dashboard.html';
+      });
+
+      // Refresh controls
+      document.getElementById('refresh-all').addEventListener('click', () => loadActiveJobs(true));
+      document.getElementById('auto-refresh-toggle').addEventListener('click', toggleAutoRefresh);
+
+      // Filters
+      document.getElementById('filter-status').addEventListener('change', applyFilters);
+      document.getElementById('filter-type').addEventListener('change', applyFilters);
+      document.getElementById('search-account').addEventListener('input', debounce(applyFilters, 300));
+      document.getElementById('reset-filters').addEventListener('click', resetFilters);
+
+      // Theme and logout
+      document.getElementById('toggle-theme').addEventListener('click', toggleTheme);
+      document.getElementById('logout-btn').addEventListener('click', logout);
+    }
+
+    async function loadActiveJobs(forceRefresh = false) {
+      try {
+        // Check cache first if not forced refresh
+        const now = Date.now();
+        if (!forceRefresh && jobsCache && (now - jobsCacheTime) < CACHE_DURATION) {
+          console.log('Using cached jobs data');
+          const data = jobsCache;
+          activeJobs = data.active_jobs || [];
+          updateSummaryStats(data.summary || {});
+          applyFilters();
+          return;
+        }
+        
+        showLoading();
+        console.log('Fetching fresh jobs data from API');
+        
+        const token = getAuthToken();
+        const response = await fetch(`https://api.roo7.site:8004/admin/jobs-manager/frontend/active-jobs-enhanced`, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: getAuthHeaders(token)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        // Update cache
+        jobsCache = data;
+        jobsCacheTime = now;
+        
+        activeJobs = data.active_jobs || [];
+        
+        updateSummaryStats(data.summary || {});
+        applyFilters();
+        updateLastRefreshTime();
+        
+      } catch (error) {
+        console.error('Error loading active jobs:', error);
+        showError('Failed to load active jobs: ' + error.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function updateSummaryStats(summary) {
+      document.getElementById('total-jobs').textContent = summary.total || 0;
+      document.getElementById('healthy-jobs').textContent = summary.healthy || 0;
+      document.getElementById('attention-jobs').textContent = summary.needs_attention || 0;
+      document.getElementById('running-jobs').textContent = summary.running || 0;
+    }
+
+    function applyFilters() {
+      const statusFilter = document.getElementById('filter-status').value;
+      const typeFilter = document.getElementById('filter-type').value;
+      const searchFilter = document.getElementById('search-account').value.toLowerCase();
+
+      filteredJobs = activeJobs.filter(job => {
+        const statusMatch = !statusFilter || 
+          (statusFilter === 'healthy' && job.is_healthy) ||
+          (statusFilter === 'needs-attention' && job.needs_attention) ||
+          (statusFilter === 'running' && job.is_running);
+
+        const typeMatch = !typeFilter || job.job_type === typeFilter;
+        const searchMatch = !searchFilter || 
+          job.account_name.toLowerCase().includes(searchFilter) ||
+          job.account_id.toLowerCase().includes(searchFilter);
+
+        return statusMatch && typeMatch && searchMatch;
+      });
+
+      renderJobsGrid();
+    }
+
+    function renderJobsGrid() {
+      const container = document.getElementById('jobs-grid');
+      const emptyState = document.getElementById('jobs-empty');
+      
+      if (filteredJobs.length === 0) {
+        container.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      container.style.display = 'grid';
+      emptyState.style.display = 'none';
+      
+      container.innerHTML = filteredJobs.map(job => createJobCard(job)).join('');
+      
+      // Add event listeners to job cards
+      filteredJobs.forEach(job => {
+        const card = document.getElementById(`job-${job.account_id}`);
+        if (card) {
+          setupJobCardListeners(card, job);
+        }
+      });
+    }
+
+    function createJobCard(job) {
+      // Determine card color based on job running status and last execution result
+      const cardClass = job.is_running ? 'running' : 
+                       job.last_execution_status === 'SUCCEEDED' ? 'healthy' : 
+                       job.last_execution_status === 'FAILED' ? 'failed' : 
+                       job.needs_attention ? 'needs-attention' : 'healthy';
+
+      const statusBadge = job.is_running ? 'status-running' : 
+                         job.last_execution_status === 'SUCCEEDED' ? 'status-healthy' : 
+                         job.last_execution_status === 'FAILED' ? 'status-failed' : 
+                         job.needs_attention ? 'status-attention' : 'status-healthy';
+
+      const statusText = job.is_running ? '🔄 Running' : 
+                        job.last_execution_status === 'SUCCEEDED' ? '✅ Success' : 
+                        job.last_execution_status === 'FAILED' ? '❌ Failed' : 
+                        job.needs_attention ? '⚠️ Attention' : '✅ Ready';
+
+      const lastExecution = job.last_execution || {};
+      const nextRun = job.next_run_at ? new Date(job.next_run_at) : null;
+      const lastRun = job.last_run_at ? new Date(job.last_run_at) : null;
+
+      return `
+        <div class="job-card ${cardClass}" id="job-${job.account_id}">
+          <div class="job-header">
+            <h3 class="job-title">${escapeHtml(job.account_name)}</h3>
+            <div class="job-status">
+              <span class="status-badge ${statusBadge}">${statusText}</span>
+            </div>
+          </div>
+          
+          <div class="job-details">
+            <div class="detail-item">
+              <span class="detail-label">Strategy</span>
+              <span class="detail-value">${escapeHtml(job.strategy)}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Hedge %</span>
+              <span class="detail-value">${job.hedge_percent}%</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Cadence</span>
+              <span class="detail-value">${job.cadence_minutes} min</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Job Type</span>
+              <span class="detail-value">${job.job_type}</span>
+            </div>
+          </div>
+
+          <div class="job-metrics">
+            <div class="metric">
+              <div class="metric-value">${job.success_rate_percent || 0}%</div>
+              <div class="metric-label">Success Rate</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">${job.consecutive_failures || 0}</div>
+              <div class="metric-label">Failures</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">${job.recent_executions_count || 0}</div>
+              <div class="metric-label">Recent Runs</div>
+            </div>
+          </div>
+
+          <div class="job-details">
+            <div class="detail-item">
+              <span class="detail-label">Next Run</span>
+              <span class="detail-value">${nextRun ? formatRelativeTime(nextRun) : 'Not scheduled'}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Last Run</span>
+              <span class="detail-value">${lastRun ? formatRelativeTime(lastRun) : 'Never'}</span>
+            </div>
+          </div>
+
+          <div class="job-actions">
+            <button class="btn-primary view-details-btn" data-account-id="${job.account_id}">
+              📊 View Details
+            </button>
+            <button class="btn-success force-run-btn" data-account-id="${job.account_id}" 
+                    ${job.is_running ? 'disabled' : ''}>
+              ▶️ ${job.is_running ? 'Running...' : 'Force Run'}
+            </button>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+      `;
+    }
 
-  <!-- Execution Details Modal -->
-  <div id="execution-details-modal" class="modal" style="display: none;">
-    <div class="modal-content large">
-      <div class="modal-header">
-        <h3>Execution Details</h3>
-        <span class="close">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div id="execution-details-content">
-          <div class="loading-state">
-            <p>Loading execution details...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    function setupJobCardListeners(card, job) {
+      // View details button
+      const viewDetailsBtn = card.querySelector('.view-details-btn');
+      if (viewDetailsBtn) {
+        viewDetailsBtn.addEventListener('click', () => {
+          window.location.href = `active_job_details.html?account_id=${encodeURIComponent(job.account_id)}`;
+        });
+      }
 
-  <!-- Audit Changes Modal -->
-  <div id="audit-changes-modal" class="modal" style="display: none;">
-    <div class="modal-content large">
-      <div class="modal-header">
-        <h3>Audit Changes</h3>
-        <span class="close" id="audit-changes-close">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="filters-bar" style="margin-bottom: 20px;">
-          <div class="filter-group">
-            <label for="audit-change-type-filter">Change Type:</label>
-            <select id="audit-change-type-filter">
-              <option value="">All Types</option>
-              <option value="job_created">Job Created</option>
-              <option value="configuration_change">Config Change</option>
-              <option value="status_change">Status Change</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="audit-account-filter">Account:</label>
-            <select id="audit-account-filter">
-              <option value="">All Accounts</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="audit-limit">Limit:</label>
-            <input type="number" id="audit-limit" value="100" min="10" max="1000" />
-          </div>
-          <button id="load-audit-changes" class="secondary-button">Load Changes</button>
-          <button id="download-audit-csv" class="secondary-button" style="display: none;">📥 Download CSV</button>
-        </div>
+      // Force run button
+      const forceRunBtn = card.querySelector('.force-run-btn');
+      if (forceRunBtn && !job.is_running) {
+        forceRunBtn.addEventListener('click', () => forceJobExecution(job.account_id));
+      }
+    }
 
-        <div class="table-container">
-          <table id="audit-changes-table">
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Change Type</th>
-                <th>Account Name</th>
-                <th>Account ID</th>
-                <th>User ID</th>
-                <th>Details</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="7" class="loading-message">Audit changes will appear here</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+    async function forceJobExecution(accountId) {
+      try {
+        const token = getAuthToken();
+        const response = await fetch(`https://api.roo7.site:8004/admin/jobs-manager/force-execution/${accountId}`, {
+          method: 'POST',
+          mode: 'cors',
+          credentials: 'include',
+          headers: getAuthHeaders(token)
+        });
+
+        if (response.ok) {
+          showSuccess('Job execution started successfully');
+          setTimeout(loadActiveJobs, 2000); // Refresh after 2 seconds
+        } else {
+          const error = await response.text();
+          throw new Error(error);
+        }
+      } catch (error) {
+        console.error('Error forcing job execution:', error);
+        showError('Failed to start job execution: ' + error.message);
+      }
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-type').value = '';
+      document.getElementById('search-account').value = '';
+      applyFilters();
+    }
+
+    function toggleAutoRefresh() {
+      const button = document.getElementById('auto-refresh-toggle');
+      
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        button.textContent = 'Auto-refresh: Off';
+        button.classList.remove('active');
+      } else {
+        autoRefreshInterval = setInterval(loadActiveJobs, AUTO_REFRESH_INTERVAL);
+        button.textContent = 'Auto-refresh: On';
+        button.classList.add('active');
+      }
+    }
+
+    function updateLastRefreshTime() {
+      lastRefreshTime = new Date();
+      document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime);
+    }
+
+    function showLoading() {
+      document.getElementById('jobs-loading').style.display = 'block';
+      document.getElementById('jobs-grid').style.display = 'none';
+      document.getElementById('jobs-empty').style.display = 'none';
+    }
+
+    function hideLoading() {
+      document.getElementById('jobs-loading').style.display = 'none';
+    }
+
+    // Utility functions
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString(undefined, { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        timeZoneName: 'short'
+      });
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return 'N/A';
+      
+      // Handle both ISO strings and timestamps
+      let date;
+      if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        // ISO string format - ensure it's treated as UTC if no timezone info
+        if (!dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.includes('-', dateStr.indexOf('T'))) {
+          dateStr = dateStr + 'Z'; // Add Z to indicate UTC
+        }
+        date = new Date(dateStr);
+      } else {
+        date = new Date(dateStr);
+      }
+      
+      // Verify date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateStr);
+        return 'Invalid Date';
+      }
+      
+      // Format in local timezone with timezone indicator
+      return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZoneName: 'short'
+      });
+    }
+
+    function formatRelativeTime(date) {
+      // Ensure we have a proper Date object with timezone handling
+      if (typeof date === 'string') {
+        // Handle UTC timestamp strings properly
+        if (date.includes('T') && !date.includes('Z') && !date.includes('+') && !date.includes('-', date.indexOf('T'))) {
+          date = date + 'Z'; // Add Z to indicate UTC
+        }
+        date = new Date(date);
+      }
+      
+      const now = new Date();
+      const diff = now.getTime() - date.getTime(); // Switch order for proper "ago" calculation
+      const absDiff = Math.abs(diff);
+      
+      if (absDiff < 60000) return diff < 0 ? 'Soon' : 'Just now';
+      if (absDiff < 3600000) {
+        const mins = Math.floor(absDiff / 60000);
+        return diff < 0 ? `In ${mins}m` : `${mins}m ago`;
+      }
+      if (absDiff < 86400000) {
+        const hours = Math.floor(absDiff / 3600000);
+        return diff < 0 ? `In ${hours}h` : `${hours}h ago`;
+      }
+      if (absDiff < 604800000) { // 7 days
+        const days = Math.floor(absDiff / 86400000);
+        return diff < 0 ? `In ${days}d` : `${days}d ago`;
+      }
+      
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    function getAuthToken() {
+      return localStorage.getItem("token");
+    }
+    
+    function getAuthHeaders(token) {
+      return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+    }
+
+    function showSuccess(message) {
+      // Implement success notification
+      console.log('Success:', message);
+    }
+
+    function showError(message) {
+      // Implement error notification
+      console.error('Error:', message);
+    }
+
+    function toggleTheme() {
+      if (window.themeManager) {
+        window.themeManager.toggleTheme();
+      } else {
+        console.error('Theme manager not available');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_token');
+      window.location.href = 'auth.html';
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+    });
+  </script>
 </body>
 </html>
