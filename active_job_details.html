@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
   <!-- JS Functions Fixed v1.4 - Fixed API endpoint to use jobs-manager port 8004 -->
-  <script type="module" src="frontend-config.js?v=2.9"></script>
+  <script type="module" src="frontend-config.js?v=3.0"></script>
   <script src="theme-manager.js?v=1.2"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
@@ -775,7 +775,7 @@
     let selectedExecution = null;
 
     // Configuration - Direct port 8004 access to jobs-manager service
-    const API_BASE = 'https://api.roo7.site:8004/admin/jobs-manager';
+    const API_BASE = 'https://api.roo7.site:8004';
     
     // Simple caching to reduce API calls
     const CACHE_DURATION = 30000; // 30 seconds
