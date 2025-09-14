@@ -2279,7 +2279,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       ${result.detailed_breakdown['COIN-M'].assets.map(asset => `
                         <tr>
                           <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.walletBalance || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.balance || 0)}</td>
                           <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(asset.unrealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">${formatNumber(asset.unrealizedPnL || 0)}</td>
                           <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
                         </tr>
@@ -2825,7 +2825,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       ${data.detailed_breakdown['COIN-M'].assets.map(asset => `
                         <tr>
                           <td style="padding: 10px; border: 1px solid #ddd;"><strong>${asset.asset}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.walletBalance || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(asset.balance || 0)}</td>
                           <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(asset.unrealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">${formatNumber(asset.unrealizedPnL || 0)}</td>
                           <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(asset.usdt_value || 0)}</strong></td>
                         </tr>
