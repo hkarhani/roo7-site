@@ -292,147 +292,224 @@ class JobsManagerDashboard {
     }
 
     renderJobsManagerStatus(data) {
-        const container = document.getElementById('jobs-status-container');
-        
+        // Update individual stat elements instead of a container that doesn't exist
         if (!data.available) {
-            container.innerHTML = `
-                <div class="jobs-error">
-                    <h4>❌ Jobs Manager Not Available</h4>
-                    <p>Jobs Manager is not available: ${data.error || 'Unknown error'}</p>
-                </div>
-            `;
+            console.error('Jobs Manager not available:', data.error || 'Unknown error');
             return;
         }
 
         const isRunning = data.running;
-        const statusClass = isRunning ? 'running' : 'stopped';
-        
-        container.innerHTML = `
-            <div class="status-card">
-                <h4>Service Status</h4>
-                <div class="status-value ${statusClass}">
-                    ${isRunning ? '🟢 Running' : '🔴 Stopped'}
-                </div>
-                <div class="status-meta">
-                    Worker ID: ${data.worker_id || 'N/A'}
-                </div>
-            </div>
-            
-            ${isRunning ? `
-                <div class="status-card">
-                    <h4>Uptime</h4>
-                    <div class="status-value">
-                        ${this.formatDuration(data.uptime_seconds || 0)}
-                    </div>
-                    <div class="status-meta">
-                        Started: ${data.started_at ? this.formatDateTime(data.started_at) : 'N/A'}
-                    </div>
-                </div>
-                
-                <div class="status-card">
-                    <h4>Cycle Statistics</h4>
-                    <div class="status-value">
-                        ${data.cycles_completed || 0} cycles
-                    </div>
-                    <div class="status-meta">
-                        Last cycle: ${data.last_cycle_at ? this.formatDateTime(data.last_cycle_at) : 'N/A'}
-                    </div>
-                </div>
-                
-                <div class="status-card">
-                    <h4>Job Statistics</h4>
-                    <div class="status-value">
-                        ${data.jobs_processed || 0} processed
-                    </div>
-                    <div class="status-meta">
-                        Success: ${data.successful_executions || 0} | Failed: ${data.failed_executions || 0}
-                    </div>
-                </div>
-            ` : ''}
-        `;
+        console.log(`Jobs Manager Status: ${isRunning ? '🟢 Running' : '🔴 Stopped'}`);
+        // Status display removed since HTML doesn't have jobs-status-container
     }
 
     renderActiveJobsSummary(data) {
-        const container = document.getElementById('active-jobs-stats');
-        
         // Debug: Log the actual data structure received
         console.log('📊 Active Jobs Summary Data:', JSON.stringify(data, null, 2));
-        
+
         if (data.error) {
-            container.innerHTML = `
-                <div class="jobs-error">
-                    Failed to load summary: ${data.error}
-                </div>
-            `;
+            console.error('Failed to load summary:', data.error);
             return;
         }
 
         const jobsByStatus = data.active_jobs_by_status || {};
         const jobsByRunStatus = data.active_jobs_by_run_status || {};
-        
+
         // Debug: Log the parsed data
         console.log('📊 Jobs by Status:', jobsByStatus);
         console.log('📊 Jobs by Run Status:', jobsByRunStatus);
-        
-        container.innerHTML = `
-            <div class="stat-card">
-                <div class="stat-number active">${jobsByStatus.ACTIVE || 0}</div>
-                <div class="stat-label">Active Jobs</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number paused">${jobsByStatus.PAUSED || 0}</div>
-                <div class="stat-label">Paused Jobs</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number disabled">${jobsByStatus.DISABLED || 0}</div>
-                <div class="stat-label">Disabled Jobs</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number stalled">${jobsByStatus.STALLED || 0}</div>
-                <div class="stat-label">Stalled Jobs</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number running">${jobsByRunStatus.RUNNING || 0}</div>
-                <div class="stat-label">Currently Running</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number failed">${jobsByRunStatus.FAILED || 0}</div>
-                <div class="stat-label">Failed Jobs</div>
-            </div>
-        `;
+
+        // Update the stat elements that actually exist in the HTML
+        document.getElementById('total-jobs').textContent = (jobsByStatus.ACTIVE || 0) + (jobsByStatus.PAUSED || 0);
+        document.getElementById('healthy-jobs').textContent = jobsByRunStatus.IDLE || 0;
+        document.getElementById('attention-jobs').textContent = data.overdue_jobs || 0;
+        document.getElementById('running-jobs').textContent = jobsByRunStatus.RUNNING || 0;
     }
 
     renderActiveJobsList(accounts) {
-        const tbody = document.querySelector('#active-jobs-table tbody');
+        const container = document.getElementById('jobs-grid');
+        const emptyState = document.getElementById('jobs-empty');
         
         if (!accounts || accounts.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="11" class="jobs-empty">
-                        <div class="jobs-empty-icon">📭</div>
-                        <p>No active jobs found</p>
-                    </td>
-                </tr>
-            `;
+            container.style.display = 'none';
+            emptyState.style.display = 'block';
             return;
         }
 
-        tbody.innerHTML = accounts.map(account => {
-            const nextRun = account.next_run_at ? this.formatDateTime(account.next_run_at) : 'Not scheduled';
-            const lastRun = account.last_run_at ? this.formatDateTime(account.last_run_at) : 'Never';
-            
-            // Use actual failed jobs count from backend instead of consecutive_failures
-            const successfulJobs = account.successful_jobs_count || 0;
-            const failedJobs = account.failed_jobs_count || 0;
-            
-            const statusClass = account.status ? account.status.toLowerCase() : 'active';
-            const runStatusClass = account.run_status ? account.run_status.toLowerCase() : 'idle';
-            
-            // Format account value - try multiple possible fields
-            const currentValue = account.current_total_value || account.last_value || account.account_value;
-            const formattedValue = currentValue ? `$${parseFloat(currentValue).toFixed(2)}` : 'N/A';
-            
-            // Style the success and failure counts
+        container.style.display = 'grid';
+        emptyState.style.display = 'none';
+
+        // Use the existing createJobCard function from HTML
+        container.innerHTML = accounts.map(account => {
+            // Convert account data to format expected by createJobCard
+            const job = {
+                account_id: account.account_id,
+                account_name: account.account_name,
+                strategy: account.strategy,
+                hedge_percent: account.hedge_percent,
+                cadence_minutes: account.cadence_minutes,
+                job_type: account.job_type,
+                success_rate_percent: account.success_rate_percent || 0,
+                consecutive_failures: account.consecutive_failures || 0,
+                recent_executions_count: account.recent_executions_count || 0,
+                next_run_at: account.next_run_at,
+                last_run_at: account.last_run_at,
+                is_running: account.run_status === 'RUNNING',
+                last_execution_status: account.last_execution_result || 'UNKNOWN',
+                needs_attention: account.consecutive_failures > 0
+            };
+
+            return this.createJobCard(job);
+        }).join('');
+
+        // Add event listeners
+        accounts.forEach(account => {
+            const card = document.getElementById(`job-${account.account_id}`);
+            if (card) {
+                this.setupJobCardListeners(card, account);
+            }
+        });
+    }
+
+    // Add createJobCard and setupJobCardListeners functions to match HTML structure
+    createJobCard(job) {
+        // This function should match the one in the HTML - copying the implementation
+        const cardClass = job.is_running ? 'running' :
+                         job.last_execution_status === 'SUCCEEDED' ? 'healthy' :
+                         job.last_execution_status === 'FAILED' ? 'failed' :
+                         job.needs_attention ? 'needs-attention' : 'healthy';
+
+        const statusBadge = job.is_running ? 'status-running' :
+                           job.last_execution_status === 'SUCCEEDED' ? 'status-healthy' :
+                           job.last_execution_status === 'FAILED' ? 'status-failed' :
+                           job.needs_attention ? 'status-attention' : 'status-healthy';
+
+        const statusText = job.is_running ? '🔄 Running' :
+                          job.last_execution_status === 'SUCCEEDED' ? '✅ Success' :
+                          job.last_execution_status === 'FAILED' ? '❌ Failed' :
+                          job.needs_attention ? '⚠️ Attention' : '✅ Ready';
+
+        const nextRun = job.next_run_at ? new Date(job.next_run_at) : null;
+        const lastRun = job.last_run_at ? new Date(job.last_run_at) : null;
+
+        return `
+          <div class="job-card ${cardClass}" id="job-${job.account_id}">
+            <div class="job-header">
+              <h3 class="job-title">${job.account_name}</h3>
+              <div class="job-status">
+                <span class="status-badge ${statusBadge}">${statusText}</span>
+              </div>
+            </div>
+
+            <div class="job-details">
+              <div class="detail-item">
+                <span class="detail-label">Strategy</span>
+                <span class="detail-value">${job.strategy}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Hedge %</span>
+                <span class="detail-value">${job.hedge_percent}%</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Cadence</span>
+                <span class="detail-value">${job.cadence_minutes} min</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Job Type</span>
+                <span class="detail-value">${job.job_type}</span>
+              </div>
+            </div>
+
+            <div class="job-metrics">
+              <div class="metric">
+                <div class="metric-value">${job.success_rate_percent || 0}%</div>
+                <div class="metric-label">Success Rate</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">${job.consecutive_failures || 0}</div>
+                <div class="metric-label">Failures</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">${job.recent_executions_count || 0}</div>
+                <div class="metric-label">Recent Runs</div>
+              </div>
+            </div>
+
+            <div class="job-details">
+              <div class="detail-item">
+                <span class="detail-label">Next Run</span>
+                <span class="detail-value">${nextRun ? this.formatRelativeTime(nextRun) : 'Not scheduled'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Last Run</span>
+                <span class="detail-value">${lastRun ? this.formatRelativeTime(lastRun) : 'Never'}</span>
+              </div>
+            </div>
+
+            <div class="job-actions">
+              <button class="btn-primary view-details-btn" data-account-id="${job.account_id}">
+                📊 View Details
+              </button>
+              <button class="btn-success force-run-btn" data-account-id="${job.account_id}"
+                      ${job.is_running ? 'disabled' : ''}>
+                ▶️ ${job.is_running ? 'Running...' : 'Force Run'}
+              </button>
+            </div>
+          </div>
+        `;
+    }
+
+    setupJobCardListeners(card, job) {
+        // View details button
+        const viewDetailsBtn = card.querySelector('.view-details-btn');
+        if (viewDetailsBtn) {
+            viewDetailsBtn.addEventListener('click', () => {
+                window.location.href = `active_job_details.html?account_id=${encodeURIComponent(job.account_id)}`;
+            });
+        }
+
+        // Force run button
+        const forceRunBtn = card.querySelector('.force-run-btn');
+        if (forceRunBtn && !job.is_running) {
+            forceRunBtn.addEventListener('click', () => this.forceJobExecution(job.account_id));
+        }
+    }
+
+    // Utility functions for job cards
+    formatRelativeTime(date) {
+        if (typeof date === 'string') {
+            if (date.includes('T') && !date.includes('Z') && !date.includes('+') && !date.includes('-', date.indexOf('T'))) {
+                date = date + 'Z';
+            }
+            date = new Date(date);
+        }
+
+        const now = new Date();
+        const diff = now.getTime() - date.getTime();
+        const absDiff = Math.abs(diff);
+
+        if (absDiff < 60000) return diff < 0 ? 'Soon' : 'Just now';
+        if (absDiff < 3600000) {
+            const mins = Math.floor(absDiff / 60000);
+            return diff < 0 ? `In ${mins}m` : `${mins}m ago`;
+        }
+        if (absDiff < 86400000) {
+            const hours = Math.floor(absDiff / 3600000);
+            return diff < 0 ? `In ${hours}h` : `${hours}h ago`;
+        }
+        if (absDiff < 604800000) {
+            const days = Math.floor(absDiff / 86400000);
+            return diff < 0 ? `In ${days}d` : `${days}d ago`;
+        }
+
+        return date.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    renderJobHistoryPlaceholder() {
             const successfulStyle = successfulJobs > 0 ? 'color: #10b981; font-weight: 600;' : '';
             const failedStyle = failedJobs > 0 ? 'color: #ef4444; font-weight: 600;' : '';
             

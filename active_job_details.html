@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
   <!-- JS Functions Fixed v1.4 - Fixed API endpoint to use jobs-manager port 8004 -->
-  <script type="module" src="frontend-config.js?v=3.2"></script>
+  <script type="module" src="frontend-config.js?v=3.3"></script>
   <script src="theme-manager.js?v=1.2"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
@@ -1236,7 +1236,7 @@
       `;
 
       try {
-        const apiUrl = `https://api.roo7.site:8004/admin/jobs/execution/${executionId}/logs`;
+        const apiUrl = `${API_BASE}/execution/${executionId}/logs`;
         console.log('🌐 Making API call to:', apiUrl);
 
         // Load detailed logs for this execution from jobs-manager service
