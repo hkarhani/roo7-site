@@ -7,8 +7,8 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
-  <!-- JS Functions Fixed v1.3 - View Logs Button Fix -->
-  <script type="module" src="frontend-config.js?v=2.8"></script>
+  <!-- JS Functions Fixed v1.4 - Fixed API endpoint to use jobs-manager port 8004 -->
+  <script type="module" src="frontend-config.js?v=2.9"></script>
   <script src="theme-manager.js?v=1.2"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.4" />
@@ -1214,6 +1214,8 @@
     }
 
     async function selectExecution(executionId) {
+      console.log('🚀 selectExecution called with executionId:', executionId);
+
       // Update UI selection
       document.querySelectorAll('.execution-item').forEach(item => {
         item.classList.remove('selected');
@@ -1221,6 +1223,7 @@
       document.querySelector(`[data-execution-id="${executionId}"]`).classList.add('selected');
 
       selectedExecution = executionHistory.find(ex => ex._id === executionId);
+      console.log('🔍 Found selectedExecution:', selectedExecution);
       
       // Show loading state
       document.getElementById('execution-details-empty').style.display = 'none';
@@ -1233,8 +1236,11 @@
       `;
 
       try {
-        // Load detailed logs for this execution from auth-api service (not jobs-manager)
-        const response = await fetch(`https://api.roo7.site:443/admin/jobs/execution/${executionId}/logs`, {
+        const apiUrl = `${API_BASE}/admin/jobs/execution/${executionId}/logs`;
+        console.log('🌐 Making API call to:', apiUrl);
+
+        // Load detailed logs for this execution from jobs-manager service
+        const response = await fetch(apiUrl, {
           method: 'GET',
           mode: 'cors',
           credentials: 'include',
