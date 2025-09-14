@@ -460,8 +460,14 @@ class JobsManagerDashboard {
                 📊 View Details
               </button>
               <button class="btn-success force-run-btn" data-account-id="${job.account_id}"
-                      ${job.is_running ? 'disabled' : ''}>
+                      ${job.is_running ? 'disabled="disabled"' : ''}>
                 ▶️ ${job.is_running ? 'Running...' : 'Force Run'}
+              </button>
+              <button class="job-action-btn delete delete-job-btn"
+                      data-account-id="${job.account_id}"
+                      data-job-id="${job._id}"
+                      title="Delete this active job">
+                🗑️ Delete
               </button>
             </div>
           </div>
@@ -1768,6 +1774,9 @@ class JobsManagerDashboard {
             button.disabled = true;
             button.textContent = '🔄 Syncing...';
 
+            // Show toast notification that command was received
+            this.showToast('📤 Force sync command sent to backend...', 'info');
+
             const response = await fetch(getApiUrl('/admin/user-account-sync/force'), {
                 method: 'POST',
                 headers: {
@@ -1783,7 +1792,7 @@ class JobsManagerDashboard {
             const result = await response.json();
             console.log('✅ User account sync completed:', result);
 
-            this.showNotification('✅ User account sync completed successfully!', 'success');
+            this.showToast('✅ User account sync completed successfully!', 'success');
 
             // Refresh the active jobs after sync
             setTimeout(() => {
@@ -1792,7 +1801,7 @@ class JobsManagerDashboard {
 
         } catch (error) {
             console.error('❌ Error forcing user account sync:', error);
-            this.showNotification(`❌ Sync failed: ${error.message}`, 'error');
+            this.showToast(`❌ Sync failed: ${error.message}`, 'error');
         } finally {
             const button = document.getElementById('force-user-sync');
             button.disabled = false;
@@ -1802,6 +1811,9 @@ class JobsManagerDashboard {
 
     async listAllActiveJobs() {
         try {
+            // Show toast notification that command was received
+            this.showToast('📤 Fetching all active jobs...', 'info');
+
             const response = await fetch(getApiUrl('/admin/active-jobs/list?limit=200'), {
                 method: 'GET',
                 headers: {
@@ -1819,11 +1831,11 @@ class JobsManagerDashboard {
 
             // Show the active jobs in a modal or new section
             this.showActiveJobsList(result);
-            this.showNotification(`📋 Found ${result.total_count} active jobs`, 'info');
+            this.showToast(`📋 Found ${result.total_count} active jobs`, 'success');
 
         } catch (error) {
             console.error('❌ Error listing active jobs:', error);
-            this.showNotification(`❌ Failed to list active jobs: ${error.message}`, 'error');
+            this.showToast(`❌ Failed to list active jobs: ${error.message}`, 'error');
         }
     }
 
@@ -1836,6 +1848,9 @@ class JobsManagerDashboard {
         }
 
         try {
+            // Show toast notification that command was received
+            this.showToast(`📤 Delete command sent for account ${accountId}...`, 'info');
+
             const response = await fetch(getApiUrl(`/admin/active-jobs/${jobId}`), {
                 method: 'DELETE',
                 headers: {
@@ -1851,14 +1866,14 @@ class JobsManagerDashboard {
             const result = await response.json();
             console.log('🗑️ Active job deleted:', result);
 
-            this.showNotification(`🗑️ Active job deleted for account ${accountId}`, 'success');
+            this.showToast(`🗑️ Active job deleted for account ${accountId}`, 'success');
 
             // Refresh the jobs list
             this.loadActiveJobs();
 
         } catch (error) {
             console.error('❌ Error deleting active job:', error);
-            this.showNotification(`❌ Failed to delete job: ${error.message}`, 'error');
+            this.showToast(`❌ Failed to delete job: ${error.message}`, 'error');
         }
     }
 
@@ -1947,6 +1962,45 @@ class JobsManagerDashboard {
                 notification.parentNode.removeChild(notification);
             }
         }, 5000);
+    }
+
+    showToast(message, type = 'info') {
+        // Create toast notification element
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            max-width: 350px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : type === 'info' ? '#17a2b8' : '#6c757d'};
+        `;
+        toast.textContent = message;
+
+        document.body.appendChild(toast);
+
+        // Slide in animation
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 100);
+
+        // Remove after 4 seconds with slide out animation
+        setTimeout(() => {
+            toast.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 4000);
     }
 
     destroy() {
