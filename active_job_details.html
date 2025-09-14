@@ -1233,8 +1233,8 @@
       `;
 
       try {
-        // Load detailed logs for this execution using the correct backend endpoint
-        const response = await fetch(`${API_BASE}/admin/jobs/execution/${executionId}/logs`, {
+        // Load detailed logs for this execution from auth-api service (not jobs-manager)
+        const response = await fetch(`https://api.roo7.site:443/admin/jobs/execution/${executionId}/logs`, {
           method: 'GET',
           mode: 'cors',
           credentials: 'include',
@@ -1245,7 +1245,13 @@
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          if (response.status === 401) {
+            throw new Error(`Authentication failed - please refresh your login token`);
+          } else if (response.status === 404) {
+            throw new Error(`Log file not found for execution ${executionId}`);
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
         }
 
         const logData = await response.json();
