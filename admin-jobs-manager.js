@@ -534,48 +534,6 @@ class JobsManagerDashboard {
         });
     }
 
-    renderJobHistoryPlaceholder() {
-            const successfulStyle = successfulJobs > 0 ? 'color: #10b981; font-weight: 600;' : '';
-            const failedStyle = failedJobs > 0 ? 'color: #ef4444; font-weight: 600;' : '';
-            
-            return `
-            <tr>
-                <td>${this.truncateId(account.account_id)}</td>
-                <td>${account.username || 'N/A'}</td>
-                <td>${account.account_name || 'Unnamed'}</td>
-                <td>${account.strategy || 'N/A'}</td>
-                <td><span class="status-badge ${statusClass}">${account.status || 'ACTIVE'}</span></td>
-                <td><span class="status-badge ${runStatusClass}">${account.run_status || 'IDLE'}</span></td>
-                <td class="account-value">${formattedValue}</td>
-                <td class="schedule-display">
-                    <div class="schedule-item next-run">
-                        <span class="schedule-label">Next:</span>
-                        <span class="schedule-time">${nextRun}</span>
-                    </div>
-                    <div class="schedule-item last-run">
-                        <span class="schedule-label">Last:</span>
-                        <span class="schedule-time">${lastRun}</span>
-                    </div>
-                </td>
-                <td><span style="${successfulStyle}">${successfulJobs}</span></td>
-                <td><span style="${failedStyle}">${failedJobs}</span></td>
-                <td>
-                    <div class="job-actions">
-                        <button class="job-action-btn force" onclick="jobsManager.showJobAction('${account.account_id}', 'force', '${account.account_name}')">
-                            ⚡ Force
-                        </button>
-                        <button class="job-action-btn pause" onclick="jobsManager.showJobAction('${account.account_id}', 'pause', '${account.account_name}')">
-                            ⏸️ Pause
-                        </button>
-                        <button class="job-action-btn details" onclick="jobsManager.showJobDetails('${account.account_id}')">
-                            📋 Details
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            `;
-        }).join('');
-    }
 
     renderJobHistoryPlaceholder() {
         const tbody = document.querySelector('#job-history-table tbody');
