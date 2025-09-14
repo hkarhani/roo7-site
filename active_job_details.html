@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Active Job Details</title>
   <!-- JS Functions Fixed v1.4 - Fixed API endpoint to use jobs-manager port 8004 -->
-  <script type="module" src="frontend-config.js?v=4.3"></script>
+  <script type="module" src="frontend-config.js?v=4.4"></script>
   <script src="theme-manager.js?v=1.3"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.5" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.5" />
@@ -739,6 +739,7 @@
         <div class="logs-actions">
           <button id="download-logs-btn" class="secondary-button" style="display: none;">💾 Download Logs</button>
           <button id="view-full-logs-btn" class="secondary-button" style="display: none;">📄 View Full Logs</button>
+          <button id="view-raw-logs-btn" class="secondary-button" style="display: none;">🗂️ Raw Logs</button>
         </div>
       </div>
       <div class="execution-body">
@@ -824,6 +825,7 @@
       // New log viewing actions
       document.getElementById('download-logs-btn').addEventListener('click', () => downloadCurrentLogs());
       document.getElementById('view-full-logs-btn').addEventListener('click', () => viewFullLogs());
+      document.getElementById('view-raw-logs-btn').addEventListener('click', () => viewRawLogs());
 
       // Theme and logout
       document.getElementById('toggle-theme').addEventListener('click', toggleTheme);
@@ -1274,6 +1276,8 @@
         const hasLogs = logData.log_content || (logData.unified_logs?.logs?.length > 0);
         document.getElementById('download-logs-btn').style.display = hasLogs ? 'inline-block' : 'none';
         document.getElementById('view-full-logs-btn').style.display = hasLogs ? 'inline-block' : 'none';
+        // Always show raw logs button when execution is selected
+        document.getElementById('view-raw-logs-btn').style.display = selectedExecution ? 'inline-block' : 'none';
 
         // Add event listener for expand logs button (if it exists)
         setTimeout(() => {
@@ -1295,6 +1299,7 @@
         // Hide log action buttons on error
         document.getElementById('download-logs-btn').style.display = 'none';
         document.getElementById('view-full-logs-btn').style.display = 'none';
+        document.getElementById('view-raw-logs-btn').style.display = 'none';
       }
     }
 
@@ -1759,6 +1764,137 @@
           ${fullTimeline}
           <div style="margin-top: 20px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
             <strong>✅ Showing all ${logs.length} log entries</strong>
+          </div>
+        `;
+      }
+    }
+
+    async function viewRawLogs() {
+      if (!selectedExecution) {
+        showError('No execution selected');
+        return;
+      }
+
+      const executionId = selectedExecution._id;
+
+      // Show loading state
+      document.getElementById('execution-details-content').innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 15px;">Loading raw log files...</p>
+        </div>
+      `;
+
+      try {
+        const apiUrl = `${API_BASE}/raw-logs/${executionId}`;
+        console.log('🌐 Making raw logs API call to:', apiUrl);
+
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error(`Authentication failed - please refresh your login token`);
+          } else if (response.status === 404) {
+            throw new Error(`Raw log file not found for execution ${executionId}`);
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+        }
+
+        const rawLogData = await response.json();
+        console.log('📋 Raw log data received:', rawLogData);
+
+        if (rawLogData.success && rawLogData.log_content) {
+          // Display raw log file content
+          document.getElementById('execution-details-content').innerHTML = `
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid #e9ecef;">
+              <h3>Raw Log File</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div>
+                  <strong>Status:</strong><br>
+                  ${selectedExecution.status_emoji} ${selectedExecution.status}
+                </div>
+                <div>
+                  <strong>File Path:</strong><br>
+                  ${rawLogData.log_file_path}
+                </div>
+                <div>
+                  <strong>File Size:</strong><br>
+                  ${rawLogData.file_size} bytes
+                </div>
+                <div>
+                  <strong>Source:</strong><br>
+                  ${rawLogData.source}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <h4>📄 Raw Log Content</h4>
+              <div style="max-height: 600px; overflow-y: auto; background: #1e1e1e; color: #f8f8f2; padding: 15px; border-radius: 6px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; border: 1px solid #495057;">${rawLogData.log_content}</div>
+            </div>
+          `;
+        } else {
+          // Show debug information when no log files found
+          const debugInfo = rawLogData.files_in_logs_dir && rawLogData.files_in_logs_dir.length > 0
+            ? `Files in logs directory (${rawLogData.logs_directory_exists ? 'exists' : 'does not exist'}):\n${rawLogData.files_in_logs_dir.join('\n')}`
+            : 'No files found in logs directory';
+
+          document.getElementById('execution-details-content').innerHTML = `
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid #e9ecef;">
+              <h3>Raw Log File Access</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div>
+                  <strong>Status:</strong><br>
+                  ${selectedExecution.status_emoji} ${selectedExecution.status}
+                </div>
+                <div>
+                  <strong>Execution ID:</strong><br>
+                  ${executionId}
+                </div>
+                <div>
+                  <strong>Logs Directory:</strong><br>
+                  ${rawLogData.logs_directory_exists ? '✅ Exists' : '❌ Missing'}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <h4>🗂️ Log File Search Results</h4>
+              <div style="padding: 20px; background: #fff3cd; border-radius: 6px; color: #856404;">
+                <span style="font-weight: bold;">⚠️ ${rawLogData.message}</span>
+              </div>
+
+              <div style="margin-top: 15px;">
+                <h5>📁 Searched Paths:</h5>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                  ${rawLogData.searched_paths ? rawLogData.searched_paths.join('\n') : 'No paths provided'}
+                </div>
+              </div>
+
+              <div style="margin-top: 15px;">
+                <h5>🗄️ Debug Information:</h5>
+                <div style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #f8f8f2; padding: 15px; border-radius: 6px; font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.4; white-space: pre-wrap; border: 1px solid #495057;">${debugInfo}</div>
+              </div>
+            </div>
+          `;
+        }
+
+      } catch (error) {
+        console.error('Error loading raw logs:', error);
+        document.getElementById('execution-details-content').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <h3>Error Loading Raw Logs</h3>
+            <p>${error.message}</p>
           </div>
         `;
       }
