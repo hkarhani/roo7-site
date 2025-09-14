@@ -2577,17 +2577,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Verify source account - use same troubleshoot endpoint as users-accounts
+  // Verify source account
   async function verifySourceAccount(accountId) {
     try {
-      showNotification('Starting source account troubleshoot...', 'info');
-      console.log('🔍 Troubleshooting source account:', accountId);
+      showNotification('Starting comprehensive account verification...', 'info');
 
-      // Use the same working troubleshoot endpoint as users-accounts
-      const troubleshootUrl = `${AUTH_API_BASE}/troubleshoot/${accountId}`;
-      console.log('🔧 Troubleshoot URL (Source Account):', troubleshootUrl);
-
-      const response = await fetch(troubleshootUrl, {
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}/verify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -2595,12 +2590,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
-        showTroubleshootResults(data);
-        showNotification('Source account troubleshoot completed successfully!', 'success');
+        showVerificationResults(data);
+        showNotification('Account verification completed successfully', 'success');
       } else {
-        console.error('❌ Failed to verify source account:', response.status, response.statusText);
+        console.error('❌ Failed to verify source account:', data.detail);
         showNotification('Failed to verify source account', 'error');
       }
     } catch (error) {
