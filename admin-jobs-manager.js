@@ -352,6 +352,7 @@ class JobsManagerDashboard {
         container.innerHTML = accounts.map(account => {
             // Convert account data to format expected by createJobCard
             const job = {
+                _id: account._id,
                 account_id: account.account_id,
                 account_name: account.account_name,
                 strategy: account.strategy,
@@ -465,7 +466,6 @@ class JobsManagerDashboard {
               </button>
               <button class="job-action-btn delete delete-job-btn"
                       data-account-id="${job.account_id}"
-                      data-job-id="${job._id}"
                       title="Delete this active job">
                 🗑️ Delete
               </button>
@@ -493,9 +493,8 @@ class JobsManagerDashboard {
         const deleteJobBtn = card.querySelector('.delete-job-btn');
         if (deleteJobBtn) {
             deleteJobBtn.addEventListener('click', () => {
-                const jobId = deleteJobBtn.getAttribute('data-job-id');
                 const accountId = deleteJobBtn.getAttribute('data-account-id');
-                this.deleteActiveJob(jobId, accountId);
+                this.deleteActiveJob(accountId);
             });
         }
     }
@@ -847,10 +846,15 @@ class JobsManagerDashboard {
 
     async populateHistoryAccountFilter() {
         try {
+            const select = document.getElementById('history-account-filter');
+            if (!select) {
+                console.warn('📊 history-account-filter element not found, skipping population');
+                return;
+            }
+
             const response = await this.makeAuthenticatedRequest(`${getApiUrl()}/admin/active-users-accounts`);
             const data = await response.json();
-            
-            const select = document.getElementById('history-account-filter');
+
             select.innerHTML = '<option value="">All Accounts</option>';
             
             if (data.accounts) {
@@ -1797,19 +1801,48 @@ class JobsManagerDashboard {
         }
     }
 
-    async deleteActiveJob(jobId, accountId) {
-        // Confirm deletion
-        const confirmed = confirm(`Are you sure you want to delete the active job for account ${accountId}?\n\nThis action cannot be undone. The job will be recreated on the next sync cycle if the account is still active.`);
-
-        if (!confirmed) {
+    async deleteActiveJob(accountId) {
+        // Validate account ID
+        if (!accountId) {
+            console.error('❌ Invalid account ID for deletion:', accountId);
+            this.showToast(`❌ Cannot delete job: Invalid account ID`, 'error');
             return;
         }
 
         try {
-            // Show toast notification that command was received
-            this.showToast(`📤 Delete command sent for account ${accountId}...`, 'info');
+            // First, get the active_job document _id for this account
+            this.showToast(`📤 Looking up active job for account ${accountId}...`, 'info');
 
-            const response = await fetch(getApiUrl(`/admin/active-jobs/${jobId}`), {
+            const lookupResponse = await fetch(getApiUrl('/admin/active-jobs/list?limit=1000'), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!lookupResponse.ok) {
+                throw new Error(`Failed to lookup active job: HTTP ${lookupResponse.status}`);
+            }
+
+            const lookupData = await lookupResponse.json();
+            const activeJob = lookupData.active_jobs?.find(job => job.account_id === accountId);
+
+            if (!activeJob || !activeJob._id) {
+                throw new Error(`No active job found for account ${accountId}`);
+            }
+
+            // Confirm deletion
+            const confirmed = confirm(`Are you sure you want to delete the active job for account ${accountId}?\n\nActive Job ID: ${activeJob._id}\n\nThis action cannot be undone. The job will be recreated on the next sync cycle if the account is still active.`);
+
+            if (!confirmed) {
+                return;
+            }
+
+            // Show toast notification that command was received
+            this.showToast(`📤 Delete command sent for active job ${activeJob._id}...`, 'info');
+
+            const response = await fetch(getApiUrl(`/admin/active-jobs/${activeJob._id}`), {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
