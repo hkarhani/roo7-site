@@ -2737,17 +2737,20 @@ document.addEventListener("DOMContentLoaded", () => {
                       </tr>
                     </thead>
                     <tbody>
-                      ${data.detailed_breakdown['USDT-M'].positions.map(position => `
+                      ${data.detailed_breakdown['USDT-M'].positions.map(position => {
+                        const side = position.position_amount > 0 ? 'Long' : position.position_amount < 0 ? 'Short' : 'None';
+                        return `
                         <tr>
                           <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(position.positionAmt || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${side === 'Long' ? '#28a745' : '#dc3545'};">${side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(Math.abs(position.position_amount || 0))}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entry_price || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.mark_price || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unrealized_pnl || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unrealized_pnl || 0)}</td>
                           <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
                         </tr>
-                      `).join('')}
+                        `;
+                      }).join('')}
                     </tbody>
                   </table>
                 </div>
@@ -2837,17 +2840,20 @@ document.addEventListener("DOMContentLoaded", () => {
                       </tr>
                     </thead>
                     <tbody>
-                      ${data.detailed_breakdown['COIN-M'].positions.map(position => `
+                      ${data.detailed_breakdown['COIN-M'].positions.map(position => {
+                        const side = position.position_amount > 0 ? 'Long' : position.position_amount < 0 ? 'Short' : 'None';
+                        return `
                         <tr>
                           <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(position.positionAmt || 0).toFixed(0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${side === 'Long' ? '#28a745' : '#dc3545'};">${side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(Math.abs(position.position_amount || 0)).toFixed(0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entry_price || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.mark_price || 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unrealized_pnl || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unrealized_pnl || 0)}</td>
                           <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
                         </tr>
-                      `).join('')}
+                        `;
+                      }).join('')}
                     </tbody>
                   </table>
                 </div>
