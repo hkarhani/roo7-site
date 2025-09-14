@@ -582,24 +582,50 @@ class JobsManagerDashboard {
     async showExecutionDetails(executionId) {
         const modal = document.getElementById('execution-details-modal');
         const content = document.getElementById('execution-details-content');
-        
+
         // Show loading state
-        content.innerHTML = `<div class="loading-state"><p>Loading execution details...</p></div>`;
+        content.innerHTML = `<div class="loading-state"><p>Loading execution details and logs...</p></div>`;
         modal.style.display = 'block';
-        
+
         try {
             console.log('📊 Fetching execution details for:', executionId);
-            
-            const response = await this.makeAuthenticatedRequest(
-                getApiUrl(`/admin/jobs-manager/job-execution/${executionId}`)
-            );
-            const data = await response.json();
-            
-            if (response.ok && data.success && data.execution) {
-                const execution = data.execution;
+
+            // Fetch both execution details and logs in parallel
+            const [executionResponse, logsResponse] = await Promise.all([
+                this.makeAuthenticatedRequest(
+                    getApiUrl(`/admin/jobs-manager/job-execution/${executionId}`)
+                ),
+                this.makeAuthenticatedRequest(
+                    getApiUrl(`/admin/jobs/execution/${executionId}/logs`)
+                )
+            ]);
+
+            const executionData = await executionResponse.json();
+            const logsData = await logsResponse.json();
+
+            if (executionResponse.ok && executionData.success && executionData.execution) {
+                const execution = executionData.execution;
                 
                 content.innerHTML = `
                     <div class="execution-details">
+                        ${logsData.success && logsData.log_content ? `
+                            <div class="execution-section">
+                                <h4>📋 Detailed Execution Logs</h4>
+                                <div class="log-info">
+                                    <p><strong>Log File:</strong> ${logsData.log_file_path || 'N/A'}</p>
+                                    <p><strong>File Size:</strong> ${logsData.file_size_bytes ? `${(logsData.file_size_bytes / 1024).toFixed(1)} KB` : 'N/A'}</p>
+                                </div>
+                                <div class="log-content" style="max-height: 400px; overflow-y: auto; background: #1e1e1e; color: #f8f8f2; padding: 15px; border-radius: 6px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap;">${logsData.log_content}</div>
+                            </div>
+                        ` : `
+                            <div class="execution-section">
+                                <h4>📋 Execution Logs</h4>
+                                <div class="execution-field">
+                                    <span class="text-warning">⚠️ ${logsData.message || 'No detailed execution logs available for this job.'}</span>
+                                </div>
+                            </div>
+                        `}
+
                         <div class="execution-section">
                             <h4>Execution Information</h4>
                             <div class="execution-field">
