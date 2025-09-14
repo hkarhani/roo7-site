@@ -1233,8 +1233,8 @@
       `;
 
       try {
-        // Load detailed logs for this execution
-        const response = await fetch(`${API_BASE}/frontend/execution-logs/${executionId}`, {
+        // Load detailed logs for this execution using the correct backend endpoint
+        const response = await fetch(`${API_BASE}/admin/jobs/execution/${executionId}/logs`, {
           method: 'GET',
           mode: 'cors',
           credentials: 'include',
@@ -1284,6 +1284,89 @@
     }
 
     function renderExecutionDetails(execution, logData) {
+      // Handle new log file format from /admin/jobs/execution/{id}/logs endpoint
+      if (logData.success && logData.log_content) {
+        document.getElementById('execution-details-content').innerHTML = `
+          <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid #e9ecef;">
+            <h3>Execution Details</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+              <div>
+                <strong>Status:</strong><br>
+                ${execution.status_emoji} ${execution.status}
+              </div>
+              <div>
+                <strong>Duration:</strong><br>
+                ${execution.duration_formatted}
+              </div>
+              <div>
+                <strong>Started:</strong><br>
+                ${formatDateTime(execution.started_at)}
+              </div>
+              <div>
+                <strong>Worker:</strong><br>
+                ${execution.worker_id}
+              </div>
+            </div>
+            ${execution.error_summary ? `
+              <div style="margin-top: 15px; padding: 10px; background: #f8d7da; border-radius: 5px; color: #721c24;">
+                <strong>Error:</strong> ${execution.error_summary}
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h4>📋 Detailed Execution Logs</h4>
+            <div style="margin-bottom: 10px; font-size: 0.9rem; color: #6c757d;">
+              <strong>Log File:</strong> ${logData.log_file_path || 'N/A'} |
+              <strong>Size:</strong> ${logData.file_size_bytes ? `${(logData.file_size_bytes / 1024).toFixed(1)} KB` : 'N/A'}
+            </div>
+            <div style="max-height: 600px; overflow-y: auto; background: #1e1e1e; color: #f8f8f2; padding: 15px; border-radius: 6px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; border: 1px solid #495057;">${logData.log_content}</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Handle case where logs are not available
+      if (!logData.success) {
+        document.getElementById('execution-details-content').innerHTML = `
+          <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid #e9ecef;">
+            <h3>Execution Details</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+              <div>
+                <strong>Status:</strong><br>
+                ${execution.status_emoji} ${execution.status}
+              </div>
+              <div>
+                <strong>Duration:</strong><br>
+                ${execution.duration_formatted}
+              </div>
+              <div>
+                <strong>Started:</strong><br>
+                ${formatDateTime(execution.started_at)}
+              </div>
+              <div>
+                <strong>Worker:</strong><br>
+                ${execution.worker_id}
+              </div>
+            </div>
+            ${execution.error_summary ? `
+              <div style="margin-top: 15px; padding: 10px; background: #f8d7da; border-radius: 5px; color: #721c24;">
+                <strong>Error:</strong> ${execution.error_summary}
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h4>📋 Execution Logs</h4>
+            <div style="padding: 20px; background: #fff3cd; border-radius: 6px; color: #856404;">
+              <span style="font-weight: bold;">⚠️ ${logData.message || 'No detailed execution logs available for this job.'}</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Fallback to old format for backward compatibility
       const logs = logData.unified_logs?.logs || [];
       const stages = logData.unified_logs?.stages || [];
       const summary = logData.summary || {};
