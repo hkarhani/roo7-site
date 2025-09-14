@@ -2593,18 +2593,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        // DEBUG: Check assets and orders structure
-        if (data.detailed_breakdown) {
-          if (data.detailed_breakdown['USDT-M']?.assets?.length > 0) {
-            console.log('🔍 USDT-M ASSET SAMPLE:', data.detailed_breakdown['USDT-M'].assets[0]);
-          }
-          if (data.detailed_breakdown['COIN-M']?.assets?.length > 0) {
-            console.log('🔍 COIN-M ASSET SAMPLE:', data.detailed_breakdown['COIN-M'].assets[0]);
-          }
-          console.log('🔍 USDT-M OPEN ORDERS:', data.detailed_breakdown['USDT-M']?.open_orders);
-          console.log('🔍 COIN-M OPEN ORDERS:', data.detailed_breakdown['COIN-M']?.open_orders);
-        }
-
         showVerificationResults(data);
         showNotification('Account verification completed successfully', 'success');
       } else {
