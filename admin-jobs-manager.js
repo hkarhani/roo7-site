@@ -87,6 +87,15 @@ class JobsManagerDashboard {
             this.downloadJobHistoryCSV();
         });
 
+        // Admin control buttons
+        document.getElementById('force-user-sync')?.addEventListener('click', () => {
+            this.forceUserAccountSync();
+        });
+
+        document.getElementById('list-all-active-jobs')?.addEventListener('click', () => {
+            this.listAllActiveJobs();
+        });
+
         // Modal close buttons
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.addEventListener('click', (e) => {
@@ -472,6 +481,16 @@ class JobsManagerDashboard {
         const forceRunBtn = card.querySelector('.force-run-btn');
         if (forceRunBtn && !job.is_running) {
             forceRunBtn.addEventListener('click', () => this.forceJobExecution(job.account_id));
+        }
+
+        // Delete job button
+        const deleteJobBtn = card.querySelector('.delete-job-btn');
+        if (deleteJobBtn) {
+            deleteJobBtn.addEventListener('click', () => {
+                const jobId = deleteJobBtn.getAttribute('data-job-id');
+                const accountId = deleteJobBtn.getAttribute('data-account-id');
+                this.deleteActiveJob(jobId, accountId);
+            });
         }
     }
 
@@ -1737,6 +1756,197 @@ class JobsManagerDashboard {
             console.error('❌ Error generating audit CSV:', error);
             alert('Error generating CSV file. Please try again.');
         }
+    }
+
+    // === NEW ADMIN FUNCTIONALITY ===
+
+    async forceUserAccountSync() {
+        try {
+            const button = document.getElementById('force-user-sync');
+            const originalText = button.textContent;
+
+            button.disabled = true;
+            button.textContent = '🔄 Syncing...';
+
+            const response = await fetch(getApiUrl('/admin/user-account-sync/force'), {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ User account sync completed:', result);
+
+            this.showNotification('✅ User account sync completed successfully!', 'success');
+
+            // Refresh the active jobs after sync
+            setTimeout(() => {
+                this.loadActiveJobs();
+            }, 2000);
+
+        } catch (error) {
+            console.error('❌ Error forcing user account sync:', error);
+            this.showNotification(`❌ Sync failed: ${error.message}`, 'error');
+        } finally {
+            const button = document.getElementById('force-user-sync');
+            button.disabled = false;
+            button.textContent = '🔄 Force User Account Sync';
+        }
+    }
+
+    async listAllActiveJobs() {
+        try {
+            const response = await fetch(getApiUrl('/admin/active-jobs/list?limit=200'), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('📋 Active jobs list:', result);
+
+            // Show the active jobs in a modal or new section
+            this.showActiveJobsList(result);
+            this.showNotification(`📋 Found ${result.total_count} active jobs`, 'info');
+
+        } catch (error) {
+            console.error('❌ Error listing active jobs:', error);
+            this.showNotification(`❌ Failed to list active jobs: ${error.message}`, 'error');
+        }
+    }
+
+    async deleteActiveJob(jobId, accountId) {
+        // Confirm deletion
+        const confirmed = confirm(`Are you sure you want to delete the active job for account ${accountId}?\n\nThis action cannot be undone. The job will be recreated on the next sync cycle if the account is still active.`);
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const response = await fetch(getApiUrl(`/admin/active-jobs/${jobId}`), {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('🗑️ Active job deleted:', result);
+
+            this.showNotification(`🗑️ Active job deleted for account ${accountId}`, 'success');
+
+            // Refresh the jobs list
+            this.loadActiveJobs();
+
+        } catch (error) {
+            console.error('❌ Error deleting active job:', error);
+            this.showNotification(`❌ Failed to delete job: ${error.message}`, 'error');
+        }
+    }
+
+    showActiveJobsList(result) {
+        // Create a simple modal to display the active jobs
+        const modalContent = `
+            <div style="max-height: 500px; overflow-y: auto;">
+                <h3>📋 All Active Jobs (${result.total_count} total)</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 8px; border: 1px solid #ddd;">Account ID</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Account Name</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Strategy</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Status</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${result.active_jobs.map(job => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace; font-size: 0.85em;">${job.account_id}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${job.account_name || 'N/A'}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${job.strategy_name || job.strategy || 'None'}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">
+                                    <span style="padding: 3px 8px; border-radius: 12px; font-size: 0.8em; background: ${job.status === 'ACTIVE' ? '#d4edda' : '#f8d7da'}; color: ${job.status === 'ACTIVE' ? '#155724' : '#721c24'};">
+                                        ${job.status}
+                                    </span>
+                                </td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">
+                                    <button onclick="window.jobsManager.deleteActiveJob('${job._id}', '${job.account_id}')"
+                                            style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
+                                        🗑️ Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        // Show in a simple alert for now (you can create a proper modal later)
+        const popup = window.open('', '_blank', 'width=800,height=600');
+        popup.document.write(`
+            <html>
+                <head>
+                    <title>Active Jobs List</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        table { border-collapse: collapse; width: 100%; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                    </style>
+                </head>
+                <body>
+                    ${modalContent}
+                </body>
+            </html>
+        `);
+        popup.document.close();
+    }
+
+    showNotification(message, type = 'info') {
+        // Simple notification system
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            max-width: 400px;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+        `;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        // Remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
     }
 
     destroy() {

@@ -263,6 +263,95 @@
       font-size: 0.9rem;
       color: #6c757d;
     }
+
+    /* Action buttons for jobs */
+    .job-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+      justify-content: flex-end;
+    }
+
+    .job-action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .job-action-btn.delete {
+      background: #dc3545;
+      color: white;
+    }
+
+    .job-action-btn.delete:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+    }
+
+    .job-action-btn.force-execute {
+      background: #007bff;
+      color: white;
+    }
+
+    .job-action-btn.force-execute:hover {
+      background: #0056b3;
+      transform: translateY(-1px);
+    }
+
+    /* Admin control panel */
+    .admin-controls {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-controls h3 {
+      margin: 0 0 15px 0;
+      color: #2c3e50;
+    }
+
+    .admin-controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .admin-action-btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .admin-action-btn.force-sync {
+      background: #28a745;
+      color: white;
+    }
+
+    .admin-action-btn.force-sync:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+
+    .admin-action-btn.list-active-jobs {
+      background: #6c757d;
+      color: white;
+    }
+
+    .admin-action-btn.list-active-jobs:hover {
+      background: #545b62;
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -280,6 +369,19 @@
   </div>
 
   <main class="dashboard-container">
+    <!-- Admin Controls -->
+    <section class="admin-controls">
+      <h3>🔧 Admin Controls</h3>
+      <div class="admin-controls-grid">
+        <button id="force-user-sync" class="admin-action-btn force-sync">
+          🔄 Force User Account Sync
+        </button>
+        <button id="list-all-active-jobs" class="admin-action-btn list-active-jobs">
+          📋 List All Active Jobs
+        </button>
+      </div>
+    </section>
+
     <!-- Summary Statistics -->
     <section class="summary-stats" id="summary-stats">
       <div class="stat-card stat-total">
@@ -588,9 +690,15 @@
             <button class="btn-primary view-details-btn" data-account-id="${job.account_id}">
               📊 View Details
             </button>
-            <button class="btn-success force-run-btn" data-account-id="${job.account_id}" 
+            <button class="btn-success force-run-btn" data-account-id="${job.account_id}"
                     ${job.is_running ? 'disabled' : ''}>
               ▶️ ${job.is_running ? 'Running...' : 'Force Run'}
+            </button>
+            <button class="job-action-btn delete delete-job-btn"
+                    data-account-id="${job.account_id}"
+                    data-job-id="${job._id}"
+                    title="Delete this active job">
+              🗑️ Delete
             </button>
           </div>
         </div>
