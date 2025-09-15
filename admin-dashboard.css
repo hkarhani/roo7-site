@@ -3632,3 +3632,50 @@
   text-overflow: ellipsis;
 }
 
+/* Platform Analytics Styles */
+.platform-summary {
+  display: flex;
+  gap: 20px;
+  margin-top: 15px;
+  padding: 15px;
+  background: var(--card-secondary-bg, #f8f9fa);
+  border-radius: 8px;
+  justify-content: space-around;
+}
+
+.summary-stat {
+  text-align: center;
+}
+
+.summary-stat .stat-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.summary-stat .stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.summary-stat .stat-value.positive {
+  color: #27ae60;
+}
+
+.summary-stat .stat-value.negative {
+  color: #e74c3c;
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 400px;
+  margin: 20px 0;
+}
+
+.section-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+

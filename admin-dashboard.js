@@ -265,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(`${INVOICING_API_BASE}/admin/dashboard/summary`, {
           headers: getAuthHeaders(token)
         }),
-        fetch(`${AUTH_API_BASE}/admin/total-portfolio-value`, {
+        fetch(`${AUTH_API_BASE}/admin/analytics/platform-total-value`, {
           headers: getAuthHeaders(token)
         })
       ]);
@@ -2506,6 +2506,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Edit source account
   async function editSourceAccount(accountId) {
     try {
+      console.log('🔍 Editing source account with ID:', accountId, 'Type:', typeof accountId);
       const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3298,6 +3299,154 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // === PLATFORM ANALYTICS FUNCTIONS ===
+  async function loadPlatformAnalytics() {
+    try {
+      const selectedPeriod = document.getElementById('platform-period-select')?.value || 30;
+      console.log(`📊 Loading platform analytics for ${selectedPeriod} days...`);
+
+      const response = await fetch(`${AUTH_API_BASE}/admin/analytics/platform-aggregated?days=${selectedPeriod}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('📊 Platform analytics data:', data);
+
+      if (data.success && data.chart_data) {
+        displayPlatformAnalyticsChart(data.chart_data, data.summary || {});
+        updatePlatformSummaryStats(data.summary || {});
+      } else {
+        throw new Error('No platform analytics data available');
+      }
+
+    } catch (error) {
+      console.error('❌ Error loading platform analytics:', error);
+      document.getElementById('platform-analytics-chart').innerHTML = `
+        <div class="error-state">
+          <p>❌ Failed to load platform analytics: ${error.message}</p>
+          <button onclick="loadPlatformAnalytics()" class="retry-btn">🔄 Retry</button>
+        </div>
+      `;
+    }
+  }
+
+  function displayPlatformAnalyticsChart(chartData, summary) {
+    const container = document.getElementById('platform-analytics-chart');
+
+    if (!chartData || chartData.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <p>📭 No platform analytics data available</p>
+          <small>Platform data will appear as users start trading</small>
+        </div>
+      `;
+      return;
+    }
+
+    // Prepare data for Chart.js
+    const labels = chartData.map(point => {
+      const date = new Date(point.timestamp);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    const values = chartData.map(point => parseFloat(point.value || 0));
+
+    // Create chart HTML
+    container.innerHTML = `
+      <div class="chart-wrapper">
+        <canvas id="platformChart" width="800" height="400"></canvas>
+      </div>
+    `;
+
+    // Initialize Chart.js
+    const ctx = document.getElementById('platformChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total Platform Value',
+          data: values,
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                if (value >= 1000000) {
+                  return '$' + (value / 1000000).toFixed(1) + 'M';
+                } else if (value >= 1000) {
+                  return '$' + (value / 1000).toFixed(1) + 'K';
+                } else {
+                  return '$' + value.toFixed(0);
+                }
+              }
+            }
+          },
+          x: {
+            ticks: {
+              maxTicksLimit: 10
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const value = context.parsed.y;
+                return `Total Value: $${value.toLocaleString()}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updatePlatformSummaryStats(summary) {
+    const summaryContainer = document.getElementById('platform-summary');
+
+    if (summary && Object.keys(summary).length > 0) {
+      document.getElementById('platform-current-total').textContent =
+        `$${(summary.current_value || 0).toLocaleString()}`;
+
+      const change24h = summary.change_24h || 0;
+      const changeElement = document.getElementById('platform-24h-change');
+      changeElement.textContent = `${change24h >= 0 ? '+' : ''}$${change24h.toLocaleString()}`;
+      changeElement.className = `stat-value ${change24h >= 0 ? 'positive' : 'negative'}`;
+
+      document.getElementById('platform-users-count').textContent =
+        summary.users_with_value || 0;
+
+      summaryContainer.style.display = 'flex';
+    }
+  }
+
+  function refreshPlatformAnalytics() {
+    loadPlatformAnalytics();
+  }
+
   // Initialize dashboard
   console.log('🚀 Admin Dashboard: Starting initialization...');
   loadSystemOverview();
@@ -3314,6 +3463,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSourceStrategies();
   loadSourceAccounts();
   initializeSourceAnalytics();
+  loadPlatformAnalytics();
   
   }); // End of authorization check
 });
