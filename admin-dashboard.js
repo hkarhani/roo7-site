@@ -1939,7 +1939,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load source accounts
   async function loadSourceAccounts() {
     try {
-      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/dashboard`, {
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -1949,7 +1949,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('📊 Source accounts dashboard data:', data);
         displaySourceAccounts(data.source_accounts);
       } else {
         console.error('❌ Failed to load source accounts:', data.detail);
@@ -1973,19 +1972,23 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML = sourceAccounts.map(account => `
       <tr>
         <td>${account.account_name}</td>
-        <td>${account.exchange || 'Binance'}</td>
+        <td>${account.exchange}</td>
         <td>
           <span class="strategy-tag">${account.strategy}</span>
         </td>
-        <td class="account-value" title="Current portfolio value: $${account.current_value || 0}">
-          ${formatAccountValue(account.current_value)}
+        <td class="account-value" title="Portfolio value not available for source accounts">
+          <span class="no-value">N/A</span>
         </td>
-        <td>${formatStatusBadge(account.overall_status, account.last_status)}</td>
+        <td>
+          <span class="status-badge ${account.is_active ? 'status-healthy' : 'status-error'}">
+            ${account.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </td>
         <td>${formatDate(account.created_at)}</td>
         <td>
-          <button class="edit-source-btn action-btn" data-id="${account._id}">✏️ Edit</button>
-          <button class="verify-source-btn action-btn success" data-id="${account._id}">🔍 Verify</button>
-          <button class="delete-source-btn action-btn danger" data-id="${account._id}">🗑️ Delete</button>
+          <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
+          <button class="verify-source-btn action-btn success" data-id="${account.id}">🔍 Verify</button>
+          <button class="delete-source-btn action-btn danger" data-id="${account.id}">🗑️ Delete</button>
         </td>
       </tr>
     `).join('');
