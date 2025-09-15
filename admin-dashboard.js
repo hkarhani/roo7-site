@@ -545,6 +545,42 @@ document.addEventListener("DOMContentLoaded", () => {
     return `<span class="status-badge ${statusInfo.class}" title="${tooltip}">${statusInfo.text}</span>`;
   }
 
+  function formatProfessionalValue(value) {
+    if (!value || value === 0) {
+      return '<span class="value-zero">$0</span>';
+    }
+
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue <= 0) {
+      return '<span class="value-zero">$0</span>';
+    }
+
+    // Format without decimals as requested
+    return `<span class="value-amount">$${Math.round(numValue).toLocaleString()}</span>`;
+  }
+
+  function getProfessionalStatusBadge(overallStatus, lastStatus) {
+    // Determine if status is success/failed based on overall status
+    let statusClass, statusText;
+
+    if (overallStatus === 'healthy' || lastStatus === 'healthy' || lastStatus === 'success' || lastStatus === 'active') {
+      statusClass = 'status-success';
+      statusText = 'Success';
+    } else if (overallStatus === 'error' || overallStatus === 'disabled' || lastStatus === 'error' || lastStatus === 'failed') {
+      statusClass = 'status-failed';
+      statusText = 'Failed';
+    } else if (overallStatus === 'warning' || lastStatus === 'warning') {
+      statusClass = 'status-warning';
+      statusText = 'Warning';
+    } else {
+      statusClass = 'status-unknown';
+      statusText = 'Unknown';
+    }
+
+    const tooltip = lastStatus ? `Last status: ${lastStatus}` : 'No status data';
+    return `<span class="professional-status ${statusClass}" title="${tooltip}">${statusText}</span>`;
+  }
+
   // === USERS ACCOUNTS FUNCTIONS ===
   async function loadUsersAccounts() {
     try {
@@ -1939,7 +1975,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load source accounts
   async function loadSourceAccounts() {
     try {
-      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts`, {
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -1949,6 +1985,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
+        console.log('📊 Source accounts dashboard data:', data);
         displaySourceAccounts(data.source_accounts);
       } else {
         console.error('❌ Failed to load source accounts:', data.detail);
@@ -1972,18 +2009,12 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML = sourceAccounts.map(account => `
       <tr>
         <td>${account.account_name}</td>
-        <td>${account.exchange}</td>
+        <td>${account.exchange || 'Binance'}</td>
         <td>
           <span class="strategy-tag">${account.strategy}</span>
         </td>
-        <td class="account-value" title="Portfolio value not available for source accounts">
-          <span class="no-value">N/A</span>
-        </td>
-        <td>
-          <span class="status-badge ${account.is_active ? 'status-healthy' : 'status-error'}">
-            ${account.is_active ? 'Active' : 'Inactive'}
-          </span>
-        </td>
+        <td class="col-value" style="text-align: center;">${formatProfessionalValue(account.current_value)}</td>
+        <td class="col-status">${getProfessionalStatusBadge(account.overall_status, account.last_status)}</td>
         <td>${formatDate(account.created_at)}</td>
         <td>
           <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
@@ -3425,21 +3456,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updatePlatformSummaryStats(summary) {
-    const summaryContainer = document.getElementById('platform-summary');
-
     if (summary && Object.keys(summary).length > 0) {
-      document.getElementById('platform-current-total').textContent =
-        `$${(summary.current_value || 0).toLocaleString()}`;
+      // Update the new badge elements
+      const currentTotalBadge = document.getElementById('platform-current-total-badge');
+      if (currentTotalBadge) {
+        currentTotalBadge.textContent = `$${Math.round(summary.current_value || 0).toLocaleString()}`;
+      }
 
       const change24h = summary.change_24h || 0;
-      const changeElement = document.getElementById('platform-24h-change');
-      changeElement.textContent = `${change24h >= 0 ? '+' : ''}$${change24h.toLocaleString()}`;
-      changeElement.className = `stat-value ${change24h >= 0 ? 'positive' : 'negative'}`;
+      const changeBadge = document.getElementById('platform-24h-change-badge');
+      if (changeBadge) {
+        changeBadge.textContent = `${change24h >= 0 ? '+' : ''}$${Math.round(change24h).toLocaleString()}`;
+        changeBadge.className = `status-badge ${change24h >= 0 ? 'success' : 'danger'}`;
+      }
 
-      document.getElementById('platform-users-count').textContent =
-        summary.users_with_value || 0;
-
-      summaryContainer.style.display = 'flex';
+      const usersBadge = document.getElementById('platform-users-count-badge');
+      if (usersBadge) {
+        usersBadge.textContent = summary.users_with_value || 0;
+      }
     }
   }
 

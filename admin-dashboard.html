@@ -203,25 +203,40 @@
     </section>
 
     <!-- Platform Analytics -->
-    <section id="section-platform-analytics" class="dashboard-card">
-      <div class="section-header">
-        <h2>📊 Platform Analytics</h2>
-        <div class="section-description">Total value of all user accounts on the platform over time</div>
-        <button id="refresh-platform-analytics" class="secondary-button">🔄 Refresh</button>
-      </div>
-
-      <!-- Chart Controls -->
-      <div class="analytics-controls">
-        <div class="control-group">
-          <label for="platform-period-select">Time Period:</label>
-          <select id="platform-period-select" onchange="refreshPlatformAnalytics()">
-            <option value="7">7 Days</option>
-            <option value="30" selected>30 Days</option>
-            <option value="90">90 Days</option>
-            <option value="180">180 Days</option>
-          </select>
+    <section id="section-platform-analytics" class="dashboard-card analytics-section">
+      <div class="analytics-header">
+        <div class="analytics-title-row">
+          <h2 class="analytics-title">📊 Platform Analytics</h2>
+          <div class="analytics-status-badges" id="platform-analytics-status-badges">
+            <div class="status-item">
+              <span class="status-label">Current Total</span>
+              <span class="status-badge primary" id="platform-current-total-badge">$0</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">24h Change</span>
+              <span class="status-badge" id="platform-24h-change-badge">$0</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Active Users</span>
+              <span class="status-badge" id="platform-users-count-badge">0</span>
+            </div>
+          </div>
         </div>
-        <button id="refresh-platform-analytics-btn" class="analytics-refresh-btn">🔄 Refresh</button>
+
+        <div class="analytics-toolbar">
+          <div class="analytics-selectors">
+            <div class="selector-group">
+              <label class="selector-label">Time Period</label>
+              <select id="platform-period-select" class="selector-input" onchange="loadPlatformAnalytics()">
+                <option value="7">7 Days</option>
+                <option value="30" selected>30 Days</option>
+                <option value="90">90 Days</option>
+                <option value="180">180 Days</option>
+              </select>
+            </div>
+          </div>
+          <button id="refresh-platform-analytics" class="analytics-refresh-btn">🔄 Refresh</button>
+        </div>
       </div>
 
       <!-- Chart Container -->
@@ -229,20 +244,9 @@
         <div id="platform-analytics-chart" class="analytics-chart"></div>
       </div>
 
-      <!-- Platform Summary Stats -->
-      <div class="platform-summary" id="platform-summary" style="display: none;">
-        <div class="summary-stat">
-          <span class="stat-label">Current Total:</span>
-          <span class="stat-value" id="platform-current-total">$0</span>
-        </div>
-        <div class="summary-stat">
-          <span class="stat-label">24h Change:</span>
-          <span class="stat-value" id="platform-24h-change">$0</span>
-        </div>
-        <div class="summary-stat">
-          <span class="stat-label">Users with Value:</span>
-          <span class="stat-value" id="platform-users-count">0</span>
-        </div>
+      <!-- Legend -->
+      <div class="analytics-legend" id="platform-analytics-legend" style="display: none;">
+        <!-- Populated dynamically -->
       </div>
     </section>
 
