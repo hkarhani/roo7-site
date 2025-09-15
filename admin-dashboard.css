@@ -3551,3 +3551,84 @@
   }
 }
 
+/* === STATUS BADGES AND VALUE FORMATTING === */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+}
+
+.status-healthy {
+  background: #27ae60;
+}
+
+.status-error {
+  background: #e74c3c;
+}
+
+.status-warning {
+  background: #f39c12;
+}
+
+.status-unknown {
+  background: #95a5a6;
+}
+
+.value-column {
+  text-align: right;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-weight: bold;
+}
+
+.account-value-amount {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.no-value {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+.strategy-tag {
+  background: #3498db;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* Account table specific styles */
+.account-value {
+  text-align: right;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.user-name {
+  font-weight: 500;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-name {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

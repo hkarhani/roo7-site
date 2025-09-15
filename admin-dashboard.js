@@ -357,8 +357,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // === ACTIVE ACCOUNTS FUNCTIONS ===
   async function loadActiveAccounts() {
     try {
-      console.log('👥 Loading active accounts...');
-      const response = await fetch(`${AUTH_API_BASE}/admin/active-users-accounts`, {
+      console.log('👥 Loading active trading accounts...');
+      const response = await fetch(`${AUTH_API_BASE}/admin/accounts/active-trading`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -370,29 +370,32 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const result = await response.json();
-      console.log('👥 Active accounts response:', result);
-      
-      // Debug: Log account values to see what we're getting
+      console.log('👥 Active trading accounts response:', result);
+
+      // Debug: Log account values and status to see what we're getting
       if (result.accounts && result.accounts.length > 0) {
-        console.log('💰 Account values debug:', result.accounts.map(acc => ({
-          account_id: acc.account_id,
+        console.log('💰 Account data debug:', result.accounts.map(acc => ({
+          account_id: acc._id,
           account_name: acc.account_name,
-          last_value: acc.last_value,
-          current_total_value: acc.current_total_value,
-          account_value: acc.account_value,
-          last_updated: acc.last_updated
+          username: acc.username,
+          strategy: acc.strategy,
+          current_value: acc.current_value,
+          last_status: acc.last_status,
+          overall_status: acc.overall_status,
+          is_disabled: acc.is_disabled,
+          is_revoked: acc.is_revoked
         })));
       }
 
       currentActiveAccounts = result.accounts || [];
       displayActiveAccounts(result.accounts || []);
       attachUserAccountVerifyListeners();
-      
+
     } catch (error) {
-      console.error('❌ Error loading active accounts:', error);
+      console.error('❌ Error loading active trading accounts:', error);
       document.getElementById('active-accounts-container').innerHTML = `
         <div class="error-state">
-          <p>❌ Failed to load active accounts: ${error.message}</p>
+          <p>❌ Failed to load active trading accounts: ${error.message}</p>
           <button onclick="loadActiveAccounts()" class="retry-btn">🔄 Retry</button>
         </div>
       `;
@@ -438,22 +441,24 @@ document.addEventListener("DOMContentLoaded", () => {
           <tbody>
             ${accounts.map(account => `
               <tr>
-                <td class="user-name" title="${account.full_name || account.username || account._user_id}">
-                  ${account.full_name || account.username || account._user_id || 'Unknown User'}
+                <td class="user-name" title="${account.username || account._id}">
+                  ${account.username || account._id || 'Unknown User'}
                 </td>
                 <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
                   ${account.account_name || 'Unnamed Account'}
                 </td>
                 <td class="account-type">
-                  <span class="account-type-badge ${(account.account_type || 'SPOT').toLowerCase()}">${account.account_type || 'SPOT'}</span>
+                  <span class="account-type-badge spot">TRADING</span>
                 </td>
-                <td class="account-strategy">${account.strategy || 'None'}</td>
-                <td class="account-value" title="Last updated: ${formatLastUpdated(account.last_updated)}">
-                  ${formatAccountValue(account.last_value || account.current_total_value || account.account_value)}
+                <td class="account-strategy">
+                  <span class="strategy-tag">${account.strategy || 'None'}</span>
                 </td>
-                <td><span class="account-status">Active</span></td>
+                <td class="account-value" title="Current portfolio value: $${account.current_value || 0}">
+                  ${formatAccountValue(account.current_value)}
+                </td>
+                <td>${formatStatusBadge(account.overall_status, account.last_status)}</td>
                 <td>
-                  <button class="verify-user-account-btn action-btn success" data-account-id="${account.account_id || account._id || account.id}">🔍 Verify</button>
+                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>
               </tr>
             `).join('')}
@@ -523,11 +528,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Helper function to format status badges
+  function formatStatusBadge(overallStatus, lastStatus) {
+    const statusMap = {
+      'healthy': { class: 'status-healthy', text: 'Healthy' },
+      'error': { class: 'status-error', text: 'Error' },
+      'warning': { class: 'status-warning', text: 'Warning' },
+      'disabled': { class: 'status-error', text: 'Disabled' },
+      'unknown': { class: 'status-unknown', text: 'Unknown' }
+    };
+
+    const status = overallStatus || 'unknown';
+    const statusInfo = statusMap[status] || statusMap['unknown'];
+    const tooltip = lastStatus ? `Last status: ${lastStatus}` : 'No status data';
+
+    return `<span class="status-badge ${statusInfo.class}" title="${tooltip}">${statusInfo.text}</span>`;
+  }
+
   // === USERS ACCOUNTS FUNCTIONS ===
   async function loadUsersAccounts() {
     try {
       console.log('👤 Loading users accounts without strategies...');
-      const response = await fetch(`${AUTH_API_BASE}/admin/users-accounts-without-strategies`, {
+      const response = await fetch(`${AUTH_API_BASE}/admin/accounts/users-accounts`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -592,7 +614,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <th>User</th>
               <th>Account Name</th>
               <th>Exchange</th>
-              <th>Account Type</th>
+              <th>Last Value</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -600,17 +622,19 @@ document.addEventListener("DOMContentLoaded", () => {
           <tbody>
             ${accounts.map(account => `
               <tr>
-                <td class="user-name" title="${account.full_name || account.username || account._user_id}">
-                  ${account.full_name || account.username || account._user_id || 'Unknown User'}
+                <td class="user-name" title="${account.username || account._id}">
+                  ${account.username || account._id || 'Unknown User'}
                 </td>
                 <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
                   ${account.account_name || 'Unnamed Account'}
                 </td>
-                <td class="account-exchange">${account.exchange || 'Unknown'}</td>
-                <td class="account-type">${account.account_type || 'Unknown'}</td>
-                <td><span class="account-status no-strategy">No Strategy</span></td>
+                <td class="account-exchange">USER</td>
+                <td class="account-value" title="Current portfolio value: $${account.current_value || 0}">
+                  ${formatAccountValue(account.current_value)}
+                </td>
+                <td>${formatStatusBadge(account.overall_status, account.last_status)}</td>
                 <td>
-                  <button class="verify-user-account-btn action-btn success" data-account-id="${account.account_id || account._id || account.id}">🔍 Verify</button>
+                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>
               </tr>
             `).join('')}
@@ -1915,7 +1939,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load source accounts
   async function loadSourceAccounts() {
     try {
-      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts`, {
+      const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -1923,8 +1947,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
+        console.log('📊 Source accounts dashboard data:', data);
         displaySourceAccounts(data.source_accounts);
       } else {
         console.error('❌ Failed to load source accounts:', data.detail);
@@ -1948,19 +1973,19 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML = sourceAccounts.map(account => `
       <tr>
         <td>${account.account_name}</td>
-        <td>${account.exchange}</td>
-        <td>${account.account_type}</td>
-        <td>${account.strategy}</td>
+        <td>${account.exchange || 'Binance'}</td>
         <td>
-          <span class="status-badge ${account.is_active ? 'active' : 'inactive'}">
-            ${account.is_active ? '✅ Active' : '⏸️ Inactive'}
-          </span>
+          <span class="strategy-tag">${account.strategy}</span>
         </td>
+        <td class="account-value" title="Current portfolio value: $${account.current_value || 0}">
+          ${formatAccountValue(account.current_value)}
+        </td>
+        <td>${formatStatusBadge(account.overall_status, account.last_status)}</td>
         <td>${formatDate(account.created_at)}</td>
         <td>
-          <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
-          <button class="verify-source-btn action-btn success" data-id="${account.id}">🔍 Verify</button>
-          <button class="delete-source-btn action-btn danger" data-id="${account.id}">🗑️ Delete</button>
+          <button class="edit-source-btn action-btn" data-id="${account._id}">✏️ Edit</button>
+          <button class="verify-source-btn action-btn success" data-id="${account._id}">🔍 Verify</button>
+          <button class="delete-source-btn action-btn danger" data-id="${account._id}">🗑️ Delete</button>
         </td>
       </tr>
     `).join('');
