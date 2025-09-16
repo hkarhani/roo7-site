@@ -258,20 +258,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentInvoice = null;
 
   // === SYSTEM OVERVIEW FUNCTIONS ===
+  // Global variable to store the latest platform analytics value
+  let latestPlatformValue = 0;
+
   async function loadSystemOverview() {
     try {
-      // Fetch both the original dashboard summary and the new total portfolio value
-      const [summaryResponse, portfolioResponse] = await Promise.all([
-        fetch(`${INVOICING_API_BASE}/admin/dashboard/summary`, {
-          headers: getAuthHeaders(token)
-        }),
-        fetch(`${AUTH_API_BASE}/admin/analytics/platform-total-value`, {
-          headers: getAuthHeaders(token)
-        })
-      ]);
+      // Only fetch the dashboard summary, use stored platform analytics value
+      const summaryResponse = await fetch(`${INVOICING_API_BASE}/admin/dashboard/summary`, {
+        headers: getAuthHeaders(token)
+      });
 
       let summary = {};
-      let totalPortfolioValue = 0;
 
       // Handle summary response
       if (summaryResponse.ok) {
@@ -281,20 +278,10 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn('Failed to load dashboard summary, using defaults');
       }
 
-      // Handle portfolio value response
-      if (portfolioResponse.ok) {
-        const portfolioData = await portfolioResponse.json();
-        if (portfolioData.success && portfolioData.total_value) {
-          totalPortfolioValue = portfolioData.total_value;
-          console.log(`💰 Loaded total portfolio value: $${totalPortfolioValue.toLocaleString()}`);
-        }
-      } else {
-        console.warn('Failed to load total portfolio value, using 0');
-      }
+      // Use the stored platform analytics value (updated by loadPlatformAnalytics)
+      summary.total_portfolio_value = latestPlatformValue;
+      console.log(`💰 Using stored platform analytics value: $${latestPlatformValue.toLocaleString()}`);
 
-      // Add the total portfolio value to the summary object
-      summary.total_portfolio_value = totalPortfolioValue;
-      
       displaySystemOverview(summary);
     } catch (error) {
       console.error('Error loading system overview:', error);
@@ -3360,6 +3347,17 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('📊 Summary data:', data.summary);
 
       if (data.success) {
+        // Update global variable with latest platform value for System Overview
+        if (data.summary && data.summary.current_value) {
+          latestPlatformValue = data.summary.current_value;
+          console.log(`💰 Updated global platform value: $${latestPlatformValue.toLocaleString()}`);
+        } else if (data.chart_data && data.chart_data.length > 0) {
+          // Fallback: use last chart data entry
+          const lastEntry = data.chart_data[data.chart_data.length - 1];
+          latestPlatformValue = lastEntry.value || 0;
+          console.log(`💰 Updated global platform value from chart: $${latestPlatformValue.toLocaleString()}`);
+        }
+
         if (data.chart_data && data.chart_data.length > 0) {
           console.log('✅ Platform analytics has data, displaying chart...');
           displayPlatformAnalyticsChart(data.chart_data, data.summary || {});
