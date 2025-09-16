@@ -513,6 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function formatStatusBadge(overallStatus, lastStatus) {
     const statusMap = {
       'healthy': { class: 'status-healthy', text: 'Healthy' },
+      'successful': { class: 'status-healthy', text: 'Successful' },
       'error': { class: 'status-error', text: 'Error' },
       'warning': { class: 'status-warning', text: 'Warning' },
       'disabled': { class: 'status-error', text: 'Disabled' },
