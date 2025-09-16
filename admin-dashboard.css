@@ -4062,3 +4062,21 @@ td.account-value {
   text-align: center !important;
   font-family: 'Consolas', 'Monaco', monospace !important;
 }
+
+/* Fix truncated Strategy names - remove width restrictions */
+.active-accounts-table .account-strategy,
+.account-strategy {
+  max-width: none !important;
+  width: auto !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
+  white-space: normal !important;
+}
+
+/* Fix strategy column on mobile too */
+@media (max-width: 768px) {
+  .active-accounts-table .account-strategy {
+    max-width: none !important;
+    width: auto !important;
+  }
+}
