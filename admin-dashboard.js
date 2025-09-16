@@ -3358,6 +3358,11 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log(`💰 Updated global platform value from chart: $${latestPlatformValue.toLocaleString()}`);
         }
 
+        // Refresh System Overview to show updated portfolio value (fix race condition)
+        if (latestPlatformValue > 0) {
+          loadSystemOverview();
+        }
+
         if (data.chart_data && data.chart_data.length > 0) {
           console.log('✅ Platform analytics has data, displaying chart...');
           displayPlatformAnalyticsChart(data.chart_data, data.summary || {});
@@ -3408,15 +3413,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const values = chartData.map(point => parseFloat(point.value || 0));
 
-    // Create chart HTML
+    // Destroy existing chart if it exists to ensure color changes apply
+    const existingCanvas = document.getElementById('platformChart');
+    if (existingCanvas && existingCanvas.chart) {
+      existingCanvas.chart.destroy();
+    }
+
+    // Create chart HTML with timestamp to force recreation
+    const chartId = 'platformChart_' + Date.now();
     container.innerHTML = `
       <div class="chart-wrapper">
-        <canvas id="platformChart" width="800" height="400"></canvas>
+        <canvas id="${chartId}" width="800" height="400"></canvas>
       </div>
     `;
 
     // Initialize Chart.js
-    const ctx = document.getElementById('platformChart').getContext('2d');
+    const ctx = document.getElementById(chartId).getContext('2d');
     new Chart(ctx, {
       type: 'line',
       data: {
