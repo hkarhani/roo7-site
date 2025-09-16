@@ -512,8 +512,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Helper function to format status badges
   function formatStatusBadge(overallStatus, lastStatus) {
     const statusMap = {
-      'healthy': { class: 'status-healthy', text: 'Healthy' },
-      'successful': { class: 'status-healthy', text: 'Successful' },
+      'healthy': { class: 'status-success', text: 'Healthy' },
+      'successful': { class: 'status-success', text: 'Successful' },
       'error': { class: 'status-error', text: 'Error' },
       'warning': { class: 'status-warning', text: 'Warning' },
       'disabled': { class: 'status-error', text: 'Disabled' },
@@ -3316,6 +3316,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === PLATFORM ANALYTICS FUNCTIONS ===
+  let platformAnalyticsChart = null;
+
   async function loadPlatformAnalytics() {
     try {
       const selectedPeriod = document.getElementById('platform-period-select')?.value || 30;
@@ -3408,23 +3410,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const values = chartData.map(point => parseFloat(point.value || 0));
 
-    // Destroy existing chart if it exists to ensure color changes apply
-    const existingCanvas = document.getElementById('platformChart');
-    if (existingCanvas && existingCanvas.chart) {
-      existingCanvas.chart.destroy();
+    // Destroy existing chart instance if it exists
+    if (platformAnalyticsChart) {
+      platformAnalyticsChart.destroy();
+      platformAnalyticsChart = null;
     }
 
-    // Create chart HTML with timestamp to force recreation
-    const chartId = 'platformChart_' + Date.now();
+    // Always use consistent canvas ID for proper cleanup
+    const chartId = 'platformChart';
     container.innerHTML = `
       <div class="chart-wrapper">
         <canvas id="${chartId}" width="800" height="400"></canvas>
       </div>
     `;
 
-    // Initialize Chart.js
+    // Initialize Chart.js and store the instance
     const ctx = document.getElementById(chartId).getContext('2d');
-    new Chart(ctx, {
+    platformAnalyticsChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
