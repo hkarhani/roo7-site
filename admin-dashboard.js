@@ -646,7 +646,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
                   ${account.account_name || 'Unnamed Account'}
                 </td>
-                <td class="account-exchange">USER</td>
+                <td class="account-exchange">${account.exchange || 'Binance'}</td>
                 <td class="account-value center-align" title="Current portfolio value: $${account.current_value || 0}">
                   ${formatAccountValue(account.current_value)}
                 </td>
