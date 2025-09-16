@@ -4080,3 +4080,16 @@ td.account-value {
     width: auto !important;
   }
 }
+
+/* Fix Exchange column alignment in Users Accounts table */
+.users-accounts-table td,
+.users-accounts-table .account-exchange,
+.account-exchange {
+  vertical-align: middle !important;
+  line-height: 1.4;
+}
+
+.users-accounts-table .account-exchange {
+  text-align: center !important;
+  padding: 6px 8px !important;
+}
