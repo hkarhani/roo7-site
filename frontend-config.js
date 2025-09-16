@@ -77,9 +77,9 @@ export const DOMAIN_CONFIG = {
     // Port Configuration
     ports: {
         api: "8003",        // invoicing-api
-        auth: "443",        // auth-api  
+        auth: "443",        // auth-api
         market: "8002",     // market-data-service
-        jobs: "8004",       // jobs-manager
+        // jobs: removed - now using auth-api endpoints for jobs KPIs
         frontend: "443"
     }
 };
@@ -91,10 +91,10 @@ export const DOMAIN_CONFIG = {
 export const API_CONFIG = {
     // Base URLs - auth-api on port 443, others as configured
     baseUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,  // explicit port 443
-    authUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,  // explicit port 443  
+    authUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,  // explicit port 443
     invoicingUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.api}`,
     marketUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.market}`,
-    jobsUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.jobs}`,  // jobs-manager URL
+    // jobsUrl: removed - now using auth-api for jobs endpoints
     
     // Endpoints
     endpoints: {
@@ -148,15 +148,9 @@ export const API_CONFIG = {
             users: "/admin/users/search"
         },
         
-        // Jobs Manager Endpoints
-        jobsManager: {
-            status: "/admin/jobs-manager/status",
-            activeJobs: "/admin/jobs-manager/active-jobs",
-            dashboard: "/admin/jobs-manager/dashboard",
-            jobExecutions: "/admin/jobs-manager/job-executions",
-            forceExecution: "/admin/jobs-manager/force-execution",
-            pause: "/admin/jobs-manager/pause",
-            resume: "/admin/jobs-manager/resume"
+        // Jobs Analytics Endpoints (now via auth-api)
+        jobsAnalytics: {
+            kpis: "/admin/analytics/jobs-kpis"
         }
     }
 };
@@ -305,13 +299,9 @@ export const CONFIG_UTILS = {
         return `^https:\\/\\/([a-zA-Z0-9-]+\\.)?(${escapedDomains.join('|')})$`;
     },
     
-    // Get full API URL - routes jobs endpoints to jobs-manager container
+    // Get full API URL - all endpoints now route to auth-api
     getApiUrl: (endpoint = '') => {
-        // Route jobs manager endpoints to dedicated container
-        if (endpoint.includes('/admin/jobs-manager/')) {
-            return `${API_CONFIG.jobsUrl}${endpoint}`;
-        }
-        // Default to auth-api for all other endpoints
+        // All endpoints now route to auth-api
         return `${API_CONFIG.baseUrl}${endpoint}`;
     },
     

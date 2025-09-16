@@ -1682,121 +1682,116 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadJobsManagerOverview() {
     try {
       const container = document.getElementById('jobs-overview');
-      
+
       // Show loading state
-      container.innerHTML = '<div class="loading-state"><p>Loading Jobs Manager status...</p></div>';
-      
-      // Fetch Jobs Manager enhanced active jobs data (routes to jobs-manager container automatically)
-      const enhancedResponse = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/jobs-manager/frontend/active-jobs-enhanced'), {
+      container.innerHTML = '<div class="loading-state"><p>Loading Jobs KPIs...</p></div>';
+
+      // Fetch Jobs KPIs from auth-api
+      const response = await fetch(CONFIG.CONFIG_UTILS.getApiUrl('/admin/analytics/jobs-kpis'), {
         method: 'GET',
         mode: 'cors',
         credentials: 'include',
         headers: getAuthHeaders(token)
       });
-      
-      if (!enhancedResponse.ok) {
-        throw new Error(`HTTP ${enhancedResponse.status}: ${enhancedResponse.statusText}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
-      const enhancedData = await enhancedResponse.json();
-      
-      // Extract status and summary data from enhanced response
-      const statusData = {
-        available: true,
-        running: enhancedData.active_jobs && enhancedData.active_jobs.length > 0,
-        active_jobs_count: enhancedData.active_jobs ? enhancedData.active_jobs.length : 0
-      };
-      
-      const summaryData = enhancedData;
-      
-      renderJobsManagerOverview(statusData, summaryData);
-      
+
+      const kpisData = await response.json();
+
+      renderJobsManagerOverview(kpisData);
+
     } catch (error) {
-      console.error('Error loading Jobs Manager overview:', error);
+      console.error('Error loading Jobs KPIs:', error);
       const container = document.getElementById('jobs-overview');
       container.innerHTML = `
         <div class="error-state">
-          <p>❌ Failed to load Jobs Manager: ${error.message}</p>
+          <p>❌ Failed to load Jobs KPIs: ${error.message}</p>
           <button onclick="loadJobsManagerOverview()" class="retry-btn">🔄 Retry</button>
         </div>
       `;
     }
   }
   
-  function renderJobsManagerOverview(statusData, summaryData) {
+  function renderJobsManagerOverview(kpisData) {
     const container = document.getElementById('jobs-overview');
-    
-    const isRunning = statusData.available && statusData.running;
+
+    // Extract KPI data
+    const activeJobs = kpisData.total_active_jobs || 0;
+    const recentExecutions = kpisData.recent_executions_24h || 0;
+    const successRate = kpisData.success_rate_24h || 0;
+    const failedJobs = kpisData.failed_jobs_24h || 0;
+    const nextRun = kpisData.next_scheduled_run;
+
+    // Status breakdown
+    const statusBreakdown = kpisData.status_breakdown || {};
+    const runStatusBreakdown = kpisData.run_status_breakdown || {};
+
+    // Determine manager status
+    const isRunning = activeJobs > 0;
     const statusIcon = isRunning ? '🟢' : '🔴';
-    const statusText = isRunning ? 'Running' : 'Stopped';
-    const statusClass = isRunning ? 'success' : 'danger';
-    
-    // Enhanced comprehensive data processing
-    const jobsArray = summaryData.active_jobs || [];
-    const activeJobs = jobsArray.length;
-    const uniqueAccounts = [...new Set(jobsArray.map(job => job.account_id))].length;
-    
-    // Job health analysis - use API summary if available
-    const healthyJobs = summaryData.summary?.healthy || jobsArray.filter(job => job.is_healthy === true).length;
-    const warningJobs = summaryData.summary?.needs_attention || jobsArray.filter(job => job.needs_attention === true).length;
-    const runningJobs = summaryData.summary?.running || jobsArray.filter(job => job.is_running === true).length;
-    
-    // Execution performance metrics
-    const avgExecutionTime = jobsArray.length > 0 ? 
-      Math.round(jobsArray.reduce((sum, job) => sum + (job.avg_execution_time || 0), 0) / jobsArray.length) : 0;
-    const totalExecutions = jobsArray.reduce((sum, job) => sum + (job.execution_count || 0), 0);
-    const successRate = activeJobs > 0 ? 
-      Math.round((healthyJobs / activeJobs) * 100) : 0;
-    
-    // Financial metrics
-    const totalManaged = jobsArray.reduce((sum, job) => sum + (job.account_value || 0), 0);
-    const highValueAccounts = jobsArray.filter(job => (job.account_value || 0) > 10000).length;
-    
-    // Recent activity analysis
-    const now = new Date();
-    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const recentExecutions = jobsArray.filter(job => {
-      const lastRun = job.last_run_at ? new Date(job.last_run_at) : null;
-      return lastRun && lastRun > last24h;
-    }).length;
+    const statusText = isRunning ? 'Active' : 'No Jobs';
+
+    // Format next run time
+    let nextRunText = 'Not scheduled';
+    if (nextRun) {
+      try {
+        const nextRunDate = new Date(nextRun);
+        const now = new Date();
+        const diffMs = nextRunDate.getTime() - now.getTime();
+        const diffMins = Math.round(diffMs / (1000 * 60));
+
+        if (diffMins <= 0) {
+          nextRunText = 'Due now';
+        } else if (diffMins < 60) {
+          nextRunText = `In ${diffMins} min`;
+        } else {
+          const diffHours = Math.round(diffMins / 60);
+          nextRunText = `In ${diffHours}h`;
+        }
+      } catch (e) {
+        nextRunText = 'Invalid time';
+      }
+    }
     
     container.innerHTML = `
       <div class="overview-summary">
-        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
+        <div class="stat-card admin">
           <div class="stat-icon">${statusIcon}</div>
           <div class="stat-label">Jobs Manager</div>
           <div class="stat-value">${statusText}</div>
-          <div class="stat-action">Click to manage →</div>
+          <div class="stat-action">${activeJobs} active jobs</div>
         </div>
-        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
-          <div class="stat-icon">🔧</div>
-          <div class="stat-label">Active Jobs</div>
-          <div class="stat-value">${activeJobs}</div>
-          <div class="stat-action">View details →</div>
+        <div class="stat-card admin">
+          <div class="stat-icon">📈</div>
+          <div class="stat-label">Success Rate (24h)</div>
+          <div class="stat-value">${successRate}%</div>
+          <div class="stat-action">${recentExecutions} executions</div>
         </div>
-        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
-          <div class="stat-icon">✅</div>
-          <div class="stat-label">Healthy Jobs</div>
-          <div class="stat-value">${healthyJobs}</div>
-          <div class="stat-action">Success rate: ${successRate}% →</div>
+        <div class="stat-card admin ${failedJobs > 0 ? 'warning' : ''}">
+          <div class="stat-icon">${failedJobs > 0 ? '⚠️' : '✅'}</div>
+          <div class="stat-label">Failed Jobs (24h)</div>
+          <div class="stat-value">${failedJobs}</div>
+          <div class="stat-action">${failedJobs > 0 ? 'Needs attention' : 'All good'}</div>
         </div>
-        <div class="stat-card admin ${warningJobs > 0 ? 'warning' : ''} clickable" onclick="window.location.href='admin-jobs-manager.html'">
-          <div class="stat-icon">${warningJobs > 0 ? '⚠️' : '👍'}</div>
-          <div class="stat-label">${warningJobs > 0 ? 'Need Attention' : 'All Systems OK'}</div>
-          <div class="stat-value">${warningJobs > 0 ? warningJobs : '0'}</div>
-          <div class="stat-action">${warningJobs > 0 ? 'Fix issues →' : 'All operational →'}</div>
+        <div class="stat-card admin">
+          <div class="stat-icon">⏰</div>
+          <div class="stat-label">Next Run</div>
+          <div class="stat-value">${nextRunText}</div>
+          <div class="stat-action">Scheduled jobs</div>
         </div>
-        <div class="stat-card admin clickable" onclick="window.location.href='admin-jobs-manager.html'">
+        <div class="stat-card admin">
           <div class="stat-icon">📊</div>
-          <div class="stat-label">Trading Accounts</div>
-          <div class="stat-value">${uniqueAccounts}</div>
-          <div class="stat-action">Manage accounts →</div>
+          <div class="stat-label">Status Breakdown</div>
+          <div class="stat-value">${Object.keys(statusBreakdown).length} types</div>
+          <div class="stat-action">ACTIVE: ${statusBreakdown.ACTIVE || 0}</div>
         </div>
         <div class="stat-card admin clickable" onclick="loadJobsManagerOverview()">
           <div class="stat-icon">🔄</div>
-          <div class="stat-label">Quick Refresh</div>
-          <div class="stat-value">Now</div>
-          <div class="stat-action">Refresh data →</div>
+          <div class="stat-label">Refresh</div>
+          <div class="stat-value">Update</div>
+          <div class="stat-action">Click to refresh →</div>
         </div>
       </div>
     `;
