@@ -23,17 +23,17 @@
   grid-column: 1 / -1;
 }
 
-/* Analytics Section Professional Styling */
+/* Restore original analytics styling for both sections */
 .analytics-section {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   overflow: hidden;
 }
 
 .analytics-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
   padding: 20px;
 }
 
@@ -41,14 +41,14 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .analytics-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  color: white;
+  color: #333;
 }
 
 .analytics-status-badges {
@@ -62,28 +62,14 @@
   flex-direction: column;
   align-items: center;
   gap: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 10px 15px;
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
 }
 
 .analytics-status-badges .status-label {
   font-size: 0.75rem;
-  opacity: 0.9;
+  color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 500;
-}
-
-.analytics-status-badges .status-badge {
-  font-size: 1rem;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .analytics-toolbar {
@@ -108,43 +94,37 @@
 .selector-label {
   font-size: 0.75rem;
   font-weight: 500;
-  opacity: 0.9;
+  color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .selector-input {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  background: white;
+  border: 1px solid #ddd;
+  color: #333;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.875rem;
-  backdrop-filter: blur(10px);
-}
-
-.selector-input option {
-  background: #333;
-  color: white;
 }
 
 .analytics-refresh-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: #007bff;
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 16px;
-  border-radius: 8px;
+  border: 1px solid #007bff;
+  padding: 8px 16px;
+  border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
   font-size: 0.875rem;
 }
 
 .analytics-refresh-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
+  background: #0056b3;
+  border-color: #0056b3;
 }
+
 
 /* Professional Button System */
 .primary-button,
