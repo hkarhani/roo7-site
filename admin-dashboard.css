@@ -4021,6 +4021,6 @@
 
 
 /* Center align for table values */
-.center-align {
+.account-value.center-align {
   text-align: center !important;
 }
