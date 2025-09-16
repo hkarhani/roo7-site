@@ -545,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Determine if status is success/failed based on overall status
     let statusClass, statusText;
 
-    if (overallStatus === 'healthy' || lastStatus === 'healthy' || lastStatus === 'success' || lastStatus === 'active') {
+    if (overallStatus === 'healthy' || overallStatus === 'successful' || lastStatus === 'healthy' || lastStatus === 'success' || lastStatus === 'successful' || lastStatus === 'active') {
       statusClass = 'status-success';
       statusText = 'Success';
     } else if (overallStatus === 'error' || overallStatus === 'disabled' || lastStatus === 'error' || lastStatus === 'failed') {
