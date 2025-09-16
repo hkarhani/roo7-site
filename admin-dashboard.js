@@ -334,7 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="stat-card admin clickable" onclick="window.location.href='/admin-accounts.html'">
           <div class="stat-icon">📈</div>
           <div class="stat-label">Total Portfolio Value</div>
-          <div class="stat-value">$${(summary.total_portfolio_value || 0).toLocaleString()}</div>
+          <div class="stat-value">$${(summary.total_portfolio_value || 0).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</div>
           <div class="stat-action">All account values combined →</div>
         </div>
       </div>
