@@ -3813,11 +3813,7 @@
   font-style: italic;
 }
 
-/* Account table specific styles */
-.account-value {
-  text-align: right;
-  font-family: 'Consolas', 'Monaco', monospace;
-}
+/* Account table specific styles - REMOVED: conflicted with center alignment */
 
 .user-name {
   font-weight: 500;

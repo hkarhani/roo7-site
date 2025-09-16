@@ -443,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-value center-align" title="Current portfolio value: $${account.current_value || 0}">
                   ${formatAccountValue(account.current_value)}
                 </td>
-                <td>${formatStatusBadge(account.overall_status || account.last_status, account.last_status)}</td>
+                <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
                 <td>
                   <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>
@@ -649,7 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-value center-align" title="Current portfolio value: $${account.current_value || 0}">
                   ${formatAccountValue(account.current_value)}
                 </td>
-                <td>${formatStatusBadge(account.overall_status || account.last_status, account.last_status)}</td>
+                <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
                 <td>
                   <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>
