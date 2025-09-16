@@ -4049,3 +4049,16 @@ span.status-badge.status-unknown,
   color: #495057 !important;
   border: 1px solid #dee2e6 !important;
 }
+
+/* NUCLEAR OPTION - Force center alignment with maximum specificity */
+table tbody tr td.account-value.center-align,
+table tbody tr td.account-value,
+tbody tr td.account-value.center-align,
+tbody tr td.account-value,
+tr td.account-value.center-align,
+tr td.account-value,
+td.account-value.center-align,
+td.account-value {
+  text-align: center !important;
+  font-family: 'Consolas', 'Monaco', monospace !important;
+}
