@@ -3421,8 +3421,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Prepare data for LineChart (same format as Source Accounts)
     const chartDataFormatted = chartData.map(point => ({
-      x: point.timestamp,
-      y: parseFloat(point.value || 0),
+      date: new Date(point.timestamp),  // Use 'date' like Source Accounts
+      value: parseFloat(point.value || 0),
       label: `$${parseFloat(point.value || 0).toLocaleString()}`
     }));
 
@@ -3441,7 +3441,7 @@ document.addEventListener("DOMContentLoaded", () => {
         responsive: true,
         colors: ['#3b82f6'],
         tooltipFormatter: function(data) {
-          const date = new Date(data.x);
+          const date = new Date(data.date);  // Use 'date' field
           const localTime = date.toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -3450,7 +3450,7 @@ document.addEventListener("DOMContentLoaded", () => {
             minute: '2-digit',
             timeZoneName: 'short'
           });
-          return `${localTime}<br/>Total Platform Value: ${data.label || data.y}`;
+          return `${localTime}<br/>Total Platform Value: ${data.label || data.value}`;  // Use 'value' field
         },
         xAxisFormatter: function(value) {
           const date = new Date(value);
@@ -3475,7 +3475,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Set data for the LineChart
       platformAnalyticsChart.setData([{
         name: 'Total Platform Value',
-        data: chartDataFormatted,
+        values: chartDataFormatted,  // Use 'values' like Source Accounts
         color: '#3b82f6'
       }]);
 
