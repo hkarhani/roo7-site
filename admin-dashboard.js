@@ -440,10 +440,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-strategy">
                   <span class="strategy-tag">${account.strategy || 'None'}</span>
                 </td>
-                <td class="account-value" title="Current portfolio value: $${account.current_value || 0}">
+                <td class="account-value center-align" title="Current portfolio value: $${account.current_value || 0}">
                   ${formatAccountValue(account.current_value)}
                 </td>
-                <td>${formatStatusBadge(account.overall_status, account.last_status)}</td>
+                <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
                 <td>
                   <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>
@@ -461,24 +461,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (value !== null && value !== undefined) {
       console.log(`💰 Formatting account value: ${value} (type: ${typeof value})`);
     }
-    
+
     if (!value || value === 0 || value === '0' || value === null || value === undefined) {
       return '<span class="no-value">N/A</span>';
     }
-    
+
     const numValue = parseFloat(value);
     if (isNaN(numValue) || numValue <= 0) {
       return '<span class="no-value">N/A</span>';
     }
-    
-    // Format based on value size
-    if (numValue >= 1000000) {
-      return `<span class="account-value-amount">$${(numValue / 1000000).toFixed(1)}M</span>`;
-    } else if (numValue >= 1000) {
-      return `<span class="account-value-amount">$${(numValue / 1000).toFixed(1)}K</span>`;
-    } else {
-      return `<span class="account-value-amount">$${numValue.toFixed(2)}</span>`;
-    }
+
+    // Show exact amount with 1 decimal place and thousand separators
+    return `<span class="account-value-amount">$${numValue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</span>`;
   }
 
   // Helper function to format last updated timestamp
@@ -652,10 +646,10 @@ document.addEventListener("DOMContentLoaded", () => {
                   ${account.account_name || 'Unnamed Account'}
                 </td>
                 <td class="account-exchange">USER</td>
-                <td class="account-value" title="Current portfolio value: $${account.current_value || 0}">
+                <td class="account-value center-align" title="Current portfolio value: $${account.current_value || 0}">
                   ${formatAccountValue(account.current_value)}
                 </td>
-                <td>${formatStatusBadge(account.overall_status, account.last_status)}</td>
+                <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
                 <td>
                   <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>

@@ -4018,3 +4018,9 @@
   background: #2980b9;
 }
 
+
+
+/* Center align for table values */
+.center-align {
+  text-align: center !important;
+}
