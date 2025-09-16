@@ -3411,91 +3411,83 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Prepare data for Chart.js
-    const labels = chartData.map(point => {
-      const date = new Date(point.timestamp);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
-
-    const values = chartData.map(point => parseFloat(point.value || 0));
-
     // Destroy existing chart instance if it exists
     if (platformAnalyticsChart) {
-      platformAnalyticsChart.destroy();
+      if (typeof platformAnalyticsChart.destroy === 'function') {
+        platformAnalyticsChart.destroy();
+      }
       platformAnalyticsChart = null;
     }
 
-    // Always use consistent canvas ID for proper cleanup
-    const chartId = 'platformChart';
-    container.innerHTML = `
-      <div class="chart-wrapper">
-        <canvas id="${chartId}" width="800" height="400"></canvas>
-      </div>
-    `;
+    // Prepare data for LineChart (same format as Source Accounts)
+    const chartDataFormatted = chartData.map(point => ({
+      x: point.timestamp,
+      y: parseFloat(point.value || 0),
+      label: `$${parseFloat(point.value || 0).toLocaleString()}`
+    }));
 
-    // Initialize Chart.js and store the instance
-    const ctx = document.getElementById(chartId).getContext('2d');
-    platformAnalyticsChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Total Platform Value',
-          data: values,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointHoverRadius: 8,
-          pointBackgroundColor: '#3b82f6',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2,
-          pointHoverBackgroundColor: '#3b82f6',
-          pointHoverBorderColor: '#ffffff',
-          pointHoverBorderWidth: 3,
-        }]
-      },
-      options: {
+    try {
+      // Get container dimensions for responsive chart
+      const containerRect = container.getBoundingClientRect();
+
+      // Create new LineChart instance with same config as Source Accounts
+      platformAnalyticsChart = new LineChart('platform-analytics-chart', {
+        width: Math.max(300, containerRect.width - 40),
+        height: Math.min(320, Math.max(280, containerRect.height - 20)),
+        animate: true,
+        showGrid: true,
+        showTooltip: true,
+        margin: { top: 40, right: 30, bottom: 40, left: 60 },
         responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                if (value >= 1000000) {
-                  return '$' + (value / 1000000).toFixed(1) + 'M';
-                } else if (value >= 1000) {
-                  return '$' + (value / 1000).toFixed(1) + 'K';
-                } else {
-                  return '$' + value.toFixed(0);
-                }
-              }
-            }
-          },
-          x: {
-            ticks: {
-              maxTicksLimit: 10
-            }
-          }
+        colors: ['#3b82f6'],
+        tooltipFormatter: function(data) {
+          const date = new Date(data.x);
+          const localTime = date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+          });
+          return `${localTime}<br/>Total Platform Value: ${data.label || data.y}`;
         },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top'
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const value = context.parsed.y;
-                return `Total Value: $${value.toLocaleString()}`;
-              }
-            }
+        xAxisFormatter: function(value) {
+          const date = new Date(value);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        },
+        yAxisFormatter: function(value) {
+          if (value >= 1000000) {
+            return '$' + (value / 1000000).toFixed(1) + 'M';
+          } else if (value >= 1000) {
+            return '$' + (value / 1000).toFixed(1) + 'K';
+          } else {
+            return '$' + value.toFixed(0);
           }
         }
-      }
-    });
+      });
+
+      // Set data for the LineChart
+      platformAnalyticsChart.setData([{
+        name: 'Total Platform Value',
+        data: chartDataFormatted,
+        color: '#3b82f6'
+      }]);
+
+    } catch (error) {
+      console.error('❌ Error creating Platform Analytics LineChart:', error);
+      container.innerHTML = `
+        <div class="error-state">
+          <p>❌ Failed to create chart: ${error.message}</p>
+          <button class="retry-btn platform-analytics-retry">🔄 Retry</button>
+        </div>
+      `;
+    }
   }
 
   function updatePlatformSummaryStats(summary) {
