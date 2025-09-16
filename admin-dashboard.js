@@ -1975,6 +1975,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load source accounts
   async function loadSourceAccounts() {
     try {
+      console.log('🔍 Loading source accounts from dashboard endpoint...');
       const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1982,18 +1983,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
+      console.log('📡 Source accounts response status:', response.status);
       const data = await response.json();
+      console.log('📊 Source accounts response data:', data);
 
       if (response.ok) {
-        console.log('📊 Source accounts dashboard data:', data);
+        console.log('✅ Source accounts loaded successfully, count:', data.source_accounts?.length || 0);
         displaySourceAccounts(data.source_accounts);
       } else {
         console.error('❌ Failed to load source accounts:', data.detail);
-        showNotification('Failed to load source accounts', 'error');
+        showNotification(`Failed to load source accounts: ${data.detail}`, 'error');
       }
     } catch (error) {
       console.error('❌ Error loading source accounts:', error);
-      showNotification('Error loading source accounts', 'error');
+      showNotification(`Error loading source accounts: ${error.message}`, 'error');
     }
   }
 
@@ -3343,18 +3346,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
+      console.log('📡 Platform analytics response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json();
+        console.error('❌ Platform analytics API error:', errorData);
+        throw new Error(`HTTP ${response.status}: ${errorData.detail || response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('📊 Platform analytics data:', data);
+      console.log('📊 Platform analytics full response:', data);
+      console.log('📊 Chart data points:', data.chart_data?.length || 0);
+      console.log('📊 Summary data:', data.summary);
 
-      if (data.success && data.chart_data) {
-        displayPlatformAnalyticsChart(data.chart_data, data.summary || {});
-        updatePlatformSummaryStats(data.summary || {});
+      if (data.success) {
+        if (data.chart_data && data.chart_data.length > 0) {
+          console.log('✅ Platform analytics has data, displaying chart...');
+          displayPlatformAnalyticsChart(data.chart_data, data.summary || {});
+          updatePlatformSummaryStats(data.summary || {});
+        } else {
+          console.warn('⚠️ Platform analytics successful but no chart data');
+          document.getElementById('platform-analytics-chart').innerHTML = `
+            <div class="empty-state">
+              <p>📭 No platform analytics data available</p>
+              <small>Platform data will appear as users start trading</small>
+            </div>
+          `;
+          updatePlatformSummaryStats(data.summary || {});
+        }
       } else {
-        throw new Error('No platform analytics data available');
+        throw new Error('Platform analytics API returned success: false');
       }
 
     } catch (error) {
