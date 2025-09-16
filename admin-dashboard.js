@@ -3424,12 +3424,18 @@ document.addEventListener("DOMContentLoaded", () => {
         datasets: [{
           label: 'Total Platform Value',
           data: values,
-          borderColor: '#3498db',
-          backgroundColor: 'rgba(52, 152, 219, 0.1)',
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
           fill: true,
           tension: 0.4,
-          pointRadius: 3,
-          pointHoverRadius: 6,
+          pointRadius: 4,
+          pointHoverRadius: 8,
+          pointBackgroundColor: '#3b82f6',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointHoverBackgroundColor: '#3b82f6',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 3,
         }]
       },
       options: {
