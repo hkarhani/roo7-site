@@ -3380,12 +3380,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (error) {
       console.error('❌ Error loading platform analytics:', error);
-      document.getElementById('platform-analytics-chart').innerHTML = `
+      const container = document.getElementById('platform-analytics-chart');
+      container.innerHTML = `
         <div class="error-state">
           <p>❌ Failed to load platform analytics: ${error.message}</p>
-          <button onclick="loadPlatformAnalytics()" class="retry-btn">🔄 Retry</button>
+          <button class="retry-btn platform-analytics-retry">🔄 Retry</button>
         </div>
       `;
+
+      // Add event listener to the retry button
+      const retryButton = container.querySelector('.platform-analytics-retry');
+      if (retryButton) {
+        retryButton.addEventListener('click', async () => {
+          await loadPlatformAnalytics();
+        });
+      }
     }
   }
 
@@ -3515,6 +3524,26 @@ document.addEventListener("DOMContentLoaded", () => {
     loadPlatformAnalytics();
   }
 
+  function setupPlatformAnalyticsEventListeners() {
+    // Period selector change
+    const periodSelect = document.getElementById('platform-period-select');
+    if (periodSelect) {
+      periodSelect.addEventListener('change', async () => {
+        console.log('🔄 Platform Analytics period changed to:', periodSelect.value);
+        await loadPlatformAnalytics();
+      });
+    }
+
+    // Refresh button
+    const refreshButton = document.getElementById('refresh-platform-analytics');
+    if (refreshButton) {
+      refreshButton.addEventListener('click', async () => {
+        console.log('🔄 Platform Analytics refresh clicked');
+        await loadPlatformAnalytics();
+      });
+    }
+  }
+
   // Initialize dashboard
   console.log('🚀 Admin Dashboard: Starting initialization...');
   loadSystemOverview();
@@ -3532,6 +3561,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSourceAccounts();
   initializeSourceAnalytics();
   loadPlatformAnalytics();
+  setupPlatformAnalyticsEventListeners();
   
   }); // End of authorization check
 });
