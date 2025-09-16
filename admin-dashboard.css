@@ -4022,8 +4022,11 @@ td.account-value.center-align {
   text-align: center !important;
 }
 
-/* Override any other right-aligned value classes */
-.account-value {
+/* Override any other right-aligned value classes - FORCE CENTER ALIGNMENT */
+.account-value,
+td.account-value,
+.account-value.center-align,
+td.account-value.center-align {
   text-align: center !important;
   font-family: 'Consolas', 'Monaco', monospace;
 }
