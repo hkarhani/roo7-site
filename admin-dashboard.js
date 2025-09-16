@@ -1999,7 +1999,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="strategy-tag">${account.strategy}</span>
         </td>
         <td class="col-value" style="text-align: center;">${formatProfessionalValue(account.current_value)}</td>
-        <td class="col-status">${getProfessionalStatusBadge(account.overall_status, account.last_status)}</td>
+        <td class="col-status">${getProfessionalStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
         <td>${formatDate(account.created_at)}</td>
         <td>
           <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
