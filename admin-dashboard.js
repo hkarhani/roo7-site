@@ -546,10 +546,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const accountFlag = normalizeBoolean(accountValue);
     const jobFlag = jobValue === null || jobValue === undefined ? null : normalizeBoolean(jobValue);
 
-    const accountBadge = `<span class="state-badge ${accountFlag ? 'state-yes' : 'state-no'}" title="Account flag">${accountFlag ? '✅ Account' : '❌ Account'}</span>`;
+    const accountBadge = `<span class="state-badge ${accountFlag ? 'state-no' : 'state-yes'}" title="Account flag">${accountFlag ? '❌ Account' : '✅ Account'}</span>`;
     const jobBadge = jobFlag === null
       ? '<span class="state-badge state-unknown" title="No active job">— Job</span>'
-      : `<span class="state-badge ${jobFlag ? 'state-yes' : 'state-no'}" title="Active job flag">${jobFlag ? '✅ Job' : '❌ Job'}</span>`;
+      : `<span class="state-badge ${jobFlag ? 'state-no' : 'state-yes'}" title="Active job flag">${jobFlag ? '❌ Job' : '✅ Job'}</span>`;
 
     return `<div class="state-pair">${accountBadge}${jobBadge}</div>`;
   }
