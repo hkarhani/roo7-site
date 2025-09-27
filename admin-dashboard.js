@@ -422,6 +422,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <th>Strategy</th>
               <th>Last Value</th>
               <th>Status</th>
+              <th>Revoked</th>
+              <th>Disabled</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -444,6 +446,8 @@ document.addEventListener("DOMContentLoaded", () => {
                   ${formatAccountValue(account.current_value)}
                 </td>
                 <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
+                <td>${renderStatePair(account.is_revoked, account.active_job_is_revoked)}</td>
+                <td>${renderStatePair(account.is_disabled, account.active_job_is_disabled)}</td>
                 <td>
                   <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>
@@ -525,6 +529,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const tooltip = lastStatus ? `Last status: ${lastStatus}` : 'No status data';
 
     return `<span class="status-badge ${statusInfo.class}" title="${tooltip}">${statusInfo.text}</span>`;
+  }
+
+  function normalizeBoolean(value) {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      return ['true', '1', 'yes', 'y'].includes(normalized);
+    }
+    return false;
+  }
+
+  function renderStatePair(accountValue, jobValue) {
+    const accountFlag = normalizeBoolean(accountValue);
+    const jobFlag = jobValue === null || jobValue === undefined ? null : normalizeBoolean(jobValue);
+
+    const accountBadge = `<span class="state-badge ${accountFlag ? 'state-yes' : 'state-no'}" title="Account flag">${accountFlag ? '✅ Account' : '❌ Account'}</span>`;
+    const jobBadge = jobFlag === null
+      ? '<span class="state-badge state-unknown" title="No active job">— Job</span>'
+      : `<span class="state-badge ${jobFlag ? 'state-yes' : 'state-no'}" title="Active job flag">${jobFlag ? '✅ Job' : '❌ Job'}</span>`;
+
+    return `<div class="state-pair">${accountBadge}${jobBadge}</div>`;
   }
 
   function formatProfessionalValue(value) {
