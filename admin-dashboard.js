@@ -2110,6 +2110,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const resultsContainer = document.getElementById('troubleshoot-results');
     
     const statusClass = result.success ? 'result-success' : 'result-error';
+    const totalUnrealized = (result.total_unrealized_pnl_usdt !== undefined && result.total_unrealized_pnl_usdt !== null)
+      ? result.total_unrealized_pnl_usdt
+      : (result.detailed_breakdown?.summary?.total_unrealized_pnl_usdt || 0);
+    const totalUnrealizedColor = totalUnrealized >= 0 ? '#28a745' : '#dc3545';
+    const totalUnrealizedLabel = `${totalUnrealized >= 0 ? '✅' : '⚠️'} $${formatNumber(totalUnrealized || 0)}`;
     
     resultsContainer.innerHTML = `
       ${result.account_status_message ? `
@@ -2133,6 +2138,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="margin-bottom: 8px;"><strong>API Key:</strong> <span style="color: ${result.api_key_valid ? '#28a745' : '#dc3545'};">${result.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
             <div style="margin-bottom: 8px;"><strong>IP Whitelist:</strong> <span style="color: ${result.ip_whitelisted ? '#28a745' : '#dc3545'};">${result.ip_whitelisted ? '✅ Yes' : '❌ No'}</span></div>
             <div><strong>Total Value:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">$${formatNumber(result.total_usdt_value || 0)}</span></div>
+            <div style="margin-top: 8px;"><strong>Unrealized PnL:</strong> <span style="font-weight: bold; color: ${totalUnrealizedColor};">${totalUnrealizedLabel}</span></div>
           </div>
         </div>
       </div>
