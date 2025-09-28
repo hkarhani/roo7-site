@@ -49,6 +49,80 @@ function formatPrice(num, decimals = 4) {
   });
 }
 
+function getAccountTotalValue(account) {
+  if (!account || typeof account !== 'object') {
+    return null;
+  }
+
+  const getByPath = (obj, path) => {
+    return path.reduce((acc, key) => {
+      if (acc === null || acc === undefined) {
+        return null;
+      }
+      return acc[key];
+    }, obj);
+  };
+
+  const normalizeNumeric = (value) => {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const candidatePaths = [
+    ['total_value'],
+    ['total_value_usd'],
+    ['total_value_usdt'],
+    ['current_total_value'],
+    ['current_value_with_pnl'],
+    ['portfolio_value'],
+    ['account_value'],
+    ['value_usdt'],
+    ['summary', 'total_value_usdt'],
+    ['summary', 'account_value'],
+    ['detailed_breakdown', 'summary', 'total_value_usdt'],
+    ['metrics', 'total_value'],
+    ['analytics', 'value_usdt']
+  ];
+
+  for (const path of candidatePaths) {
+    const candidate = normalizeNumeric(getByPath(account, path));
+    if (candidate !== null) {
+      return candidate;
+    }
+  }
+
+  const baseValue = normalizeNumeric(account.current_value);
+  if (baseValue === null) {
+    return null;
+  }
+
+  const pnlCandidatePaths = [
+    ['unrealized_pnl'],
+    ['total_unrealized_pnl'],
+    ['total_unrealized_pnl_usdt'],
+    ['summary', 'total_unrealized_pnl_usdt']
+  ];
+
+  let pnlTotal = 0;
+  let pnlFound = false;
+  for (const path of pnlCandidatePaths) {
+    const pnl = normalizeNumeric(getByPath(account, path));
+    if (pnl !== null) {
+      pnlTotal += pnl;
+      pnlFound = true;
+    }
+  }
+
+  if (pnlFound) {
+    return baseValue + pnlTotal;
+  }
+
+  return baseValue;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Use centralized API configuration  
   const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
@@ -367,6 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
           username: acc.username,
           strategy: acc.strategy,
           current_value: acc.current_value,
+          total_value: getAccountTotalValue(acc),
           last_status: acc.last_status,
           overall_status: acc.overall_status,
           is_disabled: acc.is_disabled,
@@ -420,7 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <th>Account Name</th>
               <th>Account Type</th>
               <th>Strategy</th>
-              <th>Last Value</th>
+              <th>Total Value</th>
               <th>Status</th>
               <th>Revoked</th>
               <th>Disabled</th>
@@ -428,7 +503,14 @@ document.addEventListener("DOMContentLoaded", () => {
             </tr>
           </thead>
           <tbody>
-            ${accounts.map(account => `
+            ${accounts.map(account => {
+              const totalValue = getAccountTotalValue(account);
+              const fallbackValue = totalValue !== null ? totalValue : account.current_value;
+              const parsedTooltip = parseFloat(fallbackValue);
+              const tooltipValue = Number.isFinite(parsedTooltip) ? parsedTooltip : 0;
+              const formattedValue = formatAccountValue(fallbackValue);
+
+              return `
               <tr>
                 <td class="user-name" title="${account.username || account._id}">
                   ${account.username || account._id || 'Unknown User'}
@@ -442,8 +524,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-strategy">
                   <span class="strategy-tag">${account.strategy || 'None'}</span>
                 </td>
-                <td class="account-value center-align" title="Current portfolio value: $${account.current_value || 0}">
-                  ${formatAccountValue(account.current_value)}
+                <td class="account-value center-align" title="Total portfolio value (incl. unrealized PnL): $${formatNumber(tooltipValue)}">
+                  ${formattedValue}
                 </td>
                 <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
                 <td>${renderStatePair(account.is_revoked, account.active_job_is_revoked)}</td>
@@ -452,7 +534,8 @@ document.addEventListener("DOMContentLoaded", () => {
                   <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
                 </td>
               </tr>
-            `).join('')}
+              `;
+            }).join('')}
           </tbody>
         </table>
       </div>
