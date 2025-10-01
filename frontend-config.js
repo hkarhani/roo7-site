@@ -79,7 +79,7 @@ export const DOMAIN_CONFIG = {
         api: "8003",        // invoicing-api
         auth: "443",        // auth-api
         market: "8002",     // market-data-service
-        jobs: "8005",       // jobs-manager admin API
+        jobs: "8004",       // jobs-manager admin API
         frontend: "443"
     }
 };
