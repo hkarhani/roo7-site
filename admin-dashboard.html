@@ -273,7 +273,11 @@
           <button id="open-jobs-dashboard" class="primary-button admin">📊 Jobs Dashboard</button>
         </div>
       </div>
-      <div class="jobs-overview" id="jobs-overview"></div>
+      <div class="jobs-overview" id="jobs-overview">
+        <div class="loading-state">
+          <p>Loading jobs status...</p>
+        </div>
+      </div>
     </section>
 
     <!-- Invoice Management -->
@@ -461,6 +465,6 @@
   <!-- Scripts -->
   <script src="line-chart.js?v=1.0"></script>
   <script src="theme-manager.js?v=1"></script>
-  <script type="module" src="admin-dashboard.js?cb=observer-jobs-v2"></script>
+  <script type="module" src="admin-dashboard.js?cb=jobs-admin-fix"></script>
 </body>
 </html>
