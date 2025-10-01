@@ -1947,20 +1947,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const activeJobsMarkup = activeJobs.map(job => {
-      const jobStatus = (job.status || 'UNKNOWN').toString().toLowerCase();
+      const name = job.account_name || job.account_id || 'Unknown Account';
+      const statusText = (job.status || 'UNKNOWN').toString();
+      const normalizedStatus = statusText.toUpperCase();
+      const statusClass = ['ACTIVE', 'RUNNING'].includes(normalizedStatus)
+        ? 'success'
+        : ['FAILED', 'ERROR', 'DISABLED', 'STOPPED'].includes(normalizedStatus)
+          ? 'danger'
+          : 'primary';
+      const failures = Number.isFinite(job.consecutive_failures) ? job.consecutive_failures : 0;
+      const failureClass = failures > 0 ? 'danger' : 'success';
+
       return `
-        <div class="active-job-card">
-          <div class="active-job-header">
-            <h4>${job.account_name || job.account_id || 'Unknown Account'}</h4>
-            <span class="badge badge-${jobStatus}">${job.status || 'UNKNOWN'}</span>
-          </div>
-          <div class="active-job-body">
-            <div><strong>Run Status:</strong> ${job.run_status || '—'}</div>
-            <div><strong>Job Type:</strong> ${job.job_type || '—'}</div>
-            <div><strong>Strategy:</strong> ${job.strategy || '—'}</div>
-            <div><strong>Next Run:</strong> ${formatDate(job.next_run_at)}</div>
-            <div><strong>Last Run:</strong> ${formatDate(job.last_run_at)}</div>
-            <div><strong>Consecutive Failures:</strong> ${job.consecutive_failures || 0}</div>
+        <div class="jobs-compact-row">
+          <span class="jobs-compact-name">${name}</span>
+          <div class="jobs-compact-meta">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+            <span class="status-badge ${failureClass}">Fails: ${failures}</span>
           </div>
         </div>
       `;

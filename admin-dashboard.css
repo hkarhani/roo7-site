@@ -4143,6 +4143,48 @@ td.account-value {
   }
 }
 
+/* Compact jobs manager list */
+.jobs-active-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.jobs-compact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card-bg, #f8f9fa);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05);
+}
+
+.jobs-compact-name {
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.jobs-compact-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dark-theme .jobs-compact-row {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.4);
+}
+
+.dark-theme .jobs-compact-name {
+  color: #f1f5f9;
+}
+
 /* Fix Exchange column alignment in Users Accounts table */
 .users-accounts-table td,
 .users-accounts-table .account-exchange,
