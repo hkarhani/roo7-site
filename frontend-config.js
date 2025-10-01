@@ -79,7 +79,7 @@ export const DOMAIN_CONFIG = {
         api: "8003",        // invoicing-api
         auth: "443",        // auth-api
         market: "8002",     // market-data-service
-        // jobs: removed - now using auth-api endpoints for jobs KPIs
+        jobs: "8005",       // jobs-manager admin API
         frontend: "443"
     }
 };
@@ -94,7 +94,7 @@ export const API_CONFIG = {
     authUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:443`,  // explicit port 443
     invoicingUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.api}`,
     marketUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.market}`,
-    // jobsUrl: removed - now using auth-api for jobs endpoints
+    jobsUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.jobs}`,
     
     // Endpoints
     endpoints: {
@@ -303,6 +303,10 @@ export const CONFIG_UTILS = {
     getApiUrl: (endpoint = '') => {
         // All endpoints now route to auth-api
         return `${API_CONFIG.baseUrl}${endpoint}`;
+    },
+
+    getJobsApiUrl: (endpoint = '') => {
+        return `${API_CONFIG.jobsUrl}${endpoint}`;
     },
     
     // Get page URL

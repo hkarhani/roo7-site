@@ -127,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Use centralized API configuration  
   const INVOICING_API_BASE = CONFIG.API_CONFIG.invoicingUrl;
   const AUTH_API_BASE = CONFIG.API_CONFIG.authUrl;
+  const JOBS_API_BASE = CONFIG.API_CONFIG.jobsUrl;
   
   // Check authentication
   const token = localStorage.getItem("token");
@@ -352,6 +353,20 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn('Failed to load dashboard summary, using defaults');
       }
 
+      // Fetch jobs execution summary from jobs-manager admin API
+      try {
+        const jobsResponse = await fetch(`${JOBS_API_BASE}/admin/jobs/summary`, {
+          headers: getAuthHeaders(token)
+        });
+        if (jobsResponse.ok) {
+          summary.jobs_summary = await jobsResponse.json();
+        } else {
+          console.warn('Failed to load jobs summary');
+        }
+      } catch (jobsError) {
+        console.warn('Jobs summary request failed:', jobsError);
+      }
+
       // Use the stored platform analytics value (updated by loadPlatformAnalytics)
       summary.total_portfolio_value = latestPlatformValue;
       console.log(`💰 Using stored platform analytics value: $${latestPlatformValue.toLocaleString()}`);
@@ -372,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const subscriptions = summary.subscriptions || summary.subscription_stats || {};
     const invoices = summary.invoices || summary.invoice_stats || {};
     const portfolio = summary.portfolio || summary.portfolio_stats || {};
+    const jobsSummary = summary.jobs_summary || {};
     
     container.innerHTML = `
       <div class="overview-summary">
@@ -410,6 +426,18 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="stat-label">Total Portfolio Value</div>
           <div class="stat-value">$${(summary.total_portfolio_value || 0).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</div>
           <div class="stat-action">All account values combined →</div>
+        </div>
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-jobs-manager.html'">
+          <div class="stat-icon">🧮</div>
+          <div class="stat-label">Jobs Executed</div>
+          <div class="stat-value">${jobsSummary.total_jobs || 0}</div>
+          <div class="stat-action">View execution history →</div>
+        </div>
+        <div class="stat-card admin clickable" onclick="window.location.href='/admin-jobs-manager.html'">
+          <div class="stat-icon">🚨</div>
+          <div class="stat-label">Job Failures</div>
+          <div class="stat-value">${jobsSummary.total_failed || 0}</div>
+          <div class="stat-action">Investigate recent failures →</div>
         </div>
       </div>
     `;
