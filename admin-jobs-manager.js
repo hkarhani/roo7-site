@@ -50,6 +50,8 @@ async function fetchJson(url, options = {}) {
   return response.json();
 }
 
+const dateTimeFormatterCache = new Map();
+
 function formatDate(value) {
   if (!value) return '—';
   try {
@@ -57,13 +59,24 @@ function formatDate(value) {
     if (Number.isNaN(date.getTime())) {
       return value;
     }
-    return date.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const cacheKey = `date-${timeZone}`;
+    let formatter = dateTimeFormatterCache.get(cacheKey);
+    if (!formatter) {
+      formatter = new Intl.DateTimeFormat(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone,
+      });
+      dateTimeFormatterCache.set(cacheKey, formatter);
+    }
+
+    return formatter.format(date);
   } catch (e) {
     return value;
   }
