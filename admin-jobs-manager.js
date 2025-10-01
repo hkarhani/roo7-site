@@ -8,6 +8,9 @@ const token = localStorage.getItem('token');
 let currentExecutionId = null;
 let currentJobDetails = null;
 let currentLogLines = 400;
+let currentPage = 1;
+let currentPageSize = 10;
+let currentJobsTotal = 0;
 
 function requireToken() {
   if (!token) {
@@ -113,15 +116,30 @@ async function loadJobs() {
   if (status) params.append('status', status);
   if (jobType) params.append('job_type', jobType);
   if (accountSearch) params.append('account_id', accountSearch);
-  params.append('limit', '100');
+  params.append('limit', String(currentPageSize));
+  params.append('offset', String(Math.max(0, (currentPage - 1) * currentPageSize)));
 
   try {
     const data = await fetchJson(`${JOBS_API_BASE}/admin/jobs?${params.toString()}`);
-    renderJobsTable(data.items || []);
+    currentJobsTotal = data.total || 0;
+    const items = data.items || [];
+
+    if (!items.length && currentJobsTotal > 0 && currentPage > 1) {
+      const totalPages = Math.max(1, Math.ceil(currentJobsTotal / currentPageSize));
+      if (currentPage > totalPages) {
+        currentPage = totalPages;
+        return loadJobs();
+      }
+    }
+
+    renderJobsTable(items);
     attachJobRowHandlers();
+    updatePaginationControls();
   } catch (error) {
     console.error('Failed to load job executions', error);
     renderJobsTable([]);
+    currentJobsTotal = 0;
+    updatePaginationControls();
   }
 }
 
@@ -132,22 +150,50 @@ function renderActiveJobs(items) {
     container.innerHTML = '<div class="empty">No active jobs found.</div>';
     return;
   }
-  container.innerHTML = items.map(item => `
-      <div class="active-job-card">
-        <div class="active-job-header">
-          <h4>${item.account_name || item.account_id || 'Unknown Account'}</h4>
-          <span class="badge badge-${item.status?.toLowerCase() || 'unknown'}">${item.status || '—'}</span>
-        </div>
-        <div class="active-job-body">
-          <div><strong>Run Status:</strong> ${item.run_status || '—'}</div>
-          <div><strong>Job Type:</strong> ${item.job_type || '—'}</div>
-          <div><strong>Strategy:</strong> ${item.strategy || '—'}</div>
-          <div><strong>Next Run:</strong> ${formatDate(item.next_run_at)}</div>
-          <div><strong>Last Run:</strong> ${formatDate(item.last_run_at)}</div>
-          <div><strong>Failures:</strong> ${item.consecutive_failures || 0}</div>
-        </div>
-      </div>
-    `).join('');
+  const rows = items.map(item => {
+    const status = (item.status || 'UNKNOWN').toString().toUpperCase();
+    const statusClass = status === 'ACTIVE'
+      ? 'active'
+      : status === 'DISABLED'
+        ? 'disabled'
+        : status === 'PENDING'
+          ? 'pending'
+          : 'unknown';
+
+    return `
+      <tr>
+        <td>
+          <div class="status-dot">
+            <span class="status-indicator ${statusClass}"></span>
+            <span>${item.account_name || item.account_id || 'Unknown Account'}</span>
+          </div>
+        </td>
+        <td>${item.job_type || '—'}</td>
+        <td>${item.run_status || '—'}</td>
+        <td>${formatDate(item.next_run_at)}</td>
+        <td>${formatDate(item.last_run_at)}</td>
+        <td>${item.consecutive_failures || 0}</td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <table class="active-jobs-summary">
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>Type</th>
+          <th>Run Status</th>
+          <th>Next Run</th>
+          <th>Last Run</th>
+          <th>Fails</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
 }
 
 async function loadActiveJobs() {
@@ -275,6 +321,7 @@ function attachJobRowHandlers() {
 
 function setupFilters() {
   document.getElementById('apply-filters').addEventListener('click', () => {
+    currentPage = 1;
     loadJobs();
   });
 
@@ -283,6 +330,80 @@ function setupFilters() {
     loadJobs();
     loadActiveJobs();
   });
+}
+
+function getPaginationElements() {
+  return {
+    pageSizeSelect: document.getElementById('jobs-page-size'),
+    prevButton: document.getElementById('jobs-prev'),
+    nextButton: document.getElementById('jobs-next'),
+    pageInfo: document.getElementById('jobs-page-info'),
+  };
+}
+
+function updatePaginationControls() {
+  const { pageSizeSelect, prevButton, nextButton, pageInfo } = getPaginationElements();
+
+  if (pageSizeSelect && pageSizeSelect.value !== String(currentPageSize)) {
+    pageSizeSelect.value = String(currentPageSize);
+  }
+
+  const totalPages = Math.max(1, Math.ceil((currentJobsTotal || 0) / currentPageSize));
+  if (currentPage > totalPages) {
+    currentPage = totalPages;
+  }
+  if (currentPage < 1) {
+    currentPage = 1;
+  }
+  if (pageInfo) {
+    const start = currentJobsTotal === 0 ? 0 : ((currentPage - 1) * currentPageSize) + 1;
+    const end = Math.min(currentJobsTotal, currentPage * currentPageSize);
+    const rangeText = currentJobsTotal === 0 ? '0' : `${start}-${end}`;
+    pageInfo.textContent = `Page ${Math.min(currentPage, totalPages)} of ${totalPages} • Showing ${rangeText} of ${currentJobsTotal}`;
+  }
+
+  if (prevButton) {
+    prevButton.disabled = currentPage <= 1;
+  }
+  if (nextButton) {
+    nextButton.disabled = currentPage >= totalPages;
+  }
+}
+
+function setupPaginationControls() {
+  const { pageSizeSelect, prevButton, nextButton } = getPaginationElements();
+
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener('change', () => {
+      const parsed = parseInt(pageSizeSelect.value, 10);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        currentPageSize = parsed;
+        currentPage = 1;
+        loadJobs();
+      }
+    });
+  }
+
+  if (prevButton) {
+    prevButton.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        loadJobs();
+      }
+    });
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener('click', () => {
+      const totalPages = Math.max(1, Math.ceil((currentJobsTotal || 0) / currentPageSize));
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        loadJobs();
+      }
+    });
+  }
+
+  updatePaginationControls();
 }
 
 function setupLogControls() {
@@ -328,6 +449,7 @@ window.addEventListener('DOMContentLoaded', () => {
   requireToken();
   initNavigation();
   setupFilters();
+  setupPaginationControls();
   setupLogControls();
   loadSummary();
   loadJobs();
