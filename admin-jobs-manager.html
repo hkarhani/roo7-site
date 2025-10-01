@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Jobs Manager Admin</title>
   <script type="module" src="frontend-config.js?v=3.5"></script>
-  <script type="module" src="admin-jobs-manager.js?v=3.4"></script>
+  <script type="module" src="admin-jobs-manager.js?v=3.5"></script>
   <script src="theme-manager.js?v=1.2"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.5" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.5" />
@@ -320,6 +320,27 @@
     .status-indicator.disabled { background: #dc3545; }
     .status-indicator.pending { background: #facc15; }
     .status-indicator.unknown { background: #94a3b8; }
+
+    .btn-force-run {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #d0d5dd;
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-force-run:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-force-run:not(:disabled):hover {
+      background: #1d4ed8;
+    }
 
     @media (max-width: 960px) {
       .layout-grid { flex-direction: column; }

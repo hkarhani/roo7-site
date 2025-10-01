@@ -183,6 +183,7 @@ function renderActiveJobs(items) {
         <td>${formatDate(item.next_run_at)}</td>
         <td>${formatDate(item.last_run_at)}</td>
         <td>${item.consecutive_failures || 0}</td>
+        <td><button class="btn-force-run" data-id="${item._id}">Run Now</button></td>
       </tr>
     `;
   }).join('');
@@ -197,6 +198,7 @@ function renderActiveJobs(items) {
           <th>Next Run</th>
           <th>Last Run</th>
           <th>Fails</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -204,6 +206,29 @@ function renderActiveJobs(items) {
       </tbody>
     </table>
   `;
+
+  container.querySelectorAll('.btn-force-run').forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const id = button.getAttribute('data-id');
+      if (!id) return;
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Scheduling...';
+      try {
+        await fetchJson(`${JOBS_API_BASE}/admin/active-jobs/${encodeURIComponent(id)}/run-now`, {
+          method: 'POST',
+        });
+        loadActiveJobs();
+        loadJobs();
+      } catch (error) {
+        console.error('Failed to force job execution', error);
+        alert(`Failed to force execution: ${error.message}`);
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    });
+  });
 }
 
 async function loadActiveJobs() {
