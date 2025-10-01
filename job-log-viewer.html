@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Job Log Viewer</title>
+  <script type="module" src="frontend-config.js?v=3.5"></script>
+  <script type="module" src="job-log-viewer.js?v=1.0"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.5" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: #0b1521;
+      color: #e5ecf6;
+    }
+
+    .viewer-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+    }
+
+    .viewer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .viewer-header h1 {
+      margin: 0;
+      font-size: 1.6rem;
+    }
+
+    .viewer-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-actions button,
+    .viewer-controls button {
+      background: rgba(229, 236, 246, 0.1);
+      color: #e5ecf6;
+      border: 1px solid rgba(229, 236, 246, 0.2);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .viewer-actions button:hover,
+    .viewer-controls button:hover {
+      background: rgba(229, 236, 246, 0.2);
+    }
+
+    .viewer-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .viewer-controls select {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(229, 236, 246, 0.3);
+      background: rgba(15, 27, 40, 0.9);
+      color: #e5ecf6;
+    }
+
+    .viewer-controls label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+
+    .viewer-meta {
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: #9fb4d3;
+      line-height: 1.6;
+    }
+
+    .viewer-meta strong {
+      color: #e5ecf6;
+    }
+
+    .viewer-status {
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      min-height: 1em;
+    }
+
+    .viewer-status.error {
+      color: #f8d7da;
+    }
+
+    .viewer-status.success {
+      color: #c3f0ca;
+    }
+
+    pre#viewer-log {
+      margin: 0;
+      background: rgba(9, 17, 27, 0.9);
+      border: 1px solid rgba(229, 236, 246, 0.15);
+      border-radius: 10px;
+      padding: 16px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 70vh;
+      overflow: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+    }
+
+    .auto-refresh {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .auto-refresh input[type="checkbox"] {
+      transform: scale(1.1);
+    }
+
+    @media (max-width: 640px) {
+      .viewer-container {
+        padding: 20px 16px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewer-container">
+    <div class="viewer-header">
+      <h1 id="viewer-title">Job Log Viewer</h1>
+      <div class="viewer-actions">
+        <button id="viewer-copy-api" type="button">Copy API URL</button>
+        <button id="viewer-download" type="button">Download</button>
+      </div>
+    </div>
+
+    <div class="viewer-meta">
+      <div><strong>Execution ID:</strong> <span id="viewer-execution">—</span></div>
+      <div><strong>Active Job ID:</strong> <span id="viewer-active">—</span></div>
+      <div><strong>Log Path:</strong> <span id="viewer-path">—</span></div>
+    </div>
+
+    <div class="viewer-controls">
+      <label>
+        Lines
+        <select id="viewer-lines">
+          <option value="200">200</option>
+          <option value="400" selected>400</option>
+          <option value="800">800</option>
+          <option value="1600">1600</option>
+          <option value="3200">3200</option>
+        </select>
+      </label>
+      <button id="viewer-refresh" type="button">Reload</button>
+      <label class="auto-refresh">
+        <input type="checkbox" id="viewer-autorefresh" />
+        Auto refresh (30s)
+      </label>
+      <span id="viewer-updated" class="viewer-meta"></span>
+    </div>
+
+    <div id="viewer-status" class="viewer-status"></div>
+    <pre id="viewer-log">Initializing...</pre>
+  </div>
+</body>
+</html>
