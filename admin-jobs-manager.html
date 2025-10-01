@@ -85,9 +85,9 @@
     }
 
     .layout-grid {
-      display: grid;
-      gap: 20px;
-      grid-template-columns: 2fr 1fr;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
     .card {
@@ -201,18 +201,11 @@
       padding: 20px 0;
     }
 
-    .stack-section {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      margin-bottom: 25px;
-    }
-
     .job-detail, .job-log {
-      margin-top: 20px;
-      background: #fff;
+      margin-top: 0;
+      background: #f9fafc;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border: 1px solid #eef0f3;
       padding: 18px;
     }
 
@@ -329,7 +322,7 @@
     .status-indicator.unknown { background: #94a3b8; }
 
     @media (max-width: 960px) {
-      .layout-grid { grid-template-columns: 1fr; }
+      .layout-grid { flex-direction: column; }
     }
   </style>
 </head>
@@ -372,31 +365,31 @@
       </div>
     </section>
 
-    <div class="stack-section">
-      <div id="job-detail" class="job-detail hidden"></div>
-      <div id="job-log" class="job-log hidden">
-        <div class="job-log-header">
-          <h3>Execution Log</h3>
-          <div class="log-controls">
-            <label>
-              Lines
-              <select id="job-log-lines">
-                <option value="200">200</option>
-                <option value="400" selected>400</option>
-                <option value="800">800</option>
-                <option value="1600">1600</option>
-              </select>
-            </label>
-            <button id="job-log-refresh" type="button">Reload</button>
-            <button id="job-log-open" type="button">Open Full Log</button>
-          </div>
-        </div>
-        <div id="job-log-meta" class="log-meta"></div>
-        <pre id="job-log-content">Select a job execution to view its log.</pre>
-      </div>
-    </div>
-
     <div class="layout-grid">
+      <div id="job-detail-card" class="card hidden">
+        <div id="job-detail" class="job-detail hidden"></div>
+        <div id="job-log" class="job-log hidden">
+          <div class="job-log-header">
+            <h3>Execution Log</h3>
+            <div class="log-controls">
+              <label>
+                Lines
+                <select id="job-log-lines">
+                  <option value="200">200</option>
+                  <option value="400" selected>400</option>
+                  <option value="800">800</option>
+                  <option value="1600">1600</option>
+                </select>
+              </label>
+              <button id="job-log-refresh" type="button">Reload</button>
+              <button id="job-log-open" type="button">Open Full Log</button>
+            </div>
+          </div>
+          <div id="job-log-meta" class="log-meta"></div>
+          <pre id="job-log-content">Select a job execution to view its log.</pre>
+        </div>
+      </div>
+
       <div class="card">
         <h2>Execution History</h2>
         <div class="filters">

@@ -281,6 +281,7 @@ async function showJobDetails(executionId) {
   const logContainer = document.getElementById('job-log');
   const logContent = document.getElementById('job-log-content');
   const linesSelect = document.getElementById('job-log-lines');
+  const detailCard = document.getElementById('job-detail-card');
 
   if (!detailsContainer || !logContainer || !logContent) {
     return;
@@ -295,6 +296,7 @@ async function showJobDetails(executionId) {
   detailsContainer.innerHTML = '<h3>Execution Details</h3><p>Loading details...</p>';
   logContainer.classList.remove('hidden');
   logContent.textContent = 'Loading log...';
+  detailCard?.classList.remove('hidden');
 
   try {
     const job = await fetchJson(`${JOBS_API_BASE}/admin/jobs/${executionId}`);
