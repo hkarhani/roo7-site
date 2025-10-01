@@ -77,6 +77,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadSystemOverview() {
     try {
       const summary = await fetchJson(`${INVOICING_API_BASE}/admin/dashboard/summary`, token);
+      try {
+        const jobsSummary = await fetchJson(`${JOBS_API_BASE}/admin/jobs/summary`, token);
+        summary.jobs_summary = jobsSummary;
+      } catch (jobsError) {
+        console.warn('Jobs summary fetch failed:', jobsError);
+      }
       displaySystemOverview(summary.summary || summary || {});
     } catch (error) {
       console.error('Failed to load system overview:', error);
@@ -199,22 +205,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function renderJobsSummary(summary, activeJobs) {
     const container = document.getElementById('jobs-overview');
-    const statusContainer = document.getElementById('jobs-manager-status');
-    const breakdownContainer = document.getElementById('jobs-status-breakdown');
+    if (!container) {
+      return;
+    }
 
-    const total = summary.total_jobs || 0;
-    const failures = summary.total_failed || 0;
-    const success = summary.total_success || 0;
+    const total = summary?.total_jobs ?? 0;
+    const failures = summary?.total_failed ?? 0;
+    const success = summary?.total_success ?? 0;
     const successRate = total > 0 ? Math.round((success / total) * 100) : 0;
+    const lastExecution = summary?.last_execution ? formatDate(summary.last_execution) : '—';
+    const lastFailure = summary?.last_failure ? formatDate(summary.last_failure) : '—';
 
-    statusContainer.innerHTML = `
+    const overviewCard = `
       <div class="status-card">
         <div class="status-header">
           <span class="status-icon">${total > 0 ? '🟢' : '🟡'}</span>
           <div>
             <h3>Observer Jobs Manager</h3>
-            <p>Total executions: ${total}</p>
+            <p>${total} total executions</p>
           </div>
+          <button class="secondary-button" onclick="window.open('/admin-jobs-manager.html', '_blank')">📊 Open Jobs Dashboard</button>
         </div>
         <div class="status-details">
           <div class="status-grid">
@@ -231,28 +241,31 @@ document.addEventListener('DOMContentLoaded', async () => {
               <span>Success Rate</span>
             </div>
             <div>
-              <strong>${formatDate(summary.last_execution)}</strong>
+              <strong>${lastExecution}</strong>
               <span>Last Execution</span>
+            </div>
+            <div>
+              <strong>${lastFailure}</strong>
+              <span>Last Failure</span>
             </div>
           </div>
         </div>
       </div>
     `;
 
-    breakdownContainer.innerHTML = `
-      <p><strong>Last Failure:</strong> ${formatDate(summary.last_failure)}</p>
-    `;
-
     if (!activeJobs.length) {
-      container.innerHTML = '<div class="empty-state">No active jobs currently scheduled.</div>';
+      container.innerHTML = `
+        ${overviewCard}
+        <div class="empty-state">No active jobs currently scheduled.</div>
+      `;
       return;
     }
 
-    container.innerHTML = activeJobs.map(job => `
+    const activeJobsMarkup = activeJobs.map(job => `
       <div class="active-job-card">
         <div class="active-job-header">
           <h4>${job.account_name || job.account_id || 'Unknown Account'}</h4>
-          <span class="badge">${job.status || '—'}</span>
+          <span class="badge badge-${(job.status || 'UNKNOWN').toLowerCase()}">${job.status || 'UNKNOWN'}</span>
         </div>
         <div class="active-job-body">
           <div><strong>Run Status:</strong> ${job.run_status || '—'}</div>
@@ -260,10 +273,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div><strong>Strategy:</strong> ${job.strategy || '—'}</div>
           <div><strong>Next Run:</strong> ${formatDate(job.next_run_at)}</div>
           <div><strong>Last Run:</strong> ${formatDate(job.last_run_at)}</div>
-          <div><strong>Failures:</strong> ${job.consecutive_failures || 0}</div>
+          <div><strong>Consecutive Failures:</strong> ${job.consecutive_failures || 0}</div>
         </div>
       </div>
     `).join('');
+
+    container.innerHTML = `
+      ${overviewCard}
+      <div class="jobs-active-list">${activeJobsMarkup}</div>
+    `;
   }
 
   function attachEventListeners() {
