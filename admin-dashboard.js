@@ -49,6 +49,29 @@ function formatPrice(num, decimals = 4) {
   });
 }
 
+function formatCurrency(value, decimals = 2, withSign = true) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return '--';
+  }
+  const numeric = Number(value);
+  const formatted = Math.abs(numeric).toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+  const sign = !withSign || numeric === 0 ? '' : (numeric > 0 ? '+' : '-');
+  return `${sign}$${formatted}`;
+}
+
+function formatPercentage(value, decimals = 2) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return '--';
+  }
+  const numeric = Number(value);
+  const prefix = numeric > 0 ? '+' : numeric < 0 ? '-' : '';
+  const formatted = Math.abs(numeric).toFixed(decimals);
+  return `${prefix}${formatted}%`;
+}
+
 function getAccountTotalValue(account) {
   if (!account || typeof account !== 'object') {
     return null;
@@ -335,6 +358,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // === SYSTEM OVERVIEW FUNCTIONS ===
   // Global variable to store the latest platform analytics value
   let latestPlatformValue = 0;
+  const PLATFORM_KPI_PERIODS = [
+    { id: '1d', days: 1 },
+    { id: '3d', days: 3 },
+    { id: '7d', days: 7 },
+    { id: '30d', days: 30 }
+  ];
+  let platformAnalyticsSnapshot = { chart: [], summary: {} };
 
   async function loadSystemOverview() {
     try {
@@ -3622,10 +3652,16 @@ document.addEventListener("DOMContentLoaded", () => {
           loadSystemOverview();
         }
 
+        platformAnalyticsSnapshot = {
+          chart: Array.isArray(data.chart_data) ? data.chart_data : [],
+          summary: data.summary || {}
+        };
+
         if (data.chart_data && data.chart_data.length > 0) {
           console.log('✅ Platform analytics has data, displaying chart...');
           displayPlatformAnalyticsChart(data.chart_data, data.summary || {});
           updatePlatformSummaryStats(data.summary || {});
+          updatePlatformKpis(platformAnalyticsSnapshot.chart, platformAnalyticsSnapshot.summary);
         } else {
           console.warn('⚠️ Platform analytics successful but no chart data');
           document.getElementById('platform-analytics-chart').innerHTML = `
@@ -3635,6 +3671,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           `;
           updatePlatformSummaryStats(data.summary || {});
+          updatePlatformKpis([], data.summary || {});
         }
       } else {
         throw new Error('Platform analytics API returned success: false');
@@ -3649,6 +3686,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="retry-btn platform-analytics-retry">🔄 Retry</button>
         </div>
       `;
+      resetPlatformKpis();
 
       // Add event listener to the retry button
       const retryButton = container.querySelector('.platform-analytics-retry');
@@ -3772,6 +3810,149 @@ document.addEventListener("DOMContentLoaded", () => {
         usersBadge.textContent = summary.users_with_value || 0;
       }
     }
+  }
+
+  function resetPlatformKpis() {
+    PLATFORM_KPI_PERIODS.forEach(({ id }) => {
+      const changeEl = document.getElementById(`platform-kpi-${id}-change`);
+      const profitEl = document.getElementById(`platform-kpi-${id}-profit`);
+      const pctEl = document.getElementById(`platform-kpi-${id}-pct`);
+      if (changeEl) changeEl.textContent = '--';
+      if (profitEl) profitEl.textContent = '--';
+      if (pctEl) {
+        pctEl.textContent = '--';
+        pctEl.classList.remove('success', 'danger');
+      }
+    });
+  }
+
+  function updatePlatformKpis(chartData = [], summary = {}) {
+    if (!Array.isArray(chartData) || chartData.length === 0) {
+      resetPlatformKpis();
+      return;
+    }
+
+    const normalized = chartData
+      .map((point) => {
+        const timestamp = point.timestamp || point.date || point.datetime || point.time;
+        const time = timestamp ? new Date(timestamp).getTime() : NaN;
+        if (!Number.isFinite(time)) {
+          return null;
+        }
+        const valueKeys = [
+          'value',
+          'total_value',
+          'current_value',
+          'current_total_value',
+          'portfolio_value',
+          'account_value',
+          'value_usdt',
+          'total_value_usdt'
+        ];
+        let numericValue = null;
+        for (const key of valueKeys) {
+          if (point[key] !== undefined && point[key] !== null) {
+            const parsed = Number(point[key]);
+            if (!Number.isNaN(parsed)) {
+              numericValue = parsed;
+              break;
+            }
+          }
+        }
+        if (numericValue === null && point.metrics && point.metrics.total_value !== undefined) {
+          const parsed = Number(point.metrics.total_value);
+          if (!Number.isNaN(parsed)) {
+            numericValue = parsed;
+          }
+        }
+        if (numericValue === null) {
+          return null;
+        }
+        return { time, value: numericValue };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.time - b.time);
+
+    if (!normalized.length) {
+      resetPlatformKpis();
+      return;
+    }
+
+    const latestPoint = normalized[normalized.length - 1];
+
+    const findSummaryValue = (keys) => {
+      if (!summary) return null;
+      for (const key of keys) {
+        if (summary[key] !== undefined && summary[key] !== null) {
+          const numeric = Number(summary[key]);
+          if (!Number.isNaN(numeric)) {
+            return numeric;
+          }
+        }
+      }
+      return null;
+    };
+
+    PLATFORM_KPI_PERIODS.forEach(({ id, days }) => {
+      const changeKeys = [`change_${id}`, `change_${days}d`, `change_${days}_days`, `change_${days * 24}h`];
+      const profitKeys = [`net_profit_${id}`, `net_profit_${days}d`, `net_profit_${days}_days`, `net_profit_${days * 24}h`];
+      if (days === 1) {
+        changeKeys.push('change_24h');
+        profitKeys.push('net_profit_24h');
+      }
+      if (days === 3) {
+        changeKeys.push('change_3d');
+        profitKeys.push('net_profit_3d');
+      }
+      if (days === 7) {
+        changeKeys.push('change_7d');
+        profitKeys.push('net_profit_7d');
+      }
+      if (days === 30) {
+        changeKeys.push('change_30d', 'change_1m', 'change_30_days');
+        profitKeys.push('net_profit_30d', 'net_profit_1m', 'net_profit_30_days');
+      }
+      const summaryChange = findSummaryValue(changeKeys);
+      const summaryProfit = findSummaryValue(profitKeys);
+
+      const milliseconds = days * 24 * 60 * 60 * 1000;
+      const targetTime = latestPoint.time - milliseconds;
+
+      let baselineValue = normalized[0].value;
+      for (let i = normalized.length - 1; i >= 0; i -= 1) {
+        if (normalized[i].time <= targetTime) {
+          baselineValue = normalized[i].value;
+          break;
+        }
+      }
+
+      const latestValue = latestPoint.value;
+      const computedChange = latestValue - baselineValue;
+      const changeValue = summaryChange !== null ? summaryChange : computedChange;
+      const profitValue = summaryProfit !== null ? summaryProfit : changeValue;
+      const pctValue = baselineValue !== 0 ? ((changeValue / baselineValue) * 100) : null;
+
+      const changeEl = document.getElementById(`platform-kpi-${id}-change`);
+      if (changeEl) {
+        changeEl.textContent = formatCurrency(changeValue, 2, true);
+      }
+
+      const profitEl = document.getElementById(`platform-kpi-${id}-profit`);
+      if (profitEl) {
+        profitEl.textContent = formatCurrency(profitValue, 2, true);
+      }
+
+      const pctEl = document.getElementById(`platform-kpi-${id}-pct`);
+      if (pctEl) {
+        pctEl.textContent = formatPercentage(pctValue);
+        pctEl.classList.remove('success', 'danger');
+        if (pctValue !== null && pctValue > 0.01) {
+          pctEl.classList.add('success');
+        } else if (pctValue !== null && pctValue < -0.01) {
+          pctEl.classList.add('danger');
+        }
+      }
+    });
   }
 
   function refreshPlatformAnalytics() {

@@ -1765,6 +1765,136 @@
   justify-content: center;
 }
 
+.analytics-kpi-section {
+  margin-top: 24px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+
+.analytics-kpi-section .kpi-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analytics-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+}
+
+.kpi-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.kpi-card h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.kpi-trend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.kpi-trend.success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #047857;
+}
+
+.kpi-trend.danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+.kpi-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.kpi-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.dark-theme .analytics-kpi-section {
+  border-color: #374151;
+}
+
+.dark-theme .kpi-card {
+  background: #111827;
+  border-color: #1f2937;
+  box-shadow: none;
+}
+
+.dark-theme .kpi-card:hover {
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.45);
+}
+
+.dark-theme .kpi-card h4,
+.dark-theme .kpi-value,
+.dark-theme .kpi-title {
+  color: #f8fafc;
+}
+
+.dark-theme .kpi-label {
+  color: #cbd5f5;
+}
+
+.dark-theme .kpi-trend {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
+.dark-theme .kpi-trend.success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.dark-theme .kpi-trend.danger {
+  background: rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
+}
+
 /* RESPONSIVE DESIGN */
 @media (max-width: 1024px) {
   .admin-grid {
