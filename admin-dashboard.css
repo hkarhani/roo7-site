@@ -600,6 +600,116 @@
   overflow-x: auto;
 }
 
+.active-accounts-pagination {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.active-accounts-pagination-controls,
+.active-accounts-pagination-size {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination-btn {
+  background: linear-gradient(135deg, #eef4ff 0%, #dee8ff 100%);
+  border: 1px solid #c7d5ff;
+  color: #324f8f;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, #dbe6ff 0%, #c5d6ff 100%);
+  border-color: #b2c7ff;
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f1f3f5;
+  border-color: #e9ecef;
+  color: #868e96;
+}
+
+.active-accounts-pagination-size label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.active-accounts-pagination-size select {
+  border: 1px solid #c7d5ff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  background: #fff;
+  color: #324f8f;
+  font-weight: 600;
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #324f8f;
+}
+
+.pagination-count {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.dark-theme .active-accounts-pagination {
+  background: transparent;
+}
+
+.dark-theme .pagination-btn {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.25) 0%, rgba(59, 130, 246, 0.2) 100%);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #dbeafe;
+}
+
+.dark-theme .pagination-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.35) 0%, rgba(59, 130, 246, 0.3) 100%);
+  border-color: rgba(96, 165, 250, 0.55);
+}
+
+.dark-theme .pagination-btn:disabled {
+  background: rgba(148, 163, 184, 0.15);
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #94a3b8;
+}
+
+.dark-theme .active-accounts-pagination-size label {
+  color: #cbd5f5;
+}
+
+.dark-theme .active-accounts-pagination-size select {
+  background: rgba(30, 41, 59, 0.9);
+  color: #dbeafe;
+  border-color: rgba(96, 165, 250, 0.45);
+}
+
+.dark-theme .pagination-info {
+  color: #dbeafe;
+}
+
+.dark-theme .pagination-count {
+  color: #94a3b8;
+}
+
 .active-accounts-table {
   width: 100%;
   border-collapse: collapse;
@@ -2016,6 +2126,26 @@
   
   .active-accounts-table .account-strategy {
     max-width: 80px;
+  }
+
+  .active-accounts-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .active-accounts-pagination-controls,
+  .active-accounts-pagination-size {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .active-accounts-pagination-size {
+    flex-wrap: wrap;
+  }
+
+  .active-accounts-pagination-size select {
+    flex-grow: 1;
   }
 }
 

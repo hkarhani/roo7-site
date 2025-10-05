@@ -191,6 +191,52 @@ document.addEventListener("DOMContentLoaded", () => {
     ...extra
   });
 
+  const normalizePositiveInt = (value, fallback, max) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    const normalized = Math.floor(parsed);
+    if (normalized <= 0) {
+      return fallback;
+    }
+    if (typeof max === 'number' && normalized > max) {
+      return max;
+    }
+    return normalized;
+  };
+
+  const normalizeNonNegativeInt = (value, fallback) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    const normalized = Math.floor(parsed);
+    return normalized < 0 ? fallback : normalized;
+  };
+
+  const ACTIVE_ACCOUNTS_PAGE_SIZES = [10, 25, 50, 100];
+
+  // Cached account datasets for verification flows
+  let currentActiveAccounts = [];
+  let currentUsersAccounts = [];
+
+  let activeAccountsSummary = {
+    total_accounts: 0,
+    unique_users: 0,
+    strategy_count: 0
+  };
+
+  let activeAccountsPagination = {
+    page: 1,
+    pageSize: 25,
+    totalPages: 1,
+    totalItems: 0,
+    returnedCount: 0,
+    hasNext: false,
+    hasPrevious: false
+  };
+
   // 🔒 SECURITY: Verify admin access before loading dashboard
   async function verifyAdminAccess() {
     try {
@@ -503,9 +549,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === ACTIVE ACCOUNTS FUNCTIONS ===
-  async function loadActiveAccounts() {
+  async function loadActiveAccounts(targetPage = activeAccountsPagination.page, targetPageSize = activeAccountsPagination.pageSize) {
     try {
-      const response = await fetch(`${AUTH_API_BASE}/admin/accounts/active-trading`, {
+      const requestedPage = normalizePositiveInt(targetPage, activeAccountsPagination.page);
+      const requestedPageSize = normalizePositiveInt(targetPageSize, activeAccountsPagination.pageSize, 100);
+
+      const params = new URLSearchParams({
+        page: String(requestedPage),
+        page_size: String(requestedPageSize)
+      });
+
+      const response = await fetch(`${AUTH_API_BASE}/admin/accounts/active-trading?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -517,103 +571,238 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const result = await response.json();
-      currentActiveAccounts = result.accounts || [];
-      displayActiveAccounts(result.accounts || []);
+      const accounts = Array.isArray(result.accounts) ? result.accounts : [];
+      currentActiveAccounts = accounts;
+
+      const summaryData = (result.summary && typeof result.summary === 'object') ? result.summary : {};
+      const paginationData = (result.pagination && typeof result.pagination === 'object') ? result.pagination : {};
+
+      const sanitizedPageSize = normalizePositiveInt(paginationData.page_size, requestedPageSize, 100);
+      const fallbackTotalItems = normalizeNonNegativeInt(summaryData.total_accounts, accounts.length);
+      const totalItems = normalizeNonNegativeInt(paginationData.total_items, fallbackTotalItems);
+      const totalPagesFallback = Math.max(1, Math.ceil((totalItems || accounts.length) / sanitizedPageSize));
+      const totalPages = normalizePositiveInt(paginationData.total_pages, totalPagesFallback);
+
+      const rawPage = normalizePositiveInt(paginationData.page, requestedPage);
+      const sanitizedPage = Math.min(rawPage, totalPages);
+      const returnedCount = accounts.length;
+
+      const fallbackSummaryCounters = {
+        total_accounts: totalItems || accounts.length,
+        unique_users: (() => {
+          const seen = new Set();
+          accounts.forEach(acc => {
+            const candidate = acc._user_id || acc.user_id || acc.userId || acc.username || acc.email;
+            if (candidate !== undefined && candidate !== null && candidate !== '') {
+              seen.add(candidate);
+            }
+          });
+          return seen.size;
+        })(),
+        strategy_count: (() => {
+          const seen = new Set();
+          accounts.forEach(acc => {
+            const strategy = acc.strategy;
+            if (strategy !== undefined && strategy !== null && strategy !== '') {
+              seen.add(strategy);
+            }
+          });
+          return seen.size;
+        })()
+      };
+
+      activeAccountsSummary = {
+        total_accounts: normalizeNonNegativeInt(summaryData.total_accounts, fallbackSummaryCounters.total_accounts),
+        unique_users: normalizeNonNegativeInt(summaryData.unique_users, fallbackSummaryCounters.unique_users),
+        strategy_count: normalizeNonNegativeInt(summaryData.strategy_count, fallbackSummaryCounters.strategy_count)
+      };
+
+      activeAccountsPagination = {
+        page: sanitizedPage,
+        pageSize: sanitizedPageSize,
+        totalPages,
+        totalItems,
+        returnedCount,
+        hasNext: typeof paginationData.has_next === 'boolean'
+          ? paginationData.has_next
+          : (totalItems > 0 && sanitizedPage < totalPages),
+        hasPrevious: typeof paginationData.has_previous === 'boolean'
+          ? paginationData.has_previous
+          : sanitizedPage > 1
+      };
+
+      displayActiveAccounts(accounts, activeAccountsSummary, activeAccountsPagination);
       attachUserAccountVerifyListeners();
+      attachActiveAccountsPaginationListeners();
 
     } catch (error) {
       console.error('❌ Error loading active trading accounts:', error);
       document.getElementById('active-accounts-container').innerHTML = `
         <div class="error-state">
           <p>❌ Failed to load active trading accounts: ${error.message}</p>
-          <button onclick="loadActiveAccounts()" class="retry-btn">🔄 Retry</button>
+          <button onclick="window.loadActiveAccounts()" class="retry-btn">🔄 Retry</button>
         </div>
       `;
     }
   }
 
-  function displayActiveAccounts(accounts) {
+  window.loadActiveAccounts = loadActiveAccounts;
+
+  function displayActiveAccounts(accounts, summary, pagination) {
     const container = document.getElementById('active-accounts-container');
-    
-    if (!accounts || accounts.length === 0) {
-      container.innerHTML = `
+
+    const safeSummary = summary && typeof summary === 'object' ? summary : activeAccountsSummary;
+    const safePagination = pagination && typeof pagination === 'object' ? pagination : activeAccountsPagination;
+
+    const totalAccounts = normalizeNonNegativeInt(safeSummary.total_accounts, Array.isArray(accounts) ? accounts.length : 0);
+    const uniqueUsers = normalizeNonNegativeInt(safeSummary.unique_users, 0);
+    const strategyCount = normalizeNonNegativeInt(safeSummary.strategy_count, 0);
+
+    const page = normalizePositiveInt(safePagination.page, 1);
+    const pageSize = normalizePositiveInt(safePagination.pageSize, Array.isArray(accounts) && accounts.length > 0 ? accounts.length : 25, 100);
+    const totalPages = Math.max(1, normalizePositiveInt(safePagination.totalPages, 1));
+    const returnedCount = normalizeNonNegativeInt(safePagination.returnedCount, Array.isArray(accounts) ? accounts.length : 0);
+    const totalItems = normalizeNonNegativeInt(safePagination.totalItems, totalAccounts);
+    const hasNext = Boolean(safePagination.hasNext);
+    const hasPrevious = Boolean(safePagination.hasPrevious);
+
+    const startIndex = totalItems === 0 || returnedCount === 0
+      ? 0
+      : ((page - 1) * pageSize) + 1;
+    const endIndex = totalItems === 0 || returnedCount === 0
+      ? 0
+      : Math.min(totalItems, startIndex + returnedCount - 1);
+
+    const pageSizes = Array.from(new Set([...ACTIVE_ACCOUNTS_PAGE_SIZES, pageSize]))
+      .filter(size => Number.isFinite(size) && size > 0)
+      .sort((a, b) => a - b);
+
+    const summaryMarkup = `
+      <div class="active-accounts-summary">
+        <span>${totalAccounts}</span> active accounts from <span>${uniqueUsers}</span> paying users 
+        (<span>${strategyCount}</span> different strategies)
+      </div>
+    `;
+
+    const tableMarkup = Array.isArray(accounts) && accounts.length > 0
+      ? `
+        <div class="active-accounts-table-container">
+          <table class="active-accounts-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Account Name</th>
+                <th>Account Type</th>
+                <th>Strategy</th>
+                <th>Total Value</th>
+                <th>Status</th>
+                <th>Revoked</th>
+                <th>Disabled</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${accounts.map(account => {
+                const totalValue = getAccountTotalValue(account);
+                const fallbackValue = totalValue !== null ? totalValue : account.current_value;
+                const parsedTooltip = Number(fallbackValue);
+                const tooltipValue = Number.isFinite(parsedTooltip) ? parsedTooltip : 0;
+                const formattedValue = formatAccountValue(fallbackValue);
+                const unrealizedPnl = getAccountUnrealizedPnl(account);
+                const tooltipParts = [`Total portfolio value (incl. unrealized PnL): $${formatNumber(tooltipValue)}`];
+                if (unrealizedPnl !== null) {
+                  tooltipParts.push(`Unrealized PnL: $${formatNumber(unrealizedPnl, 2)}`);
+                }
+                const tooltipText = tooltipParts.join('\n');
+
+                return `
+                <tr>
+                  <td class="user-name" title="${account.username || account._id}">
+                    ${account.username || account._id || 'Unknown User'}
+                  </td>
+                  <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
+                    ${account.account_name || 'Unnamed Account'}
+                  </td>
+                  <td class="account-type">
+                    <span class="account-type-badge spot">TRADING</span>
+                  </td>
+                  <td class="account-strategy">
+                    <span class="strategy-tag">${account.strategy || 'None'}</span>
+                  </td>
+                  <td class="account-value center-align" title="${tooltipText}">
+                    ${formattedValue}
+                  </td>
+                  <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
+                  <td>${renderStatePair(account.is_revoked, account.active_job_is_revoked)}</td>
+                  <td>${renderStatePair(account.is_disabled, account.active_job_is_disabled)}</td>
+                  <td>
+                    <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
+                  </td>
+                </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+      : `
         <div class="empty-state">
           <p>📭 No active trading accounts found</p>
           <small>No paying users have active trading accounts at this time</small>
         </div>
       `;
-      return;
-    }
 
-    // Create summary
-    const totalAccounts = accounts.length;
-    const uniqueUsers = new Set(accounts.map(acc => acc._user_id)).size;
-    const strategies = new Set(accounts.map(acc => acc.strategy)).size;
-
-    container.innerHTML = `
-      <div class="active-accounts-summary">
-        <span>${totalAccounts}</span> active accounts from <span>${uniqueUsers}</span> paying users 
-        (<span>${strategies}</span> different strategies)
-      </div>
-      <div class="active-accounts-table-container">
-        <table class="active-accounts-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Account Name</th>
-              <th>Account Type</th>
-              <th>Strategy</th>
-              <th>Total Value</th>
-              <th>Status</th>
-              <th>Revoked</th>
-              <th>Disabled</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${accounts.map(account => {
-              const totalValue = getAccountTotalValue(account);
-              const fallbackValue = totalValue !== null ? totalValue : account.current_value;
-              const parsedTooltip = Number(fallbackValue);
-              const tooltipValue = Number.isFinite(parsedTooltip) ? parsedTooltip : 0;
-              const formattedValue = formatAccountValue(fallbackValue);
-              const unrealizedPnl = getAccountUnrealizedPnl(account);
-              const tooltipParts = [`Total portfolio value (incl. unrealized PnL): $${formatNumber(tooltipValue)}`];
-              if (unrealizedPnl !== null) {
-                tooltipParts.push(`Unrealized PnL: $${formatNumber(unrealizedPnl, 2)}`);
-              }
-              const tooltipText = tooltipParts.join('\n');
-
-              return `
-              <tr>
-                <td class="user-name" title="${account.username || account._id}">
-                  ${account.username || account._id || 'Unknown User'}
-                </td>
-                <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
-                  ${account.account_name || 'Unnamed Account'}
-                </td>
-                <td class="account-type">
-                  <span class="account-type-badge spot">TRADING</span>
-                </td>
-                <td class="account-strategy">
-                  <span class="strategy-tag">${account.strategy || 'None'}</span>
-                </td>
-                <td class="account-value center-align" title="${tooltipText}">
-                  ${formattedValue}
-                </td>
-                <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
-                <td>${renderStatePair(account.is_revoked, account.active_job_is_revoked)}</td>
-                <td>${renderStatePair(account.is_disabled, account.active_job_is_disabled)}</td>
-                <td>
-                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
-                </td>
-              </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+    const paginationMarkup = `
+      <div class="active-accounts-pagination">
+        <div class="active-accounts-pagination-controls">
+          <button id="active-accounts-prev" class="pagination-btn" ${hasPrevious ? '' : 'disabled'}>◀ Prev</button>
+          <span class="pagination-info">Page ${Math.min(page, totalPages)} of ${totalPages}</span>
+          <button id="active-accounts-next" class="pagination-btn" ${hasNext ? '' : 'disabled'}>Next ▶</button>
+        </div>
+        <div class="active-accounts-pagination-size">
+          <label for="active-accounts-page-size">Rows per page</label>
+          <select id="active-accounts-page-size">
+            ${pageSizes.map(size => `<option value="${size}" ${size === pageSize ? 'selected' : ''}>${size}</option>`).join('')}
+          </select>
+          <span class="pagination-count">
+            ${totalItems === 0 ? '0-0' : `${startIndex}-${endIndex}`} of ${totalItems}
+          </span>
+        </div>
       </div>
     `;
+
+    container.innerHTML = `${summaryMarkup}${tableMarkup}${paginationMarkup}`;
+  }
+
+  function attachActiveAccountsPaginationListeners() {
+    const prevButton = document.getElementById('active-accounts-prev');
+    const nextButton = document.getElementById('active-accounts-next');
+    const pageSizeSelect = document.getElementById('active-accounts-page-size');
+
+    if (prevButton) {
+      prevButton.onclick = () => {
+        if (activeAccountsPagination.page > 1) {
+          loadActiveAccounts(activeAccountsPagination.page - 1, activeAccountsPagination.pageSize);
+        }
+      };
+    }
+
+    if (nextButton) {
+      nextButton.onclick = () => {
+        if (activeAccountsPagination.hasNext) {
+          loadActiveAccounts(activeAccountsPagination.page + 1, activeAccountsPagination.pageSize);
+        }
+      };
+    }
+
+    if (pageSizeSelect) {
+      pageSizeSelect.onchange = (event) => {
+        const newSize = normalizePositiveInt(event.target.value, activeAccountsPagination.pageSize, 100);
+        if (newSize !== activeAccountsPagination.pageSize) {
+          loadActiveAccounts(1, newSize);
+        }
+      };
+    }
   }
 
   // Helper function to format account values
@@ -2107,7 +2296,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Refresh buttons
   document.getElementById('refresh-overview').onclick = loadSystemOverview;
-  document.getElementById('refresh-active-accounts').onclick = loadActiveAccounts;
+  document.getElementById('refresh-active-accounts').onclick = () => loadActiveAccounts(activeAccountsPagination.page, activeAccountsPagination.pageSize);
   document.getElementById('refresh-users-accounts').onclick = loadUsersAccounts;
   document.getElementById('refresh-wallets').onclick = loadWalletVerifications;
   document.getElementById('refresh-referrals').onclick = loadReferrals;
@@ -2280,16 +2469,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.verify-source-btn').forEach(btn => {
       btn.onclick = () => verifySourceAccount(btn.dataset.id);
     });
-
-
     document.querySelectorAll('.delete-source-btn').forEach(btn => {
       btn.onclick = () => deleteSourceAccount(btn.dataset.id);
     });
   }
-
-  // Store account data for verification
-  let currentActiveAccounts = [];
-  let currentUsersAccounts = [];
 
   // Add event listeners for user account verify buttons
   function attachUserAccountVerifyListeners() {
