@@ -216,6 +216,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const ACTIVE_ACCOUNTS_PAGE_SIZES = [10, 25, 50, 100];
+  const ACTIVE_ACCOUNTS_STATUS_LABELS = {
+    healthy: 'Healthy',
+    warning: 'Warning',
+    error: 'Error',
+    disabled: 'Disabled',
+    unknown: 'Unknown'
+  };
 
   // Cached account datasets for verification flows
   let currentActiveAccounts = [];
@@ -235,6 +242,129 @@ document.addEventListener("DOMContentLoaded", () => {
     returnedCount: 0,
     hasNext: false,
     hasPrevious: false
+  };
+
+  let activeAccountsFilters = {
+    search: '',
+    strategy: '',
+    status: ''
+  };
+
+  const normalizeActiveAccountsFilters = (filters = {}) => ({
+    search: typeof filters.search === 'string' ? filters.search.trim() : '',
+    strategy: typeof filters.strategy === 'string' ? filters.strategy.trim() : '',
+    status: typeof filters.status === 'string' ? filters.status.trim() : ''
+  });
+
+  const syncActiveAccountsFilterInputs = () => {
+    const searchInput = document.getElementById('active-accounts-search');
+    if (searchInput && searchInput.value !== activeAccountsFilters.search) {
+      searchInput.value = activeAccountsFilters.search;
+    }
+
+    const strategySelect = document.getElementById('active-accounts-strategy-filter');
+    if (strategySelect && strategySelect.value !== activeAccountsFilters.strategy) {
+      strategySelect.value = activeAccountsFilters.strategy || '';
+    }
+
+    const statusSelect = document.getElementById('active-accounts-status-filter');
+    if (statusSelect && statusSelect.value !== activeAccountsFilters.status) {
+      statusSelect.value = activeAccountsFilters.status || '';
+    }
+  };
+
+  const updateActiveAccountsFilterOptions = (filtersData = {}) => {
+    const strategySelect = document.getElementById('active-accounts-strategy-filter');
+    const statusSelect = document.getElementById('active-accounts-status-filter');
+
+    const strategies = Array.isArray(filtersData.available_strategies)
+      ? filtersData.available_strategies.filter(Boolean).sort((a, b) => a.localeCompare(b))
+      : [];
+
+    const statuses = Array.isArray(filtersData.available_statuses)
+      ? filtersData.available_statuses.filter(Boolean).sort((a, b) => a.localeCompare(b))
+      : [];
+
+    if (strategySelect) {
+      const currentSelection = activeAccountsFilters.strategy;
+      strategySelect.innerHTML = ['<option value="">All strategies</option>',
+        ...strategies.map(strategyName => {
+          const safeName = strategyName || '';
+          const isSelected = safeName === currentSelection ? 'selected' : '';
+          return `<option value="${safeName}">${safeName}</option>`;
+        })
+      ].join('');
+
+      if (!strategies.includes(currentSelection)) {
+        strategySelect.value = '';
+        if (currentSelection) {
+          activeAccountsFilters.strategy = '';
+        }
+      }
+    }
+
+    if (statusSelect) {
+      const currentStatus = activeAccountsFilters.status;
+      const options = ['<option value="">All statuses</option>'];
+      statuses.forEach(statusValue => {
+        const label = ACTIVE_ACCOUNTS_STATUS_LABELS[statusValue] || statusValue.toUpperCase();
+        const selected = statusValue === currentStatus ? 'selected' : '';
+        options.push(`<option value="${statusValue}" ${selected}>${label}</option>`);
+      });
+      statusSelect.innerHTML = options.join('');
+
+      if (!statuses.includes(currentStatus)) {
+        statusSelect.value = '';
+        if (currentStatus) {
+          activeAccountsFilters.status = '';
+        }
+      }
+    }
+  };
+
+  const collectActiveAccountsFilters = () => {
+    const searchInput = document.getElementById('active-accounts-search');
+    const strategySelect = document.getElementById('active-accounts-strategy-filter');
+    const statusSelect = document.getElementById('active-accounts-status-filter');
+
+    return normalizeActiveAccountsFilters({
+      search: searchInput ? searchInput.value : '',
+      strategy: strategySelect ? strategySelect.value : '',
+      status: statusSelect ? statusSelect.value : ''
+    });
+  };
+
+  const applyActiveAccountsFilters = () => {
+    activeAccountsFilters = collectActiveAccountsFilters();
+    loadActiveAccounts(1, activeAccountsPagination.pageSize, { ...activeAccountsFilters });
+  };
+
+  const resetActiveAccountsFilters = () => {
+    activeAccountsFilters = { search: '', strategy: '', status: '' };
+    syncActiveAccountsFilterInputs();
+    loadActiveAccounts(1, activeAccountsPagination.pageSize, { ...activeAccountsFilters });
+  };
+
+  const attachActiveAccountsFilterListeners = () => {
+    const applyButton = document.getElementById('active-accounts-apply-filters');
+    if (applyButton) {
+      applyButton.onclick = () => applyActiveAccountsFilters();
+    }
+
+    const clearButton = document.getElementById('active-accounts-clear-filters');
+    if (clearButton) {
+      clearButton.onclick = () => resetActiveAccountsFilters();
+    }
+
+    const searchInput = document.getElementById('active-accounts-search');
+    if (searchInput) {
+      searchInput.onkeydown = (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          applyActiveAccountsFilters();
+        }
+      };
+    }
   };
 
   // 🔒 SECURITY: Verify admin access before loading dashboard
@@ -549,8 +679,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === ACTIVE ACCOUNTS FUNCTIONS ===
-  async function loadActiveAccounts(targetPage = activeAccountsPagination.page, targetPageSize = activeAccountsPagination.pageSize) {
+  async function loadActiveAccounts(
+    targetPage = activeAccountsPagination.page,
+    targetPageSize = activeAccountsPagination.pageSize,
+    overrideFilters = null
+  ) {
     try {
+      if (overrideFilters) {
+        activeAccountsFilters = normalizeActiveAccountsFilters(overrideFilters);
+      }
+
       const requestedPage = normalizePositiveInt(targetPage, activeAccountsPagination.page);
       const requestedPageSize = normalizePositiveInt(targetPageSize, activeAccountsPagination.pageSize, 100);
 
@@ -558,6 +696,18 @@ document.addEventListener("DOMContentLoaded", () => {
         page: String(requestedPage),
         page_size: String(requestedPageSize)
       });
+
+      if (activeAccountsFilters.strategy) {
+        params.set('strategy', activeAccountsFilters.strategy);
+      }
+
+      if (activeAccountsFilters.status) {
+        params.set('status', activeAccountsFilters.status);
+      }
+
+      if (activeAccountsFilters.search) {
+        params.set('search', activeAccountsFilters.search);
+      }
 
       const response = await fetch(`${AUTH_API_BASE}/admin/accounts/active-trading?${params.toString()}`, {
         headers: {
@@ -576,6 +726,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const summaryData = (result.summary && typeof result.summary === 'object') ? result.summary : {};
       const paginationData = (result.pagination && typeof result.pagination === 'object') ? result.pagination : {};
+      const filtersData = (result.filters && typeof result.filters === 'object') ? result.filters : {};
+      const appliedFiltersData = normalizeActiveAccountsFilters(result.applied_filters || activeAccountsFilters);
+
+      activeAccountsFilters = appliedFiltersData;
+      updateActiveAccountsFilterOptions(filtersData);
+      syncActiveAccountsFilterInputs();
 
       const sanitizedPageSize = normalizePositiveInt(paginationData.page_size, requestedPageSize, 100);
       const fallbackTotalItems = normalizeNonNegativeInt(summaryData.total_accounts, accounts.length);
@@ -634,6 +790,7 @@ document.addEventListener("DOMContentLoaded", () => {
       displayActiveAccounts(accounts, activeAccountsSummary, activeAccountsPagination);
       attachUserAccountVerifyListeners();
       attachActiveAccountsPaginationListeners();
+      attachActiveAccountsFilterListeners();
 
     } catch (error) {
       console.error('❌ Error loading active trading accounts:', error);
@@ -676,6 +833,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const pageSizes = Array.from(new Set([...ACTIVE_ACCOUNTS_PAGE_SIZES, pageSize]))
       .filter(size => Number.isFinite(size) && size > 0)
       .sort((a, b) => a - b);
+
+    const filtersApplied = Boolean(activeAccountsFilters.search || activeAccountsFilters.strategy || activeAccountsFilters.status);
 
     const summaryMarkup = `
       <div class="active-accounts-summary">
@@ -747,8 +906,8 @@ document.addEventListener("DOMContentLoaded", () => {
       `
       : `
         <div class="empty-state">
-          <p>📭 No active trading accounts found</p>
-          <small>No paying users have active trading accounts at this time</small>
+          <p>${filtersApplied ? '🔍 No accounts match the current filters' : '📭 No active trading accounts found'}</p>
+          <small>${filtersApplied ? 'Adjust filters or reset to see all active trading accounts.' : 'No paying users have active trading accounts at this time.'}</small>
         </div>
       `;
 
@@ -2327,6 +2486,8 @@ document.addEventListener("DOMContentLoaded", () => {
     loadInvoices(status);
     showToast('🔄 Invoices refreshed', 'info');
   };
+
+  attachActiveAccountsFilterListeners();
 
   // Modal event listeners
   document.getElementById('wallet-modal-close').onclick = () => {

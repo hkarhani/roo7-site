@@ -224,6 +224,84 @@
   grid-row: 2;
 }
 
+.active-accounts-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.active-accounts-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.filter-group.wide {
+  min-width: 240px;
+  flex: 1 1 320px;
+}
+
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #6b7280;
+}
+
+.filter-group select,
+.filter-group input[type="search"] {
+  border: 1px solid #c7d5ff;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  color: #1f2937;
+  background: #fff;
+  min-height: 38px;
+}
+
+.filter-group input[type="search"]::placeholder {
+  color: #9ca3af;
+}
+
+.active-accounts-filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.active-accounts-filter-actions .secondary-button.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.dark-theme .filter-group label {
+  color: #cbd5f5;
+}
+
+.dark-theme .filter-group select,
+.dark-theme .filter-group input[type="search"] {
+  background: rgba(30, 41, 59, 0.85);
+  color: #e5edff;
+  border-color: rgba(96, 165, 250, 0.45);
+}
+
+.dark-theme .filter-group input[type="search"]::placeholder {
+  color: #94a3b8;
+}
+
 #section-users-accounts {
   grid-column: 1 / -1;
   grid-row: 3;
@@ -2126,6 +2204,17 @@
   
   .active-accounts-table .account-strategy {
     max-width: 80px;
+  }
+
+  .active-accounts-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .active-accounts-filters {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .active-accounts-pagination {

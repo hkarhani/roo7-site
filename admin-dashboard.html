@@ -42,6 +42,30 @@
         <h2>👥 Active Trading Accounts</h2>
         <button id="refresh-active-accounts" class="secondary-button">🔄 Refresh</button>
       </div>
+      <div class="active-accounts-toolbar">
+        <div class="active-accounts-filters">
+          <div class="filter-group wide">
+            <label for="active-accounts-search">Search</label>
+            <input type="search" id="active-accounts-search" placeholder="Search by user, email, or account name" autocomplete="off" />
+          </div>
+          <div class="filter-group">
+            <label for="active-accounts-strategy-filter">Strategy</label>
+            <select id="active-accounts-strategy-filter">
+              <option value="">All strategies</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="active-accounts-status-filter">Status</label>
+            <select id="active-accounts-status-filter">
+              <option value="">All statuses</option>
+            </select>
+          </div>
+        </div>
+        <div class="active-accounts-filter-actions">
+          <button id="active-accounts-apply-filters" class="secondary-button small">Apply</button>
+          <button id="active-accounts-clear-filters" class="secondary-button small">Reset</button>
+        </div>
+      </div>
       <div class="active-accounts-container" id="active-accounts-container">
         <div class="loading-state">
           <p>Loading active accounts...</p>
