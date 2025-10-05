@@ -7,7 +7,7 @@ const token = localStorage.getItem('token');
 
 let currentExecutionId = null;
 let currentJobDetails = null;
-let currentLogLines = 400;
+let currentLogLines = 200;
 let currentPage = 1;
 let currentPageSize = 10;
 let currentJobsTotal = 0;
@@ -339,11 +339,17 @@ async function loadJobLog(linesOverride) {
       const jobName = currentJobDetails?.account_name || currentJobDetails?.account_id || currentExecutionId;
       logMeta.textContent = `Active Job: ${log.active_job_id || 'n/a'} · Showing last ${currentLogLines} lines for ${jobName}`;
     }
+    requestAnimationFrame(() => {
+      logContent.scrollTop = logContent.scrollHeight;
+    });
   } catch (error) {
     logContent.textContent = `Log unavailable: ${error.message}`;
     if (logMeta) {
       logMeta.textContent = '';
     }
+    requestAnimationFrame(() => {
+      logContent.scrollTop = logContent.scrollHeight;
+    });
   }
 
   logContainer.classList.remove('hidden');
