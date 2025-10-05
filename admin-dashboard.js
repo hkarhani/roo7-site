@@ -108,6 +108,7 @@ function getAccountTotalValue(account) {
   };
 
   const candidatePaths = [
+    ['portfolio_total_value'],
     ['total_value'],
     ['total_value_usd'],
     ['total_value_usdt'],
@@ -157,6 +158,20 @@ function getAccountTotalValue(account) {
   }
 
   return baseValue;
+}
+
+function getAccountUnrealizedPnl(account) {
+  if (!account || typeof account !== 'object') {
+    return null;
+  }
+
+  const summary = account.summary;
+  if (!summary || summary.total_unrealized_pnl_usdt === undefined || summary.total_unrealized_pnl_usdt === null) {
+    return null;
+  }
+
+  const pnl = Number(summary.total_unrealized_pnl_usdt);
+  return Number.isFinite(pnl) ? pnl : null;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -585,9 +600,15 @@ document.addEventListener("DOMContentLoaded", () => {
             ${accounts.map(account => {
               const totalValue = getAccountTotalValue(account);
               const fallbackValue = totalValue !== null ? totalValue : account.current_value;
-              const parsedTooltip = parseFloat(fallbackValue);
+              const parsedTooltip = Number(fallbackValue);
               const tooltipValue = Number.isFinite(parsedTooltip) ? parsedTooltip : 0;
               const formattedValue = formatAccountValue(fallbackValue);
+              const unrealizedPnl = getAccountUnrealizedPnl(account);
+              const tooltipParts = [`Total portfolio value (incl. unrealized PnL): $${formatNumber(tooltipValue)}`];
+              if (unrealizedPnl !== null) {
+                tooltipParts.push(`Unrealized PnL: $${formatNumber(unrealizedPnl, 2)}`);
+              }
+              const tooltipText = tooltipParts.join('\n');
 
               return `
               <tr>
@@ -603,7 +624,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="account-strategy">
                   <span class="strategy-tag">${account.strategy || 'None'}</span>
                 </td>
-                <td class="account-value center-align" title="Total portfolio value (incl. unrealized PnL): $${formatNumber(tooltipValue)}">
+                <td class="account-value center-align" title="${tooltipText}">
                   ${formattedValue}
                 </td>
                 <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
