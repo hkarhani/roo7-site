@@ -120,14 +120,58 @@ function getAccountTotalValue(account) {
     ['analytics', 'value_usdt']
   ];
 
+  let baseValue = null;
+  let baseSource = null;
   for (const path of candidatePaths) {
     const candidate = normalizeNumeric(getByPath(account, path));
     if (candidate !== null) {
-      return candidate;
+      baseValue = candidate;
+      baseSource = `path:${path.join('.')}`;
+      if (candidate > 0) {
+        break;
+      }
     }
   }
 
-  const baseValue = normalizeNumeric(account.current_value);
+  const componentPaths = [
+    ['summary', 'spot_value_usdt'],
+    ['summary', 'usdtm_value_usdt'],
+    ['summary', 'coinm_value_usdt'],
+    ['summary', 'futures_value_usdt'],
+    ['summary', 'margin_value_usdt'],
+    ['detailed_breakdown', 'summary', 'spot_value_usdt'],
+    ['detailed_breakdown', 'summary', 'usdtm_value_usdt'],
+    ['detailed_breakdown', 'summary', 'coinm_value_usdt'],
+    ['portfolio', 'total_value_usdt']
+  ];
+
+  let componentSum = 0;
+  let componentsFound = false;
+  for (const path of componentPaths) {
+    const value = normalizeNumeric(getByPath(account, path));
+    if (value !== null) {
+      componentSum += value;
+      componentsFound = true;
+    }
+  }
+
+  if ((baseValue === null || baseValue <= 0) && componentsFound && componentSum > 0) {
+    baseValue = componentSum;
+    baseSource = 'componentSum';
+  }
+
+  if (baseValue === null) {
+    baseValue = normalizeNumeric(account.current_value);
+    if (baseValue !== null) {
+      baseSource = 'current_value';
+    }
+  }
+
+  if (baseValue === null && componentsFound && componentSum !== 0) {
+    baseValue = componentSum;
+    baseSource = 'componentSum';
+  }
+
   if (baseValue === null) {
     return null;
   }
@@ -136,7 +180,12 @@ function getAccountTotalValue(account) {
     ['unrealized_pnl'],
     ['total_unrealized_pnl'],
     ['total_unrealized_pnl_usdt'],
-    ['summary', 'total_unrealized_pnl_usdt']
+    ['summary', 'total_unrealized_pnl_usdt'],
+    ['summary', 'spot_unrealized_pnl_usdt'],
+    ['summary', 'usdtm_unrealized_pnl_usdt'],
+    ['summary', 'coinm_unrealized_pnl_usdt'],
+    ['summary', 'futures_unrealized_pnl_usdt'],
+    ['portfolio_unrealized_pnl']
   ];
 
   let pnlTotal = 0;
@@ -149,7 +198,12 @@ function getAccountTotalValue(account) {
     }
   }
 
-  if (pnlFound) {
+  const sourceIndicatesTotal = baseSource && (
+    baseSource.includes('total_value') ||
+    baseSource.includes('portfolio_total_value')
+  );
+
+  if (pnlFound && !sourceIndicatesTotal) {
     return baseValue + pnlTotal;
   }
 
