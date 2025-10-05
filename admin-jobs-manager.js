@@ -87,6 +87,10 @@ function formatDuration(seconds) {
   return `${seconds.toFixed(1)}s`;
 }
 
+function hasKeys(value) {
+  return value && typeof value === 'object' && Object.keys(value).length > 0;
+}
+
 function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
@@ -260,6 +264,12 @@ function renderJobDetails(job) {
     return;
   }
 
+  const resultDetails = job.result_details || {};
+  const hasResultDetails = hasKeys(resultDetails);
+  const rawJson = hasResultDetails
+    ? JSON.stringify(resultDetails, null, 2)
+    : 'No result payload available for this execution.';
+
   detailsContainer.innerHTML = `
     <h3>Execution Details</h3>
     <div class="detail-grid">
@@ -274,8 +284,20 @@ function renderJobDetails(job) {
       <div><strong>Error Info:</strong> ${job.error_info?.message || job.error_info || '—'}</div>
       <div><strong>Active Job ID:</strong> ${job.active_job_id || '—'}</div>
     </div>
-    <pre class="result-json">${JSON.stringify(job.result_details || {}, null, 2)}</pre>
+    <details class="raw-json" ${hasResultDetails ? '' : 'open'}>
+      <summary>Raw result JSON</summary>
+      <pre class="result-json"></pre>
+    </details>
   `;
+
+  const jsonPre = detailsContainer.querySelector('.result-json');
+  if (jsonPre) {
+    jsonPre.textContent = rawJson;
+  }
+
+  if (!hasResultDetails) {
+    detailsContainer.querySelector('.raw-json')?.setAttribute('open', '');
+  }
 
   detailsContainer.classList.remove('hidden');
 }

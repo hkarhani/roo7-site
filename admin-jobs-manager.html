@@ -102,17 +102,11 @@
       color: #94a3b8;
     }
 
-    .jobs-top-grid {
-      display: grid;
+    .jobs-detail-stack {
+      display: flex;
+      flex-direction: column;
       gap: 24px;
       margin-bottom: 24px;
-    }
-
-    @media (min-width: 1080px) {
-      .jobs-top-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: start;
-      }
     }
 
     .jobs-card {
@@ -127,6 +121,59 @@
 
     .active-jobs-card {
       margin-top: 0;
+    }
+
+    .raw-json {
+      border-top: 1px solid var(--card-border, rgba(15,23,42,0.08));
+      padding-top: 12px;
+    }
+
+    .dark-theme.jobs-manager-page .raw-json {
+      border-color: rgba(148, 163, 184, 0.25);
+    }
+
+    .raw-json summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-secondary, #64748b);
+      list-style: none;
+    }
+
+    .dark-theme.jobs-manager-page .raw-json summary {
+      color: #94a3b8;
+    }
+
+    .raw-json summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .raw-json summary::after {
+      content: '▼';
+      font-size: 0.7rem;
+      margin-left: 8px;
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+
+    .raw-json[open] summary::after {
+      transform: rotate(-180deg);
+    }
+
+    .raw-json pre {
+      margin: 12px 0 0;
+      background: rgba(15, 23, 42, 0.04);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: inherit;
+      overflow-x: auto;
+      max-height: 260px;
+    }
+
+    .dark-theme.jobs-manager-page .raw-json pre {
+      background: rgba(15, 23, 42, 0.6);
+      color: #e2e8f0;
     }
 
     .jobs-card h2,
@@ -517,7 +564,7 @@
       </div>
     </section>
 
-    <div class="jobs-top-grid">
+    <div class="jobs-detail-stack">
       <section id="job-detail-card" class="dashboard-card jobs-card hidden">
         <div id="job-detail" class="job-detail hidden"></div>
       </section>
