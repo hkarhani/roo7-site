@@ -203,18 +203,42 @@
     }
 
     .job-detail {
-      font-size: 0.95rem;
-      line-height: 1.6;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 340px;
+      overflow-y: auto;
+      padding-right: 12px;
+      scroll-behavior: smooth;
+    }
+
+    .job-detail::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .job-detail::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .job-detail::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.45);
+      border-radius: 999px;
+    }
+
+    .dark-theme.jobs-manager-page .job-detail::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.65);
     }
 
     .job-detail h3 {
-      margin: 0 0 12px;
-      font-size: 1rem;
+      margin: 0 0 8px;
+      font-size: 0.95rem;
     }
 
     .job-detail.grid {
       display: grid;
-      gap: 12px;
+      gap: 10px;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 
@@ -227,7 +251,7 @@
     .detail-grid div {
       background: var(--card-bg, #ffffff);
       border-radius: 8px;
-      padding: 10px;
+      padding: 8px 10px;
       border: 1px solid var(--card-border, rgba(15,23,42,0.08));
     }
 
