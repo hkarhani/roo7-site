@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check authentication
   const token = localStorage.getItem("token");
   if (!token) {
-    console.log("❌ No token found, redirecting to auth...");
     setTimeout(() => {
       window.location.href = "/auth.html";
     }, 2000);
@@ -268,14 +267,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function bindAccountEvents(accounts) {
     // Clear any existing event listeners and bind fresh ones
     setTimeout(() => {
-      console.log("🔗 Binding fresh event listeners...");
-
       // Edit account buttons
       document.querySelectorAll('.edit-account').forEach((btn, index) => {
         const accountId = btn.dataset.id;
         const accountName = btn.dataset.name;
-        
-        console.log(`📝 Binding edit button ${index + 1} for ${accountName} (ID: ${accountId})`);
         
         btn.onclick = function(e) {
           e.preventDefault();
@@ -326,23 +321,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Strategy assignment buttons with debug logging
       const strategyButtons = document.querySelectorAll('.assign-strategy-btn');
-      console.log(`🔧 Debug: Found ${strategyButtons.length} strategy assignment buttons`);
-      
       strategyButtons.forEach((btn, index) => {
         const accountId = btn.dataset.id;
         const accountName = btn.dataset.name;
-        console.log(`🔧 Debug: Attaching event listener to button ${index + 1}: ${accountName} (ID: ${accountId})`);
-        
         btn.onclick = function() {
-          console.log(`🔧 Debug: Strategy button clicked for account: ${accountName} (ID: ${accountId})`);
-          
           const account = accounts.find(acc => acc.id === accountId);
           if (account) {
-            console.log(`🔧 Debug: Account found, opening modal for: ${account.account_name}`);
             modalManager.openStrategyModal(account);
           } else {
             console.error(`🔧 Debug: Account NOT found for ID: ${accountId}`);
-            console.log(`🔧 Debug: Available account IDs:`, accounts.map(acc => acc.id));
             showToast("Account not found", 'error');
           }
         };
@@ -357,17 +344,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tableContainer) {
       tableContainer.addEventListener('click', function(event) {
         if (event.target.classList.contains('assign-strategy-btn')) {
-          console.log(`🔧 Delegation Debug: Strategy button clicked via delegation`);
-          
           const btn = event.target;
           const accountId = btn.dataset.id;
           const accountName = btn.dataset.name;
           
-          console.log(`🔧 Delegation Debug: Looking for account ID: ${accountId}`);
-          
           const account = accounts.find(acc => acc.id === accountId);
           if (account) {
-            console.log(`🔧 Delegation Debug: Account found via delegation, opening modal`);
             modalManager.openStrategyModal(account);
           } else {
             console.error(`🔧 Delegation Debug: Account NOT found via delegation for ID: ${accountId}`);
@@ -375,8 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       });
-      console.log(`🔧 Delegation Debug: Event delegation setup complete`);
-    }
+      }
   }
 
   async function deleteAccount(accountId) {
@@ -482,12 +463,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!token) return;
 
     // Debug current user data
-    console.log('checkSubscriptionStatus called with currentUser:', currentUser);
-
     // Check if user is admin
     if (currentUser && currentUser.is_admin) {
-      console.log('Admin user detected, checking if they have trading accounts...');
-      
       // Check if admin has any trading accounts
       try {
         const accountsRes = await fetch(`${API_BASE}/accounts`, {
@@ -502,11 +479,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const accounts = await accountsRes.json();
           if (accounts && accounts.length > 0) {
             // Admin has trading accounts - treat as paying customer
-            console.log(`Admin user has ${accounts.length} trading accounts, treating as paying customer`);
             await checkRegularSubscriptionStatus();
           } else {
             // Admin has no accounts - show admin unlimited access
-            console.log('Admin user has no trading accounts, showing admin unlimited access');
             showAdminUnlimitedAccess();
           }
         } else {
@@ -541,14 +516,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (res.ok) {
         const subscription = await res.json();
-        console.log('Subscription data:', subscription);
-        console.log('Subscription status check:', {
-          hasSubscription: !!subscription,
-          status: subscription?.status,
-          isActive: subscription?.status === 'active',
-          expiresAt: subscription?.expires_at
-        });
-        
         // Check if user has active subscription
         if (subscription && subscription.status === 'active') {
           const expiresAt = new Date(subscription.expires_at);
@@ -597,7 +564,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else if (res.status === 404) {
         // No subscription found - show no subscription message
-        console.log('No subscription found for user');
         showNoSubscriptionStatus();
       }
     } catch (error) {
@@ -675,7 +641,6 @@ document.addEventListener("DOMContentLoaded", () => {
   logoutBtn.onclick = logout;
   const openModalBtn = document.getElementById("open-modal");
   openModalBtn.onclick = () => {
-    console.log("🆕 ADD NEW ACCOUNT clicked");
     modalManager.openAddAccountModal();
   };
 
@@ -699,7 +664,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const invoicesBtn = document.getElementById("invoices-btn");
     if (invoicesBtn) {
       invoicesBtn.onclick = () => {
-        console.log("📄 INVOICES clicked");
         window.location.href = "/invoices.html";
       };
     }
@@ -716,7 +680,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const adminBtn = document.getElementById("admin-btn");
     if (adminBtn) {
       adminBtn.onclick = () => {
-        console.log("🔧 ADMIN clicked");
         window.location.href = "/admin-dashboard.html";
       };
     }
@@ -730,7 +693,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const strategyListEl = document.getElementById('strategy-list');
     
     if (!totalStrategiesEl || !assignedAccountsEl || !strategyListEl) {
-      console.log("Strategy management elements not found");
       return;
     }
 
@@ -843,11 +805,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize analytics
   async function initializeAnalytics() {
     try {
-      console.log('🚀 Starting analytics initialization...');
-      console.log('🔍 Analytics section exists:', !!document.getElementById('section-analytics'));
-      console.log('🔍 Account select exists:', !!document.getElementById('analytics-account-select'));
-      console.log('🔍 Chart container exists:', !!document.getElementById('analytics-chart'));
-      
       // Initialize chart
       if (typeof LineChart !== 'undefined') {
         // Get container dimensions for responsive chart
@@ -863,8 +820,7 @@ document.addEventListener("DOMContentLoaded", () => {
           margin: { top: 20, right: 30, bottom: 40, left: 60 },
           responsive: true
         });
-        console.log('📊 Analytics chart initialized');
-      } else {
+        } else {
         console.warn('LineChart class not available');
       }
 
@@ -884,10 +840,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadAnalyticsAccountsList() {
     try {
-      console.log('🔍 Loading analytics accounts list...');
       const select = document.getElementById('analytics-account-select');
-      console.log('🔍 Select element found:', !!select);
-      
       if (!select) {
         console.error('❌ analytics-account-select element not found in DOM');
         return;
@@ -900,33 +853,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      console.log('🔍 Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('🔍 Analytics accounts response:', JSON.stringify(data, null, 2));
-        
         // Clear existing options
         select.innerHTML = '';
-        console.log('🔍 Cleared existing options, select innerHTML now:', select.innerHTML);
-        
         // Add "ALL" option
         const allOption = document.createElement('option');
         allOption.value = 'ALL';
         allOption.textContent = 'All Accounts';
         select.appendChild(allOption);
-        console.log('🔍 Added ALL option, select now has', select.options.length, 'options');
-        
         // Add individual accounts
         if (data.success && data.accounts && Array.isArray(data.accounts)) {
-          console.log('🔍 Processing accounts:', data.accounts.length, 'accounts found');
           data.accounts.forEach((account, index) => {
-            console.log(`🔍 Account ${index}:`, {
-              id: account.account_id,
-              name: account.account_name,
-              strategy: account.strategy,
-              value: account.latest_value
-            });
-            
             if (account.account_id && account.account_name) {
               const option = document.createElement('option');
               option.value = account.account_id;
@@ -937,8 +875,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           });
           
-          console.log(`📊 Loaded ${data.accounts.length} accounts for analytics`);
-        } else {
+          } else {
           console.warn('🔍 No accounts found in response or invalid format:', {
             success: data.success,
             accounts: data.accounts,
@@ -949,12 +886,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Select "ALL" by default
         select.value = 'ALL';
         
-        // Final debugging - count options
-        const totalOptions = select.options.length;
-        console.log(`🔍 Final result: ${totalOptions} total options added to dropdown`);
-        console.log('🔍 Option values:', Array.from(select.options).map(opt => ({value: opt.value, text: opt.textContent})));
-        
-      } else {
+        } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
@@ -1007,8 +939,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.success) {
           currentAnalyticsData = data;
           displayAnalyticsData(data, selectedAccount);
-          console.log(`📊 Loaded analytics data: ${data.data_points || 0} points`);
-        } else {
+          } else {
           throw new Error('Invalid response data');
         }
       } else {
@@ -1155,7 +1086,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const accountSelect = document.getElementById('analytics-account-select');
     if (accountSelect) {
       accountSelect.addEventListener('change', async () => {
-        console.log('📊 Account selection changed:', accountSelect.value);
         await loadAnalyticsData();
       });
     }
@@ -1164,7 +1094,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const periodSelect = document.getElementById('analytics-period-select');
     if (periodSelect) {
       periodSelect.addEventListener('change', async () => {
-        console.log('📊 Period selection changed:', periodSelect.value);
         await loadAnalyticsData();
       });
     }
@@ -1201,9 +1130,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize analytics after a short delay to ensure DOM is ready
   // Initialize analytics after ensuring DOM is ready
   if (document.getElementById('section-analytics')) {
-    console.log('📊 Analytics section found, initializing...');
     setTimeout(initializeAnalytics, 500);
   } else {
-    console.log('❌ Analytics section not found in DOM');
-  }
+    }
 });

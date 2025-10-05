@@ -1,11 +1,7 @@
 // admin-dashboard.js - Admin Dashboard Logic v3.5
 
-console.log('🔧 Admin Dashboard Debug: Script loading started...');
-
 // Import centralized configuration
 import CONFIG from './frontend-config.js';
-
-console.log('🔧 Admin Dashboard Debug: Config loaded:', CONFIG);
 
 // === UTILITY FUNCTIONS ===
 
@@ -183,7 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check authentication
   const token = localStorage.getItem("token");
   if (!token) {
-    console.log("❌ No token found, redirecting to auth...");
     setTimeout(() => {
       window.location.href = "/auth.html";
     }, 2000);
@@ -435,8 +430,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Use the stored platform analytics value (updated by loadPlatformAnalytics)
       summary.total_portfolio_value = latestPlatformValue;
-      console.log(`💰 Using stored platform analytics value: $${latestPlatformValue.toLocaleString()}`);
-
       displaySystemOverview(summary);
     } catch (error) {
       console.error('Error loading system overview:', error);
@@ -512,7 +505,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // === ACTIVE ACCOUNTS FUNCTIONS ===
   async function loadActiveAccounts() {
     try {
-      console.log('👥 Loading active trading accounts...');
       const response = await fetch(`${AUTH_API_BASE}/admin/accounts/active-trading`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -525,24 +517,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const result = await response.json();
-      console.log('👥 Active trading accounts response:', result);
-
-      // Debug: Log account values and status to see what we're getting
-      if (result.accounts && result.accounts.length > 0) {
-        console.log('💰 Account data debug:', result.accounts.map(acc => ({
-          account_id: acc._id,
-          account_name: acc.account_name,
-          username: acc.username,
-          strategy: acc.strategy,
-          current_value: acc.current_value,
-          total_value: getAccountTotalValue(acc),
-          last_status: acc.last_status,
-          overall_status: acc.overall_status,
-          is_disabled: acc.is_disabled,
-          is_revoked: acc.is_revoked
-        })));
-      }
-
       currentActiveAccounts = result.accounts || [];
       displayActiveAccounts(result.accounts || []);
       attachUserAccountVerifyListeners();
@@ -644,11 +618,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Helper function to format account values
   function formatAccountValue(value) {
-    // Debug logging
-    if (value !== null && value !== undefined) {
-      console.log(`💰 Formatting account value: ${value} (type: ${typeof value})`);
-    }
-
     if (!value || value === 0 || value === '0' || value === null || value === undefined) {
       return '<span class="no-value">N/A</span>';
     }
@@ -776,7 +745,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // === USERS ACCOUNTS FUNCTIONS ===
   async function loadUsersAccounts() {
     try {
-      console.log('👤 Loading users accounts without strategies...');
       const response = await fetch(`${AUTH_API_BASE}/admin/accounts/users-accounts`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -789,8 +757,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const result = await response.json();
-      console.log('👤 Users accounts response:', result);
-      
       currentUsersAccounts = result.accounts || [];
       displayUsersAccounts(result.accounts || []);
       attachUserAccountVerifyListeners();
@@ -995,34 +961,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // === INVOICE MANAGEMENT FUNCTIONS ===
   async function loadInvoices(status = '') {
     try {
-      console.log('📄 Loading invoices...');
-      console.log('📄 INVOICING_API_BASE:', INVOICING_API_BASE);
-      console.log('📄 Token available:', !!token);
-      
       let url = `${INVOICING_API_BASE}/admin/invoices`;
       if (status) url += `?status=${status}`;
       
-      console.log('📄 Full URL:', url);
-
       const headers = getAuthHeaders(token);
-      console.log('📄 Headers:', headers);
-
       const response = await fetch(url, {
         headers: headers
       });
 
-      console.log('📄 Response status:', response.status);
-      console.log('📄 Response ok:', response.ok);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('📄 Invoice data received:', data);
-        
         // Handle different possible response structures
         const invoices = data.invoices || data || [];
-        console.log('📄 Invoices array:', invoices);
-        console.log('📄 Number of invoices:', invoices.length);
-        
         displayInvoices(invoices);
         updateInvoiceStats(invoices);
       } else {
@@ -1132,8 +1082,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!confirm('Are you sure you want to approve this invoice?')) return;
     
     try {
-      console.log('Approving invoice with ID:', invoiceId);
-      
       const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/approve`, {
         method: 'PATCH',
         headers: getAuthHeaders(token),
@@ -1161,8 +1109,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!reason) return;
     
     try {
-      console.log('Rejecting invoice with ID:', invoiceId);
-      
       const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/cancel`, {
         method: 'PATCH',
         headers: getAuthHeaders(token),
@@ -1189,8 +1135,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!confirm('Mark this invoice as paid? This should only be done after payment has been received.')) return;
     
     try {
-      console.log('Marking invoice as paid, ID:', invoiceId);
-      
       const response = await fetch(`${INVOICING_API_BASE}/admin/invoices/${invoiceId}/mark-paid`, {
         method: 'PATCH',
         headers: getAuthHeaders(token),
@@ -1599,8 +1543,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       showToast(`Processing payout for ${username}...`, 'info');
       
-      console.log('📤 Sending payout request for user:', userId, 'amount:', amount);
-      
       const response = await fetch(`${INVOICING_API_BASE}/admin/referrals/${userId}/payout`, {
         method: 'POST',
         headers: getAuthHeaders(token),
@@ -1610,8 +1552,6 @@ document.addEventListener("DOMContentLoaded", () => {
           notes: `Manual payout processed by admin via dashboard`
         })
       });
-      
-      console.log('📥 Payout response status:', response.status, response.statusText);
       
       if (response.ok) {
         const result = await response.json();
@@ -2285,7 +2225,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load source accounts
   async function loadSourceAccounts() {
     try {
-      console.log('🔍 Loading source accounts from dashboard endpoint...');
       const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -2293,12 +2232,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      console.log('📡 Source accounts response status:', response.status);
       const data = await response.json();
-      console.log('📊 Source accounts response data:', data);
-
       if (response.ok) {
-        console.log('✅ Source accounts loaded successfully, count:', data.source_accounts?.length || 0);
         displaySourceAccounts(data.source_accounts);
       } else {
         console.error('❌ Failed to load source accounts:', data.detail);
@@ -2367,12 +2302,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function verifyUserAccount(accountId) {
     try {
       showNotification('Starting user account troubleshoot...', 'info');
-      console.log('🔍 Troubleshooting user trading account:', accountId);
-      
       // Use the same working troubleshoot endpoint as admin-accounts.js (it accepts admin tokens)
       const troubleshootUrl = `${AUTH_API_BASE}/troubleshoot/${accountId}`;
-      console.log('🔧 Troubleshoot URL (User Account):', troubleshootUrl);
-      
       const response = await fetch(troubleshootUrl, {
         method: 'POST',
         headers: {
@@ -2387,7 +2318,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showNotification('User account troubleshoot completed successfully!', 'success');
       } else {
         // Fallback - show basic account info from existing data
-        console.log('❌ Verification API not available, showing basic account info');
         let accountData = currentActiveAccounts.find(acc => 
           (acc.account_id === accountId) || (acc._id === accountId) || (acc.id === accountId)
         );
@@ -2856,7 +2786,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Edit source account
   async function editSourceAccount(accountId) {
     try {
-      console.log('🔍 Editing source account with ID:', accountId, 'Type:', typeof accountId);
       const response = await fetch(`${AUTH_API_BASE}/admin/source-accounts/${accountId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3410,7 +3339,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Initialize chart if LineChart is available
       if (typeof LineChart !== 'undefined') {
-        console.log('📊 Initializing source accounts analytics chart...');
         const container = document.getElementById('source-analytics-chart');
         if (container) {
           // Get container dimensions for responsive chart
@@ -3447,8 +3375,7 @@ document.addEventListener("DOMContentLoaded", () => {
               });
             }
           });
-          console.log('📊 Source analytics chart initialized successfully');
-        } else {
+          } else {
           console.error('❌ Chart container not found');
         }
       } else {
@@ -3497,8 +3424,7 @@ document.addEventListener("DOMContentLoaded", () => {
             accountSelect.appendChild(option);
           });
 
-          console.log(`📊 Loaded ${data.accounts.length} source accounts for analytics`);
-        } else {
+          } else {
           throw new Error('Invalid response data');
         }
       } else {
@@ -3547,8 +3473,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.success) {
           currentSourceAnalyticsData = data;
           displaySourceAccountsAnalyticsData(data, selectedAccount);
-          console.log(`📊 Loaded source analytics data: ${data.data_points || 0} points`);
-        } else {
+          } else {
           throw new Error('Invalid response data');
         }
       } else {
@@ -3581,11 +3506,9 @@ document.addEventListener("DOMContentLoaded", () => {
           values: chartData,  // Changed from 'data' to 'values' to match LineChart expected format
           color: '#3b82f6'
         }]);
-        console.log('📊 Chart data set successfully with', chartData.length, 'points');
-      } else if (sourceAnalyticsChart) {
+        } else if (sourceAnalyticsChart) {
         sourceAnalyticsChart.showEmptyState();
-        console.log('📊 Showing empty state - no data available');
-      }
+        }
 
     } catch (error) {
       console.error('Error displaying source analytics data:', error);
@@ -3655,13 +3578,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadPlatformAnalytics() {
     try {
       const selectedPeriod = document.getElementById('platform-period-select')?.value || 30;
-      console.log(`📊 Loading platform analytics for ${selectedPeriod} days...`);
-
       const response = await fetch(`${AUTH_API_BASE}/admin/analytics/platform-aggregated?days=${selectedPeriod}`, {
         headers: buildAuthHeaders()
       });
-
-      console.log('📡 Platform analytics response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -3670,21 +3589,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await response.json();
-      console.log('📊 Platform analytics full response:', data);
-      console.log('📊 Chart data points:', data.chart_data?.length || 0);
-      console.log('📊 Summary data:', data.summary);
-
       if (data.success) {
         // Update global variable with latest platform value for System Overview
         if (data.summary && data.summary.current_value) {
           latestPlatformValue = data.summary.current_value;
-          console.log(`💰 Updated global platform value: $${latestPlatformValue.toLocaleString()}`);
-        } else if (data.chart_data && data.chart_data.length > 0) {
+          } else if (data.chart_data && data.chart_data.length > 0) {
           // Fallback: use last chart data entry
           const lastEntry = data.chart_data[data.chart_data.length - 1];
           latestPlatformValue = lastEntry.value || 0;
-          console.log(`💰 Updated global platform value from chart: $${latestPlatformValue.toLocaleString()}`);
-        }
+          }
 
         // Refresh System Overview to show updated portfolio value (fix race condition)
         if (latestPlatformValue > 0) {
@@ -3704,7 +3617,6 @@ document.addEventListener("DOMContentLoaded", () => {
         loadPlatformKpiSnapshots(true, selectedDays);
 
         if (data.chart_data && data.chart_data.length > 0) {
-          console.log('✅ Platform analytics has data, displaying chart...');
           displayPlatformAnalyticsChart(data.chart_data, data.summary || {});
           updatePlatformSummaryStats(data.summary || {});
         } else {
@@ -3972,7 +3884,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const periodSelect = document.getElementById('platform-period-select');
     if (periodSelect) {
       periodSelect.addEventListener('change', async () => {
-        console.log('🔄 Platform Analytics period changed to:', periodSelect.value);
         await loadPlatformAnalytics();
       });
     }
@@ -3981,19 +3892,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const refreshButton = document.getElementById('refresh-platform-analytics');
     if (refreshButton) {
       refreshButton.addEventListener('click', async () => {
-        console.log('🔄 Platform Analytics refresh clicked');
         await loadPlatformAnalytics();
       });
     }
   }
 
   // Initialize dashboard
-  console.log('🚀 Admin Dashboard: Starting initialization...');
   loadSystemOverview();
   loadActiveAccounts();
   loadUsersAccounts();
   loadWalletVerifications();
-  console.log('📄 Admin Dashboard: About to load invoices...');
   loadInvoices();
   loadTierUpgrades();
   loadReferrals();
