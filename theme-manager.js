@@ -16,7 +16,6 @@ class ThemeManager {
     window.addEventListener('storage', (e) => {
       if (e.key === this.STORAGE_KEY) {
         this.applySavedTheme();
-        console.log('🎨 Theme updated from another tab');
       }
     });
   }
@@ -30,7 +29,6 @@ class ThemeManager {
   // Save theme preference to localStorage
   saveThemePreference(isDark) {
     localStorage.setItem(this.STORAGE_KEY, isDark ? 'dark' : 'light');
-    console.log('💾 Theme preference saved:', isDark ? 'dark' : 'light');
   }
 
   // Apply the saved theme to the current page
@@ -61,7 +59,6 @@ class ThemeManager {
       }
     }
     
-    console.log('🎨 Theme applied:', isDark ? 'dark' : 'light');
   }
 
   // Toggle theme and save preference
@@ -75,7 +72,6 @@ class ThemeManager {
     // Apply new theme
     this.applySavedTheme();
     
-    console.log('🔄 Theme toggled to:', newTheme ? 'dark' : 'light');
     return newTheme;
   }
 
@@ -93,7 +89,6 @@ class ThemeManager {
       toggleBtn.addEventListener('click', () => {
         this.toggleTheme();
       });
-      console.log('🔘 Theme toggle button setup complete');
     } else {
       console.warn('⚠️ Theme toggle button not found:', buttonSelector);
     }
