@@ -187,7 +187,7 @@ function renderActiveJobs(items) {
       <tr>
         <td>
           <div class="status-dot">
-            <span class="status-indicator ${statusClass}"></span>
+            <span class="status-indicator ${statusClass}" title="${status}"></span>
             <span>${item.account_name || item.account_id || 'Unknown Account'}</span>
           </div>
         </td>
@@ -496,6 +496,9 @@ function initNavigation() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  if (window.themeManager) {
+    window.themeManager.applySavedTheme();
+  }
   requireToken();
   initNavigation();
   setupFilters();

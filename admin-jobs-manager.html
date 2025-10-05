@@ -8,120 +8,245 @@
   <meta http-equiv="Expires" content="0" />
   <title>Jobs Manager Admin</title>
   <script type="module" src="frontend-config.js?v=3.5"></script>
-  <script type="module" src="admin-jobs-manager.js?v=3.6"></script>
-  <script src="theme-manager.js?v=1.2"></script>
+  <script type="module" src="admin-jobs-manager.js?v=3.7"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.5" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.5" />
   <style>
-    body {
-      background: #f4f6f8;
-      color: #2c3e50;
-      font-family: 'Inter', 'Segoe UI', sans-serif;
+    body.jobs-manager-page {
+      margin: 0;
+      background: var(--dashboard-background, #f4f6f8);
+      color: var(--text-primary, #1f2937);
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
-    .page-container {
+    .dark-theme.jobs-manager-page {
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .jobs-manager-content {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 30px 20px 60px;
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
-
-    .page-header h1 {
-      font-size: 1.8rem;
-      margin: 0;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    .header-actions button {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .btn-secondary { background: #e9ecef; color: #2c3e50; }
-    .btn-secondary:hover { background: #dfe3eb; }
-    .btn-danger { background: #dc3545; color: #fff; }
-    .btn-danger:hover { background: #c82333; }
-
-    .summary-grid {
-      display: grid;
-      gap: 15px;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      margin-bottom: 25px;
-    }
-
-    .summary-card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      padding: 18px;
-    }
-
-    .summary-card h3 {
-      margin: 0 0 6px;
-      font-size: 0.95rem;
-      color: #6c757d;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .summary-value {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #2c3e50;
-    }
-
-    .layout-grid {
+      padding: 0 20px 60px;
       display: flex;
       flex-direction: column;
       gap: 24px;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
+    .jobs-manager-page .dashboard-header {
+      max-width: 1200px;
+      margin: 0 auto 24px;
     }
 
-    .card h2 {
-      margin: 0 0 15px;
-      font-size: 1.2rem;
+    .jobs-summary-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .jobs-summary-card > h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .jobs-summary-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .summary-card {
+      background: var(--card-bg, #ffffff);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--card-shadow, 0 2px 8px rgba(15,23,42,0.08));
+      border: 1px solid var(--card-border, rgba(15,23,42,0.08));
+      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dark-theme .summary-card {
+      background: rgba(15,23,42,0.85);
+      border-color: rgba(148,163,184,0.2);
+      box-shadow: 0 4px 16px rgba(8,15,35,0.6);
+    }
+
+    .summary-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary, #64748b);
+    }
+
+    .summary-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-primary, #1f2937);
+    }
+
+    .dark-theme .summary-value {
+      color: #f1f5f9;
+    }
+
+    .summary-card small {
+      color: var(--text-secondary, #64748b);
+      display: block;
+    }
+
+    .dark-theme.jobs-manager-page .summary-card small {
+      color: #94a3b8;
+    }
+
+    .jobs-layout {
+      display: grid;
+      gap: 24px;
+    }
+
+    .jobs-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    @media (min-width: 1080px) {
+      .jobs-layout {
+        grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+        align-items: start;
+      }
+
+    }
+
+    .jobs-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .jobs-card h2,
+    .jobs-card h3 {
+      margin: 0;
+      font-size: 1.1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      color: inherit;
     }
 
-    .filters {
+    .jobs-card h3 {
+      font-size: 1rem;
+    }
+
+    .jobs-filters {
       display: flex;
       gap: 12px;
-      margin-bottom: 15px;
       flex-wrap: wrap;
       align-items: center;
     }
 
-    .filters select,
-    .filters input {
+    .job-detail {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .job-detail h3 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+    }
+
+    .job-detail.grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .detail-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .detail-grid div {
+      background: var(--card-bg, #ffffff);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid var(--card-border, rgba(15,23,42,0.08));
+    }
+
+    .dark-theme.jobs-manager-page .detail-grid div {
+      background: rgba(30, 41, 59, 0.6);
+      border-color: rgba(148, 163, 184, 0.25);
+    }
+
+    .jobs-filters select,
+    .jobs-filters input {
       padding: 6px 10px;
       border-radius: 6px;
-      border: 1px solid #d0d5dd;
-      min-width: 140px;
+      border: 1px solid var(--input-border, #d0d5dd);
+      background: var(--card-bg, #ffffff);
+      color: inherit;
+      font-size: 0.9rem;
+    }
+
+    .dark-theme.jobs-manager-page .jobs-filters select,
+    .dark-theme.jobs-manager-page .jobs-filters input {
+      border-color: rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.8);
+      color: #e2e8f0;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .jobs-card table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .jobs-card thead th {
+      padding: 10px 12px;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--table-header-bg, #f8fafc);
+      color: var(--text-secondary, #64748b);
+      border-bottom: 1px solid var(--table-border, #e2e8f0);
+    }
+
+    .dark-theme.jobs-manager-page .jobs-card thead th {
+      background: rgba(30, 41, 59, 0.85);
+      color: #cbd5f5;
+      border-bottom-color: rgba(148, 163, 184, 0.25);
+    }
+
+    .jobs-card tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--table-border, #e2e8f0);
+    }
+
+    .dark-theme.jobs-manager-page .jobs-card tbody td {
+      border-bottom-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .jobs-card tbody tr.job-row {
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .jobs-card tbody tr.job-row:hover {
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .dark-theme.jobs-manager-page .jobs-card tbody tr.job-row:hover {
+      background: rgba(96, 165, 250, 0.15);
     }
 
     .pagination-bar {
@@ -143,12 +268,21 @@
     .pagination-group button {
       padding: 6px 10px;
       border-radius: 6px;
-      border: 1px solid #d0d5dd;
-      background: #f1f3f5;
-      color: #2c3e50;
+      border: 1px solid var(--input-border, #d0d5dd);
+      background: var(--card-bg, #ffffff);
+      color: inherit;
       cursor: pointer;
       font-weight: 600;
       transition: background 0.2s ease;
+    }
+
+    .pagination-group select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--input-border, #d0d5dd);
+      background: var(--card-bg, #ffffff);
+      color: inherit;
+      font-size: 0.9rem;
     }
 
     .pagination-group button:disabled {
@@ -157,180 +291,43 @@
     }
 
     .pagination-group button:not(:disabled):hover {
-      background: #e7ebf1;
+      background: rgba(37, 99, 235, 0.12);
     }
 
-    #jobs-page-size {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #d0d5dd;
+    .dark-theme.jobs-manager-page .pagination-group button {
+      border-color: rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .dark-theme.jobs-manager-page .pagination-group button:not(:disabled):hover {
+      background: rgba(96, 165, 250, 0.2);
+    }
+
+    .dark-theme.jobs-manager-page .pagination-group select {
+      border-color: rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.8);
+      color: #e2e8f0;
     }
 
     .pagination-info {
-      font-size: 0.9rem;
-      color: #6c757d;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid #eef0f3;
-    }
-
-    tr.job-row { cursor: pointer; }
-    tr.job-row:hover { background: #f8f9fb; }
-
-    .status-badge {
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .status-success { background: #d4edda; color: #155724; }
-    .status-failed { background: #f8d7da; color: #721c24; }
-
-    .empty {
-      text-align: center;
-      color: #6c757d;
-      padding: 20px 0;
-    }
-
-    .job-detail, .job-log {
-      margin-top: 0;
-      background: #f9fafc;
-      border-radius: 12px;
-      border: 1px solid #eef0f3;
-      padding: 18px;
-    }
-
-    .hidden { display: none; }
-
-    .detail-grid {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-
-    .result-json {
-      background: #f4f6f8;
-      padding: 12px;
-      border-radius: 8px;
-      max-height: 280px;
-      overflow: auto;
       font-size: 0.85rem;
+      color: var(--text-secondary, #64748b);
     }
 
-    #job-log-content {
-      background: #0b1521;
-      color: #d7e3f4;
-      padding: 12px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      font-family: 'Fira Code', monospace;
-      max-height: 320px;
-      overflow: auto;
+    .dark-theme.jobs-manager-page .pagination-info {
+      color: #cbd5f5;
     }
-
-    .job-log-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .log-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .log-controls select {
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid #d0d5dd;
-      background: #fff;
-      font-size: 0.85rem;
-    }
-
-    .log-controls button {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: #e9ecef;
-      color: #2c3e50;
-      transition: background 0.2s ease;
-    }
-
-    .log-controls button:hover {
-      background: #dfe3eb;
-    }
-
-    .log-meta {
-      margin: 10px 0;
-      font-size: 0.8rem;
-      color: #6c757d;
-    }
-
-    .active-jobs-summary {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    .active-jobs-summary thead {
-      background: #f3f5f9;
-    }
-
-    .active-jobs-summary th,
-    .active-jobs-summary td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #eef0f3;
-      text-align: left;
-    }
-
-    .active-jobs-summary tbody tr:hover {
-      background: #f9fbff;
-    }
-
-    .status-dot {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .status-indicator.active { background: #16a34a; }
-    .status-indicator.disabled { background: #dc3545; }
-    .status-indicator.pending { background: #facc15; }
-    .status-indicator.unknown { background: #94a3b8; }
 
     .btn-force-run {
       padding: 6px 12px;
       border-radius: 6px;
-      border: 1px solid #d0d5dd;
-      background: #2563eb;
+      border: 1px solid transparent;
+      background: var(--primary-color, #2563eb);
       color: #fff;
       font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: background 0.2s ease, transform 0.2s ease;
     }
 
     .btn-force-run:disabled {
@@ -340,80 +337,221 @@
 
     .btn-force-run:not(:disabled):hover {
       background: #1d4ed8;
+      transform: translateY(-1px);
     }
 
-    @media (max-width: 960px) {
-      .layout-grid { flex-direction: column; }
+    .dark-theme.jobs-manager-page .btn-force-run {
+      border-color: rgba(96, 165, 250, 0.4);
+      background: rgba(96, 165, 250, 0.25);
+      color: #e0f2fe;
+    }
+
+    .dark-theme.jobs-manager-page .btn-force-run:not(:disabled):hover {
+      background: rgba(96, 165, 250, 0.4);
+    }
+
+    .status-dot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-indicator.active { background: #16a34a; }
+    .status-indicator.disabled { background: #dc2626; }
+    .status-indicator.pending { background: #ca8a04; }
+    .status-indicator.unknown { background: #94a3b8; }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-success { background: rgba(34, 197, 94, 0.16); color: #166534; }
+    .status-failed { background: rgba(239, 68, 68, 0.16); color: #991b1b; }
+
+    .dark-theme.jobs-manager-page .status-success {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+    }
+
+    .dark-theme.jobs-manager-page .status-failed {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--text-secondary, #64748b);
+      padding: 18px 12px;
+    }
+
+    .dark-theme.jobs-manager-page .empty {
+      color: #94a3b8;
+    }
+
+    .job-log {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .job-log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .active-jobs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .log-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .log-controls select,
+    .log-controls button {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--input-border, #d0d5dd);
+      background: var(--card-bg, #ffffff);
+      color: inherit;
+    }
+
+    .dark-theme.jobs-manager-page .log-controls select,
+    .dark-theme.jobs-manager-page .log-controls button {
+      border-color: rgba(148, 163, 184, 0.3);
+      background: rgba(30, 41, 59, 0.8);
+      color: #e2e8f0;
+    }
+
+    #job-log-content {
+      background: rgba(15, 23, 42, 0.04);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: inherit;
+      overflow-x: auto;
+      max-height: 320px;
+    }
+
+    .dark-theme.jobs-manager-page #job-log-content {
+      background: rgba(15, 23, 42, 0.6);
+      color: #e2e8f0;
+    }
+
+    @media (max-width: 768px) {
+      .jobs-manager-content {
+        padding: 0 16px 40px;
+      }
+
+      .jobs-summary-card {
+        padding: 20px;
+      }
+
+      .jobs-card h2 {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
-<body>
-  <div class="page-container">
-    <div class="page-header">
-      <h1>Observer Jobs Manager</h1>
-      <div class="header-actions">
-        <button class="btn-secondary" id="refresh-summary">Refresh</button>
-        <button class="btn-secondary" id="back-to-dashboard">← Dashboard</button>
-        <button class="btn-danger" id="logout-btn">Logout</button>
-      </div>
+<body class="jobs-manager-page">
+  <div class="dashboard-header">
+    <h1>⚙️ Jobs Manager Admin</h1>
+    <div class="actions">
+      <button type="button" id="back-to-dashboard">← Dashboard</button>
+      <button type="button" id="toggle-theme">Toggle Theme</button>
+      <button type="button" id="refresh-summary">🔄 Refresh</button>
+      <button type="button" id="logout-btn">Logout</button>
     </div>
+  </div>
 
-    <section class="summary-grid">
-      <div class="summary-card">
-        <h3>Total Executed</h3>
-        <div class="summary-value" id="jobs-total">—</div>
-        <small>All recorded job executions</small>
-      </div>
-      <div class="summary-card">
-        <h3>Succeeded</h3>
-        <div class="summary-value" id="jobs-success">—</div>
-        <small>Successful runs</small>
-      </div>
-      <div class="summary-card">
-        <h3>Failed</h3>
-        <div class="summary-value" id="jobs-failed">—</div>
-        <small>Executions requiring review</small>
-      </div>
-      <div class="summary-card">
-        <h3>Last Execution</h3>
-        <div class="summary-value" id="jobs-last-execution">—</div>
-        <small>Most recent run</small>
-      </div>
-      <div class="summary-card">
-        <h3>Last Failure</h3>
-        <div class="summary-value" id="jobs-last-failure">—</div>
-        <small>Time of most recent failure</small>
+  <main class="jobs-manager-content">
+    <section class="dashboard-card jobs-summary-card">
+      <h2>📊 Jobs Overview</h2>
+      <div class="jobs-summary-grid">
+        <div class="summary-card">
+          <h3>Total Executed</h3>
+          <div class="summary-value" id="jobs-total">—</div>
+          <small>All recorded job executions</small>
+        </div>
+        <div class="summary-card">
+          <h3>Succeeded</h3>
+          <div class="summary-value" id="jobs-success">—</div>
+          <small>Successful runs</small>
+        </div>
+        <div class="summary-card">
+          <h3>Failed</h3>
+          <div class="summary-value" id="jobs-failed">—</div>
+          <small>Executions requiring review</small>
+        </div>
+        <div class="summary-card">
+          <h3>Last Execution</h3>
+          <div class="summary-value" id="jobs-last-execution">—</div>
+          <small>Most recent run</small>
+        </div>
+        <div class="summary-card">
+          <h3>Last Failure</h3>
+          <div class="summary-value" id="jobs-last-failure">—</div>
+          <small>Time of most recent failure</small>
+        </div>
       </div>
     </section>
 
-    <div class="layout-grid">
-      <div id="job-detail-card" class="card hidden">
-        <div id="job-detail" class="job-detail hidden"></div>
-        <div id="job-log" class="job-log hidden">
-          <div class="job-log-header">
-            <h3>Execution Log</h3>
-            <div class="log-controls">
-              <label>
-                Lines
-                <select id="job-log-lines">
-                  <option value="200">200</option>
-                  <option value="400" selected>400</option>
-                  <option value="800">800</option>
-                  <option value="1600">1600</option>
-                </select>
-              </label>
-              <button id="job-log-refresh" type="button">Reload</button>
-              <button id="job-log-open" type="button">Open Full Log</button>
+    <div class="jobs-layout">
+      <div class="jobs-sidebar">
+        <div id="job-detail-card" class="dashboard-card jobs-card hidden">
+          <div id="job-detail" class="job-detail hidden"></div>
+          <div id="job-log" class="job-log hidden">
+            <div class="job-log-header">
+              <h3>Execution Log</h3>
+              <div class="log-controls">
+                <label>
+                  Lines
+                  <select id="job-log-lines">
+                    <option value="200">200</option>
+                    <option value="400" selected>400</option>
+                    <option value="800">800</option>
+                    <option value="1600">1600</option>
+                  </select>
+                </label>
+                <button id="job-log-refresh" type="button">Reload</button>
+                <button id="job-log-open" type="button">Open Full Log</button>
+              </div>
             </div>
+            <div id="job-log-meta" class="log-meta"></div>
+            <pre id="job-log-content">Select a job execution to view its log.</pre>
           </div>
-          <div id="job-log-meta" class="log-meta"></div>
-          <pre id="job-log-content">Select a job execution to view its log.</pre>
+        </div>
+
+        <div class="dashboard-card jobs-card">
+          <h2>Active Jobs</h2>
+          <div id="active-jobs-list" class="active-jobs-container">
+            <div class="empty">Loading...</div>
+          </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="dashboard-card jobs-card jobs-history-card">
         <h2>Execution History</h2>
-        <div class="filters">
+        <div class="jobs-filters">
           <select id="filter-status">
             <option value="">All Statuses</option>
             <option value="SUCCEEDED">Succeeded</option>
@@ -427,7 +565,7 @@
             <option value="LIQUIDATION">Liquidation</option>
           </select>
           <input id="filter-account" placeholder="Account ID" />
-          <button class="btn-secondary" id="apply-filters">Apply</button>
+          <button type="button" class="secondary-button small" id="apply-filters">Apply</button>
         </div>
         <div class="pagination-bar">
           <div class="pagination-group">
@@ -462,14 +600,8 @@
           </table>
         </div>
       </div>
-
-      <div class="card">
-        <h2>Active Jobs</h2>
-        <div id="active-jobs-list" class="active-jobs-container">
-          <div class="empty">Loading...</div>
-        </div>
-      </div>
     </div>
-  </div>
+  </main>
+  <script src="theme-manager.js?v=1.2"></script>
 </body>
 </html>
