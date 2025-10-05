@@ -102,29 +102,31 @@
       color: #94a3b8;
     }
 
-    .jobs-layout {
+    .jobs-top-grid {
       display: grid;
       gap: 24px;
-    }
-
-    .jobs-sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+      margin-bottom: 24px;
     }
 
     @media (min-width: 1080px) {
-      .jobs-layout {
-        grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+      .jobs-top-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         align-items: start;
       }
-
     }
 
     .jobs-card {
       display: flex;
       flex-direction: column;
       gap: 16px;
+    }
+
+    .jobs-history-card {
+      margin-bottom: 24px;
+    }
+
+    .active-jobs-card {
+      margin-top: 0;
     }
 
     .jobs-card h2,
@@ -515,92 +517,93 @@
       </div>
     </section>
 
-    <div class="jobs-layout">
-      <div class="jobs-sidebar">
-        <div id="job-detail-card" class="dashboard-card jobs-card hidden">
-          <div id="job-detail" class="job-detail hidden"></div>
-          <div id="job-log" class="job-log hidden">
-            <div class="job-log-header">
-              <h3>Execution Log</h3>
-              <div class="log-controls">
-                <label>
-                  Lines
-                  <select id="job-log-lines">
-                    <option value="200">200</option>
-                    <option value="400" selected>400</option>
-                    <option value="800">800</option>
-                    <option value="1600">1600</option>
-                  </select>
-                </label>
-                <button id="job-log-refresh" type="button">Reload</button>
-                <button id="job-log-open" type="button">Open Full Log</button>
-              </div>
+    <div class="jobs-top-grid">
+      <section id="job-detail-card" class="dashboard-card jobs-card hidden">
+        <div id="job-detail" class="job-detail hidden"></div>
+      </section>
+
+      <section id="job-log-card" class="dashboard-card jobs-card hidden">
+        <div id="job-log" class="job-log hidden">
+          <div class="job-log-header">
+            <h3>Execution Log</h3>
+            <div class="log-controls">
+              <label>
+                Lines
+                <select id="job-log-lines">
+                  <option value="200">200</option>
+                  <option value="400" selected>400</option>
+                  <option value="800">800</option>
+                  <option value="1600">1600</option>
+                </select>
+              </label>
+              <button id="job-log-refresh" type="button">Reload</button>
+              <button id="job-log-open" type="button">Open Full Log</button>
             </div>
-            <div id="job-log-meta" class="log-meta"></div>
-            <pre id="job-log-content">Select a job execution to view its log.</pre>
           </div>
+          <div id="job-log-meta" class="log-meta"></div>
+          <pre id="job-log-content">Select a job execution to view its log.</pre>
         </div>
-
-        <div class="dashboard-card jobs-card">
-          <h2>Active Jobs</h2>
-          <div id="active-jobs-list" class="active-jobs-container">
-            <div class="empty">Loading...</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="dashboard-card jobs-card jobs-history-card">
-        <h2>Execution History</h2>
-        <div class="jobs-filters">
-          <select id="filter-status">
-            <option value="">All Statuses</option>
-            <option value="SUCCEEDED">Succeeded</option>
-            <option value="FAILED">Failed</option>
-          </select>
-          <select id="filter-job-type">
-            <option value="">All Job Types</option>
-            <option value="TRADING">Trading</option>
-            <option value="FUTURES_TRADING">Futures</option>
-            <option value="DATA_COLLECTION">Data Collection</option>
-            <option value="LIQUIDATION">Liquidation</option>
-          </select>
-          <input id="filter-account" placeholder="Account ID" />
-          <button type="button" class="secondary-button small" id="apply-filters">Apply</button>
-        </div>
-        <div class="pagination-bar">
-          <div class="pagination-group">
-            <label for="jobs-page-size">Rows per page</label>
-            <select id="jobs-page-size">
-              <option value="10" selected>10</option>
-              <option value="20">20</option>
-              <option value="30">30</option>
-            </select>
-          </div>
-          <div class="pagination-group">
-            <button id="jobs-prev" type="button">← Prev</button>
-            <span id="jobs-page-info" class="pagination-info">Page 1 of 1</span>
-            <button id="jobs-next" type="button">Next →</button>
-          </div>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Account</th>
-                <th>Strategy</th>
-                <th>Status</th>
-                <th>Completed</th>
-                <th>Duration</th>
-              </tr>
-            </thead>
-            <tbody id="jobs-table-body">
-              <tr><td colspan="6" class="empty">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      </section>
     </div>
+
+    <section class="dashboard-card jobs-card jobs-history-card">
+      <h2>Execution History</h2>
+      <div class="jobs-filters">
+        <select id="filter-status">
+          <option value="">All Statuses</option>
+          <option value="SUCCEEDED">Succeeded</option>
+          <option value="FAILED">Failed</option>
+        </select>
+        <select id="filter-job-type">
+          <option value="">All Job Types</option>
+          <option value="TRADING">Trading</option>
+          <option value="FUTURES_TRADING">Futures</option>
+          <option value="DATA_COLLECTION">Data Collection</option>
+          <option value="LIQUIDATION">Liquidation</option>
+        </select>
+        <input id="filter-account" placeholder="Account ID" />
+        <button type="button" class="secondary-button small" id="apply-filters">Apply</button>
+      </div>
+      <div class="pagination-bar">
+        <div class="pagination-group">
+          <label for="jobs-page-size">Rows per page</label>
+          <select id="jobs-page-size">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+          </select>
+        </div>
+        <div class="pagination-group">
+          <button id="jobs-prev" type="button">← Prev</button>
+          <span id="jobs-page-info" class="pagination-info">Page 1 of 1</span>
+          <button id="jobs-next" type="button">Next →</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Account</th>
+              <th>Strategy</th>
+              <th>Status</th>
+              <th>Completed</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody id="jobs-table-body">
+            <tr><td colspan="6" class="empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="dashboard-card jobs-card active-jobs-card">
+      <h2>Active Jobs</h2>
+      <div id="active-jobs-list" class="active-jobs-container">
+        <div class="empty">Loading...</div>
+      </div>
+    </section>
   </main>
   <script src="theme-manager.js?v=1.2"></script>
 </body>

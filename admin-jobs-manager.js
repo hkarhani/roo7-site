@@ -285,6 +285,7 @@ async function loadJobLog(linesOverride) {
   const logContent = document.getElementById('job-log-content');
   const logMeta = document.getElementById('job-log-meta');
   const linesSelect = document.getElementById('job-log-lines');
+  const logCard = document.getElementById('job-log-card');
 
   if (!logContainer || !logContent) {
     return;
@@ -293,6 +294,8 @@ async function loadJobLog(linesOverride) {
   if (!currentExecutionId) {
     logContent.textContent = 'Select a job execution to view its log.';
     if (logMeta) logMeta.textContent = '';
+    logContainer.classList.add('hidden');
+    logCard?.classList.add('hidden');
     return;
   }
 
@@ -322,6 +325,7 @@ async function loadJobLog(linesOverride) {
   }
 
   logContainer.classList.remove('hidden');
+  logCard?.classList.remove('hidden');
 }
 
 async function showJobDetails(executionId) {
@@ -330,6 +334,7 @@ async function showJobDetails(executionId) {
   const logContent = document.getElementById('job-log-content');
   const linesSelect = document.getElementById('job-log-lines');
   const detailCard = document.getElementById('job-detail-card');
+  const logCard = document.getElementById('job-log-card');
 
   if (!detailsContainer || !logContainer || !logContent) {
     return;
@@ -345,6 +350,7 @@ async function showJobDetails(executionId) {
   logContainer.classList.remove('hidden');
   logContent.textContent = 'Loading log...';
   detailCard?.classList.remove('hidden');
+  logCard?.classList.remove('hidden');
 
   try {
     const job = await fetchJson(`${JOBS_API_BASE}/admin/jobs/${executionId}`);
