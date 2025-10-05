@@ -812,8 +812,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const safePagination = pagination && typeof pagination === 'object' ? pagination : activeAccountsPagination;
 
     const totalAccounts = normalizeNonNegativeInt(safeSummary.total_accounts, Array.isArray(accounts) ? accounts.length : 0);
-    const uniqueUsers = normalizeNonNegativeInt(safeSummary.unique_users, 0);
-    const strategyCount = normalizeNonNegativeInt(safeSummary.strategy_count, 0);
 
     const page = normalizePositiveInt(safePagination.page, 1);
     const pageSize = normalizePositiveInt(safePagination.pageSize, Array.isArray(accounts) && accounts.length > 0 ? accounts.length : 25, 100);
@@ -835,13 +833,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .sort((a, b) => a - b);
 
     const filtersApplied = Boolean(activeAccountsFilters.search || activeAccountsFilters.strategy || activeAccountsFilters.status);
-
-    const summaryMarkup = `
-      <div class="active-accounts-summary">
-        <span>${totalAccounts}</span> active accounts from <span>${uniqueUsers}</span> paying users 
-        (<span>${strategyCount}</span> different strategies)
-      </div>
-    `;
 
     const tableMarkup = Array.isArray(accounts) && accounts.length > 0
       ? `
@@ -930,7 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    container.innerHTML = `${summaryMarkup}${tableMarkup}${paginationMarkup}`;
+    container.innerHTML = `${tableMarkup}${paginationMarkup}`;
   }
 
   function attachActiveAccountsPaginationListeners() {
