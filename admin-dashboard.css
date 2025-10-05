@@ -512,11 +512,6 @@
   grid-row: 5;
 }
 
-#section-logs-management {
-  grid-column: 3;
-  grid-row: 5;
-}
-
 #section-upgrades {
   grid-column: 1;
   grid-row: 6;
@@ -3400,98 +3395,6 @@
   opacity: 0.8;
 }
 
-.recent-issues {
-  margin-top: 25px;
-  padding: 20px;
-  background: var(--card-background);
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-}
-
-.issues-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.issue-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  border-left: 3px solid transparent;
-}
-
-.issue-item.error {
-  background: rgba(231, 76, 60, 0.1);
-  border-left-color: #e74c3c;
-}
-
-.issue-item.critical {
-  background: rgba(231, 76, 60, 0.2);
-  border-left-color: #e74c3c;
-  font-weight: bold;
-}
-
-.issue-item.warning {
-  background: rgba(243, 156, 18, 0.1);
-  border-left-color: #f39c12;
-}
-
-.issue-level {
-  font-weight: bold;
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  min-width: 60px;
-  text-align: center;
-}
-
-.issue-item.error .issue-level {
-  background: #e74c3c;
-  color: white;
-}
-
-.issue-item.critical .issue-level {
-  background: #c0392b;
-  color: white;
-}
-
-.issue-item.warning .issue-level {
-  background: #f39c12;
-  color: white;
-}
-
-.issue-message {
-  flex: 1;
-  color: var(--text-primary);
-}
-
-.issue-time {
-  font-size: 11px;
-  color: var(--text-secondary);
-  opacity: 0.7;
-  min-width: 60px;
-  text-align: right;
-}
-
-.no-issues {
-  text-align: center;
-  padding: 30px;
-  color: var(--text-secondary);
-  background: var(--success-background, rgba(39, 174, 96, 0.1));
-  border-radius: 10px;
-  margin-top: 20px;
-}
-
-.logs-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
 @media (max-width: 768px) {
   .overview-grid {
     grid-template-columns: 1fr 1fr;
@@ -3499,16 +3402,6 @@
   
   .kpi-value {
     font-size: 24px;
-  }
-  
-  .issue-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .issue-time {
-    align-self: flex-end;
   }
 }
 
