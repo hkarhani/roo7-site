@@ -953,6 +953,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
     }
+
+    const header = document.getElementById('active-accounts-title');
+    if (header) {
+      header.textContent = `👥 Active Trading Accounts (${activeAccountsSummary.total_accounts || 0})`;
+    }
   }
 
   // Helper function to format account values
