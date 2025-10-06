@@ -280,13 +280,31 @@ body {
 }
 
 #section-accounts .section-header .accounts-meta {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: inherit;
 }
 
 .dark-theme #section-accounts .section-header .accounts-meta {
-  color: #cbd5f5;
+  color: inherit;
+}
+
+#section-accounts .section-header .accounts-meta .accounts-count {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+#section-accounts .section-header .accounts-meta .accounts-total {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.dark-theme #section-accounts .section-header .accounts-meta .accounts-total {
+  color: #4ade80;
 }
 
 .section-header h2 {

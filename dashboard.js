@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ? overrideTotal
       : list.reduce((sum, account) => sum + resolveAccountTotalValue(account), 0);
 
-    totalEl.textContent = formatCurrency(totalValue);
+    totalEl.textContent = formatCurrency(totalValue, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
   function resolveAccountTotalValue(account) {
@@ -1194,13 +1194,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Utility functions
-  function formatCurrency(value) {
-    return new Intl.NumberFormat('en-US', {
+  function formatCurrency(value, overrides = {}) {
+    const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value || 0);
+      maximumFractionDigits: 2,
+      ...overrides,
+    });
+    return formatter.format(value || 0);
   }
 
   function formatPercentage(value) {
