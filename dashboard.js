@@ -772,14 +772,6 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     }
 
-  // Market Insights button handler
-    const marketInsightsBtn = document.getElementById("market-insights-btn");
-    if (marketInsightsBtn) {
-      marketInsightsBtn.onclick = () => {
-        window.location.href = "/market-insights.html";
-      };
-    }
-
     // Invoices button handler
     const invoicesBtn = document.getElementById("invoices-btn");
     if (invoicesBtn) {
