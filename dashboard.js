@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Global user data storage
   let currentUser = null;
   let latestAggregatedCurrentTotal = null;
+  let latestAggregatedTimestamp = null;
   
   // Update page title
   document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.dashboard;
@@ -229,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load accounts and bind events
   window.loadAccounts = async function() {
-    
+
     const token = localStorage.getItem("token");
     if (!token) {
       window.location.href = "/auth.html";
@@ -237,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-    const res = await fetch(`${API_BASE}/accounts`, {
+      const res = await fetch(`${API_BASE}/accounts`, {
         method: "GET",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -257,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Store accounts globally for modal access
       window.lastLoadedAccounts = accounts;
-      
+
       updateAccountTables(accounts);
       bindAccountEvents(accounts);
       updateStrategyManagement(accounts);
@@ -265,13 +266,14 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("❌ Error loading accounts:", error);
       showToast(`Failed to load accounts: ${error.message}`, 'error');
-      updateLiveAccountsSummary([]);
+      updateLiveAccountsSummary([], null, null);
     }
   };
 
-  function updateLiveAccountsSummary(accounts = [], overrideTotal = null) {
+  function updateLiveAccountsSummary(accounts = [], overrideTotal = null, overrideTimestamp = null) {
     const countEl = document.getElementById('live-accounts-count');
     const totalEl = document.getElementById('live-accounts-total');
+    const lastCheckEl = document.getElementById('live-accounts-last-check');
     if (!countEl || !totalEl) return;
 
     const list = Array.isArray(accounts) ? accounts : Array.isArray(window.lastLoadedAccounts) ? window.lastLoadedAccounts : [];
@@ -288,6 +290,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const roundedTotal = Math.round(totalValue || 0);
     totalEl.textContent = formatCurrency(roundedTotal, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+    let timestamp = null;
+    if (overrideTimestamp instanceof Date && !Number.isNaN(overrideTimestamp.getTime())) {
+      timestamp = overrideTimestamp;
+    } else if (typeof overrideTimestamp === 'number' && Number.isFinite(overrideTimestamp)) {
+      timestamp = new Date(overrideTimestamp);
+    } else if (latestAggregatedTimestamp instanceof Date) {
+      timestamp = latestAggregatedTimestamp;
+    } else if (list.length) {
+      timestamp = list.reduce((latest, account) => {
+        const accountTimestamp = resolveAccountTimestamp(account);
+        if (!accountTimestamp) return latest;
+        if (!latest || accountTimestamp > latest) return accountTimestamp;
+        return latest;
+      }, null);
+    }
+
+    if (lastCheckEl) {
+      lastCheckEl.textContent = timestamp ? formatLastCheckMessage(timestamp) : 'last check —';
+    }
   }
 
   function resolveAccountTotalValue(account) {
@@ -1142,7 +1164,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (selectedAccount === 'ALL') {
         latestAggregatedCurrentTotal = currentTotal;
-        updateLiveAccountsSummary(window.lastLoadedAccounts || [], currentTotal);
+        const latestTimestamp = parseTimestamp(latestValue.timestamp || latestValue.date || latestValue.time);
+        latestAggregatedTimestamp = latestTimestamp;
+        updateLiveAccountsSummary(window.lastLoadedAccounts || [], currentTotal, latestTimestamp);
       }
 
     } catch (error) {
@@ -1211,6 +1235,84 @@ document.addEventListener("DOMContentLoaded", () => {
       ...overrides,
     });
     return formatter.format(value || 0);
+  }
+
+  function resolveAccountTimestamp(account) {
+    if (!account) return null;
+    const candidates = [
+      account?.analytics_summary?.last_updated,
+      account?.analytics_summary?.updated_at,
+      account?.analytics_summary?.snapshot_time,
+      account?.analytics_summary?.timestamp,
+      account?.analytics_summary?.last_sync,
+      account?.analytics_summary?.last_run_at,
+      account?.last_value_update,
+      account?.last_synced_at,
+      account?.last_run_at,
+      account?.next_run_at,
+      account?.updated_at,
+      account?.created_at,
+    ];
+
+    let latest = null;
+    for (const candidate of candidates) {
+      const parsed = parseTimestamp(candidate);
+      if (parsed && (!latest || parsed > latest)) {
+        latest = parsed;
+      }
+    }
+    return latest;
+  }
+
+  function parseTimestamp(value) {
+    if (!value) return null;
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      // Accept seconds or milliseconds
+      return value < 1e12 ? new Date(value * 1000) : new Date(value);
+    }
+    if (typeof value === 'string') {
+      const parsed = Date.parse(value);
+      if (!Number.isNaN(parsed)) {
+        return new Date(parsed);
+      }
+    }
+    return null;
+  }
+
+  function formatLastCheckMessage(timestamp) {
+    const ts = timestamp instanceof Date ? timestamp : parseTimestamp(timestamp);
+    if (!ts) return 'last check —';
+
+    const now = Date.now();
+    const diffMs = Math.max(0, now - ts.getTime());
+    const diffMinutes = Math.floor(diffMs / 60000);
+
+    if (diffMinutes <= 0) {
+      return 'last check moments ago';
+    }
+    if (diffMinutes === 1) {
+      return 'last check 1 min ago';
+    }
+    if (diffMinutes < 60) {
+      return `last check ${diffMinutes} mins ago`;
+    }
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours === 1) {
+      return 'last check 1 hour ago';
+    }
+    if (diffHours < 24) {
+      return `last check ${diffHours} hrs ago`;
+    }
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) {
+      return 'last check 1 day ago';
+    }
+    return `last check ${diffDays} days ago`;
   }
 
   function formatPercentage(value) {

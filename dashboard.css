@@ -303,6 +303,16 @@ body {
   color: #4ade80;
 }
 
+#section-accounts .section-header .accounts-meta .accounts-last-check {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #64748b;
+}
+
+.dark-theme #section-accounts .section-header .accounts-meta .accounts-last-check {
+  color: #cbd5f5;
+}
+
 .section-header h2 {
   margin: 0;
   font-size: 1.3rem;
