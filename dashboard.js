@@ -71,15 +71,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Updated mobile-optimized updateAccountTables function
   function updateAccountTables(accounts) {
     const liveTbody = document.querySelector("#accounts-table tbody");
+    const normalizedAccounts = Array.isArray(accounts) ? accounts : [];
 
     if (!liveTbody) {
       console.error("❌ Accounts table not found");
+      updateLiveAccountsSummary(normalizedAccounts);
       return;
     }
 
     liveTbody.innerHTML = "";
+    updateLiveAccountsSummary(normalizedAccounts);
 
-    accounts.forEach(acc => {
+    normalizedAccounts.forEach(acc => {
       // Escape and sanitize account name and other text fields
       const accountName = (acc.account_name || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
       const strategy = (acc.strategy || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\r?\n/g, ' ');
@@ -233,7 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/accounts`, {
+    const res = await fetch(`${API_BASE}/accounts`, {
         method: "GET",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -261,8 +264,82 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("❌ Error loading accounts:", error);
       showToast(`Failed to load accounts: ${error.message}`, 'error');
+      updateLiveAccountsSummary([]);
     }
   };
+
+  function updateLiveAccountsSummary(accounts = []) {
+    const countEl = document.getElementById('live-accounts-count');
+    const totalEl = document.getElementById('live-accounts-total');
+    if (!countEl || !totalEl) return;
+
+    const list = Array.isArray(accounts) ? accounts : [];
+    countEl.textContent = list.length;
+
+    const totalValue = list.reduce((sum, account) => sum + resolveAccountTotalValue(account), 0);
+    totalEl.textContent = formatCurrency(totalValue);
+  }
+
+  function resolveAccountTotalValue(account) {
+    if (!account) return 0;
+
+    const directCandidates = [
+      account?.portfolio_total_value,
+      account?.total_portfolio_value,
+      account?.portfolio_value_usd,
+      account?.analytics_summary?.portfolio_total_value,
+      account?.analytics_summary?.portfolio_total_value_usd,
+      account?.analytics_summary?.portfolio_total,
+    ];
+
+    for (const candidate of directCandidates) {
+      const numeric = toFiniteNumber(candidate);
+      if (numeric !== null) {
+        return numeric;
+      }
+    }
+
+    const baseCandidates = [
+      account?.current_value,
+      account?.total_value,
+      account?.total_value_usd,
+      account?.account_value,
+      account?.balance_usd,
+    ];
+
+    let baseValue = null;
+    for (const candidate of baseCandidates) {
+      const numeric = toFiniteNumber(candidate);
+      if (numeric !== null) {
+        baseValue = numeric;
+        break;
+      }
+    }
+
+    if (baseValue === null) {
+      return 0;
+    }
+
+    const pnlCandidates = [
+      account?.analytics_summary?.unrealized_pnl_total,
+      account?.analytics_summary?.unrealized_pnl,
+      account?.unrealized_pnl,
+    ];
+
+    for (const candidate of pnlCandidates) {
+      const numeric = toFiniteNumber(candidate);
+      if (numeric !== null) {
+        return baseValue + numeric;
+      }
+    }
+
+    return baseValue;
+  }
+
+  function toFiniteNumber(value) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
 
   function bindAccountEvents(accounts) {
     // Clear any existing event listeners and bind fresh ones

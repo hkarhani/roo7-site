@@ -270,6 +270,25 @@ body {
   margin-bottom: 15px;
 }
 
+#section-accounts .section-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#section-accounts .section-header .accounts-meta {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.dark-theme #section-accounts .section-header .accounts-meta {
+  color: #cbd5f5;
+}
+
 .section-header h2 {
   margin: 0;
   font-size: 1.3rem;
