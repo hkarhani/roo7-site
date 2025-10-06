@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // DOM elements
   const logoutBtn = document.getElementById("logout-btn");
+  const marketInsightsBtn = document.getElementById("market-insights-btn");
   // Note: theme toggle is now handled by theme-manager.js
 
   // Toast notification system
@@ -68,6 +69,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function logout() {
     localStorage.removeItem("token");
     window.location.href = "/auth.html";
+  }
+
+  if (marketInsightsBtn) {
+    marketInsightsBtn.addEventListener('click', () => {
+      window.open('market-insights.html', '_blank', 'noopener');
+    });
   }
 
   // Updated mobile-optimized updateAccountTables function
