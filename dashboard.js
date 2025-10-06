@@ -1291,7 +1291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const diffMinutes = Math.floor(diffMs / 60000);
 
     if (diffMinutes <= 0) {
-      return 'last check moments ago';
+      return 'last check 0 mins ago';
     }
     if (diffMinutes === 1) {
       return 'last check 1 min ago';

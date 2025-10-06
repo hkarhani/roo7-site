@@ -304,8 +304,9 @@ body {
 }
 
 #section-accounts .section-header .accounts-meta .accounts-last-check {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-style: italic;
+  font-weight: 400;
   color: #64748b;
 }
 
