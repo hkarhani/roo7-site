@@ -268,15 +268,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  function updateLiveAccountsSummary(accounts = []) {
+  function updateLiveAccountsSummary(accounts = [], overrideTotal = null) {
     const countEl = document.getElementById('live-accounts-count');
     const totalEl = document.getElementById('live-accounts-total');
     if (!countEl || !totalEl) return;
 
-    const list = Array.isArray(accounts) ? accounts : [];
+    const list = Array.isArray(accounts) ? accounts : Array.isArray(window.lastLoadedAccounts) ? window.lastLoadedAccounts : [];
     countEl.textContent = list.length;
 
-    const totalValue = list.reduce((sum, account) => sum + resolveAccountTotalValue(account), 0);
+    const totalValue = overrideTotal !== null
+      ? overrideTotal
+      : list.reduce((sum, account) => sum + resolveAccountTotalValue(account), 0);
+
     totalEl.textContent = formatCurrency(totalValue);
   }
 
@@ -1129,7 +1132,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Add data attributes for CSS to style based on positive/negative values
       periodChangeEl.setAttribute('data-value-type', periodChange >= 0 ? 'positive' : 'negative');
       changePercentageEl.setAttribute('data-value-type', changePercentage >= 0 ? 'positive' : 'negative');
-      
+
+      if (selectedAccount === 'ALL') {
+        updateLiveAccountsSummary(window.lastLoadedAccounts || [], currentTotal);
+      }
+
     } catch (error) {
       console.error('Error updating analytics summary:', error);
     }
