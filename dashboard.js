@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Global user data storage
   let currentUser = null;
+  let latestAggregatedCurrentTotal = null;
   
   // Update page title
   document.getElementById('page-title').textContent = CONFIG.PAGE_CONFIG.titles.dashboard;
@@ -276,11 +277,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const list = Array.isArray(accounts) ? accounts : Array.isArray(window.lastLoadedAccounts) ? window.lastLoadedAccounts : [];
     countEl.textContent = list.length;
 
-    const totalValue = overrideTotal !== null
-      ? overrideTotal
-      : list.reduce((sum, account) => sum + resolveAccountTotalValue(account), 0);
+    let totalValue;
+    if (overrideTotal !== null && Number.isFinite(overrideTotal)) {
+      totalValue = overrideTotal;
+    } else if (latestAggregatedCurrentTotal !== null) {
+      totalValue = latestAggregatedCurrentTotal;
+    } else {
+      totalValue = list.reduce((sum, account) => sum + resolveAccountTotalValue(account), 0);
+    }
 
-    totalEl.textContent = formatCurrency(totalValue, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const roundedTotal = Math.round(totalValue || 0);
+    totalEl.textContent = formatCurrency(roundedTotal, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
   function resolveAccountTotalValue(account) {
@@ -1128,12 +1135,13 @@ document.addEventListener("DOMContentLoaded", () => {
       currentTotalEl.textContent = formatCurrency(currentTotal);
       periodChangeEl.textContent = formatCurrency(periodChange);  
       changePercentageEl.textContent = formatPercentage(changePercentage);
-      
+
       // Add data attributes for CSS to style based on positive/negative values
       periodChangeEl.setAttribute('data-value-type', periodChange >= 0 ? 'positive' : 'negative');
       changePercentageEl.setAttribute('data-value-type', changePercentage >= 0 ? 'positive' : 'negative');
 
       if (selectedAccount === 'ALL') {
+        latestAggregatedCurrentTotal = currentTotal;
         updateLiveAccountsSummary(window.lastLoadedAccounts || [], currentTotal);
       }
 
