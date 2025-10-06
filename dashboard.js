@@ -307,8 +307,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }, null);
     }
 
+    if (!timestamp) {
+      timestamp = new Date();
+    }
+
     if (lastCheckEl) {
-      lastCheckEl.textContent = timestamp ? formatLastCheckMessage(timestamp) : 'last check —';
+      lastCheckEl.textContent = formatLastCheckMessage(timestamp);
     }
   }
 
@@ -926,7 +930,7 @@ document.addEventListener("DOMContentLoaded", () => {
           animate: true,
           showGrid: true,
           showTooltip: true,
-          margin: { top: 20, right: 30, bottom: 40, left: 60 },
+          margin: { top: 20, right: 30, bottom: 40, left: 110 },
           responsive: true
         });
         } else {

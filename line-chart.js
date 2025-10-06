@@ -358,7 +358,7 @@ class LineChart {
       label.setAttribute('text-anchor', 'end');
       label.setAttribute('fill', '#6b7280');
       label.setAttribute('font-size', '12');
-      label.textContent = this.formatValue(tick);
+      label.textContent = this.formatAxisValue(tick);
       yAxis.appendChild(label);
     });
     
@@ -677,6 +677,23 @@ class LineChart {
     } else {
       return value.toLocaleString();
     }
+  }
+
+  formatAxisValue(value) {
+    if (this.options.valueFormat === 'currency') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(value);
+    }
+
+    if (this.options.valueFormat === 'percentage') {
+      return Math.round(value * 100) + '%';
+    }
+
+    return Math.round(value).toLocaleString();
   }
 
   formatDate(date, format = null) {
