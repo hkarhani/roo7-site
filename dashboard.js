@@ -1137,20 +1137,24 @@ document.addEventListener("DOMContentLoaded", () => {
       let periodChange = 0;
       let changePercentage = 0;
       
+      let latestTimestampCandidate = extractTimestampFromData(data);
+
       if (values.length > 0) {
         const latestValue = values[values.length - 1];
         const earliestValue = values[0];
-        
+
         currentTotal = selectedAccount === 'ALL' ? 
           latestValue.total_value : 
           latestValue.value_usdt || latestValue.value;
-          
+
         const earliestAmount = selectedAccount === 'ALL' ? 
           earliestValue.total_value : 
           earliestValue.value_usdt || earliestValue.value;
-        
+
         periodChange = currentTotal - earliestAmount;
         changePercentage = earliestAmount > 0 ? (periodChange / earliestAmount) * 100 : 0;
+
+        latestTimestampCandidate = extractTimestampFromAnalyticsPoint(latestValue) || latestTimestampCandidate;
       }
       
       // Update UI - ONLY change text content, let CSS handle all styling
@@ -1164,9 +1168,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (selectedAccount === 'ALL') {
         latestAggregatedCurrentTotal = currentTotal;
-        const latestTimestamp = parseTimestamp(latestValue.timestamp || latestValue.date || latestValue.time);
-        latestAggregatedTimestamp = latestTimestamp;
-        updateLiveAccountsSummary(window.lastLoadedAccounts || [], currentTotal, latestTimestamp);
+        latestAggregatedTimestamp = latestTimestampCandidate;
+        updateLiveAccountsSummary(window.lastLoadedAccounts || [], currentTotal, latestTimestampCandidate);
       }
 
     } catch (error) {
@@ -1262,6 +1265,65 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     return latest;
+  }
+
+  function extractTimestampFromAnalyticsPoint(point) {
+    if (!point) return null;
+    const candidateKeys = [
+      'timestamp',
+      'timestamp_ms',
+      'time',
+      'time_ms',
+      'time_unix',
+      'time_unix_ms',
+      'date',
+      'datetime',
+      'updated_at',
+      'last_updated',
+      'captured_at',
+      'generated_at',
+      'collected_at',
+      'last_sync',
+      'last_run_at',
+    ];
+
+    for (const key of candidateKeys) {
+      if (key in point) {
+        const parsed = parseTimestamp(point[key]);
+        if (parsed) return parsed;
+      }
+    }
+
+    if (point.meta) {
+      const nested = extractTimestampFromAnalyticsPoint(point.meta);
+      if (nested) return nested;
+    }
+
+    return null;
+  }
+
+  function extractTimestampFromData(data) {
+    if (!data) return null;
+    const candidateKeys = [
+      'latest_timestamp',
+      'latest_updated_at',
+      'last_updated',
+      'updated_at',
+      'generated_at',
+      'captured_at',
+      'collected_at',
+      'timestamp',
+      'time',
+    ];
+
+    for (const key of candidateKeys) {
+      if (key in data) {
+        const parsed = parseTimestamp(data[key]);
+        if (parsed) return parsed;
+      }
+    }
+
+    return null;
   }
 
   function parseTimestamp(value) {
