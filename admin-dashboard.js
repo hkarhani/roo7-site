@@ -104,34 +104,90 @@ function getAccountTotalValue(account) {
   };
 
   const candidatePaths = [
+    ['current_value_with_pnl'],
+    ['current_total_value'],
+    ['current_value'],
     ['portfolio_total_value'],
     ['total_value'],
     ['total_value_usd'],
     ['total_value_usdt'],
-    ['current_total_value'],
-    ['current_value_with_pnl'],
+    ['current_value_usdt'],
+    ['analytics_total_value_usdt'],
     ['portfolio_value'],
     ['account_value'],
     ['value_usdt'],
     ['summary', 'total_value_usdt'],
+    ['summary', 'total_value'],
     ['summary', 'account_value'],
     ['detailed_breakdown', 'summary', 'total_value_usdt'],
     ['metrics', 'total_value'],
-    ['analytics', 'value_usdt']
+    ['analytics', 'value_usdt'],
+    ['portfolio', 'total_value_usdt']
   ];
 
-  let baseValue = null;
-  let baseSource = null;
+  const candidateEntries = [];
   for (const path of candidatePaths) {
     const candidate = normalizeNumeric(getByPath(account, path));
     if (candidate !== null) {
-      baseValue = candidate;
-      baseSource = `path:${path.join('.')}`;
-      if (candidate > 0) {
-        break;
-      }
+      candidateEntries.push({ path: path.join('.'), value: candidate });
     }
   }
+
+  if (normalizeNumeric(account.analytics_total_value_usdt) !== null && !candidateEntries.some(entry => entry.path === 'analytics_total_value_usdt')) {
+    candidateEntries.push({
+      path: 'analytics_total_value_usdt',
+      value: normalizeNumeric(account.analytics_total_value_usdt)
+    });
+  }
+
+  if (normalizeNumeric(account.current_value) !== null && !candidateEntries.some(entry => entry.path === 'current_value')) {
+    candidateEntries.push({
+      path: 'current_value',
+      value: normalizeNumeric(account.current_value)
+    });
+  }
+
+  if (candidateEntries.length === 0) {
+    return null;
+  }
+
+  const preferredOrder = [
+    'current_value_with_pnl',
+    'current_total_value',
+    'current_value',
+    'total_value_with_pnl',
+    'analytics_total_value_usdt',
+    'analytics.value_usdt',
+    'metrics.total_value',
+    'total_value_usdt',
+    'total_value',
+    'total_value_usd',
+    'summary.total_value_usdt',
+    'summary.total_value',
+    'summary.account_value',
+    'portfolio_total_value',
+    'portfolio.total_value_usdt',
+    'detailed_breakdown.summary.total_value_usdt',
+    'portfolio_value',
+    'account_value',
+    'value_usdt'
+  ];
+
+  let baseEntry = null;
+  for (const key of preferredOrder) {
+    const match = candidateEntries.find(entry => entry.path === key);
+    if (match) {
+      baseEntry = match;
+      break;
+    }
+  }
+
+  if (!baseEntry) {
+    baseEntry = candidateEntries[0];
+  }
+
+  let baseValue = baseEntry.value;
+  let baseSource = `path:${baseEntry.path}`;
 
   const componentPaths = [
     ['summary', 'spot_value_usdt'],
@@ -180,6 +236,7 @@ function getAccountTotalValue(account) {
     ['unrealized_pnl'],
     ['total_unrealized_pnl'],
     ['total_unrealized_pnl_usdt'],
+    ['summary', 'unrealized_pnl_usdt'],
     ['summary', 'total_unrealized_pnl_usdt'],
     ['summary', 'spot_unrealized_pnl_usdt'],
     ['summary', 'usdtm_unrealized_pnl_usdt'],
@@ -198,16 +255,51 @@ function getAccountTotalValue(account) {
     }
   }
 
-  const sourceIndicatesTotal = baseSource && (
-    baseSource.includes('total_value') ||
-    baseSource.includes('portfolio_total_value')
-  );
+  const numericBase = normalizeNumeric(baseValue);
+  const baseSourceLabel = baseSource || '';
+  const baseLikelyIncludesPnl = typeof baseSourceLabel === 'string'
+    ? /current_value|with_pnl|analytics|metrics/.test(baseSourceLabel)
+    : false;
+  const combinedFromComponents = componentsFound
+    ? normalizeNumeric(componentSum + (pnlFound ? pnlTotal : 0))
+    : null;
 
-  if (pnlFound && !sourceIndicatesTotal) {
-    return baseValue + pnlTotal;
+  if (combinedFromComponents !== null) {
+    if (numericBase === null || !Number.isFinite(numericBase)) {
+      return combinedFromComponents;
+    }
+
+    const tolerance = Math.max(0.5, Math.abs(combinedFromComponents) * 0.005);
+    const diff = Math.abs(numericBase - combinedFromComponents);
+
+    if (baseLikelyIncludesPnl) {
+      if (diff <= tolerance) {
+        return numericBase;
+      }
+      if (numericBase >= combinedFromComponents - tolerance) {
+        return numericBase;
+      }
+    }
+
+    if (diff <= tolerance) {
+      return Math.max(numericBase, combinedFromComponents);
+    }
+
+    if (numericBase < combinedFromComponents - tolerance) {
+      return combinedFromComponents;
+    }
+
+    return numericBase;
   }
 
-  return baseValue;
+  if (pnlFound && numericBase !== null && Number.isFinite(numericBase)) {
+    if (!baseLikelyIncludesPnl) {
+      return numericBase + pnlTotal;
+    }
+    return numericBase;
+  }
+
+  return numericBase;
 }
 
 function getAccountUnrealizedPnl(account) {
@@ -234,6 +326,7 @@ function getAccountUnrealizedPnl(account) {
 
   const directPaths = [
     ['summary', 'total_unrealized_pnl_usdt'],
+    ['summary', 'unrealized_pnl_usdt'],
     ['detailed_breakdown', 'summary', 'total_unrealized_pnl_usdt'],
     ['portfolio', 'total_unrealized_pnl_usdt'],
     ['total_unrealized_pnl_usdt'],
