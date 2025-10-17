@@ -272,6 +272,54 @@ function getAccountUnrealizedPnl(account) {
     return componentTotal;
   }
 
+  const breakdown = account.detailed_breakdown;
+  if (breakdown && typeof breakdown === 'object') {
+    let breakdownSum = 0;
+    let breakdownFound = false;
+
+    const accumulateFromItems = (items) => {
+      if (!Array.isArray(items)) {
+        return;
+      }
+
+      for (const item of items) {
+        if (!item || typeof item !== 'object') {
+          continue;
+        }
+
+        const pnlKeys = [
+          'unrealized_pnl',
+          'unrealized_profit',
+          'pnl',
+          'unrealizedPnl'
+        ];
+
+        for (const key of pnlKeys) {
+          const value = normalizeNumeric(item[key]);
+          if (value !== null) {
+            breakdownSum += value;
+            breakdownFound = true;
+            break;
+          }
+        }
+      }
+    };
+
+    for (const section of Object.values(breakdown)) {
+      if (!section || typeof section !== 'object') {
+        continue;
+      }
+
+      accumulateFromItems(section.positions);
+      accumulateFromItems(section.assets);
+      accumulateFromItems(section.open_orders);
+    }
+
+    if (breakdownFound) {
+      return breakdownSum;
+    }
+  }
+
   const fallback = normalizeNumeric(account.total_unrealized_pnl_usdt ?? account.total_unrealized_pnl ?? account.unrealized_pnl);
   return fallback !== null ? fallback : null;
 }
