@@ -147,6 +147,15 @@ function getAccountTotalValue(account) {
     });
   }
 
+  const summaryTotal = normalizeNumeric(getByPath(account, ['summary', 'total_value_usdt']));
+  const summaryUnrealized = normalizeNumeric(getByPath(account, ['summary', 'unrealized_pnl_usdt']));
+  if (summaryTotal !== null && summaryUnrealized !== null) {
+    candidateEntries.push({
+      path: 'summary.total_value_usdt_plus_unrealized',
+      value: summaryTotal + summaryUnrealized
+    });
+  }
+
   if (candidateEntries.length === 0) {
     return null;
   }
