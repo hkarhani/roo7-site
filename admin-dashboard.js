@@ -215,13 +215,65 @@ function getAccountUnrealizedPnl(account) {
     return null;
   }
 
-  const summary = account.summary;
-  if (!summary || summary.total_unrealized_pnl_usdt === undefined || summary.total_unrealized_pnl_usdt === null) {
-    return null;
+  const getByPath = (obj, path) => {
+    return path.reduce((acc, key) => {
+      if (acc === null || acc === undefined) {
+        return null;
+      }
+      return acc[key];
+    }, obj);
+  };
+
+  const normalizeNumeric = (value) => {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const directPaths = [
+    ['summary', 'total_unrealized_pnl_usdt'],
+    ['detailed_breakdown', 'summary', 'total_unrealized_pnl_usdt'],
+    ['portfolio', 'total_unrealized_pnl_usdt'],
+    ['total_unrealized_pnl_usdt'],
+    ['total_unrealized_pnl'],
+    ['unrealized_pnl']
+  ];
+
+  for (const path of directPaths) {
+    const candidate = normalizeNumeric(getByPath(account, path));
+    if (candidate !== null) {
+      return candidate;
+    }
   }
 
-  const pnl = Number(summary.total_unrealized_pnl_usdt);
-  return Number.isFinite(pnl) ? pnl : null;
+  const componentPaths = [
+    ['summary', 'spot_unrealized_pnl_usdt'],
+    ['summary', 'usdtm_unrealized_pnl_usdt'],
+    ['summary', 'coinm_unrealized_pnl_usdt'],
+    ['summary', 'futures_unrealized_pnl_usdt'],
+    ['detailed_breakdown', 'summary', 'spot_unrealized_pnl_usdt'],
+    ['detailed_breakdown', 'summary', 'usdtm_unrealized_pnl_usdt'],
+    ['detailed_breakdown', 'summary', 'coinm_unrealized_pnl_usdt']
+  ];
+
+  let componentTotal = 0;
+  let foundComponent = false;
+  for (const path of componentPaths) {
+    const componentValue = normalizeNumeric(getByPath(account, path));
+    if (componentValue !== null) {
+      componentTotal += componentValue;
+      foundComponent = true;
+    }
+  }
+
+  if (foundComponent) {
+    return componentTotal;
+  }
+
+  const fallback = normalizeNumeric(account.total_unrealized_pnl_usdt ?? account.total_unrealized_pnl ?? account.unrealized_pnl);
+  return fallback !== null ? fallback : null;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1212,24 +1264,36 @@ document.addEventListener("DOMContentLoaded", () => {
             </tr>
           </thead>
           <tbody>
-            ${accounts.map(account => `
-              <tr>
-                <td class="user-name" title="${account.username || account._id}">
-                  ${account.username || account._id || 'Unknown User'}
-                </td>
-                <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
-                  ${account.account_name || 'Unnamed Account'}
-                </td>
-                <td class="account-exchange">${account.exchange || 'Binance'}</td>
-                <td class="account-value center-align" title="Current portfolio value: $${account.current_value || 0}">
-                  ${formatAccountValue(account.current_value)}
-                </td>
-                <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
-                <td>
-                  <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
-                </td>
-              </tr>
-            `).join('')}
+            ${accounts.map(account => {
+              const totalValue = getAccountTotalValue(account);
+              const fallbackValue = totalValue !== null ? totalValue : (account.current_value ?? account.current_total_value ?? 0);
+              const numericValue = Number(fallbackValue) || 0;
+              const unrealizedPnl = getAccountUnrealizedPnl(account);
+              const tooltipParts = [`Total portfolio value (incl. unrealized PnL): $${formatNumber(numericValue)}`];
+              if (unrealizedPnl !== null) {
+                tooltipParts.push(`Unrealized PnL: $${formatNumber(unrealizedPnl, 2)}`);
+              }
+              const tooltipText = tooltipParts.join('\n');
+
+              return `
+                <tr>
+                  <td class="user-name" title="${account.username || account._id}">
+                    ${account.username || account._id || 'Unknown User'}
+                  </td>
+                  <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
+                    ${account.account_name || 'Unnamed Account'}
+                  </td>
+                  <td class="account-exchange">${account.exchange || 'Binance'}</td>
+                  <td class="account-value center-align" title="${tooltipText}">
+                    ${formatAccountValue(numericValue)}
+                  </td>
+                  <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
+                  <td>
+                    <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -2452,23 +2516,35 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    tbody.innerHTML = sourceAccounts.map(account => `
-      <tr>
-        <td>${account.account_name}</td>
-        <td>${account.exchange || 'Binance'}</td>
-        <td>
-          <span class="strategy-tag">${account.strategy}</span>
-        </td>
-        <td class="col-value" style="text-align: center;">${formatProfessionalValue(account.current_value)}</td>
-        <td class="col-status">${getProfessionalStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
-        <td>${formatDate(account.created_at)}</td>
-        <td>
-          <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
-          <button class="verify-source-btn action-btn success" data-id="${account.id}">🔍 Verify</button>
-          <button class="delete-source-btn action-btn danger" data-id="${account.id}">🗑️ Delete</button>
-        </td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = sourceAccounts.map(account => {
+      const totalValue = getAccountTotalValue(account);
+      const fallbackValue = totalValue !== null ? totalValue : (account.current_value ?? account.current_total_value ?? 0);
+      const numericValue = Number(fallbackValue) || 0;
+      const unrealizedPnl = getAccountUnrealizedPnl(account);
+      const tooltipParts = [`Total portfolio value (incl. unrealized PnL): $${formatNumber(numericValue)}`];
+      if (unrealizedPnl !== null) {
+        tooltipParts.push(`Unrealized PnL: $${formatNumber(unrealizedPnl, 2)}`);
+      }
+      const tooltipText = tooltipParts.join('\n');
+
+      return `
+        <tr>
+          <td>${account.account_name}</td>
+          <td>${account.exchange || 'Binance'}</td>
+          <td>
+            <span class="strategy-tag">${account.strategy}</span>
+          </td>
+          <td class="col-value" style="text-align: center;" title="${tooltipText}">${formatProfessionalValue(numericValue)}</td>
+          <td class="col-status">${getProfessionalStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
+          <td>${formatDate(account.created_at)}</td>
+          <td>
+            <button class="edit-source-btn action-btn" data-id="${account.id}">✏️ Edit</button>
+            <button class="verify-source-btn action-btn success" data-id="${account.id}">🔍 Verify</button>
+            <button class="delete-source-btn action-btn danger" data-id="${account.id}">🗑️ Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
 
     // Add event listeners to action buttons
     document.querySelectorAll('.edit-source-btn').forEach(btn => {
@@ -3112,6 +3188,23 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.style.display = 'block';
     
     const statusClass = data.verification_success ? 'result-success' : 'result-error';
+    const computedTotalValue = getAccountTotalValue(data);
+    const totalValueNumeric = Number(
+      computedTotalValue !== null && computedTotalValue !== undefined
+        ? computedTotalValue
+        : (data.total_usdt_value ??
+          data.total_value ??
+          data.detailed_breakdown?.summary?.total_value_usdt ??
+          data.account_summary?.total_value_usdt ??
+          0)
+    ) || 0;
+    const totalUnrealized = getAccountUnrealizedPnl(data);
+    const totalUnrealizedColor = totalUnrealized !== null
+      ? (totalUnrealized >= 0 ? '#28a745' : '#dc3545')
+      : '#6c757d';
+    const totalUnrealizedLabel = totalUnrealized !== null
+      ? `${totalUnrealized >= 0 ? '✅' : '⚠️'} $${formatNumber(totalUnrealized || 0)}`
+      : 'Not available';
     
     const content = `
       <div class="modal-content verification-content">
@@ -3129,7 +3222,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
               <div style="margin-bottom: 8px;"><strong>API Key:</strong> <span style="color: ${data.api_key_valid ? '#28a745' : '#dc3545'};">${data.api_key_valid ? '✅ Valid' : '❌ Invalid'}</span></div>
               <div style="margin-bottom: 8px;"><strong>IP Whitelist:</strong> <span style="color: ${data.ip_whitelisted ? '#28a745' : '#dc3545'};">${data.ip_whitelisted ? '✅ Yes' : '❌ No'}</span></div>
-              <div><strong>Total Value:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">$${formatNumber(data.total_usdt_value || 0)}</span></div>
+              <div><strong>Total Value:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">$${formatNumber(totalValueNumeric)}</span></div>
+              <div style="margin-top: 8px;"><strong>Unrealized PnL:</strong> <span style="font-weight: bold; color: ${totalUnrealizedColor};">${totalUnrealizedLabel}</span></div>
             </div>
           </div>
         </div>
