@@ -163,6 +163,7 @@ function getAccountTotalValue(account) {
   const preferredOrder = [
     'current_value_with_pnl',
     'current_total_value',
+    'summary.total_value_usdt_plus_unrealized',
     'current_value',
     'total_value_with_pnl',
     'analytics_total_value_usdt',
@@ -2366,40 +2367,73 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    if (!activeJobs.length) {
-      container.innerHTML = `
-        ${overviewCard}
-        <div class="empty-state">No active jobs currently scheduled.</div>
-      `;
-      return;
-    }
+    const failureStatuses = new Set(['FAILED', 'ERROR', 'STOPPED', 'DISABLED']);
+    const jobsWithFailures = Array.isArray(activeJobs)
+      ? activeJobs.filter(job => {
+          const statusText = (job?.status || '').toString().toUpperCase();
+          const failureCount = Number(job?.consecutive_failures ?? job?.failure_count ?? job?.failures ?? 0);
+          return failureCount > 0 || failureStatuses.has(statusText);
+        })
+      : [];
 
-    const activeJobsMarkup = activeJobs.map(job => {
-      const name = job.account_name || job.account_id || 'Unknown Account';
-      const statusText = (job.status || 'UNKNOWN').toString();
-      const normalizedStatus = statusText.toUpperCase();
-      const statusClass = ['ACTIVE', 'RUNNING'].includes(normalizedStatus)
-        ? 'success'
-        : ['FAILED', 'ERROR', 'DISABLED', 'STOPPED'].includes(normalizedStatus)
-          ? 'danger'
-          : 'primary';
-      const failures = Number.isFinite(job.consecutive_failures) ? job.consecutive_failures : 0;
-      const failureClass = failures > 0 ? 'danger' : 'success';
+    let trailingMarkup = '';
 
-      return `
-        <div class="jobs-compact-row">
-          <span class="jobs-compact-name">${name}</span>
-          <div class="jobs-compact-meta">
-            <span class="status-badge ${statusClass}">${statusText}</span>
-            <span class="status-badge ${failureClass}">Fails: ${failures}</span>
-          </div>
+    if (failures > 0) {
+      const jobsAlertList = jobsWithFailures
+        .sort((a, b) => {
+          const failureA = Number(a?.consecutive_failures ?? a?.failure_count ?? a?.failures ?? 0);
+          const failureB = Number(b?.consecutive_failures ?? b?.failure_count ?? b?.failures ?? 0);
+          return failureB - failureA;
+        })
+        .map(job => {
+          const name = job.account_name || job.account_id || 'Unknown Account';
+          const statusText = (job.status || 'UNKNOWN').toString();
+          const normalizedStatus = statusText.toUpperCase();
+          const statusClass = ['ACTIVE', 'RUNNING'].includes(normalizedStatus)
+            ? 'success'
+            : failureStatuses.has(normalizedStatus)
+              ? 'danger'
+              : 'primary';
+          const failuresCount = Number(job.consecutive_failures ?? job.failure_count ?? job.failures ?? 0);
+          const failureClass = failuresCount > 0 ? 'danger' : 'success';
+
+          return `
+            <div class="jobs-compact-row">
+              <span class="jobs-compact-name">${name}</span>
+              <div class="jobs-compact-meta">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                <span class="status-badge ${failureClass}">Fails: ${failuresCount}</span>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      trailingMarkup = `
+        <div class="jobs-alert">
+          <h4>⚠️ ${failures} job${failures === 1 ? '' : 's'} requiring attention</h4>
+          ${jobsWithFailures.length > 0
+            ? `<div class="jobs-active-list">${jobsAlertList}</div>`
+            : `<p>No job details were returned in the summary. Open the Jobs Dashboard for a detailed view.</p>`}
         </div>
       `;
-    }).join('');
+    } else {
+      const activeCount = Array.isArray(activeJobs) ? activeJobs.length : 0;
+      const label = activeCount === 1 ? 'job' : 'jobs';
+      const summaryMessage = activeCount > 0
+        ? `${activeCount} active ${label} running`
+        : 'No active jobs currently scheduled.';
+
+      trailingMarkup = `
+        <div class="jobs-summary-message">
+          ${summaryMessage}
+        </div>
+      `;
+    }
 
     container.innerHTML = `
       ${overviewCard}
-      <div class="jobs-active-list">${activeJobsMarkup}</div>
+      ${trailingMarkup}
     `;
   }
 
@@ -2444,6 +2478,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     
+    const summaryMessage = failedJobs > 0
+      ? `
+        <div class="jobs-alert">
+          <h4>⚠️ Jobs Requiring Attention</h4>
+          <p>${failedJobs} job${failedJobs === 1 ? '' : 's'} failed in the last 24h. Review the Jobs Dashboard for details.</p>
+        </div>
+      `
+      : `
+        <div class="jobs-summary-message">
+          ${activeJobs > 0
+            ? `${activeJobs} active job${activeJobs === 1 ? '' : 's'} running`
+            : 'No active jobs currently scheduled.'}
+        </div>
+      `;
+
     container.innerHTML = `
       <div class="overview-summary">
         <div class="stat-card admin">
@@ -2483,6 +2532,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="stat-action">Click to refresh →</div>
         </div>
       </div>
+      ${summaryMessage}
     `;
   }
 
