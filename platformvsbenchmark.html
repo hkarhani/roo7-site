@@ -35,16 +35,32 @@
         <div>
           <h2>Benchmark Comparison</h2>
           <p class="section-description">
-            Composite benchmark weights: BTC 60%, ETH 25%, SOL 5%, BNB 5%, XRP 5%. Values represent cumulative percentage change from the beginning of the selected window using hourly data.
+            Compare ROO7 cumulative returns against the composite benchmark or any individual asset below. Values represent cumulative percentage change from the beginning of the selected window using hourly data.
           </p>
         </div>
-        <div class="period-selector" id="period-selector">
-          <button data-period="24h" class="period-btn active">24h</button>
-          <button data-period="7d" class="period-btn">7d</button>
-          <button data-period="30d" class="period-btn">30d</button>
-          <button data-period="90d" class="period-btn">90d</button>
-          <button data-period="180d" class="period-btn">180d</button>
-          <button data-period="1y" class="period-btn">1y</button>
+        <div class="controls-panel">
+          <div class="control-group">
+            <span class="control-label">Benchmark</span>
+            <div class="benchmark-selector" id="benchmark-selector">
+              <button data-benchmark="composite" class="benchmark-btn active">Composite</button>
+              <button data-benchmark="BTCUSDT" class="benchmark-btn">BTC</button>
+              <button data-benchmark="ETHUSDT" class="benchmark-btn">ETH</button>
+              <button data-benchmark="SOLUSDT" class="benchmark-btn">SOL</button>
+              <button data-benchmark="BNBUSDT" class="benchmark-btn">BNB</button>
+              <button data-benchmark="XRPUSDT" class="benchmark-btn">XRP</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Period</span>
+            <div class="period-selector" id="period-selector">
+              <button data-period="24h" class="period-btn active">24h</button>
+              <button data-period="7d" class="period-btn">7d</button>
+              <button data-period="30d" class="period-btn">30d</button>
+              <button data-period="90d" class="period-btn">90d</button>
+              <button data-period="180d" class="period-btn">180d</button>
+              <button data-period="1y" class="period-btn">1y</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -57,7 +73,9 @@
         <div class="stat-card secondary">
           <p class="label">Benchmark cumulative change</p>
           <p class="value" id="benchmark-change">– %</p>
-          <span class="detail">Weighted BTC/ETH/SOL/BNB/XRP basket</span>
+          <span class="detail" id="benchmark-detail">
+            Composite weighted basket (BTC 60% · ETH 25% · SOL 5% · BNB 5% · XRP 5%)
+          </span>
         </div>
         <div class="stat-card contrast">
           <p class="label">Platform vs Benchmark</p>
@@ -74,7 +92,7 @@
               <span class="dot platform"></span> Platform cumulative %
             </span>
             <span class="legend-item">
-              <span class="dot benchmark"></span> Benchmark cumulative %
+              <span class="dot benchmark"></span> <span id="benchmark-legend-label">Benchmark cumulative %</span>
             </span>
           </div>
           <div id="chart-status" class="chart-status">Fetching data...</div>

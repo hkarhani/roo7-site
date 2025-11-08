@@ -9,24 +9,74 @@ const PERIODS = [
   { value: '1y', label: '1y', days: 365 },
 ];
 
+const BENCHMARKS = [
+  {
+    value: 'composite',
+    label: 'Composite Benchmark',
+    shortLabel: 'Composite',
+    detail: 'Composite weighted basket (BTC 60% · ETH 25% · SOL 5% · BNB 5% · XRP 5%)',
+  },
+  { value: 'BTCUSDT', label: 'BTC', shortLabel: 'BTC', detail: 'Bitcoin (BTCUSDT) hourly change' },
+  { value: 'ETHUSDT', label: 'ETH', shortLabel: 'ETH', detail: 'Ethereum (ETHUSDT) hourly change' },
+  { value: 'SOLUSDT', label: 'SOL', shortLabel: 'SOL', detail: 'Solana (SOLUSDT) hourly change' },
+  { value: 'BNBUSDT', label: 'BNB', shortLabel: 'BNB', detail: 'BNB (BNBUSDT) hourly change' },
+  { value: 'XRPUSDT', label: 'XRP', shortLabel: 'XRP', detail: 'XRP (XRPUSDT) hourly change' },
+];
+
 const state = {
   period: '24h',
+  benchmark: BENCHMARKS[0].value,
   rawData: null,
   loading: false,
 };
 
 const selectors = {
   periodButtons: document.querySelectorAll('.period-btn'),
+  benchmarkButtons: document.querySelectorAll('.benchmark-btn'),
   status: document.getElementById('chart-status'),
   platformChange: document.getElementById('platform-change'),
   platformUpdated: document.getElementById('platform-last-updated'),
   benchmarkChange: document.getElementById('benchmark-change'),
   spreadChange: document.getElementById('spread-change'),
   spreadHelper: document.getElementById('spread-helper'),
+  benchmarkDetail: document.getElementById('benchmark-detail'),
+  benchmarkLegend: document.getElementById('benchmark-legend-label'),
   footerYear: document.getElementById('footer-year'),
 };
 
 let chart = null;
+
+function getBenchmarkOption(value) {
+  return BENCHMARKS.find((option) => option.value === value) || BENCHMARKS[0];
+}
+
+function resolveBenchmarkLabel() {
+  const option = getBenchmarkOption(state.benchmark);
+  const metadataKey = state.rawData?.metadata?.benchmark;
+  if (metadataKey && metadataKey.toLowerCase() === state.benchmark.toLowerCase()) {
+    return state.rawData?.metadata?.benchmark_label || option.label;
+  }
+  return option.label;
+}
+
+function resolveBenchmarkDetail() {
+  const option = getBenchmarkOption(state.benchmark);
+  if (option.value === 'composite') {
+    return option.detail;
+  }
+  const metadataKey = state.rawData?.metadata?.benchmark;
+  if (metadataKey && metadataKey.toLowerCase() === state.benchmark.toLowerCase()) {
+    const label = state.rawData?.metadata?.benchmark_label || option.label;
+    return `${label} hourly change (spot close)`;
+  }
+  return option.detail;
+}
+
+function updateBenchmarkButtons() {
+  selectors.benchmarkButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.benchmark === state.benchmark);
+  });
+}
 
 function debounce(fn, delay = 150) {
   let timeoutId;
@@ -81,7 +131,10 @@ function waitForLineChart() {
 
 function setLoading(isLoading) {
   state.loading = isLoading;
-  selectors.status.textContent = isLoading ? 'Fetching data…' : '';
+  if (isLoading) {
+    const label = getBenchmarkOption(state.benchmark).label;
+    selectors.status.textContent = `Fetching data vs ${label}…`;
+  }
   if (isLoading && chart) {
     chart.showLoadingState();
   }
@@ -127,13 +180,23 @@ function updateStats(platformSeries, benchmarkSeries) {
   const lastPlatform = platformSeries.at(-1)?.value ?? 0;
   const lastBenchmark = benchmarkSeries.at(-1)?.value ?? 0;
   const spread = (lastPlatform - lastBenchmark) * 100;
+  const benchmarkLabel = resolveBenchmarkLabel();
 
   selectors.platformChange.textContent = formatPercent(lastPlatform * 100);
   selectors.benchmarkChange.textContent = formatPercent(lastBenchmark * 100);
   selectors.spreadChange.textContent = formatPercent(spread);
   selectors.spreadChange.style.color = spread >= 0 ? '#10b981' : '#ef4444';
   selectors.spreadHelper.textContent =
-    spread >= 0 ? 'Platform outperforming benchmark' : 'Platform underperforming benchmark';
+    spread >= 0
+      ? `Platform outperforming ${benchmarkLabel}`
+      : `Platform underperforming ${benchmarkLabel}`;
+
+  if (selectors.benchmarkLegend) {
+    selectors.benchmarkLegend.textContent = `Benchmark cumulative % (${benchmarkLabel})`;
+  }
+  if (selectors.benchmarkDetail) {
+    selectors.benchmarkDetail.textContent = resolveBenchmarkDetail();
+  }
 
   const lastTimestamp =
     state.rawData?.points?.at(-1)?.timestamp || new Date().toISOString();
@@ -145,7 +208,7 @@ function updateChart() {
     if (chart) {
       chart.showEmptyState();
     }
-    selectors.status.textContent = 'No overlapping data available for this period.';
+    selectors.status.textContent = `No overlapping data available for ${resolveBenchmarkLabel()} this period.`;
     return;
   }
 
@@ -154,13 +217,14 @@ function updateChart() {
 
   if (!platformSeries.length || !benchmarkSeries.length) {
     chart.showEmptyState();
-    selectors.status.textContent = 'Insufficient data to display chart.';
+    selectors.status.textContent = `Insufficient data to display chart for ${resolveBenchmarkLabel()}.`;
     return;
   }
 
   const periodConfig = PERIODS.find((p) => p.value === state.period);
   if (chart) {
     chart.options.periodDays = periodConfig?.days || 7;
+    const benchmarkLabel = resolveBenchmarkLabel();
     chart.setData([
       {
         name: 'Platform cumulative %',
@@ -171,7 +235,7 @@ function updateChart() {
         })),
       },
       {
-        name: 'Benchmark cumulative %',
+        name: `Benchmark cumulative % (${benchmarkLabel})`,
         color: '#f97316',
         values: benchmarkSeries.map((point) => ({
           timestamp: point.timestamp,
@@ -183,7 +247,7 @@ function updateChart() {
   }
 
   updateStats(platformSeries, benchmarkSeries);
-  selectors.status.textContent = `Shared data points: ${state.rawData.metadata?.timestamps_shared ?? '–'}`;
+  selectors.status.textContent = `Shared data points vs ${resolveBenchmarkLabel()}: ${state.rawData.metadata?.timestamps_shared ?? '–'}`;
 }
 
 async function fetchPerformance() {

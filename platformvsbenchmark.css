@@ -132,13 +132,52 @@ body {
   max-width: 720px;
 }
 
+.controls-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 260px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.control-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+@media (min-width: 992px) {
+  .controls-panel {
+    align-items: flex-end;
+  }
+  
+  .control-group {
+    width: auto;
+    align-items: flex-end;
+  }
+}
+
 .period-selector {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.period-btn {
+.benchmark-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.period-btn,
+.benchmark-btn {
   border: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
@@ -149,7 +188,8 @@ body {
   transition: all 0.2s ease;
 }
 
-.period-btn.active {
+.period-btn.active,
+.benchmark-btn.active {
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
@@ -281,10 +321,20 @@ body {
     align-items: flex-start;
   }
 
+  .controls-panel {
+    width: 100%;
+  }
+
+  .control-group {
+    width: 100%;
+  }
+
+  .benchmark-selector,
   .period-selector {
     width: 100%;
   }
 
+  .benchmark-btn,
   .period-btn {
     flex: 1 1 calc(33% - 8px);
     text-align: center;
