@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>ROO7 | Platform vs Benchmark Performance</title>
+  <link rel="stylesheet" href="platformvsbenchmark.css?v=20240317" />
+  <script type="module" src="frontend-config.js?v=20240317"></script>
+  <script src="line-chart.js?v=20240317" defer></script>
+  <script type="module" src="platformvsbenchmark.js?v=20240317"></script>
+</head>
+<body>
+  <header class="pvb-header">
+    <div class="pvb-brand">
+      <a href="index.html" class="brand-link">
+        <span class="brand-logo">ROO7</span>
+      </a>
+      <div class="tagline">
+        <p class="title">Platform vs Benchmark</p>
+        <p class="subtitle">Hourly cumulative performance of ROO7 trading algos vs major market basket</p>
+      </div>
+    </div>
+    <div class="pvb-actions">
+      <a href="dashboard.html" class="action-link">Go to Dashboard</a>
+      <a href="landingpage.html" class="action-link secondary">Learn More</a>
+    </div>
+  </header>
+
+  <main class="pvb-main">
+    <section class="pvb-card">
+      <div class="section-header">
+        <div>
+          <h2>Benchmark Comparison</h2>
+          <p class="section-description">
+            Composite benchmark weights: BTC 60%, ETH 25%, SOL 5%, BNB 5%, XRP 5%. Values represent cumulative percentage change from the beginning of the selected window using hourly data.
+          </p>
+        </div>
+        <div class="period-selector" id="period-selector">
+          <button data-period="24h" class="period-btn active">24h</button>
+          <button data-period="7d" class="period-btn">7d</button>
+          <button data-period="30d" class="period-btn">30d</button>
+          <button data-period="90d" class="period-btn">90d</button>
+          <button data-period="180d" class="period-btn">180d</button>
+          <button data-period="1y" class="period-btn">1y</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card primary">
+          <p class="label">Platform cumulative change</p>
+          <p class="value" id="platform-change">– %</p>
+          <span class="detail" id="platform-last-updated">Awaiting data...</span>
+        </div>
+        <div class="stat-card secondary">
+          <p class="label">Benchmark cumulative change</p>
+          <p class="value" id="benchmark-change">– %</p>
+          <span class="detail">Weighted BTC/ETH/SOL/BNB/XRP basket</span>
+        </div>
+        <div class="stat-card contrast">
+          <p class="label">Platform vs Benchmark</p>
+          <p class="value" id="spread-change">– %</p>
+          <span class="detail" id="spread-helper">Spread over selected window</span>
+        </div>
+      </div>
+
+      <div class="chart-wrapper">
+        <div id="comparison-chart"></div>
+        <div class="chart-footer">
+          <div class="legend">
+            <span class="legend-item">
+              <span class="dot platform"></span> Platform cumulative %
+            </span>
+            <span class="legend-item">
+              <span class="dot benchmark"></span> Benchmark cumulative %
+            </span>
+          </div>
+          <div id="chart-status" class="chart-status">Fetching data...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pvb-card slim">
+      <h3>About this chart</h3>
+      <ul class="info-list">
+        <li>Platform data aggregates all ROO7 source accounts and strategies, normalized each hour.</li>
+        <li>Benchmark prices are sourced from Binance spot klines (1-hour intervals) and stored internally.</li>
+        <li>Each point shows cumulative change from the start of the selected window; the first value is always 0% by design.</li>
+        <li>Data updates shortly after each hour. Times shown in UTC.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="pvb-footer">
+    <p>© <span id="footer-year"></span> ROO7 Automated Trading Platform · Market data provided by Binance</p>
+  </footer>
+</body>
+</html>
