@@ -151,7 +151,7 @@ function updateChart() {
 
 async function fetchPerformance() {
   setLoading(true);
-  const endpoint = `${API_CONFIG.marketUrl}/benchmark/platform-vs-market?period=${state.period}`;
+  const endpoint = `${API_CONFIG.marketUrl}/public/benchmark/platform-vs-market?period=${state.period}`;
 
   try {
     const response = await fetch(endpoint, { cache: 'no-store' });
