@@ -150,9 +150,17 @@ function cumulativeSeries(points, key) {
 
   const series = [];
   const firstTime = new Date(sorted[0].timestamp);
+  let baselineDate = new Date(firstTime);
+  if (sorted.length > 1) {
+    const nextTime = new Date(sorted[1].timestamp);
+    const delta = Math.max(1, nextTime.getTime() - firstTime.getTime());
+    baselineDate = new Date(firstTime.getTime() - delta);
+  } else {
+    baselineDate = new Date(firstTime.getTime() - 3600000); // default to 1 hour before
+  }
   series.push({
-    timestamp: firstTime.toISOString(),
-    date: firstTime,
+    timestamp: baselineDate.toISOString(),
+    date: baselineDate,
     value: 0,
   });
 
