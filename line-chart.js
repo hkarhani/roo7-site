@@ -247,12 +247,13 @@ class LineChart {
     
     // Handle edge cases
     let yDomainMin, yDomainMax;
-    if (yMax === yMin) {
-      if (this.options.valueFormat === 'percentage') {
-        const base = Math.abs(yMax) || 1;
-        yDomainMin = yMax - base * 0.5;
-        yDomainMax = yMax + base * 0.5;
-      } else if (yMax === 0) {
+    if (this.options.valueFormat === 'percentage') {
+      const maxAbs = Math.max(...values.map(v => Math.abs(v)), 0.005);
+      const padding = Math.max(maxAbs * 0.15, 0.0025);
+      yDomainMin = -maxAbs - padding;
+      yDomainMax = maxAbs + padding;
+    } else if (yMax === yMin) {
+      if (yMax === 0) {
         yDomainMin = 0;
         yDomainMax = 100; // Default range for zero values
       } else {
@@ -261,13 +262,8 @@ class LineChart {
       }
     } else {
       const yPadding = Math.max((yMax - yMin) * 0.1, 0.001);
-      if (this.options.valueFormat === 'percentage') {
-        yDomainMin = yMin - yPadding;
-        yDomainMax = yMax + yPadding;
-      } else {
-        yDomainMin = Math.max(0, yMin - yPadding);
-        yDomainMax = yMax + yPadding;
-      }
+      yDomainMin = Math.max(0, yMin - yPadding);
+      yDomainMax = yMax + yPadding;
     }
     
     if (yDomainMax === yDomainMin) {
