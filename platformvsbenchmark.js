@@ -252,7 +252,11 @@ function updateChart() {
 
 async function fetchPerformance() {
   setLoading(true);
-  const endpoint = `${API_CONFIG.marketUrl}/public/benchmark/platform-vs-market?period=${state.period}`;
+  const params = new URLSearchParams({
+    period: state.period,
+    benchmark: state.benchmark,
+  });
+  const endpoint = `${API_CONFIG.marketUrl}/public/benchmark/platform-vs-market?${params.toString()}`;
 
   try {
     const response = await fetch(endpoint, { cache: 'no-store' });
@@ -267,7 +271,8 @@ async function fetchPerformance() {
     updateChart();
   } catch (error) {
     console.error('Benchmark fetch error:', error);
-    selectors.status.textContent = 'Unable to load data. Please try again later.';
+    const option = getBenchmarkOption(state.benchmark);
+    selectors.status.textContent = `Unable to load data for ${option.label}. Please try again later.`;
     if (chart) {
       chart.showEmptyState();
     }
@@ -282,6 +287,15 @@ function handlePeriodClick(event) {
 
   selectors.periodButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
   state.period = button.dataset.period;
+  fetchPerformance();
+}
+
+function handleBenchmarkClick(event) {
+  const button = event.target.closest('button[data-benchmark]');
+  if (!button || button.dataset.benchmark === state.benchmark) return;
+
+  state.benchmark = button.dataset.benchmark;
+  updateBenchmarkButtons();
   fetchPerformance();
 }
 
@@ -305,6 +319,10 @@ async function init() {
   selectors.periodButtons.forEach((btn) => {
     btn.addEventListener('click', handlePeriodClick);
   });
+  selectors.benchmarkButtons.forEach((btn) => {
+    btn.addEventListener('click', handleBenchmarkClick);
+  });
+  updateBenchmarkButtons();
   const handleResize = debounce(() => resizeChart(state.rawData?.points?.length || 0), 200);
   window.addEventListener('resize', handleResize);
 
