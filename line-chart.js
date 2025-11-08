@@ -544,10 +544,13 @@ class LineChart {
     }
 
     if (this.clipPathRect) {
-      this.clipPathRect.setAttribute('x', margin.left);
-      this.clipPathRect.setAttribute('y', margin.top);
-      this.clipPathRect.setAttribute('width', chartWidth);
-      this.clipPathRect.setAttribute('height', chartHeight);
+      const padding = 6;
+      const x = Math.max(0, margin.left - padding);
+      const y = Math.max(0, margin.top - padding);
+      this.clipPathRect.setAttribute('x', x);
+      this.clipPathRect.setAttribute('y', y);
+      this.clipPathRect.setAttribute('width', chartWidth + padding * 2);
+      this.clipPathRect.setAttribute('height', chartHeight + padding * 2);
     }
     target.setAttribute('clip-path', `url(#${this.clipPathId})`);
   }
