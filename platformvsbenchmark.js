@@ -28,6 +28,42 @@ const selectors = {
 
 let chart = null;
 
+function debounce(fn, delay = 150) {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+}
+
+function getChartContainer() {
+  return document.getElementById('comparison-chart');
+}
+
+function computeChartDimensions(pointCount = 0) {
+  const container = getChartContainer();
+  const viewportWidth = window.innerWidth || 1024;
+  const viewportHeight = window.innerHeight || 768;
+  const containerWidth = container?.clientWidth || viewportWidth - 40;
+  const width = Math.max(360, Math.min(containerWidth, viewportWidth - 32));
+
+  const baseHeight = Math.max(360, viewportHeight * 0.45);
+  let densityBonus = 0;
+  if (pointCount > 240) densityBonus = 160;
+  else if (pointCount > 180) densityBonus = 120;
+  else if (pointCount > 120) densityBonus = 80;
+  else if (pointCount > 60) densityBonus = 40;
+
+  const height = Math.min(820, baseHeight + densityBonus);
+  return { width, height };
+}
+
+function resizeChart(pointCount = 0) {
+  if (!chart) return;
+  const { width, height } = computeChartDimensions(pointCount);
+  chart.resize(width, height);
+}
+
 function waitForLineChart() {
   return new Promise((resolve) => {
     if (window.LineChart) {
@@ -143,6 +179,7 @@ function updateChart() {
         })),
       },
     ]);
+    resizeChart(state.rawData?.points?.length || platformSeries.length);
   }
 
   updateStats(platformSeries, benchmarkSeries);
@@ -186,8 +223,10 @@ function handlePeriodClick(event) {
 
 async function init() {
   await waitForLineChart();
+  const initialDimensions = computeChartDimensions();
   chart = new window.LineChart('comparison-chart', {
-    height: 540,
+    width: initialDimensions.width,
+    height: initialDimensions.height,
     dateFormat: 'adaptive',
     valueFormat: 'percentage',
     periodDays: 1,
@@ -202,6 +241,9 @@ async function init() {
   selectors.periodButtons.forEach((btn) => {
     btn.addEventListener('click', handlePeriodClick);
   });
+  const handleResize = debounce(() => resizeChart(state.rawData?.points?.length || 0), 200);
+  window.addEventListener('resize', handleResize);
+
   fetchPerformance();
 }
 
