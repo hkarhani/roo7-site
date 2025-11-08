@@ -1,0 +1,602 @@
+import { API_CONFIG, BRAND_CONFIG } from './frontend-config.js';
+
+const PERIODS = [
+  { value: '24h', label: '24h', days: 1 },
+  { value: '7d', label: '7d', days: 7 },
+  { value: '30d', label: '30d', days: 30 },
+  { value: '90d', label: '90d', days: 90 },
+  { value: '180d', label: '180d', days: 180 },
+  { value: '1y', label: '1y', days: 365 },
+];
+const PERIOD_KEYS = PERIODS.map((period) => period.value);
+
+const BENCHMARKS = [
+  { value: 'composite', label: 'Composite Benchmark', detail: 'Composite weighted basket (BTC 60% · ETH 25% · SOL 5% · BNB 5% · XRP 5%)' },
+  { value: 'BTCUSDT', label: 'BTC', detail: 'Bitcoin (BTCUSDT) hourly change' },
+  { value: 'ETHUSDT', label: 'ETH', detail: 'Ethereum (ETHUSDT) hourly change' },
+  { value: 'SOLUSDT', label: 'SOL', detail: 'Solana (SOLUSDT) hourly change' },
+  { value: 'BNBUSDT', label: 'BNB', detail: 'BNB (BNBUSDT) hourly change' },
+  { value: 'XRPUSDT', label: 'XRP', detail: 'XRP (XRPUSDT) hourly change' },
+];
+const BENCHMARK_VALUES = BENCHMARKS.map((benchmark) => benchmark.value);
+const DEFAULT_PERIOD = '7d';
+
+const AUTH_API_BASE = API_CONFIG.authUrl;
+const MARKET_API_BASE = API_CONFIG.marketUrl;
+
+const state = {
+  token: null,
+  accounts: [],
+  accountId: 'ALL',
+  period: DEFAULT_PERIOD,
+  lockedPeriod: DEFAULT_PERIOD,
+  benchmark: 'composite',
+  lockedBenchmark: 'composite',
+  rawData: null,
+  summary: null,
+  loading: false,
+};
+
+const selectors = {
+  accountSelector: document.getElementById('account-selector'),
+  benchmarkButtons: document.querySelectorAll('.benchmark-btn'),
+  periodButtons: document.querySelectorAll('.period-btn'),
+  status: document.getElementById('chart-status'),
+  benchmarkDetail: document.getElementById('benchmark-detail'),
+  benchmarkLegend: document.getElementById('benchmark-legend-label'),
+  portfolioChange: document.getElementById('portfolio-change'),
+  platformChange: document.getElementById('platform-change'),
+  benchmarkChange: document.getElementById('benchmark-change'),
+  portfolioUpdated: document.getElementById('portfolio-last-updated'),
+  portfolioPlatformSpread: document.getElementById('portfolio-platform-spread'),
+  portfolioPlatformHelper: document.getElementById('portfolio-platform-helper'),
+  tableBody: document.getElementById('benchmark-table-body'),
+  tableStatus: document.getElementById('benchmark-table-status'),
+  logoutBtn: document.getElementById('logout-btn'),
+  footerYear: document.getElementById('footer-year'),
+};
+
+let chart = null;
+const seriesCache = new Map();
+const resizeHandler = () => resizeChart(state.rawData?.points?.length || 0);
+
+function getChartContainer() {
+  return document.getElementById('comparison-chart');
+}
+
+function computeChartDimensions(pointCount = 0) {
+  const container = getChartContainer();
+  const viewportWidth = window.innerWidth || 1024;
+  const viewportHeight = window.innerHeight || 768;
+  const containerWidth = container?.clientWidth || viewportWidth - 40;
+  const width = Math.max(360, Math.min(containerWidth, viewportWidth - 32));
+
+  const baseHeight = Math.max(300, viewportHeight * 0.35);
+  let densityBonus = 0;
+  if (pointCount > 240) densityBonus = 80;
+  else if (pointCount > 120) densityBonus = 60;
+  else if (pointCount > 60) densityBonus = 30;
+
+  const height = Math.min(640, baseHeight + densityBonus);
+  return { width, height };
+}
+
+function resizeChart(pointCount = 0) {
+  if (!chart) return;
+  const { width, height } = computeChartDimensions(pointCount);
+  chart.resize(width, height);
+}
+
+function getBenchmarkOption(value) {
+  return BENCHMARKS.find((option) => option.value === value) || BENCHMARKS[0];
+}
+
+function waitForLineChart() {
+  return new Promise((resolve) => {
+    if (window.LineChart) {
+      resolve(window.LineChart);
+      return;
+    }
+    const interval = setInterval(() => {
+      if (window.LineChart) {
+        clearInterval(interval);
+        resolve(window.LineChart);
+      }
+    }, 30);
+  });
+}
+
+function setLoading(isLoading, { silent = false } = {}) {
+  state.loading = isLoading;
+  if (!silent) {
+    if (isLoading) {
+      const benchmarkLabel = getBenchmarkOption(state.benchmark).label;
+      selectors.status.textContent = `Fetching data vs ${benchmarkLabel}…`;
+    } else {
+      selectors.status.textContent = '';
+    }
+  }
+  if (isLoading && chart) {
+    chart.showLoadingState();
+  }
+}
+
+function formatPercent(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) return '– %';
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)}%`;
+}
+
+function cumulativeSeries(points, key) {
+  if (!points || points.length === 0) {
+    return [];
+  }
+  const sorted = [...points].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
+  const series = [];
+  const firstTime = new Date(sorted[0].timestamp);
+  let baselineDate = new Date(firstTime);
+  if (sorted.length > 1) {
+    const nextTime = new Date(sorted[1].timestamp);
+    const delta = Math.max(1, nextTime.getTime() - firstTime.getTime());
+    baselineDate = new Date(firstTime.getTime() - delta);
+  } else {
+    baselineDate = new Date(firstTime.getTime() - 3600000);
+  }
+  series.push({
+    timestamp: baselineDate.toISOString(),
+    date: baselineDate,
+    value: 0,
+  });
+
+  let cumulative = 0;
+  sorted.forEach((point) => {
+    const change = parseFloat(point[key] || 0);
+    cumulative += change;
+    series.push({
+      timestamp: point.timestamp,
+      date: new Date(point.timestamp),
+      value: cumulative / 100,
+    });
+  });
+
+  return series;
+}
+
+function getAuthHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${state.token}`,
+  };
+}
+
+function handleAuthError(status) {
+  if (status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/auth.html';
+    return true;
+  }
+  return false;
+}
+
+async function loadAccounts() {
+  try {
+    const res = await fetch(`${AUTH_API_BASE}/accounts`, {
+      headers: getAuthHeaders(),
+    });
+    if (handleAuthError(res.status)) return;
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const normalized = Array.isArray(data) ? data : [];
+    state.accounts = normalized.map((acc) => ({
+      id: acc.id || acc._id,
+      label: acc.account_name || acc.name || acc.id,
+    }));
+    renderAccountSelector();
+  } catch (error) {
+    console.error('Account fetch error:', error);
+    state.accounts = [];
+    renderAccountSelector();
+    selectors.status.textContent = 'Unable to load accounts list.';
+  }
+}
+
+function renderAccountSelector() {
+  if (!selectors.accountSelector) return;
+  selectors.accountSelector.innerHTML = '';
+  const items = [{ id: 'ALL', label: 'All Accounts' }, ...state.accounts];
+  items.forEach((item) => {
+    const button = document.createElement('button');
+    button.textContent = item.label || 'Unnamed';
+    button.dataset.accountId = item.id;
+    button.className = item.id === state.accountId ? 'active' : '';
+    button.addEventListener('click', () => {
+      if (state.accountId === item.id) return;
+      state.accountId = item.id;
+      renderAccountSelector();
+      seriesCache.clear();
+      fetchPerformance({ silent: false, useCache: false }).catch((error) =>
+        console.error('Account change fetch error', error)
+      );
+      fetchSummary();
+    });
+    selectors.accountSelector.appendChild(button);
+  });
+}
+
+function setActivePeriodButton(activePeriod) {
+  selectors.periodButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.period === activePeriod);
+  });
+  document.querySelectorAll('.period-header').forEach((header) => {
+    header.classList.toggle('active', header.dataset.period === activePeriod);
+  });
+}
+
+function updateBenchmarkButtons() {
+  selectors.benchmarkButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.benchmark === state.benchmark);
+  });
+}
+
+function highlightTableRow(activeBenchmark) {
+  if (!selectors.tableBody) return;
+  selectors.tableBody.querySelectorAll('tr').forEach((row) => {
+    row.classList.toggle('active-row', row.dataset.benchmark === activeBenchmark);
+  });
+}
+
+function updateStats(portfolioSeries, platformSeries, benchmarkSeries) {
+  const lastPortfolio = portfolioSeries.at(-1)?.value ?? 0;
+  const lastPlatform = platformSeries.at(-1)?.value ?? 0;
+  const lastBenchmark = benchmarkSeries.at(-1)?.value ?? 0;
+  const spread = (lastPortfolio - lastPlatform) * 100;
+
+  selectors.portfolioChange.textContent = formatPercent(lastPortfolio * 100);
+  selectors.platformChange.textContent = formatPercent(lastPlatform * 100);
+  selectors.benchmarkChange.textContent = formatPercent(lastBenchmark * 100);
+  selectors.portfolioPlatformSpread.textContent = formatPercent(spread);
+  selectors.portfolioPlatformHelper.textContent =
+    spread >= 0 ? 'Portfolio outperforming platform' : 'Portfolio underperforming platform';
+
+  const lastTimestamp =
+    state.rawData?.points?.at(-1)?.timestamp || new Date().toISOString();
+  selectors.portfolioUpdated.textContent = `Updated ${new Date(lastTimestamp).toUTCString()}`;
+
+  const option = getBenchmarkOption(state.benchmark);
+  selectors.benchmarkDetail.textContent = option.detail;
+  selectors.benchmarkLegend.textContent = `${option.label} benchmark`;
+}
+
+function updateChart() {
+  if (!state.rawData || !state.rawData.points?.length) {
+    if (chart) {
+      chart.showEmptyState();
+    }
+    selectors.status.textContent = 'No overlapping data available for this selection.';
+    return;
+  }
+
+  const portfolioSeries = cumulativeSeries(state.rawData.points, 'portfolio_change_percent');
+  const platformSeries = cumulativeSeries(state.rawData.points, 'platform_change_percent');
+  const benchmarkSeries = cumulativeSeries(state.rawData.points, 'benchmark_change_percent');
+
+  if (!portfolioSeries.length || !platformSeries.length || !benchmarkSeries.length) {
+    chart.showEmptyState();
+    selectors.status.textContent = 'Insufficient data to display chart.';
+    return;
+  }
+
+  const periodConfig = PERIODS.find((p) => p.value === state.period);
+  if (chart) {
+    chart.options.periodDays = periodConfig?.days || 7;
+    const benchmarkLabel = getBenchmarkOption(state.benchmark).label;
+    chart.setData([
+      {
+        name: state.accountId === 'ALL' ? 'Portfolio cumulative %' : 'Account cumulative %',
+        color: '#10b981',
+        values: portfolioSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
+      },
+      {
+        name: 'Platform cumulative %',
+        color: '#1d4ed8',
+        values: platformSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
+      },
+      {
+        name: `Benchmark cumulative % (${benchmarkLabel})`,
+        color: '#f97316',
+        values: benchmarkSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
+      },
+    ]);
+    resizeChart(state.rawData?.points?.length || portfolioSeries.length);
+  }
+
+  updateStats(portfolioSeries, platformSeries, benchmarkSeries);
+  selectors.status.textContent = `Shared data points: ${state.rawData.metadata?.timestamps_shared ?? '–'}`;
+  highlightTableRow(state.benchmark);
+}
+
+async function fetchPerformance(options = {}) {
+  const { silent = false, useCache = true } = options;
+  const targetBenchmark = state.benchmark;
+  const targetPeriod = state.period;
+  const targetAccount = state.accountId === 'ALL' ? null : state.accountId;
+  const cacheKey = `${targetBenchmark}|${targetPeriod}|${targetAccount || 'ALL'}`;
+  if (useCache && seriesCache.has(cacheKey)) {
+    state.rawData = seriesCache.get(cacheKey);
+    updateChart();
+    return;
+  }
+
+  setLoading(true, { silent });
+  const params = new URLSearchParams({
+    period: targetPeriod,
+    benchmark: targetBenchmark,
+  });
+  if (targetAccount) {
+    params.append('account_id', targetAccount);
+  }
+
+  const endpoint = `${MARKET_API_BASE}/benchmark/portfolio/performance?${params.toString()}`;
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: getAuthHeaders(),
+    });
+    if (handleAuthError(response.status)) return;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    if (!payload.success) {
+      throw new Error(payload.detail || 'Unexpected API response');
+    }
+    state.rawData = payload.data;
+    seriesCache.set(cacheKey, payload.data);
+    updateChart();
+  } catch (error) {
+    console.error('Portfolio fetch error:', error);
+    seriesCache.delete(cacheKey);
+    selectors.status.textContent = 'Unable to load portfolio analytics.';
+    if (chart) {
+      chart.showEmptyState();
+    }
+  } finally {
+    state.loading = false;
+  }
+}
+
+function buildTableCell(metrics) {
+  if (!metrics || Number.isNaN(metrics.portfolio_change_percent)) {
+    return '<td><div class="placeholder-copy">–</div></td>';
+  }
+  return `<td>
+    <div class="cell-values">
+      <span class="portfolio-value">You: ${formatPercent(metrics.portfolio_change_percent)}</span>
+      <span class="platform-value">Platform: ${formatPercent(metrics.platform_change_percent)}</span>
+      <span class="benchmark-value">Benchmark: ${formatPercent(metrics.benchmark_change_percent)}</span>
+    </div>
+  </td>`;
+}
+
+function buildPortfolioSummaryRow(periodValues) {
+  const cells = PERIODS.map((period) =>
+    buildSummaryCell(periodValues[period.value])
+  ).join('');
+  return `
+    <tr class="portfolio-row">
+      <td>
+        <div class="benchmark-name">
+          <span>Portfolio Summary</span>
+          <span class="sub">Aggregated across selected accounts</span>
+        </div>
+      </td>
+      ${cells}
+    </tr>`;
+}
+
+function buildSummaryCell(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return '<td><div class="placeholder-copy">–</div></td>';
+  }
+  return `<td><span class="cell-pill portfolio">${formatPercent(value)}</span></td>`;
+}
+
+function renderSummaryTable() {
+  if (!selectors.tableBody) return;
+  if (!state.summary || !Array.isArray(state.summary.benchmarks) || state.summary.benchmarks.length === 0) {
+    selectors.tableBody.innerHTML = `
+      <tr class="table-placeholder-row">
+        <td colspan="7">
+          <div class="placeholder-copy">Summary will appear once data loads.</div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  const orderMap = new Map(BENCHMARK_VALUES.map((value, index) => [value, index]));
+  const sortedBenchmarks = [...state.summary.benchmarks].sort((a, b) => {
+    const aScore = orderMap.get(a.benchmark) ?? Number.MAX_SAFE_INTEGER;
+    const bScore = orderMap.get(b.benchmark) ?? Number.MAX_SAFE_INTEGER;
+    return aScore - bScore;
+  });
+
+  const rows = sortedBenchmarks
+    .map((entry) => {
+      const shortLabel = entry.benchmark === 'composite' ? 'Composite' : entry.benchmark.replace('USDT', '');
+      const subtitle =
+        entry.benchmark_type === 'composite'
+          ? 'Composite weighted basket'
+          : `${shortLabel} spot reference`;
+      const cells = PERIODS.map((period) =>
+        buildTableCell(entry.periods?.[period.value])
+      ).join('');
+      return `
+        <tr data-benchmark="${entry.benchmark}">
+          <td>
+            <div class="benchmark-name">
+              <span>${shortLabel}</span>
+              <span class="sub">${subtitle}</span>
+            </div>
+          </td>
+          ${cells}
+        </tr>`;
+    })
+    .join('');
+
+  const summaryCells = state.summary.portfolio?.periods || {};
+  const summaryRow = buildPortfolioSummaryRow(summaryCells);
+
+  selectors.tableBody.innerHTML = rows + summaryRow;
+  selectors.tableBody.querySelectorAll('tr').forEach((row) => {
+    const benchmark = row.dataset.benchmark;
+    if (!benchmark) return;
+    row.addEventListener('click', () => {
+      if (benchmark === state.benchmark) return;
+      state.benchmark = benchmark;
+      state.lockedBenchmark = benchmark;
+      updateBenchmarkButtons();
+      highlightTableRow(benchmark);
+      fetchPerformance({ silent: false, useCache: false }).catch((error) =>
+        console.error('Benchmark change error', error)
+      );
+    });
+  });
+
+  document.querySelectorAll('.period-header').forEach((header) => {
+    header.removeEventListener('click', handlePeriodHeaderClick);
+    header.addEventListener('click', handlePeriodHeaderClick);
+  });
+  setActivePeriodButton(state.period);
+
+  if (selectors.tableStatus) {
+    selectors.tableStatus.textContent = 'Click a benchmark row or timeframe to update the chart.';
+  }
+}
+
+function handlePeriodHeaderClick(event) {
+  const period = event.currentTarget?.dataset?.period;
+  if (!period || period === state.period) return;
+  state.period = period;
+  state.lockedPeriod = period;
+  setActivePeriodButton(period);
+  fetchPerformance({ silent: false, useCache: false }).catch((error) =>
+    console.error('Period header change error', error)
+  );
+}
+
+async function fetchSummary() {
+  if (!selectors.tableStatus) return;
+  try {
+    selectors.tableStatus.textContent = 'Loading summary…';
+    const params = new URLSearchParams({
+      periods: PERIOD_KEYS.join(','),
+      benchmarks: BENCHMARK_VALUES.join(','),
+    });
+    if (state.accountId !== 'ALL') {
+      params.append('account_id', state.accountId);
+    }
+    const endpoint = `${MARKET_API_BASE}/benchmark/portfolio/table?${params.toString()}`;
+    const response = await fetch(endpoint, {
+      headers: getAuthHeaders(),
+    });
+    if (handleAuthError(response.status)) return;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    if (!payload.success) {
+      throw new Error(payload.detail || 'Unexpected API response');
+    }
+    state.summary = payload.data;
+    renderSummaryTable();
+  } catch (error) {
+    console.error('Summary fetch error:', error);
+    selectors.tableStatus.textContent = 'Unable to load summary table.';
+  }
+}
+
+function applyBenchmark(nextBenchmark) {
+  if (!nextBenchmark || nextBenchmark === state.benchmark) {
+    highlightTableRow(state.benchmark);
+    updateBenchmarkButtons();
+    return;
+  }
+  state.benchmark = nextBenchmark;
+  state.lockedBenchmark = nextBenchmark;
+  updateBenchmarkButtons();
+  highlightTableRow(nextBenchmark);
+  fetchPerformance({ silent: false, useCache: false }).catch((error) =>
+    console.error('Benchmark button error', error)
+  );
+}
+
+function handleBenchmarkClick(event) {
+  const button = event.target.closest('button[data-benchmark]');
+  if (!button) return;
+  applyBenchmark(button.dataset.benchmark);
+}
+
+function handlePeriodClick(event) {
+  const button = event.target.closest('button[data-period]');
+  if (!button || button.dataset.period === state.period) return;
+  state.period = button.dataset.period;
+  state.lockedPeriod = state.period;
+  setActivePeriodButton(state.period);
+  fetchPerformance({ silent: false, useCache: false }).catch((error) =>
+    console.error('Period button error', error)
+  );
+}
+
+function initLogout() {
+  if (!selectors.logoutBtn) return;
+  selectors.logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    window.location.href = '/auth.html';
+  });
+}
+
+async function init() {
+  state.token = localStorage.getItem('token');
+  if (!state.token) {
+    window.location.href = '/auth.html';
+    return;
+  }
+
+  document.title = `${BRAND_CONFIG.name} | Portfolio vs Benchmark`;
+  const brandLogo = document.querySelector('.brand-logo');
+  if (brandLogo) brandLogo.textContent = BRAND_CONFIG.name;
+
+  selectors.footerYear.textContent = new Date().getFullYear();
+  initLogout();
+
+  selectors.periodButtons.forEach((btn) => btn.addEventListener('click', handlePeriodClick));
+  selectors.benchmarkButtons.forEach((btn) => btn.addEventListener('click', handleBenchmarkClick));
+
+  await waitForLineChart();
+  const initialDimensions = computeChartDimensions();
+  chart = new window.LineChart('comparison-chart', {
+    width: initialDimensions.width,
+    height: initialDimensions.height,
+    dateFormat: 'adaptive',
+    valueFormat: 'percentage',
+    periodDays: 7,
+    colors: ['#10b981', '#1d4ed8', '#f97316'],
+    centerZero: true,
+    shadeBetween: false,
+    fillArea: false,
+  });
+
+  window.addEventListener('resize', resizeHandler);
+
+  await loadAccounts();
+  setActivePeriodButton(state.period);
+  await fetchPerformance({ silent: false, useCache: false });
+  await fetchSummary();
+}
+
+window.addEventListener('DOMContentLoaded', init);

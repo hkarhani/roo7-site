@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>ROO7 | Portfolio vs Benchmark</title>
+  <link rel="stylesheet" href="portfoliovsbenchmark.css?v=20240408" />
+  <script type="module" src="frontend-config.js?v=20240317"></script>
+  <script src="line-chart.js?v=20240330" defer></script>
+  <script type="module" src="portfoliovsbenchmark.js?v=20240408" defer></script>
+</head>
+<body>
+  <header class="pvb-header">
+    <div class="pvb-brand">
+      <a href="dashboard.html" class="brand-link">
+        <span class="brand-logo">ROO7</span>
+      </a>
+      <div class="tagline">
+        <p class="title">Portfolio vs Benchmark</p>
+        <p class="subtitle">Authenticated analytics comparing your portfolio/accounts against ROO7 platform and market benchmarks.</p>
+      </div>
+    </div>
+    <div class="pvb-actions">
+      <button id="logout-btn" class="action-link danger">Logout</button>
+      <a href="dashboard.html" class="action-link secondary">Back to Dashboard</a>
+    </div>
+  </header>
+
+  <main class="pvb-main">
+    <section class="pvb-card">
+      <div class="section-header">
+        <div>
+          <h2>Portfolio Comparison</h2>
+          <p class="section-description">
+            Choose a portfolio or specific account, select a benchmark basket or individual coin, and compare performance over standard timeframes.
+          </p>
+        </div>
+        <div class="controls-panel">
+          <div class="control-group">
+            <span class="control-label">Portfolio / Account</span>
+            <div id="account-selector" class="selector-group pills"></div>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Benchmark</span>
+            <div class="benchmark-selector" id="benchmark-selector">
+              <button data-benchmark="composite" class="benchmark-btn active">Composite</button>
+              <button data-benchmark="BTCUSDT" class="benchmark-btn">BTC</button>
+              <button data-benchmark="ETHUSDT" class="benchmark-btn">ETH</button>
+              <button data-benchmark="SOLUSDT" class="benchmark-btn">SOL</button>
+              <button data-benchmark="BNBUSDT" class="benchmark-btn">BNB</button>
+              <button data-benchmark="XRPUSDT" class="benchmark-btn">XRP</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Period</span>
+            <div class="period-selector" id="period-selector">
+              <button data-period="24h" class="period-btn">24h</button>
+              <button data-period="7d" class="period-btn active">7d</button>
+              <button data-period="30d" class="period-btn">30d</button>
+              <button data-period="90d" class="period-btn">90d</button>
+              <button data-period="180d" class="period-btn">180d</button>
+              <button data-period="1y" class="period-btn">1y</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card primary">
+          <p class="label">Portfolio cumulative change</p>
+          <p class="value" id="portfolio-change">– %</p>
+          <span class="detail" id="portfolio-last-updated">Awaiting data...</span>
+        </div>
+        <div class="stat-card secondary">
+          <p class="label">Platform cumulative change</p>
+          <p class="value" id="platform-change">– %</p>
+          <span class="detail">ROO7 aggregate strategies</span>
+        </div>
+        <div class="stat-card contrast">
+          <p class="label">Benchmark cumulative change</p>
+          <p class="value" id="benchmark-change">– %</p>
+          <span class="detail" id="benchmark-detail">Composite weighted basket (BTC 60% · ETH 25% · SOL 5% · BNB 5% · XRP 5%)</span>
+        </div>
+        <div class="stat-card spread">
+          <p class="label">Portfolio vs Platform</p>
+          <p class="value" id="portfolio-platform-spread">– %</p>
+          <span class="detail" id="portfolio-platform-helper">Spread over selected window</span>
+        </div>
+      </div>
+
+      <div class="chart-wrapper">
+        <div id="comparison-chart"></div>
+        <div class="chart-footer">
+          <div class="legend">
+            <span class="legend-item">
+              <span class="dot portfolio"></span> Portfolio / Account
+            </span>
+            <span class="legend-item">
+              <span class="dot platform"></span> Platform aggregate
+            </span>
+            <span class="legend-item">
+              <span class="dot benchmark"></span> <span id="benchmark-legend-label">Benchmark</span>
+            </span>
+          </div>
+          <div id="chart-status" class="chart-status">Fetching data...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pvb-card table-card">
+      <div class="table-header">
+        <div>
+          <h3>Portfolio vs Benchmark Snapshot</h3>
+          <p class="section-description">
+            Click a benchmark row or timeframe to refresh the chart above with the selected comparison.
+          </p>
+        </div>
+        <div id="benchmark-table-status" class="table-status">Loading summary…</div>
+      </div>
+      <div class="benchmark-table-wrapper">
+        <table class="benchmark-table">
+          <thead>
+            <tr>
+              <th>Benchmark</th>
+              <th class="period-header" data-period="24h">1D</th>
+              <th class="period-header" data-period="7d">7D</th>
+              <th class="period-header" data-period="30d">30D</th>
+              <th class="period-header" data-period="90d">90D</th>
+              <th class="period-header" data-period="180d">180D</th>
+              <th class="period-header" data-period="1y">1Y</th>
+            </tr>
+          </thead>
+          <tbody id="benchmark-table-body">
+            <tr class="table-placeholder-row">
+              <td colspan="7">
+                <div class="placeholder-copy">Summary will appear once data loads.</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="pvb-card slim">
+      <h3>About this analytics view</h3>
+      <ul class="info-list">
+        <li>Metrics are derived from your authenticated account analytics, normalized to ignore deposits/withdrawals when performance deviates sharply from the platform baseline.</li>
+        <li>Benchmark options match the public view (composite basket or individual majors) but the data here is private to your account.</li>
+        <li>Data updates shortly after each hour; times shown in UTC.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="pvb-footer">
+    <p>© <span id="footer-year"></span> ROO7 Automated Trading Platform · Secure portfolio analytics</p>
+  </footer>
+</body>
+</html>
