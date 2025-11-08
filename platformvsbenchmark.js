@@ -25,8 +25,11 @@ const BENCHMARKS = [
 ];
 const BENCHMARK_VALUES = BENCHMARKS.map((benchmark) => benchmark.value);
 
+const DEFAULT_PERIOD = '7d';
+
 const state = {
-  period: '24h',
+  period: DEFAULT_PERIOD,
+  lockedPeriod: DEFAULT_PERIOD,
   benchmark: BENCHMARKS[0].value,
   lockedBenchmark: BENCHMARKS[0].value,
   rawData: null,
@@ -52,7 +55,8 @@ const selectors = {
 
 let chart = null;
 const seriesCache = new Map();
-let tableHoverTimer = null;
+let rowHoverTimer = null;
+let periodHoverTimer = null;
 
 function getBenchmarkOption(value) {
   return BENCHMARKS.find((option) => option.value === value) || BENCHMARKS[0];
@@ -83,6 +87,15 @@ function resolveBenchmarkDetail() {
 function updateBenchmarkButtons() {
   selectors.benchmarkButtons.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.benchmark === state.benchmark);
+  });
+}
+
+function setActivePeriodButton(activePeriod) {
+  selectors.periodButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.period === activePeriod);
+  });
+  document.querySelectorAll('.period-header').forEach((header) => {
+    header.classList.toggle('active', header.dataset.period === activePeriod);
   });
 }
 
@@ -322,19 +335,32 @@ async function fetchPerformance(options = {}) {
 
 function handlePeriodClick(event) {
   const button = event.target.closest('button[data-period]');
-  if (!button || button.dataset.period === state.period) return;
-
-  selectors.periodButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
-  state.period = button.dataset.period;
-  fetchPerformance({ silent: false, useCache: true }).catch((error) =>
-    console.error('Period fetch error', error)
-  );
+  if (!button) return;
+  applyPeriod(button.dataset.period);
 }
 
 function handleBenchmarkClick(event) {
   const button = event.target.closest('button[data-benchmark]');
   if (!button) return;
   applyBenchmark(button.dataset.benchmark);
+}
+
+function applyPeriod(nextPeriod, options = {}) {
+  const { temporary = false, silent = false } = options;
+  if (!nextPeriod) return;
+  const normalized = nextPeriod.toLowerCase();
+  if (!temporary) {
+    state.lockedPeriod = normalized;
+  }
+  if (normalized === state.period) {
+    setActivePeriodButton(state.period);
+    return;
+  }
+  state.period = normalized;
+  setActivePeriodButton(state.period);
+  fetchPerformance({ silent, useCache: true }).catch((error) =>
+    console.error('applyPeriod fetch error', error)
+  );
 }
 
 function highlightTableRow(activeBenchmark) {
@@ -365,14 +391,14 @@ function applyBenchmark(nextBenchmark, options = {}) {
 function handleTableRowEnter(event) {
   const benchmark = event.currentTarget?.dataset?.benchmark;
   if (!benchmark) return;
-  if (tableHoverTimer) clearTimeout(tableHoverTimer);
-  tableHoverTimer = setTimeout(() => {
+  if (rowHoverTimer) clearTimeout(rowHoverTimer);
+  rowHoverTimer = setTimeout(() => {
     applyBenchmark(benchmark, { temporary: true, silent: false });
   }, 180);
 }
 
 function handleTableRowLeave() {
-  if (tableHoverTimer) clearTimeout(tableHoverTimer);
+  if (rowHoverTimer) clearTimeout(rowHoverTimer);
   if (state.lockedBenchmark && state.lockedBenchmark !== state.benchmark) {
     applyBenchmark(state.lockedBenchmark, { temporary: true, silent: true });
   }
@@ -381,22 +407,82 @@ function handleTableRowLeave() {
 function handleTableRowClick(event) {
   const benchmark = event.currentTarget?.dataset?.benchmark;
   if (!benchmark) return;
-  if (tableHoverTimer) clearTimeout(tableHoverTimer);
+  if (rowHoverTimer) clearTimeout(rowHoverTimer);
   applyBenchmark(benchmark);
 }
 
-function buildTableCell(metrics) {
-  if (!metrics || Number.isNaN(metrics.platform_change_percent)) {
+function handlePeriodHeaderEnter(event) {
+  const period = event.currentTarget?.dataset?.period;
+  if (!period) return;
+  if (periodHoverTimer) clearTimeout(periodHoverTimer);
+  periodHoverTimer = setTimeout(() => {
+    applyPeriod(period, { temporary: true, silent: true });
+  }, 160);
+}
+
+function handlePeriodHeaderLeave() {
+  if (periodHoverTimer) clearTimeout(periodHoverTimer);
+  if (state.lockedPeriod && state.lockedPeriod !== state.period) {
+    applyPeriod(state.lockedPeriod, { temporary: true, silent: true });
+  }
+}
+
+function buildTableCell(value, { variant = 'benchmark' } = {}) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
   }
-  const platformValue = formatPercent(metrics.platform_change_percent);
-  const benchmarkValue = formatPercent(metrics.benchmark_change_percent);
-  return `<td>
-    <div class="cell-values">
-      <span class="platform-value">${platformValue}</span>
-      <span class="benchmark-value">vs ${benchmarkValue}</span>
-    </div>
-  </td>`;
+  const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+  const classes = ['cell-pill', polarity];
+  if (variant === 'platform') {
+    classes.push('platform');
+  }
+  return `<td><span class="${classes.join(' ')}">${formatPercent(value)}</span></td>`;
+}
+
+function computePlatformPeriodValues() {
+  const values = {};
+  if (!state.summary?.benchmarks) {
+    PERIODS.forEach(({ value }) => {
+      values[value] = null;
+    });
+    return values;
+  }
+  PERIODS.forEach(({ value }) => {
+    values[value] = getPlatformValueForPeriod(value);
+  });
+  return values;
+}
+
+function getPlatformValueForPeriod(periodKey) {
+  if (!state.summary?.benchmarks) return null;
+  for (const entry of state.summary.benchmarks) {
+    const metric = entry.periods?.[periodKey];
+    if (
+      metric &&
+      metric.platform_change_percent !== null &&
+      metric.platform_change_percent !== undefined &&
+      !Number.isNaN(metric.platform_change_percent)
+    ) {
+      return metric.platform_change_percent;
+    }
+  }
+  return null;
+}
+
+function buildPlatformRow(periodValues) {
+  const cells = PERIODS.map((period) =>
+    buildTableCell(periodValues[period.value], { variant: 'platform' })
+  ).join('');
+  return `
+    <tr class="platform-row">
+      <td>
+        <div class="benchmark-name">
+          <span>Platform</span>
+          <span class="sub">Aggregated ROO7 performance</span>
+        </div>
+      </td>
+      ${cells}
+    </tr>`;
 }
 
 function renderSummaryTable() {
@@ -426,7 +512,9 @@ function renderSummaryTable() {
         entry.benchmark_type === 'composite'
           ? 'Composite weighted basket'
           : `${shortLabel} spot reference`;
-      const cells = PERIODS.map((period) => buildTableCell(entry.periods?.[period.value])).join('');
+      const cells = PERIODS.map((period) =>
+        buildTableCell(entry.periods?.[period.value]?.benchmark_change_percent)
+      ).join('');
       return `
         <tr data-benchmark="${entry.benchmark}">
           <td>
@@ -440,15 +528,26 @@ function renderSummaryTable() {
     })
     .join('');
 
-  selectors.tableBody.innerHTML = rows;
+  const platformValues = computePlatformPeriodValues();
+  const platformRow = buildPlatformRow(platformValues);
+  selectors.tableBody.innerHTML = rows + platformRow;
   selectors.tableBody.querySelectorAll('tr').forEach((row) => {
+    const benchmark = row.dataset.benchmark;
+    if (!benchmark) return;
     row.addEventListener('mouseenter', handleTableRowEnter);
     row.addEventListener('mouseleave', handleTableRowLeave);
     row.addEventListener('click', handleTableRowClick);
   });
   highlightTableRow(state.benchmark);
+  document.querySelectorAll('.period-header').forEach((header) => {
+    header.removeEventListener('mouseenter', handlePeriodHeaderEnter);
+    header.removeEventListener('mouseleave', handlePeriodHeaderLeave);
+    header.addEventListener('mouseenter', handlePeriodHeaderEnter);
+    header.addEventListener('mouseleave', handlePeriodHeaderLeave);
+  });
+  setActivePeriodButton(state.period);
   if (selectors.tableStatus) {
-    selectors.tableStatus.textContent = 'Hover a row to preview. Click to lock comparison.';
+    selectors.tableStatus.textContent = 'Hover a row to preview; hover a period header to test timeframes.';
   }
 }
 
@@ -505,6 +604,7 @@ async function init() {
   window.addEventListener('resize', handleResize);
 
   state.lockedBenchmark = state.benchmark;
+  setActivePeriodButton(state.period);
   fetchPerformance().catch((error) => console.error('Initial fetch error', error));
   fetchSummary();
 }

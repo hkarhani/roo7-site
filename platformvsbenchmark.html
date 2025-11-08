@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="platformvsbenchmark.css?v=20240317" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
   <script src="line-chart.js?v=20240330" defer></script>
-  <script type="module" src="platformvsbenchmark.js?v=20240405"></script>
+  <script type="module" src="platformvsbenchmark.js?v=20240407"></script>
 </head>
 <body>
   <header class="pvb-header">
@@ -100,17 +100,6 @@
       </div>
     </section>
 
-    <section class="pvb-card slim">
-      <h3>About this chart</h3>
-      <ul class="info-list">
-        <li>Platform performance aggregates ROO7 managed trading accounts and strategies, normalized each hour.</li>
-        <li>Benchmark selector toggles between the composite basket or individual BTC/ETH/SOL/BNB/XRP spot references.</li>
-        <li>Benchmark prices are sourced from Binance spot klines (1-hour intervals) and stored internally.</li>
-        <li>Each point shows cumulative change from the start of the selected window; the first value is always 0% by design.</li>
-        <li>Data updates shortly after each hour. Times shown in UTC.</li>
-      </ul>
-    </section>
-
     <section class="pvb-card table-card">
       <div class="table-header">
         <div>
@@ -126,12 +115,12 @@
           <thead>
             <tr>
               <th>Benchmark</th>
-              <th>1D</th>
-              <th>7D</th>
-              <th>30D</th>
-              <th>90D</th>
-              <th>180D</th>
-              <th>1Y</th>
+              <th class="period-header" data-period="24h">1D</th>
+              <th class="period-header" data-period="7d">7D</th>
+              <th class="period-header" data-period="30d">30D</th>
+              <th class="period-header" data-period="90d">90D</th>
+              <th class="period-header" data-period="180d">180D</th>
+              <th class="period-header" data-period="1y">1Y</th>
             </tr>
           </thead>
           <tbody id="benchmark-table-body">
@@ -143,6 +132,17 @@
           </tbody>
         </table>
       </div>
+    </section>
+
+    <section class="pvb-card slim">
+      <h3>About this chart</h3>
+      <ul class="info-list">
+        <li>Platform performance aggregates ROO7 managed trading accounts and strategies, normalized each hour.</li>
+        <li>Benchmark selector toggles between the composite basket or individual BTC/ETH/SOL/BNB/XRP spot references.</li>
+        <li>Benchmark prices are sourced from Binance spot klines (1-hour intervals) and stored internally.</li>
+        <li>Each point shows cumulative change from the start of the selected window; the first value is always 0% by design.</li>
+        <li>Data updates shortly after each hour. Times shown in UTC.</li>
+      </ul>
     </section>
   </main>
 
