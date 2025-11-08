@@ -187,7 +187,7 @@ class LineChart {
     this.renderAxes(chartGroup, chartWidth, chartHeight);
     this.renderZeroLine(chartGroup, chartWidth);
     if (this.options.shadeBetween && this.data.length >= 2) {
-      this.renderShadeBetween(chartGroup);
+      this.renderShadeBetween(chartGroup, chartWidth);
     }
     this.renderLines(chartGroup);
     this.renderPoints(chartGroup);
@@ -787,7 +787,7 @@ class LineChart {
     }
   }
 
-  renderShadeBetween(parent) {
+  renderShadeBetween(parent, chartWidth) {
     if (!this.scales || !this.scales.x || !this.scales.y) return;
     if (this.data.length < 2) return;
     const [seriesA, seriesB] = this.data;
@@ -809,27 +809,59 @@ class LineChart {
     const timestamps = [...mapA.keys()].filter(ts => mapB.has(ts)).sort((a, b) => a - b);
     if (timestamps.length < 2) return;
 
-    const pathParts = [];
-    timestamps.forEach((ts, idx) => {
+    let currentSign = null;
+    let upperCoords = [];
+    let lowerCoords = [];
+
+    const flushSegment = () => {
+      if (upperCoords.length < 2 || lowerCoords.length < 2 || currentSign === null) {
+        upperCoords = [];
+        lowerCoords = [];
+        return;
+      }
+
+      const segmentPath = [];
+      upperCoords.forEach((point, idx) => {
+        segmentPath.push(`${idx === 0 ? 'M' : 'L'} ${point.x} ${point.y}`);
+      });
+      for (let i = lowerCoords.length - 1; i >= 0; i--) {
+        const point = lowerCoords[i];
+        segmentPath.push(`L ${point.x} ${point.y}`);
+      }
+      segmentPath.push('Z');
+
+      const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      area.setAttribute('d', segmentPath.join(' '));
+      area.setAttribute('fill', currentSign >= 0 ? '#10b981' : '#f97316');
+      area.setAttribute('opacity', '0.2');
+      area.setAttribute('stroke', 'none');
+      parent.appendChild(area);
+
+      upperCoords = [];
+      lowerCoords = [];
+    };
+
+    timestamps.forEach((ts) => {
+      const diff = mapA.get(ts) - mapB.get(ts);
+      const segmentSign = diff >= 0 ? 1 : -1;
       const x = this.scales.x.scale(ts);
       const yA = this.scales.y.scale(mapA.get(ts));
-      pathParts.push(`${idx === 0 ? 'M' : 'L'} ${x} ${yA}`);
-    });
-    for (let i = timestamps.length - 1; i >= 0; i--) {
-      const ts = timestamps[i];
-      const x = this.scales.x.scale(ts);
       const yB = this.scales.y.scale(mapB.get(ts));
-      pathParts.push(`L ${x} ${yB}`);
-    }
-    pathParts.push('Z');
 
-    const fillColor = seriesA.color || this.options.colors[0] || '#3b82f6';
-    const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    area.setAttribute('d', pathParts.join(' '));
-    area.setAttribute('fill', fillColor);
-    area.setAttribute('opacity', '0.18');
-    area.setAttribute('stroke', 'none');
-    parent.appendChild(area);
+      if (currentSign === null) {
+        currentSign = segmentSign;
+      }
+
+      if (segmentSign !== currentSign) {
+        flushSegment();
+        currentSign = segmentSign;
+      }
+
+      upperCoords.push({ x, y: currentSign >= 0 ? yA : yB });
+      lowerCoords.push({ x, y: currentSign >= 0 ? yB : yA });
+    });
+
+    flushSegment();
   }
 
   renderZeroLine(parent, chartWidth) {

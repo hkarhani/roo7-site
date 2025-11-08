@@ -187,7 +187,7 @@ function handlePeriodClick(event) {
 async function init() {
   await waitForLineChart();
   chart = new window.LineChart('comparison-chart', {
-    height: 520,
+    height: 540,
     dateFormat: 'adaptive',
     valueFormat: 'percentage',
     periodDays: 1,
