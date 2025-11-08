@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="platformvsbenchmark.css?v=20240317" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
   <script src="line-chart.js?v=20240330" defer></script>
-  <script type="module" src="platformvsbenchmark.js?v=20240402"></script>
+  <script type="module" src="platformvsbenchmark.js?v=20240405"></script>
 </head>
 <body>
   <header class="pvb-header">
@@ -109,6 +109,40 @@
         <li>Each point shows cumulative change from the start of the selected window; the first value is always 0% by design.</li>
         <li>Data updates shortly after each hour. Times shown in UTC.</li>
       </ul>
+    </section>
+
+    <section class="pvb-card table-card">
+      <div class="table-header">
+        <div>
+          <h3>Platform vs Benchmark Snapshot</h3>
+          <p class="section-description">
+            Hover a row to preview the platform vs selected benchmark chart. Click to lock the comparison.
+          </p>
+        </div>
+        <div id="benchmark-table-status" class="table-status">Loading summary…</div>
+      </div>
+      <div class="benchmark-table-wrapper">
+        <table class="benchmark-table">
+          <thead>
+            <tr>
+              <th>Benchmark</th>
+              <th>1D</th>
+              <th>7D</th>
+              <th>30D</th>
+              <th>90D</th>
+              <th>180D</th>
+              <th>1Y</th>
+            </tr>
+          </thead>
+          <tbody id="benchmark-table-body">
+            <tr class="table-placeholder-row">
+              <td colspan="7">
+                <div class="placeholder-copy">Summary will appear once data loads.</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
   </main>
 

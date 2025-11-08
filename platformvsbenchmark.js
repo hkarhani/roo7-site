@@ -8,6 +8,7 @@ const PERIODS = [
   { value: '180d', label: '180d', days: 180 },
   { value: '1y', label: '1y', days: 365 },
 ];
+const PERIOD_KEYS = PERIODS.map((period) => period.value);
 
 const BENCHMARKS = [
   {
@@ -22,12 +23,15 @@ const BENCHMARKS = [
   { value: 'BNBUSDT', label: 'BNB', shortLabel: 'BNB', detail: 'BNB (BNBUSDT) hourly change' },
   { value: 'XRPUSDT', label: 'XRP', shortLabel: 'XRP', detail: 'XRP (XRPUSDT) hourly change' },
 ];
+const BENCHMARK_VALUES = BENCHMARKS.map((benchmark) => benchmark.value);
 
 const state = {
   period: '24h',
   benchmark: BENCHMARKS[0].value,
+  lockedBenchmark: BENCHMARKS[0].value,
   rawData: null,
   loading: false,
+  summary: null,
 };
 
 const selectors = {
@@ -41,10 +45,14 @@ const selectors = {
   spreadHelper: document.getElementById('spread-helper'),
   benchmarkDetail: document.getElementById('benchmark-detail'),
   benchmarkLegend: document.getElementById('benchmark-legend-label'),
+  tableBody: document.getElementById('benchmark-table-body'),
+  tableStatus: document.getElementById('benchmark-table-status'),
   footerYear: document.getElementById('footer-year'),
 };
 
 let chart = null;
+const seriesCache = new Map();
+let tableHoverTimer = null;
 
 function getBenchmarkOption(value) {
   return BENCHMARKS.find((option) => option.value === value) || BENCHMARKS[0];
@@ -129,11 +137,15 @@ function waitForLineChart() {
   });
 }
 
-function setLoading(isLoading) {
+function setLoading(isLoading, { silent = false } = {}) {
   state.loading = isLoading;
-  if (isLoading) {
-    const label = getBenchmarkOption(state.benchmark).label;
-    selectors.status.textContent = `Fetching data vs ${label}…`;
+  if (!silent) {
+    if (isLoading) {
+      const label = getBenchmarkOption(state.benchmark).label;
+      selectors.status.textContent = `Fetching data vs ${label}…`;
+    } else {
+      selectors.status.textContent = '';
+    }
   }
   if (isLoading && chart) {
     chart.showLoadingState();
@@ -179,7 +191,7 @@ function cumulativeSeries(points, key) {
 }
 
 function formatPercent(value) {
-  if (value === null || value === undefined) return '– %';
+  if (value === null || value === undefined || Number.isNaN(value)) return '– %';
   const sign = value >= 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}%`;
 }
@@ -256,13 +268,26 @@ function updateChart() {
 
   updateStats(platformSeries, benchmarkSeries);
   selectors.status.textContent = `Shared data points vs ${resolveBenchmarkLabel()}: ${state.rawData.metadata?.timestamps_shared ?? '–'}`;
+  highlightTableRow(state.benchmark);
 }
 
-async function fetchPerformance() {
-  setLoading(true);
+async function fetchPerformance(options = {}) {
+  const { silent = false, useCache = true } = options;
+  const targetBenchmark = state.benchmark;
+  const targetPeriod = state.period;
+  const cacheKey = `${targetBenchmark}|${targetPeriod}`;
+  if (useCache && seriesCache.has(cacheKey)) {
+    if (targetBenchmark === state.benchmark && targetPeriod === state.period) {
+      state.rawData = seriesCache.get(cacheKey);
+      updateChart();
+    }
+    return;
+  }
+
+  setLoading(true, { silent });
   const params = new URLSearchParams({
-    period: state.period,
-    benchmark: state.benchmark,
+    period: targetPeriod,
+    benchmark: targetBenchmark,
   });
   const endpoint = `${API_CONFIG.marketUrl}/public/benchmark/platform-vs-market?${params.toString()}`;
 
@@ -275,17 +300,23 @@ async function fetchPerformance() {
     if (!payload.success) {
       throw new Error(payload.detail || 'Unexpected API response');
     }
-    state.rawData = payload.data;
-    updateChart();
+    seriesCache.set(cacheKey, payload.data);
+    if (targetBenchmark === state.benchmark && targetPeriod === state.period) {
+      state.rawData = payload.data;
+      updateChart();
+    }
   } catch (error) {
     console.error('Benchmark fetch error:', error);
-    const option = getBenchmarkOption(state.benchmark);
-    selectors.status.textContent = `Unable to load data for ${option.label}. Please try again later.`;
-    if (chart) {
-      chart.showEmptyState();
+    seriesCache.delete(cacheKey);
+    if (targetBenchmark === state.benchmark && targetPeriod === state.period) {
+      const option = getBenchmarkOption(state.benchmark);
+      selectors.status.textContent = `Unable to load data for ${option.label}. Please try again later.`;
+      if (chart) {
+        chart.showEmptyState();
+      }
     }
   } finally {
-    setLoading(false);
+    state.loading = false;
   }
 }
 
@@ -295,16 +326,155 @@ function handlePeriodClick(event) {
 
   selectors.periodButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
   state.period = button.dataset.period;
-  fetchPerformance();
+  fetchPerformance({ silent: false, useCache: true }).catch((error) =>
+    console.error('Period fetch error', error)
+  );
 }
 
 function handleBenchmarkClick(event) {
   const button = event.target.closest('button[data-benchmark]');
-  if (!button || button.dataset.benchmark === state.benchmark) return;
+  if (!button) return;
+  applyBenchmark(button.dataset.benchmark);
+}
 
-  state.benchmark = button.dataset.benchmark;
+function highlightTableRow(activeBenchmark) {
+  if (!selectors.tableBody) return;
+  selectors.tableBody.querySelectorAll('tr').forEach((row) => {
+    row.classList.toggle('active-row', row.dataset.benchmark === activeBenchmark);
+  });
+}
+
+function applyBenchmark(nextBenchmark, options = {}) {
+  const { temporary = false, silent = false } = options;
+  if (!nextBenchmark) return;
+  const isSameBenchmark = nextBenchmark === state.benchmark;
+  if (!temporary) {
+    state.lockedBenchmark = nextBenchmark;
+  }
+  if (isSameBenchmark) {
+    highlightTableRow(nextBenchmark);
+    updateBenchmarkButtons();
+    return;
+  }
+  state.benchmark = nextBenchmark;
   updateBenchmarkButtons();
-  fetchPerformance();
+  highlightTableRow(nextBenchmark);
+  fetchPerformance({ silent }).catch((error) => console.error('applyBenchmark fetch error', error));
+}
+
+function handleTableRowEnter(event) {
+  const benchmark = event.currentTarget?.dataset?.benchmark;
+  if (!benchmark) return;
+  if (tableHoverTimer) clearTimeout(tableHoverTimer);
+  tableHoverTimer = setTimeout(() => {
+    applyBenchmark(benchmark, { temporary: true, silent: false });
+  }, 180);
+}
+
+function handleTableRowLeave() {
+  if (tableHoverTimer) clearTimeout(tableHoverTimer);
+  if (state.lockedBenchmark && state.lockedBenchmark !== state.benchmark) {
+    applyBenchmark(state.lockedBenchmark, { temporary: true, silent: true });
+  }
+}
+
+function handleTableRowClick(event) {
+  const benchmark = event.currentTarget?.dataset?.benchmark;
+  if (!benchmark) return;
+  if (tableHoverTimer) clearTimeout(tableHoverTimer);
+  applyBenchmark(benchmark);
+}
+
+function buildTableCell(metrics) {
+  if (!metrics || Number.isNaN(metrics.platform_change_percent)) {
+    return '<td><div class="placeholder-copy">–</div></td>';
+  }
+  const platformValue = formatPercent(metrics.platform_change_percent);
+  const benchmarkValue = formatPercent(metrics.benchmark_change_percent);
+  return `<td>
+    <div class="cell-values">
+      <span class="platform-value">${platformValue}</span>
+      <span class="benchmark-value">vs ${benchmarkValue}</span>
+    </div>
+  </td>`;
+}
+
+function renderSummaryTable() {
+  if (!selectors.tableBody) return;
+  if (!state.summary || !Array.isArray(state.summary.benchmarks) || state.summary.benchmarks.length === 0) {
+    selectors.tableBody.innerHTML = `
+      <tr class="table-placeholder-row">
+        <td colspan="7">
+          <div class="placeholder-copy">Summary will appear once data loads.</div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  const orderMap = new Map(BENCHMARK_VALUES.map((value, index) => [value, index]));
+  const sortedBenchmarks = [...state.summary.benchmarks].sort((a, b) => {
+    const aScore = orderMap.get(a.benchmark) ?? Number.MAX_SAFE_INTEGER;
+    const bScore = orderMap.get(b.benchmark) ?? Number.MAX_SAFE_INTEGER;
+    return aScore - bScore;
+  });
+
+  const rows = sortedBenchmarks
+    .map((entry) => {
+      const shortLabel =
+        entry.benchmark === 'composite' ? 'Composite' : (entry.benchmark || '').replace('USDT', '');
+      const subtitle =
+        entry.benchmark_type === 'composite'
+          ? 'Composite weighted basket'
+          : `${shortLabel} spot reference`;
+      const cells = PERIODS.map((period) => buildTableCell(entry.periods?.[period.value])).join('');
+      return `
+        <tr data-benchmark="${entry.benchmark}">
+          <td>
+            <div class="benchmark-name">
+              <span>${shortLabel}</span>
+              <span class="sub">${subtitle}</span>
+            </div>
+          </td>
+          ${cells}
+        </tr>`;
+    })
+    .join('');
+
+  selectors.tableBody.innerHTML = rows;
+  selectors.tableBody.querySelectorAll('tr').forEach((row) => {
+    row.addEventListener('mouseenter', handleTableRowEnter);
+    row.addEventListener('mouseleave', handleTableRowLeave);
+    row.addEventListener('click', handleTableRowClick);
+  });
+  highlightTableRow(state.benchmark);
+  if (selectors.tableStatus) {
+    selectors.tableStatus.textContent = 'Hover a row to preview. Click to lock comparison.';
+  }
+}
+
+async function fetchSummary() {
+  if (!selectors.tableStatus) return;
+  try {
+    selectors.tableStatus.textContent = 'Loading summary…';
+    const params = new URLSearchParams({
+      periods: PERIOD_KEYS.join(','),
+      benchmarks: BENCHMARK_VALUES.join(','),
+    });
+    const endpoint = `${API_CONFIG.marketUrl}/public/benchmark/platform-vs-market/table?${params.toString()}`;
+    const response = await fetch(endpoint, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    if (!payload.success) {
+      throw new Error(payload.detail || 'Unexpected API response');
+    }
+    state.summary = payload.data;
+    renderSummaryTable();
+  } catch (error) {
+    console.error('Summary fetch error:', error);
+    selectors.tableStatus.textContent = 'Unable to load summary table.';
+  }
 }
 
 async function init() {
@@ -334,7 +504,9 @@ async function init() {
   const handleResize = debounce(() => resizeChart(state.rawData?.points?.length || 0), 200);
   window.addEventListener('resize', handleResize);
 
-  fetchPerformance();
+  state.lockedBenchmark = state.benchmark;
+  fetchPerformance().catch((error) => console.error('Initial fetch error', error));
+  fetchSummary();
 }
 
 window.addEventListener('DOMContentLoaded', init);

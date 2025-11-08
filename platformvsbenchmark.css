@@ -303,6 +303,103 @@ body {
   line-height: 1.6;
 }
 
+.table-card {
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.table-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.benchmark-table-wrapper {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow-x: auto;
+}
+
+.benchmark-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.benchmark-table th,
+.benchmark-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.benchmark-table thead th {
+  background: rgba(15, 23, 42, 0.03);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.benchmark-table tbody tr {
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.benchmark-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.benchmark-table tbody tr.active-row {
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+.benchmark-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.benchmark-name .sub {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.cell-values {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cell-values .platform-value {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cell-values .benchmark-value {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.placeholder-copy {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 12px 0;
+}
+
 .pvb-footer {
   padding: 30px 20px;
   text-align: center;
@@ -338,6 +435,10 @@ body {
   .period-btn {
     flex: 1 1 calc(33% - 8px);
     text-align: center;
+  }
+
+  .benchmark-table {
+    min-width: 100%;
   }
 
   .stat-card .value {
