@@ -250,7 +250,7 @@ body {
 
 #comparison-chart {
   width: 100%;
-  min-height: 420px;
+  min-height: 360px;
 }
 
 .chart-footer {
@@ -355,10 +355,24 @@ body {
 }
 
 .benchmark-table tbody tr:hover {
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(249, 115, 22, 0.08);
 }
 
 .benchmark-table tbody tr.active-row {
+  background: rgba(249, 115, 22, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.25);
+}
+
+.benchmark-table tbody tr.platform-row {
+  background: rgba(37, 99, 235, 0.06);
+  cursor: default;
+}
+
+.benchmark-table tbody tr.platform-row:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.benchmark-table tbody tr.platform-row.active-row {
   background: rgba(37, 99, 235, 0.12);
   box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.25);
 }

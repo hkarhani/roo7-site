@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="platformvsbenchmark.css?v=20240317" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
   <script src="line-chart.js?v=20240330" defer></script>
-  <script type="module" src="platformvsbenchmark.js?v=20240407"></script>
+  <script type="module" src="platformvsbenchmark.js?v=20240408"></script>
 </head>
 <body>
   <header class="pvb-header">
@@ -53,8 +53,8 @@
           <div class="control-group">
             <span class="control-label">Period</span>
             <div class="period-selector" id="period-selector">
-              <button data-period="24h" class="period-btn active">24h</button>
-              <button data-period="7d" class="period-btn">7d</button>
+              <button data-period="24h" class="period-btn">24h</button>
+              <button data-period="7d" class="period-btn active">7d</button>
               <button data-period="30d" class="period-btn">30d</button>
               <button data-period="90d" class="period-btn">90d</button>
               <button data-period="180d" class="period-btn">180d</button>
@@ -105,7 +105,7 @@
         <div>
           <h3>Platform vs Benchmark Snapshot</h3>
           <p class="section-description">
-            Hover a row to preview the platform vs selected benchmark chart. Click to lock the comparison.
+            Click a benchmark row or timeframe to refresh the chart above with the selected comparison.
           </p>
         </div>
         <div id="benchmark-table-status" class="table-status">Loading summary…</div>

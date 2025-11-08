@@ -55,8 +55,6 @@ const selectors = {
 
 let chart = null;
 const seriesCache = new Map();
-let rowHoverTimer = null;
-let periodHoverTimer = null;
 
 function getBenchmarkOption(value) {
   return BENCHMARKS.find((option) => option.value === value) || BENCHMARKS[0];
@@ -118,14 +116,13 @@ function computeChartDimensions(pointCount = 0) {
   const containerWidth = container?.clientWidth || viewportWidth - 40;
   const width = Math.max(360, Math.min(containerWidth, viewportWidth - 32));
 
-  const baseHeight = Math.max(360, viewportHeight * 0.45);
+  const baseHeight = Math.max(300, viewportHeight * 0.35);
   let densityBonus = 0;
-  if (pointCount > 240) densityBonus = 160;
-  else if (pointCount > 180) densityBonus = 120;
-  else if (pointCount > 120) densityBonus = 80;
-  else if (pointCount > 60) densityBonus = 40;
+  if (pointCount > 240) densityBonus = 80;
+  else if (pointCount > 120) densityBonus = 60;
+  else if (pointCount > 60) densityBonus = 30;
 
-  const height = Math.min(820, baseHeight + densityBonus);
+  const height = Math.min(640, baseHeight + densityBonus);
   return { width, height };
 }
 
@@ -388,43 +385,16 @@ function applyBenchmark(nextBenchmark, options = {}) {
   fetchPerformance({ silent }).catch((error) => console.error('applyBenchmark fetch error', error));
 }
 
-function handleTableRowEnter(event) {
-  const benchmark = event.currentTarget?.dataset?.benchmark;
-  if (!benchmark) return;
-  if (rowHoverTimer) clearTimeout(rowHoverTimer);
-  rowHoverTimer = setTimeout(() => {
-    applyBenchmark(benchmark, { temporary: true, silent: false });
-  }, 180);
-}
-
-function handleTableRowLeave() {
-  if (rowHoverTimer) clearTimeout(rowHoverTimer);
-  if (state.lockedBenchmark && state.lockedBenchmark !== state.benchmark) {
-    applyBenchmark(state.lockedBenchmark, { temporary: true, silent: true });
-  }
-}
-
 function handleTableRowClick(event) {
   const benchmark = event.currentTarget?.dataset?.benchmark;
   if (!benchmark) return;
-  if (rowHoverTimer) clearTimeout(rowHoverTimer);
   applyBenchmark(benchmark);
 }
 
-function handlePeriodHeaderEnter(event) {
+function handlePeriodHeaderClick(event) {
   const period = event.currentTarget?.dataset?.period;
   if (!period) return;
-  if (periodHoverTimer) clearTimeout(periodHoverTimer);
-  periodHoverTimer = setTimeout(() => {
-    applyPeriod(period, { temporary: true, silent: true });
-  }, 160);
-}
-
-function handlePeriodHeaderLeave() {
-  if (periodHoverTimer) clearTimeout(periodHoverTimer);
-  if (state.lockedPeriod && state.lockedPeriod !== state.period) {
-    applyPeriod(state.lockedPeriod, { temporary: true, silent: true });
-  }
+  applyPeriod(period, { temporary: false, silent: false });
 }
 
 function buildTableCell(value, { variant = 'benchmark' } = {}) {
@@ -534,20 +504,16 @@ function renderSummaryTable() {
   selectors.tableBody.querySelectorAll('tr').forEach((row) => {
     const benchmark = row.dataset.benchmark;
     if (!benchmark) return;
-    row.addEventListener('mouseenter', handleTableRowEnter);
-    row.addEventListener('mouseleave', handleTableRowLeave);
     row.addEventListener('click', handleTableRowClick);
   });
   highlightTableRow(state.benchmark);
   document.querySelectorAll('.period-header').forEach((header) => {
-    header.removeEventListener('mouseenter', handlePeriodHeaderEnter);
-    header.removeEventListener('mouseleave', handlePeriodHeaderLeave);
-    header.addEventListener('mouseenter', handlePeriodHeaderEnter);
-    header.addEventListener('mouseleave', handlePeriodHeaderLeave);
+    header.removeEventListener('click', handlePeriodHeaderClick);
+    header.addEventListener('click', handlePeriodHeaderClick);
   });
   setActivePeriodButton(state.period);
   if (selectors.tableStatus) {
-    selectors.tableStatus.textContent = 'Hover a row to preview; hover a period header to test timeframes.';
+    selectors.tableStatus.textContent = 'Click a benchmark row or timeframe to update the chart.';
   }
 }
 
