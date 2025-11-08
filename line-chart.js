@@ -62,6 +62,8 @@ class LineChart {
     this.tooltip = null;
     this.scales = { x: null, y: null };
     this.isInitialized = false;
+    this.clipPathId = `line-chart-clip-${Math.random().toString(36).slice(2)}`;
+    this.clipPathRect = null;
     
     this.initializeChart();
   }
@@ -77,6 +79,7 @@ class LineChart {
       position: relative;
       width: 100%;
       height: ${this.options.height}px;
+      overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     `;
     
@@ -87,8 +90,9 @@ class LineChart {
     this.svg.setAttribute('viewBox', `0 0 ${this.options.width} ${this.options.height}`);
     this.svg.style.cssText = `
       display: block;
+      width: 100%;
       max-width: 100%;
-      height: auto;
+      height: 100%;
     `;
     
     // Create tooltip element
@@ -141,7 +145,7 @@ class LineChart {
         </text>
         <text x="50%" y="50%" text-anchor="middle" dy="1em" 
               fill="#9ca3af" font-size="12">
-          Account values will appear here once data is collected
+          Performance data will appear here once fresh metrics are collected
         </text>
       </g>
     `;
@@ -179,18 +183,22 @@ class LineChart {
     const chartGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     chartGroup.setAttribute('transform', `translate(${margin.left}, ${margin.top})`);
     this.svg.appendChild(chartGroup);
+
+    const dataLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    chartGroup.appendChild(dataLayer);
+    this.applyClipPath(dataLayer, chartWidth, chartHeight, margin);
     
     // Render components
     if (this.options.showGrid) {
       this.renderGrid(chartGroup, chartWidth, chartHeight);
     }
     this.renderAxes(chartGroup, chartWidth, chartHeight);
-    this.renderZeroLine(chartGroup, chartWidth);
+    this.renderZeroLine(dataLayer, chartWidth);
     if (this.options.shadeBetween && this.data.length >= 2) {
-      this.renderShadeBetween(chartGroup, chartWidth);
+      this.renderShadeBetween(dataLayer);
     }
-    this.renderLines(chartGroup);
-    this.renderPoints(chartGroup);
+    this.renderLines(dataLayer);
+    this.renderPoints(dataLayer);
     this.renderInteractionLayer(chartGroup, chartWidth, chartHeight);
   }
 
@@ -492,7 +500,7 @@ class LineChart {
         
         // Store data for tooltip
         circle._chartData = {
-          series: series.name || `Account ${index + 1}`,
+          series: series.name || series.label || `Series ${index + 1}`,
           date: point.date,
           value: point.value,
           color: color
@@ -515,6 +523,33 @@ class LineChart {
     overlay.addEventListener('mouseleave', () => this.hideTooltip());
     
     parent.appendChild(overlay);
+  }
+
+  applyClipPath(target, chartWidth, chartHeight, margin) {
+    if (!this.svg) return;
+    let defs = this.svg.querySelector('defs');
+    if (!defs) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      this.svg.appendChild(defs);
+    }
+
+    let clipPath = this.svg.querySelector(`#${this.clipPathId}`);
+    if (!clipPath) {
+      clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+      clipPath.setAttribute('id', this.clipPathId);
+      clipPath.setAttribute('clipPathUnits', 'userSpaceOnUse');
+      this.clipPathRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      clipPath.appendChild(this.clipPathRect);
+      defs.appendChild(clipPath);
+    }
+
+    if (this.clipPathRect) {
+      this.clipPathRect.setAttribute('x', margin.left);
+      this.clipPathRect.setAttribute('y', margin.top);
+      this.clipPathRect.setAttribute('width', chartWidth);
+      this.clipPathRect.setAttribute('height', chartHeight);
+    }
+    target.setAttribute('clip-path', `url(#${this.clipPathId})`);
   }
 
   createLinePath(values) {
@@ -621,7 +656,7 @@ class LineChart {
         if (distance < minDistance && distance < 20) { // 20px threshold
           minDistance = distance;
           closestPoint = {
-            series: series.name || `Account ${seriesIndex + 1}`,
+            series: series.name || series.label || `Series ${seriesIndex + 1}`,
             date: point.date,
             value: point.value,
             color: series.color || this.options.colors[seriesIndex % this.options.colors.length],
@@ -787,7 +822,7 @@ class LineChart {
     }
   }
 
-  renderShadeBetween(parent, chartWidth) {
+  renderShadeBetween(parent) {
     if (!this.scales || !this.scales.x || !this.scales.y) return;
     if (this.data.length < 2) return;
     const [seriesA, seriesB] = this.data;
