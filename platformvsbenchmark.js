@@ -187,11 +187,14 @@ function handlePeriodClick(event) {
 async function init() {
   await waitForLineChart();
   chart = new window.LineChart('comparison-chart', {
-    height: 420,
+    height: 520,
     dateFormat: 'adaptive',
     valueFormat: 'percentage',
     periodDays: 1,
     colors: ['#1d4ed8', '#f97316'],
+    centerZero: true,
+    shadeBetween: true,
+    fillArea: false
   });
 
   document.title = `${BRAND_CONFIG.name} | Platform vs Benchmark`;

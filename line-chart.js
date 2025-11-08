@@ -50,7 +50,10 @@ class LineChart {
       showTooltip: options.showTooltip !== false,
       animate: options.animate !== false,
       dateFormat: options.dateFormat || 'short', // 'short', 'medium', 'long'
-      valueFormat: options.valueFormat || 'currency' // 'currency', 'number', 'percentage'
+      valueFormat: options.valueFormat || 'currency', // 'currency', 'number', 'percentage'
+      centerZero: options.centerZero || false,
+      shadeBetween: options.shadeBetween || false,
+      fillArea: options.fillArea !== false
     };
     
     // Internal state
@@ -182,6 +185,10 @@ class LineChart {
       this.renderGrid(chartGroup, chartWidth, chartHeight);
     }
     this.renderAxes(chartGroup, chartWidth, chartHeight);
+    this.renderZeroLine(chartGroup, chartWidth);
+    if (this.options.shadeBetween && this.data.length >= 2) {
+      this.renderShadeBetween(chartGroup);
+    }
     this.renderLines(chartGroup);
     this.renderPoints(chartGroup);
     this.renderInteractionLayer(chartGroup, chartWidth, chartHeight);
@@ -247,7 +254,7 @@ class LineChart {
     
     // Handle edge cases
     let yDomainMin, yDomainMax;
-    if (this.options.valueFormat === 'percentage') {
+    if (this.options.valueFormat === 'percentage' && this.options.centerZero) {
       const maxAbs = Math.max(...values.map(v => Math.abs(v)), 0.005);
       const padding = Math.max(maxAbs * 0.15, 0.0025);
       yDomainMin = -maxAbs - padding;
@@ -418,19 +425,22 @@ class LineChart {
   }
 
   renderLines(parent) {
+    if (!this.scales || !this.scales.x || !this.scales.y) return;
+    
     this.data.forEach((series, index) => {
       if (!series.values || series.values.length < 2) return;
       
       const color = series.color || this.options.colors[index % this.options.colors.length];
       
-      // Create area path (fill under the line)
-      const areaPath = this.createAreaPath(series.values);
-      const areaElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      areaElement.setAttribute('d', areaPath);
-      areaElement.setAttribute('fill', this.hexToRgba(color, 0.2));
-      areaElement.setAttribute('stroke', 'none');
-      areaElement.setAttribute('class', `area-series-${index}`);
-      parent.appendChild(areaElement);
+      if (this.options.fillArea && !this.options.shadeBetween) {
+        const areaPath = this.createAreaPath(series.values);
+        const areaElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        areaElement.setAttribute('d', areaPath);
+        areaElement.setAttribute('fill', this.hexToRgba(color, 0.2));
+        areaElement.setAttribute('stroke', 'none');
+        areaElement.setAttribute('class', `area-series-${index}`);
+        parent.appendChild(areaElement);
+      }
       
       // Create line path (stroke only)
       const linePath = this.createLinePath(series.values);
@@ -775,6 +785,72 @@ class LineChart {
       // Fallback: just update the chart data which will trigger a render
       this.setData(this.data);
     }
+  }
+
+  renderShadeBetween(parent) {
+    if (!this.scales || !this.scales.x || !this.scales.y) return;
+    if (this.data.length < 2) return;
+    const [seriesA, seriesB] = this.data;
+    if (!seriesA.values || !seriesB.values) return;
+
+    const toMap = (series) => {
+      const map = new Map();
+      series.values.forEach(point => {
+        const date = point.date ? new Date(point.date) : new Date(point.timestamp || point.time);
+        const time = date.getTime();
+        const value = parseFloat(point.value_usdt || point.total_value || point.value || 0);
+        map.set(time, value);
+      });
+      return map;
+    };
+
+    const mapA = toMap(seriesA);
+    const mapB = toMap(seriesB);
+    const timestamps = [...mapA.keys()].filter(ts => mapB.has(ts)).sort((a, b) => a - b);
+    if (timestamps.length < 2) return;
+
+    const pathParts = [];
+    timestamps.forEach((ts, idx) => {
+      const x = this.scales.x.scale(ts);
+      const yA = this.scales.y.scale(mapA.get(ts));
+      pathParts.push(`${idx === 0 ? 'M' : 'L'} ${x} ${yA}`);
+    });
+    for (let i = timestamps.length - 1; i >= 0; i--) {
+      const ts = timestamps[i];
+      const x = this.scales.x.scale(ts);
+      const yB = this.scales.y.scale(mapB.get(ts));
+      pathParts.push(`L ${x} ${yB}`);
+    }
+    pathParts.push('Z');
+
+    const fillColor = seriesA.color || this.options.colors[0] || '#3b82f6';
+    const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    area.setAttribute('d', pathParts.join(' '));
+    area.setAttribute('fill', fillColor);
+    area.setAttribute('opacity', '0.18');
+    area.setAttribute('stroke', 'none');
+    parent.appendChild(area);
+  }
+
+  renderZeroLine(parent, chartWidth) {
+    if (!this.scales || !this.scales.y) return;
+    const domain = this.scales.y.domain || [];
+    if (domain.length !== 2) return;
+    const [min, max] = domain;
+    if (min > 0 || max < 0) return;
+
+    const y = this.scales.y.scale(0);
+    if (isNaN(y) || !isFinite(y)) return;
+
+    const zeroLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    zeroLine.setAttribute('x1', 0);
+    zeroLine.setAttribute('x2', chartWidth);
+    zeroLine.setAttribute('y1', y);
+    zeroLine.setAttribute('y2', y);
+    zeroLine.setAttribute('stroke', '#cbd5f5');
+    zeroLine.setAttribute('stroke-width', 1);
+    zeroLine.setAttribute('stroke-dasharray', '4 4');
+    parent.appendChild(zeroLine);
   }
 
   // Utility method to update chart size
