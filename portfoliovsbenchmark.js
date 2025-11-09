@@ -81,6 +81,14 @@ const seriesCache = new Map();
 const accountSummaryCache = new Map();
 const resizeHandler = () => resizeChart(state.rawData?.points?.length || 0);
 
+function loadingMarkup(text) {
+  return `
+    <span class="loading-indicator">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>${text}</span>
+    </span>`;
+}
+
 function getChartContainer() {
   return document.getElementById('comparison-chart');
 }
@@ -188,7 +196,7 @@ function setLoading(isLoading, { silent = false } = {}) {
   if (!silent) {
     if (isLoading) {
       const benchmarkLabel = getBenchmarkOption(state.benchmark).label;
-      selectors.status.textContent = `Fetching data vs ${benchmarkLabel}…`;
+      selectors.status.innerHTML = loadingMarkup(`Fetching data vs ${benchmarkLabel}…`);
     } else {
       selectors.status.textContent = '';
     }
@@ -639,7 +647,7 @@ function handlePeriodHeaderClick(event) {
 async function fetchSummary() {
   if (!selectors.tableStatus) return;
   try {
-    selectors.tableStatus.textContent = 'Loading summary…';
+    selectors.tableStatus.innerHTML = loadingMarkup('Loading summary…');
     const params = new URLSearchParams({
       periods: PERIOD_KEYS.join(','),
       benchmarks: BENCHMARK_VALUES.join(','),
