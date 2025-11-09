@@ -2916,6 +2916,29 @@ select option[disabled] {
   border-color: #6b7280;
 }
 
+.analytics-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analytics-link {
+  text-decoration: none;
+  font-weight: 600;
+  color: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.15);
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+  background: rgba(17, 24, 39, 0.04);
+  white-space: nowrap;
+}
+
+.analytics-link:hover {
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+}
+
 /* Chart Container */
 .analytics-chart-container {
   padding: 20px;
@@ -2990,6 +3013,16 @@ select option[disabled] {
   .analytics-refresh-btn {
     width: 100%;
     justify-self: center;
+  }
+
+  .analytics-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .analytics-link {
+    width: 100%;
+    text-align: center;
   }
   
   .analytics-chart {
