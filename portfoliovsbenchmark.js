@@ -284,6 +284,7 @@ function updateChart() {
   const portfolioSeries = cumulativeSeries(state.rawData.points, 'portfolio_change_percent');
   const platformSeries = cumulativeSeries(state.rawData.points, 'platform_change_percent');
   const benchmarkSeries = cumulativeSeries(state.rawData.points, 'benchmark_change_percent');
+  const portfolioValueMap = new Map(portfolioSeries.map((point) => [point.timestamp, point.value]));
 
   if (!portfolioSeries.length || !platformSeries.length || !benchmarkSeries.length) {
     chart.showEmptyState();
@@ -312,6 +313,17 @@ function updateChart() {
         values: benchmarkSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
       },
     ]);
+    const anomalies = Array.isArray(state.rawData.metadata?.anomalies)
+      ? state.rawData.metadata.anomalies
+      : [];
+    const markers = anomalies
+      .map((anomaly) => ({
+        timestamp: anomaly.timestamp,
+        value: portfolioValueMap.get(anomaly.timestamp) ?? null,
+        color: anomaly.type === 'withdrawal' ? '#ef4444' : '#10b981',
+      }))
+      .filter((marker) => marker.value !== null);
+    chart.setMarkers(markers);
     resizeChart(state.rawData?.points?.length || portfolioSeries.length);
   }
 

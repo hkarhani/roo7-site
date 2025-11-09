@@ -64,6 +64,8 @@ class LineChart {
     this.isInitialized = false;
     this.clipPathId = `line-chart-clip-${Math.random().toString(36).slice(2)}`;
     this.clipPathRect = null;
+    this.markers = [];
+    this.latestDataLayer = null;
     
     this.initializeChart();
   }
@@ -187,6 +189,7 @@ class LineChart {
     const dataLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     chartGroup.appendChild(dataLayer);
     this.applyClipPath(dataLayer, chartWidth, chartHeight, margin);
+    this.latestDataLayer = dataLayer;
     
     // Render components
     if (this.options.showGrid) {
@@ -199,6 +202,7 @@ class LineChart {
     }
     this.renderLines(dataLayer);
     this.renderPoints(dataLayer);
+    this.renderMarkers();
     this.renderInteractionLayer(chartGroup, chartWidth, chartHeight);
   }
 
@@ -553,6 +557,46 @@ class LineChart {
       this.clipPathRect.setAttribute('height', chartHeight + padding * 2);
     }
     target.setAttribute('clip-path', `url(#${this.clipPathId})`);
+  }
+
+  setMarkers(markers = []) {
+    this.markers = Array.isArray(markers) ? markers : [];
+    this.renderMarkers();
+  }
+
+  renderMarkers() {
+    if (!this.latestDataLayer) return;
+    const existingLayer = this.latestDataLayer.querySelector('.marker-layer');
+    if (existingLayer) {
+      existingLayer.remove();
+    }
+    if (!this.markers || this.markers.length === 0 || !this.scales.x || !this.scales.y) {
+      return;
+    }
+
+    const markerLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    markerLayer.setAttribute('class', 'marker-layer');
+    this.latestDataLayer.appendChild(markerLayer);
+
+    this.markers.forEach((marker) => {
+      if (!marker || marker.value == null || marker.timestamp == null) return;
+      const ts = marker.timestamp instanceof Date ? marker.timestamp : new Date(marker.timestamp);
+      if (Number.isNaN(ts.getTime())) return;
+      const x = this.scales.x.scale(ts);
+      const y = this.scales.y.scale(marker.value);
+      if (!isFinite(x) || !isFinite(y)) return;
+
+      const star = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      star.setAttribute('x', x);
+      star.setAttribute('y', y - 8);
+      star.setAttribute('text-anchor', 'middle');
+      star.setAttribute('font-size', '16');
+      star.setAttribute('fill', marker.color || '#fbbf24');
+      star.setAttribute('stroke', '#ffffff');
+      star.setAttribute('stroke-width', '0.5');
+      star.textContent = '★';
+      markerLayer.appendChild(star);
+    });
   }
 
   createLinePath(values) {
