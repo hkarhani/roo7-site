@@ -2925,18 +2925,16 @@ select option[disabled] {
 .analytics-link {
   text-decoration: none;
   font-weight: 600;
-  color: #111827;
-  border: 1px solid rgba(17, 24, 39, 0.15);
-  padding: 8px 14px;
+  color: #fff;
+  padding: 8px 16px;
   border-radius: 999px;
   transition: all 0.2s ease;
-  background: rgba(17, 24, 39, 0.04);
+  background: #17a2b8;
   white-space: nowrap;
 }
 
 .analytics-link:hover {
-  border-color: #1d4ed8;
-  color: #1d4ed8;
+  background: #138496;
 }
 
 /* Chart Container */
