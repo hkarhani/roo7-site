@@ -43,38 +43,40 @@
             <span class="control-label">Portfolio / Account</span>
             <div id="account-selector" class="selector-group pills"></div>
           </div>
-          <div class="control-group">
-            <span class="control-label">Benchmark</span>
-            <div class="benchmark-selector" id="benchmark-selector">
-              <button data-benchmark="composite" class="benchmark-btn active">Composite</button>
-              <button data-benchmark="BTCUSDT" class="benchmark-btn">BTC</button>
-              <button data-benchmark="ETHUSDT" class="benchmark-btn">ETH</button>
-              <button data-benchmark="SOLUSDT" class="benchmark-btn">SOL</button>
-              <button data-benchmark="BNBUSDT" class="benchmark-btn">BNB</button>
-              <button data-benchmark="XRPUSDT" class="benchmark-btn">XRP</button>
+          <div class="inline-selectors">
+            <div class="control-group compact">
+              <span class="control-label">Benchmark</span>
+              <div class="benchmark-selector" id="benchmark-selector">
+                <button data-benchmark="composite" class="benchmark-btn active">Composite</button>
+                <button data-benchmark="BTCUSDT" class="benchmark-btn">BTC</button>
+                <button data-benchmark="ETHUSDT" class="benchmark-btn">ETH</button>
+                <button data-benchmark="SOLUSDT" class="benchmark-btn">SOL</button>
+                <button data-benchmark="BNBUSDT" class="benchmark-btn">BNB</button>
+                <button data-benchmark="XRPUSDT" class="benchmark-btn">XRP</button>
+              </div>
             </div>
-          </div>
-          <div class="control-group">
-            <span class="control-label">Period</span>
-            <div class="period-selector" id="period-selector">
-              <button data-period="24h" class="period-btn">24h</button>
-              <button data-period="7d" class="period-btn active">7d</button>
-              <button data-period="30d" class="period-btn">30d</button>
-              <button data-period="90d" class="period-btn">90d</button>
-              <button data-period="180d" class="period-btn">180d</button>
-              <button data-period="1y" class="period-btn">1y</button>
+            <div class="control-group compact">
+              <span class="control-label">Period</span>
+              <div class="period-selector" id="period-selector">
+                <button data-period="24h" class="period-btn">24h</button>
+                <button data-period="7d" class="period-btn active">7d</button>
+                <button data-period="30d" class="period-btn">30d</button>
+                <button data-period="90d" class="period-btn">90d</button>
+                <button data-period="180d" class="period-btn">180d</button>
+                <button data-period="1y" class="period-btn">1y</button>
+              </div>
             </div>
-          </div>
-          <div class="control-group toggle-group">
-            <span class="control-label">Series Visibility</span>
-            <label class="toggle">
-              <input type="checkbox" id="toggle-platform" checked />
-              <span>Show Platform</span>
-            </label>
-            <label class="toggle">
-              <input type="checkbox" id="toggle-benchmark" checked />
-              <span>Show Benchmark</span>
-            </label>
+            <div class="control-group inline-toggles">
+              <span class="control-label">Series</span>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-platform" checked />
+                <span>Platform</span>
+              </label>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-benchmark" checked />
+                <span>Benchmark</span>
+              </label>
+            </div>
           </div>
         </div>
       </div>

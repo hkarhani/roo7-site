@@ -501,7 +501,18 @@ function renderSummaryTable() {
   }
 
   const rows = [];
+  // Portfolio first
+  rows.push(
+    buildRow({
+      label: 'Portfolio',
+      subtitle: 'Aggregated across selected accounts',
+      periods: state.portfolioPeriods,
+      rowClass: 'portfolio-row',
+      variant: 'portfolio',
+    })
+  );
 
+  // User accounts
   state.accounts.forEach((account) => {
     const summary = state.accountSummaries.get(account.id);
     const periods = summary?.periods || {};
@@ -516,16 +527,26 @@ function renderSummaryTable() {
     );
   });
 
-  rows.push(
-    buildRow({
-      label: 'Portfolio',
-      subtitle: 'Aggregated across selected accounts',
-      periods: state.portfolioPeriods,
-      rowClass: 'portfolio-row',
-      variant: 'portfolio',
-    })
-  );
+  // Composite benchmark (or first available benchmark)
+  if (Array.isArray(state.summary.benchmarks) && state.summary.benchmarks.length) {
+    const composite =
+      state.summary.benchmarks.find((entry) => entry.benchmark === 'composite') ||
+      state.summary.benchmarks[0];
+    const shortLabel =
+      composite.benchmark === 'composite' ? 'Composite Benchmark' : composite.benchmark.replace('USDT', '');
+    rows.push(
+      buildRow({
+        label: shortLabel,
+        subtitle: 'Benchmark reference',
+        periods: extractBenchmarkPeriods(composite),
+        rowClass: 'benchmark-row',
+        dataset: composite.benchmark,
+        variant: 'benchmark',
+      })
+    );
+  }
 
+  // Platform last
   rows.push(
     buildRow({
       label: 'Platform',
@@ -535,33 +556,6 @@ function renderSummaryTable() {
       variant: 'platform',
     })
   );
-
-  if (Array.isArray(state.summary.benchmarks)) {
-    const orderMap = new Map(BENCHMARK_VALUES.map((value, index) => [value, index]));
-    const sortedBenchmarks = [...state.summary.benchmarks].sort((a, b) => {
-      const aScore = orderMap.get(a.benchmark) ?? Number.MAX_SAFE_INTEGER;
-      const bScore = orderMap.get(b.benchmark) ?? Number.MAX_SAFE_INTEGER;
-      return aScore - bScore;
-    });
-
-    sortedBenchmarks.forEach((entry) => {
-      const shortLabel = entry.benchmark === 'composite' ? 'Composite' : entry.benchmark.replace('USDT', '');
-      const subtitle =
-        entry.benchmark_type === 'composite'
-          ? 'Composite weighted basket'
-          : `${shortLabel} spot reference`;
-      rows.push(
-        buildRow({
-          label: shortLabel,
-          subtitle,
-          periods: extractBenchmarkPeriods(entry),
-          rowClass: 'benchmark-row',
-          dataset: entry.benchmark,
-          variant: 'benchmark',
-        })
-      );
-    });
-  }
 
   selectors.tableBody.innerHTML = rows.length
     ? rows.join('')

@@ -153,6 +153,24 @@ body {
   gap: 6px;
 }
 
+.inline-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.control-group.compact {
+  flex: 1 1 240px;
+}
+
+.control-group.inline-toggles {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
 .control-label {
   font-size: 0.75rem;
   font-weight: 700;
