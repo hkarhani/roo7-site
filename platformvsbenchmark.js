@@ -26,6 +26,16 @@ const BENCHMARKS = [
 const BENCHMARK_VALUES = BENCHMARKS.map((benchmark) => benchmark.value);
 
 const DEFAULT_PERIOD = '7d';
+const PERIOD_INFO = {
+  '24h': 24,
+  '7d': 7 * 24,
+  '30d': 30 * 24,
+  '90d': 90 * 24,
+  '180d': 180 * 24,
+  '1y': 365 * 24,
+};
+const LONG_PERIODS = new Set(['90d', '180d', '1y']);
+const COVERAGE_RATIO = 0.75;
 
 const state = {
   period: DEFAULT_PERIOD,
@@ -35,6 +45,7 @@ const state = {
   rawData: null,
   loading: false,
   summary: null,
+  coverage: {},
 };
 
 const selectors = {
@@ -204,6 +215,17 @@ function formatPercent(value) {
   if (value === null || value === undefined || Number.isNaN(value)) return '– %';
   const sign = value >= 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}%`;
+}
+
+function deriveCoverage(summary) {
+  const coverage = {};
+  const benchmark = summary?.benchmarks?.find((entry) => entry.periods);
+  if (!benchmark) return coverage;
+  PERIODS.forEach(({ value }) => {
+    const metric = benchmark.periods?.[value];
+    coverage[value] = metric?.timestamps_shared ?? metric?.shared_points ?? 0;
+  });
+  return coverage;
 }
 
 function updateStats(platformSeries, benchmarkSeries) {
@@ -397,15 +419,39 @@ function handlePeriodHeaderClick(event) {
   applyPeriod(period, { temporary: false, silent: false });
 }
 
-function buildTableCell(value, { variant = 'benchmark' } = {}) {
+function hasSufficientCoverage(sharedPoints, periodKey) {
+  const expected = PERIOD_INFO[periodKey] || 0;
+  if (!LONG_PERIODS.has(periodKey) || expected === 0) return true;
+  if (sharedPoints === null || sharedPoints === undefined) return false;
+  return sharedPoints >= expected * COVERAGE_RATIO;
+}
+
+function buildBenchmarkCell(metric, periodKey) {
+  if (!metric) {
+    return '<td><div class="placeholder-copy">–</div></td>';
+  }
+  const shared = metric.timestamps_shared ?? metric.shared_points ?? 0;
+  if (!hasSufficientCoverage(shared, periodKey)) {
+    return '<td><div class="placeholder-copy">N/A</div></td>';
+  }
+  return `<td>
+    <div class="cell-values">
+      <span class="platform-value">Platform: ${formatPercent(metric.platform_change_percent)}</span>
+      <span class="benchmark-value">Benchmark: ${formatPercent(metric.benchmark_change_percent)}</span>
+    </div>
+  </td>`;
+}
+
+function buildPlatformCell(value, periodKey) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
   }
-  const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
-  const classes = ['cell-pill', polarity];
-  if (variant === 'platform') {
-    classes.push('platform');
+  const shared = state.coverage?.[periodKey] ?? 0;
+  if (!hasSufficientCoverage(shared, periodKey)) {
+    return '<td><div class="placeholder-copy">N/A</div></td>';
   }
+  const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+  const classes = ['cell-pill', polarity, 'platform'];
   return `<td><span class="${classes.join(' ')}">${formatPercent(value)}</span></td>`;
 }
 
@@ -441,7 +487,7 @@ function getPlatformValueForPeriod(periodKey) {
 
 function buildPlatformRow(periodValues) {
   const cells = PERIODS.map((period) =>
-    buildTableCell(periodValues[period.value], { variant: 'platform' })
+    buildPlatformCell(periodValues[period.value], period.value)
   ).join('');
   return `
     <tr class="platform-row">
@@ -483,7 +529,7 @@ function renderSummaryTable() {
           ? 'Composite weighted basket'
           : `${shortLabel} spot reference`;
       const cells = PERIODS.map((period) =>
-        buildTableCell(entry.periods?.[period.value]?.benchmark_change_percent)
+        buildBenchmarkCell(entry.periods?.[period.value], period.value)
       ).join('');
       return `
         <tr data-benchmark="${entry.benchmark}">
@@ -535,6 +581,7 @@ async function fetchSummary() {
       throw new Error(payload.detail || 'Unexpected API response');
     }
     state.summary = payload.data;
+    state.coverage = deriveCoverage(payload.data);
     renderSummaryTable();
   } catch (error) {
     console.error('Summary fetch error:', error);
