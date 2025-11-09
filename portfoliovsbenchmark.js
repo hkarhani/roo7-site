@@ -106,15 +106,18 @@ function derivePlatformPeriods(summary) {
   return result;
 }
 
-function buildValueCell(value, variant = 'benchmark') {
+function buildValueCell(value) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
   }
-  return `<td><span class="cell-pill ${variant}">${formatPercent(value)}</span></td>`;
+  const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : '';
+  const classes = ['cell-pill'];
+  if (polarity) classes.push(polarity);
+  return `<td><span class="${classes.join(' ')}">${formatPercent(value)}</span></td>`;
 }
 
-function buildRow({ label, subtitle = '', periods = {}, rowClass = '', dataset = null, variant = 'benchmark' }) {
-  const cells = PERIODS.map(({ value }) => buildValueCell(periods[value], variant)).join('');
+function buildRow({ label, subtitle = '', periods = {}, rowClass = '', dataset = null }) {
+  const cells = PERIODS.map(({ value }) => buildValueCell(periods[value])).join('');
   const attrs = dataset ? ` data-benchmark="${dataset}"` : '';
   return `
     <tr class="${rowClass}"${attrs}>

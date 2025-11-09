@@ -469,32 +469,20 @@ body {
   border-radius: 999px;
   font-weight: 600;
   font-size: 0.85rem;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--portfolio);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
 }
 
-.cell-pill.portfolio {
+.cell-pill.positive {
   border-color: rgba(16, 185, 129, 0.5);
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.18);
   color: #065f46;
 }
 
-.cell-pill.account {
-  border-color: rgba(59, 130, 246, 0.35);
-  background: rgba(59, 130, 246, 0.12);
-  color: #1e3a8a;
-}
-
-.cell-pill.platform {
-  border-color: rgba(37, 99, 235, 0.4);
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
-}
-
-.cell-pill.benchmark {
-  border-color: rgba(249, 115, 22, 0.35);
-  background: rgba(249, 115, 22, 0.12);
+.cell-pill.negative {
+  border-color: rgba(249, 115, 22, 0.5);
+  background: rgba(249, 115, 22, 0.18);
   color: #9a3412;
 }
 
