@@ -427,19 +427,16 @@ function hasSufficientCoverage(sharedPoints, periodKey) {
 }
 
 function buildBenchmarkCell(metric, periodKey) {
-  if (!metric) {
+  const value = metric?.benchmark_change_percent;
+  if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
   }
   const shared = metric.timestamps_shared ?? metric.shared_points ?? 0;
   if (!hasSufficientCoverage(shared, periodKey)) {
     return '<td><div class="placeholder-copy">N/A</div></td>';
   }
-  return `<td>
-    <div class="cell-values">
-      <span class="platform-value">Platform: ${formatPercent(metric.platform_change_percent)}</span>
-      <span class="benchmark-value">Benchmark: ${formatPercent(metric.benchmark_change_percent)}</span>
-    </div>
-  </td>`;
+  const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+  return `<td><span class="cell-pill ${polarity}">${formatPercent(value)}</span></td>`;
 }
 
 function buildPlatformCell(value, periodKey) {
@@ -451,8 +448,7 @@ function buildPlatformCell(value, periodKey) {
     return '<td><div class="placeholder-copy">N/A</div></td>';
   }
   const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
-  const classes = ['cell-pill', polarity, 'platform'];
-  return `<td><span class="${classes.join(' ')}">${formatPercent(value)}</span></td>`;
+  return `<td><span class="cell-pill ${polarity} platform-pill">${formatPercent(value)}</span></td>`;
 }
 
 function computePlatformPeriodValues() {

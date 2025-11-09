@@ -291,6 +291,37 @@ body {
   background: var(--benchmark-color);
 }
 
+.cell-pill {
+  display: inline-flex;
+  min-width: 64px;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
+}
+
+.cell-pill.positive {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.18);
+  color: #065f46;
+}
+
+.cell-pill.negative {
+  border-color: rgba(249, 115, 22, 0.5);
+  background: rgba(249, 115, 22, 0.18);
+  color: #9a3412;
+}
+
+.cell-pill.platform-pill {
+  border-color: rgba(37, 99, 235, 0.4);
+  background: rgba(37, 99, 235, 0.15);
+  color: #1d4ed8;
+}
+
 .chart-status {
   color: var(--muted);
   font-size: 0.9rem;
