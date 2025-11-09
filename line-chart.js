@@ -444,11 +444,12 @@ class LineChart {
       
       const color = series.color || this.options.colors[index % this.options.colors.length];
       
-      if (this.options.fillArea && !this.options.shadeBetween) {
-        const areaPath = this.createAreaPath(series.values);
+      const shouldFill = series.area || (this.options.fillArea && !this.options.shadeBetween);
+      if (shouldFill) {
+        const areaPath = this.createAreaPath(series.values, !!series.fillToZero);
         const areaElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         areaElement.setAttribute('d', areaPath);
-        areaElement.setAttribute('fill', this.hexToRgba(color, 0.2));
+        areaElement.setAttribute('fill', series.areaColor || this.hexToRgba(color, 0.2));
         areaElement.setAttribute('stroke', 'none');
         areaElement.setAttribute('class', `area-series-${index}`);
         parent.appendChild(areaElement);
@@ -618,12 +619,17 @@ class LineChart {
     return path;
   }
 
-  createAreaPath(values) {
+  createAreaPath(values, fillToZero = false) {
     if (!values || values.length === 0) return '';
     
     const chartHeight = this.options.height - this.options.margin.top - this.options.margin.bottom;
-    // Use actual chart bottom instead of scaling 0 (which may be outside domain)
-    const baselineY = chartHeight; // Bottom of the chart area
+    let baselineY = chartHeight;
+    if (fillToZero && this.scales.y) {
+      const zeroY = this.scales.y.scale(0);
+      if (!isNaN(zeroY) && isFinite(zeroY)) {
+        baselineY = zeroY;
+      }
+    }
     
     let path = '';
     

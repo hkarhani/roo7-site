@@ -32,8 +32,13 @@ const state = {
   lockedPeriod: DEFAULT_PERIOD,
   benchmark: 'composite',
   lockedBenchmark: 'composite',
+  showPlatform: true,
+  showBenchmark: true,
   rawData: null,
   summary: null,
+  platformPeriods: {},
+  portfolioPeriods: {},
+  accountSummaries: new Map(),
   loading: false,
 };
 
@@ -41,6 +46,8 @@ const selectors = {
   accountSelector: document.getElementById('account-selector'),
   benchmarkButtons: document.querySelectorAll('.benchmark-btn'),
   periodButtons: document.querySelectorAll('.period-btn'),
+  togglePlatform: document.getElementById('toggle-platform'),
+  toggleBenchmark: document.getElementById('toggle-benchmark'),
   status: document.getElementById('chart-status'),
   benchmarkDetail: document.getElementById('benchmark-detail'),
   benchmarkLegend: document.getElementById('benchmark-legend-label'),
@@ -58,6 +65,7 @@ const selectors = {
 
 let chart = null;
 const seriesCache = new Map();
+const accountSummaryCache = new Map();
 const resizeHandler = () => resizeChart(state.rawData?.points?.length || 0);
 
 function getChartContainer() {
@@ -85,6 +93,39 @@ function resizeChart(pointCount = 0) {
   if (!chart) return;
   const { width, height } = computeChartDimensions(pointCount);
   chart.resize(width, height);
+}
+
+function derivePlatformPeriods(summary) {
+  const result = {};
+  if (!summary?.benchmarks?.length) return result;
+  const source = summary.benchmarks.find((entry) => entry.periods);
+  if (!source) return result;
+  PERIODS.forEach(({ value }) => {
+    result[value] = source.periods?.[value]?.platform_change_percent ?? null;
+  });
+  return result;
+}
+
+function buildValueCell(value, variant = 'benchmark') {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return '<td><div class="placeholder-copy">–</div></td>';
+  }
+  return `<td><span class="cell-pill ${variant}">${formatPercent(value)}</span></td>`;
+}
+
+function buildRow({ label, subtitle = '', periods = {}, rowClass = '', dataset = null, variant = 'benchmark' }) {
+  const cells = PERIODS.map(({ value }) => buildValueCell(periods[value], variant)).join('');
+  const attrs = dataset ? ` data-benchmark="${dataset}"` : '';
+  return `
+    <tr class="${rowClass}"${attrs}>
+      <td>
+        <div class="benchmark-name">
+          <span>${label}</span>
+          ${subtitle ? `<span class="sub">${subtitle}</span>` : ''}
+        </div>
+      </td>
+      ${cells}
+    </tr>`;
 }
 
 function getBenchmarkOption(value) {
@@ -196,6 +237,7 @@ async function loadAccounts() {
       id: acc.id || acc._id,
       label: acc.account_name || acc.name || acc.id,
     }));
+    accountSummaryCache.clear();
     renderAccountSelector();
   } catch (error) {
     console.error('Account fetch error:', error);
@@ -226,6 +268,50 @@ function renderAccountSelector() {
     });
     selectors.accountSelector.appendChild(button);
   });
+}
+
+async function fetchSingleAccountSummary(accountId) {
+  try {
+    const params = new URLSearchParams({
+      periods: PERIOD_KEYS.join(','),
+      benchmarks: 'composite',
+      account_id: accountId,
+    });
+    const endpoint = `${MARKET_API_BASE}/benchmark/portfolio/table?${params.toString()}`;
+    const response = await fetch(endpoint, { headers: getAuthHeaders() });
+    if (handleAuthError(response.status)) return null;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    if (!payload.success) {
+      throw new Error(payload.detail || 'Unexpected API response');
+    }
+    return payload.data.portfolio?.periods || {};
+  } catch (error) {
+    console.error(`Account summary fetch failed for ${accountId}:`, error);
+    return {};
+  }
+}
+
+async function fetchAccountSummaries(force = false) {
+  if (!state.accounts.length) {
+    state.accountSummaries = new Map();
+    return;
+  }
+
+  const entries = [];
+  for (const account of state.accounts) {
+    if (!account.id) continue;
+    if (!force && accountSummaryCache.has(account.id)) {
+      entries.push([account.id, { periods: accountSummaryCache.get(account.id) }]);
+      continue;
+    }
+    const periods = await fetchSingleAccountSummary(account.id);
+    accountSummaryCache.set(account.id, periods);
+    entries.push([account.id, { periods }]);
+  }
+  state.accountSummaries = new Map(entries);
 }
 
 function setActivePeriodButton(activePeriod) {
@@ -296,23 +382,34 @@ function updateChart() {
   if (chart) {
     chart.options.periodDays = periodConfig?.days || 7;
     const benchmarkLabel = getBenchmarkOption(state.benchmark).label;
-    chart.setData([
+    const dataset = [
       {
         name: state.accountId === 'ALL' ? 'Portfolio cumulative %' : 'Account cumulative %',
         color: '#10b981',
         values: portfolioSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
-      },
-      {
+        area: true,
+        fillToZero: true,
+        areaColor: 'rgba(16, 185, 129, 0.18)'
+      }
+    ];
+    if (state.showPlatform) {
+      dataset.push({
         name: 'Platform cumulative %',
         color: '#1d4ed8',
         values: platformSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
-      },
-      {
+        area: false
+      });
+    }
+    if (state.showBenchmark) {
+      dataset.push({
         name: `Benchmark cumulative % (${benchmarkLabel})`,
         color: '#f97316',
         values: benchmarkSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
-      },
-    ]);
+        area: false
+      });
+    }
+
+    chart.setData(dataset);
     const anomalies = Array.isArray(state.rawData.metadata?.anomalies)
       ? state.rawData.metadata.anomalies
       : [];
@@ -382,45 +479,18 @@ async function fetchPerformance(options = {}) {
   }
 }
 
-function buildTableCell(metrics) {
-  if (!metrics || Number.isNaN(metrics.portfolio_change_percent)) {
-    return '<td><div class="placeholder-copy">–</div></td>';
-  }
-  return `<td>
-    <div class="cell-values">
-      <span class="portfolio-value">You: ${formatPercent(metrics.portfolio_change_percent)}</span>
-      <span class="platform-value">Platform: ${formatPercent(metrics.platform_change_percent)}</span>
-      <span class="benchmark-value">Benchmark: ${formatPercent(metrics.benchmark_change_percent)}</span>
-    </div>
-  </td>`;
-}
 
-function buildPortfolioSummaryRow(periodValues) {
-  const cells = PERIODS.map((period) =>
-    buildSummaryCell(periodValues[period.value])
-  ).join('');
-  return `
-    <tr class="portfolio-row">
-      <td>
-        <div class="benchmark-name">
-          <span>Portfolio Summary</span>
-          <span class="sub">Aggregated across selected accounts</span>
-        </div>
-      </td>
-      ${cells}
-    </tr>`;
-}
-
-function buildSummaryCell(value) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return '<td><div class="placeholder-copy">–</div></td>';
-  }
-  return `<td><span class="cell-pill portfolio">${formatPercent(value)}</span></td>`;
+function extractBenchmarkPeriods(entry) {
+  const periods = {};
+  PERIODS.forEach(({ value }) => {
+    periods[value] = entry.periods?.[value]?.benchmark_change_percent ?? null;
+  });
+  return periods;
 }
 
 function renderSummaryTable() {
   if (!selectors.tableBody) return;
-  if (!state.summary || !Array.isArray(state.summary.benchmarks) || state.summary.benchmarks.length === 0) {
+  if (!state.summary) {
     selectors.tableBody.innerHTML = `
       <tr class="table-placeholder-row">
         <td colspan="7">
@@ -430,45 +500,77 @@ function renderSummaryTable() {
     return;
   }
 
-  const orderMap = new Map(BENCHMARK_VALUES.map((value, index) => [value, index]));
-  const sortedBenchmarks = [...state.summary.benchmarks].sort((a, b) => {
-    const aScore = orderMap.get(a.benchmark) ?? Number.MAX_SAFE_INTEGER;
-    const bScore = orderMap.get(b.benchmark) ?? Number.MAX_SAFE_INTEGER;
-    return aScore - bScore;
+  const rows = [];
+
+  state.accounts.forEach((account) => {
+    const summary = state.accountSummaries.get(account.id);
+    const periods = summary?.periods || {};
+    rows.push(
+      buildRow({
+        label: account.label || 'Account',
+        subtitle: 'Account performance',
+        periods,
+        rowClass: 'account-row',
+        variant: 'account',
+      })
+    );
   });
 
-  const rows = sortedBenchmarks
-    .map((entry) => {
+  rows.push(
+    buildRow({
+      label: 'Portfolio',
+      subtitle: 'Aggregated across selected accounts',
+      periods: state.portfolioPeriods,
+      rowClass: 'portfolio-row',
+      variant: 'portfolio',
+    })
+  );
+
+  rows.push(
+    buildRow({
+      label: 'Platform',
+      subtitle: 'ROO7 aggregate strategies',
+      periods: state.platformPeriods,
+      rowClass: 'platform-row',
+      variant: 'platform',
+    })
+  );
+
+  if (Array.isArray(state.summary.benchmarks)) {
+    const orderMap = new Map(BENCHMARK_VALUES.map((value, index) => [value, index]));
+    const sortedBenchmarks = [...state.summary.benchmarks].sort((a, b) => {
+      const aScore = orderMap.get(a.benchmark) ?? Number.MAX_SAFE_INTEGER;
+      const bScore = orderMap.get(b.benchmark) ?? Number.MAX_SAFE_INTEGER;
+      return aScore - bScore;
+    });
+
+    sortedBenchmarks.forEach((entry) => {
       const shortLabel = entry.benchmark === 'composite' ? 'Composite' : entry.benchmark.replace('USDT', '');
       const subtitle =
         entry.benchmark_type === 'composite'
           ? 'Composite weighted basket'
           : `${shortLabel} spot reference`;
-      const cells = PERIODS.map((period) =>
-        buildTableCell(entry.periods?.[period.value])
-      ).join('');
-      return `
-        <tr data-benchmark="${entry.benchmark}">
-          <td>
-            <div class="benchmark-name">
-              <span>${shortLabel}</span>
-              <span class="sub">${subtitle}</span>
-            </div>
-          </td>
-          ${cells}
-        </tr>`;
-    })
-    .join('');
+      rows.push(
+        buildRow({
+          label: shortLabel,
+          subtitle,
+          periods: extractBenchmarkPeriods(entry),
+          rowClass: 'benchmark-row',
+          dataset: entry.benchmark,
+          variant: 'benchmark',
+        })
+      );
+    });
+  }
 
-  const summaryCells = state.summary.portfolio?.periods || {};
-  const summaryRow = buildPortfolioSummaryRow(summaryCells);
+  selectors.tableBody.innerHTML = rows.length
+    ? rows.join('')
+    : `<tr class="table-placeholder-row"><td colspan="7"><div class="placeholder-copy">No data available.</div></td></tr>`;
 
-  selectors.tableBody.innerHTML = rows + summaryRow;
-  selectors.tableBody.querySelectorAll('tr').forEach((row) => {
+  selectors.tableBody.querySelectorAll('tr[data-benchmark]').forEach((row) => {
     const benchmark = row.dataset.benchmark;
-    if (!benchmark) return;
     row.addEventListener('click', () => {
-      if (benchmark === state.benchmark) return;
+      if (!benchmark || benchmark === state.benchmark) return;
       state.benchmark = benchmark;
       state.lockedBenchmark = benchmark;
       updateBenchmarkButtons();
@@ -488,6 +590,8 @@ function renderSummaryTable() {
   if (selectors.tableStatus) {
     selectors.tableStatus.textContent = 'Click a benchmark row or timeframe to update the chart.';
   }
+
+  highlightTableRow(state.benchmark);
 }
 
 function handlePeriodHeaderClick(event) {
@@ -509,9 +613,6 @@ async function fetchSummary() {
       periods: PERIOD_KEYS.join(','),
       benchmarks: BENCHMARK_VALUES.join(','),
     });
-    if (state.accountId !== 'ALL') {
-      params.append('account_id', state.accountId);
-    }
     const endpoint = `${MARKET_API_BASE}/benchmark/portfolio/table?${params.toString()}`;
     const response = await fetch(endpoint, {
       headers: getAuthHeaders(),
@@ -525,6 +626,9 @@ async function fetchSummary() {
       throw new Error(payload.detail || 'Unexpected API response');
     }
     state.summary = payload.data;
+    state.platformPeriods = derivePlatformPeriods(payload.data);
+    state.portfolioPeriods = payload.data.portfolio?.periods || {};
+    await fetchAccountSummaries(true);
     renderSummaryTable();
   } catch (error) {
     console.error('Summary fetch error:', error);
@@ -572,6 +676,23 @@ function initLogout() {
   });
 }
 
+function initVisibilityToggles() {
+  if (selectors.togglePlatform) {
+    selectors.togglePlatform.checked = state.showPlatform;
+    selectors.togglePlatform.addEventListener('change', (event) => {
+      state.showPlatform = event.target.checked;
+      updateChart();
+    });
+  }
+  if (selectors.toggleBenchmark) {
+    selectors.toggleBenchmark.checked = state.showBenchmark;
+    selectors.toggleBenchmark.addEventListener('change', (event) => {
+      state.showBenchmark = event.target.checked;
+      updateChart();
+    });
+  }
+}
+
 async function init() {
   state.token = localStorage.getItem('token');
   if (!state.token) {
@@ -585,6 +706,7 @@ async function init() {
 
   selectors.footerYear.textContent = new Date().getFullYear();
   initLogout();
+  initVisibilityToggles();
 
   selectors.periodButtons.forEach((btn) => btn.addEventListener('click', handlePeriodClick));
   selectors.benchmarkButtons.forEach((btn) => btn.addEventListener('click', handleBenchmarkClick));
@@ -606,6 +728,7 @@ async function init() {
   window.addEventListener('resize', resizeHandler);
 
   await loadAccounts();
+  await fetchAccountSummaries(true);
   setActivePeriodButton(state.period);
   await fetchPerformance({ silent: false, useCache: false });
   await fetchSummary();
