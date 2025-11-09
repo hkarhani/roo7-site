@@ -24,6 +24,17 @@ const DEFAULT_PERIOD = '7d';
 const AUTH_API_BASE = API_CONFIG.authUrl;
 const MARKET_API_BASE = API_CONFIG.marketUrl;
 
+const PERIOD_INFO = {
+  '24h': 24,
+  '7d': 7 * 24,
+  '30d': 30 * 24,
+  '90d': 90 * 24,
+  '180d': 180 * 24,
+  '1y': 365 * 24,
+};
+const LONG_PERIODS = new Set(['90d', '180d', '1y']);
+const COVERAGE_RATIO = 0.75;
+
 const state = {
   token: null,
   accounts: [],
@@ -37,7 +48,9 @@ const state = {
   rawData: null,
   summary: null,
   platformPeriods: {},
+  platformCoverage: {},
   portfolioPeriods: {},
+  portfolioCoverage: {},
   accountSummaries: new Map(),
   loading: false,
 };
@@ -106,9 +119,26 @@ function derivePlatformPeriods(summary) {
   return result;
 }
 
-function buildValueCell(value) {
+function deriveCoverage(summary) {
+  const result = {};
+  if (!summary?.benchmarks?.length) return result;
+  const source = summary.benchmarks.find((entry) => entry.periods);
+  if (!source) return result;
+  PERIODS.forEach(({ value }) => {
+    result[value] = source.periods?.[value]?.shared_points ?? null;
+  });
+  return result;
+}
+
+function buildValueCell(value, coverage, periodKey) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
+  }
+  if (LONG_PERIODS.has(periodKey)) {
+    const expected = PERIOD_INFO[periodKey] || 0;
+    if (!coverage || (expected && coverage < expected * COVERAGE_RATIO)) {
+      return '<td><div class="placeholder-copy">N/A</div></td>';
+    }
   }
   const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : '';
   const classes = ['cell-pill'];
@@ -116,8 +146,8 @@ function buildValueCell(value) {
   return `<td><span class="${classes.join(' ')}">${formatPercent(value)}</span></td>`;
 }
 
-function buildRow({ label, subtitle = '', periods = {}, rowClass = '', dataset = null, accountId = null }) {
-  const cells = PERIODS.map(({ value }) => buildValueCell(periods[value])).join('');
+function buildRow({ label, subtitle = '', periods = {}, coverage = {}, rowClass = '', dataset = null, accountId = null }) {
+  const cells = PERIODS.map(({ value }) => buildValueCell(periods[value], coverage[value], value)).join('');
   const attributes = [];
   if (dataset) attributes.push(`data-benchmark="${dataset}"`);
   if (accountId) attributes.push(`data-account-id="${accountId}"`);
@@ -295,10 +325,12 @@ async function fetchSingleAccountSummary(accountId) {
     if (!payload.success) {
       throw new Error(payload.detail || 'Unexpected API response');
     }
-    return payload.data.portfolio?.periods || {};
+    const periods = payload.data.portfolio?.periods || {};
+    const coverage = deriveCoverage(payload.data);
+    return { periods, coverage };
   } catch (error) {
     console.error(`Account summary fetch failed for ${accountId}:`, error);
-    return {};
+    return { periods: {}, coverage: {} };
   }
 }
 
@@ -312,12 +344,12 @@ async function fetchAccountSummaries(force = false) {
   for (const account of state.accounts) {
     if (!account.id) continue;
     if (!force && accountSummaryCache.has(account.id)) {
-      entries.push([account.id, { periods: accountSummaryCache.get(account.id) }]);
+      entries.push([account.id, accountSummaryCache.get(account.id)]);
       continue;
     }
-    const periods = await fetchSingleAccountSummary(account.id);
-    accountSummaryCache.set(account.id, periods);
-    entries.push([account.id, { periods }]);
+    const summary = await fetchSingleAccountSummary(account.id);
+    accountSummaryCache.set(account.id, summary);
+    entries.push([account.id, summary]);
   }
   state.accountSummaries = new Map(entries);
 }
@@ -515,6 +547,7 @@ function renderSummaryTable() {
       label: 'Portfolio',
       subtitle: 'Aggregated across selected accounts',
       periods: state.portfolioPeriods,
+      coverage: state.portfolioCoverage,
       rowClass: 'portfolio-row',
       accountId: 'ALL',
     })
@@ -528,6 +561,7 @@ function renderSummaryTable() {
         label: account.label || 'Account',
         subtitle: 'Account performance',
         periods,
+        coverage: summary?.coverage || {},
         rowClass: 'account-row',
         accountId: account.id,
       })
@@ -543,6 +577,7 @@ function renderSummaryTable() {
         label: 'Composite Benchmark',
         subtitle: 'Weighted basket reference',
         periods: extractBenchmarkPeriods(composite),
+        coverage: deriveCoverage({ benchmarks: [composite] }),
         rowClass: 'benchmark-row',
         dataset: composite.benchmark,
       })
@@ -554,6 +589,7 @@ function renderSummaryTable() {
       label: 'Platform',
       subtitle: 'ROO7 aggregate strategies',
       periods: state.platformPeriods,
+      coverage: state.platformCoverage,
       rowClass: 'platform-row',
     })
   );
@@ -622,7 +658,9 @@ async function fetchSummary() {
     }
     state.summary = payload.data;
     state.platformPeriods = derivePlatformPeriods(payload.data);
+    state.platformCoverage = deriveCoverage(payload.data);
     state.portfolioPeriods = payload.data.portfolio?.periods || {};
+    state.portfolioCoverage = deriveCoverage(payload.data);
     await fetchAccountSummaries(true);
     renderSummaryTable();
   } catch (error) {
