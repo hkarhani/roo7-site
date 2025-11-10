@@ -422,44 +422,30 @@ async function waitForLineChart() {
   });
 }
 
+function buildCumulativeSeries(points, key) {
+  let cumulativeFactor = 1;
+  return points.map((point) => {
+    const delta = Number(point?.[key] ?? 0);
+    const stepMultiplier = 1 + (delta / 100);
+    const safeMultiplier = Number.isFinite(stepMultiplier) && stepMultiplier > 0 ? stepMultiplier : 0.0001;
+    cumulativeFactor *= safeMultiplier;
+    const cumulativePercent = (cumulativeFactor - 1) * 100;
+    const date = new Date(point.timestamp);
+    return {
+      timestamp: point.timestamp,
+      date,
+      value: cumulativePercent,
+      label: formatPercent(cumulativePercent)
+    };
+  });
+}
+
 function computeChartSeries(points) {
   if (!Array.isArray(points) || points.length === 0) return [];
   const series = [];
-  let cumulativePortfolio = 0;
-  let cumulativePlatform = 0;
-  let cumulativeBenchmark = 0;
-
-  const portfolioValues = [];
-  const platformValues = [];
-  const benchmarkValues = [];
-
-  points.forEach((point) => {
-    const date = new Date(point.timestamp);
-    const portfolioDelta = point.portfolio_change_percent || 0;
-    const platformDelta = point.platform_change_percent || 0;
-    const benchmarkDelta = point.benchmark_change_percent || 0;
-    cumulativePortfolio += portfolioDelta;
-    cumulativePlatform += platformDelta;
-    cumulativeBenchmark += benchmarkDelta;
-    portfolioValues.push({
-      timestamp: point.timestamp,
-      date,
-      value: cumulativePortfolio,
-      label: formatPercent(cumulativePortfolio)
-    });
-    platformValues.push({
-      timestamp: point.timestamp,
-      date,
-      value: cumulativePlatform,
-      label: formatPercent(cumulativePlatform)
-    });
-    benchmarkValues.push({
-      timestamp: point.timestamp,
-      date,
-      value: cumulativeBenchmark,
-      label: formatPercent(cumulativeBenchmark)
-    });
-  });
+  const portfolioValues = buildCumulativeSeries(points, 'portfolio_change_percent');
+  const platformValues = buildCumulativeSeries(points, 'platform_change_percent');
+  const benchmarkValues = buildCumulativeSeries(points, 'benchmark_change_percent');
 
   series.push({
     name: state.selectedUserId === 'ALL' ? 'Total Portfolio' : 'Selection Portfolio',
