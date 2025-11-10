@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Admin · Portfolio vs Benchmark</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script type="module" src="frontend-config.js?v=2.4"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-portfolioanalytics.css?v=20250215a" />
+</head>
+<body class="admin-portfolio-layout">
+  <header class="page-header">
+    <div>
+      <h1>🧠 Advanced Portfolio Analytics</h1>
+      <p class="subtitle">Platform-wide exposure vs benchmarks with user-level drill downs</p>
+    </div>
+    <div class="header-actions">
+      <a href="admin-dashboard.html" class="secondary-button">← Admin Dashboard</a>
+      <button id="theme-toggle" class="secondary-button">Toggle Theme</button>
+      <button id="logout-btn" class="primary-button danger">Logout</button>
+    </div>
+  </header>
+
+  <main class="portfolio-analytics-grid">
+    <section class="summary-row">
+      <div class="summary-card" id="total-portfolio-card">
+        <div class="card-label">Total Portfolio Value</div>
+        <div class="card-value" id="total-portfolio-value">$0.00</div>
+        <div class="card-meta">
+          <span><strong id="total-users">0</strong> Users</span>
+          <span><strong id="total-accounts">0</strong> Accounts</span>
+          <span>Updated <span id="total-last-updated">--</span></span>
+        </div>
+      </div>
+      <div class="summary-card top-users-card">
+        <div class="card-label">Top Contributors</div>
+        <div class="top-users-chart" id="top-users-chart">
+          <div class="empty-state small">No data yet</div>
+        </div>
+        <ul class="top-users-list" id="top-users-list"></ul>
+      </div>
+    </section>
+
+    <section class="distribution-row">
+      <div class="distribution-card" id="strategy-card">
+        <div class="card-header">
+          <h2>Strategy Exposure</h2>
+          <span id="strategy-total" class="tag">Total: $0</span>
+        </div>
+        <div class="distribution-content" id="strategy-distribution">
+          <div class="empty-state small">Distribution pending…</div>
+        </div>
+      </div>
+      <div class="distribution-card" id="source-card">
+        <div class="card-header">
+          <h2>Source Accounts Distribution</h2>
+          <span id="source-total" class="tag">Total: $0</span>
+        </div>
+        <div class="distribution-content" id="source-distribution">
+          <div class="empty-state small">Distribution pending…</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="analytics-row">
+      <div class="filters-panel">
+        <div class="panel-section">
+          <label for="user-filter">User Selection</label>
+          <select id="user-filter">
+            <option value="ALL">All Users</option>
+          </select>
+          <p class="hint">Pick a user to drill down. Keeps platform aggregate when left on “All”.</p>
+        </div>
+        <div class="panel-section">
+          <div class="panel-header">
+            <label>Accounts</label>
+            <button id="toggle-all-accounts" class="link-button" disabled>Select all</button>
+          </div>
+          <div id="accounts-list" class="accounts-list">
+            <div class="placeholder-copy">Select a user to load accounts.</div>
+          </div>
+        </div>
+        <div class="panel-section compact">
+          <label>Period</label>
+          <div class="period-buttons" id="period-buttons"></div>
+        </div>
+        <div class="panel-section compact">
+          <label>Benchmark</label>
+          <div class="benchmark-buttons" id="benchmark-buttons"></div>
+        </div>
+        <div class="panel-section compact toggles">
+          <label>Series</label>
+          <label class="switch">
+            <input type="checkbox" id="toggle-platform" checked />
+            <span>Platform</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="toggle-benchmark" checked />
+            <span>Benchmark</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Portfolio vs Benchmark</h2>
+            <p id="chart-status" class="hint">Ready.</p>
+          </div>
+          <div class="legend" id="chart-legend">
+            <span class="legend-item portfolio">Portfolio</span>
+            <span class="legend-item platform">Platform</span>
+            <span class="legend-item benchmark">Benchmark</span>
+          </div>
+        </div>
+        <div id="comparison-chart" class="chart-container">
+          <div class="empty-state">Waiting for data…</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-row">
+      <div class="table-card">
+        <div class="card-header">
+          <h2>Portfolio vs Benchmark Snapshot</h2>
+        </div>
+        <div class="table-responsive">
+          <table class="benchmark-table">
+            <thead>
+              <tr>
+                <th>Entity</th>
+                <th>24h</th>
+                <th>7d</th>
+                <th>30d</th>
+                <th>90d</th>
+                <th>180d</th>
+                <th>1Y</th>
+              </tr>
+            </thead>
+            <tbody id="snapshot-table-body">
+              <tr>
+                <td colspan="7">
+                  <div class="placeholder-copy">Snapshot will appear after data loads.</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <span>© <span id="footer-year"></span> ROO7 Analytics</span>
+    <span>Internal admin workspace · Do not share</span>
+  </footer>
+
+  <script src="line-chart.js?v=20240410"></script>
+  <script type="module" src="admin-portfolioanalytics.js?v=20250215a"></script>
+</body>
+</html>
