@@ -228,11 +228,37 @@ body.admin-portfolio-layout {
   align-items: flex-start;
 }
 
+.source-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.source-period-buttons,
 .source-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 16px 0;
+}
+
+.source-period-buttons button {
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.source-period-buttons button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.source-filters {
+  margin: 12px 0 16px;
 }
 
 .source-toggle {
@@ -249,6 +275,17 @@ body.admin-portfolio-layout {
 
 .source-toggle input {
   accent-color: var(--accent);
+}
+
+.source-toggle span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.source-toggle span small {
+  color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
 .chart-container.small {

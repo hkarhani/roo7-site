@@ -49,7 +49,8 @@ const state = {
   selectedSourceIds: [],
   sourcePerformance: null,
   sourceChart: null,
-  sourceLoading: false
+  sourceLoading: false,
+  sourcePeriod: '7d'
 };
 
 const selectors = {
@@ -79,7 +80,8 @@ const selectors = {
   footerYear: document.getElementById('footer-year'),
   sourceFilters: document.getElementById('source-account-filters'),
   sourceChartContainer: document.getElementById('source-comparison-chart'),
-  sourceChartStatus: document.getElementById('source-chart-status')
+  sourceChartStatus: document.getElementById('source-chart-status'),
+  sourcePeriodButtons: document.getElementById('source-period-buttons')
 };
 
 function requireAuth() {
@@ -401,6 +403,15 @@ function setupPeriodButtons() {
   });
 }
 
+function setupSourcePeriodButtons() {
+  if (!selectors.sourcePeriodButtons) return;
+  buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, async (value) => {
+    state.sourcePeriod = value;
+    buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, () => {});
+    await fetchSourcePerformance();
+  });
+}
+
 function setupBenchmarkButtons() {
   buildButtonGroup(selectors.benchmarkButtons, BENCHMARKS, state.benchmark, async (value) => {
     state.benchmark = value;
@@ -498,8 +509,12 @@ async function loadSourceAccountsForComparison() {
     state.sourceAccounts = (response.accounts || []).slice(0, 4);
     state.selectedSourceIds = state.sourceAccounts.map((account) => account.id);
     renderSourceAccountFilters();
-    if (!state.sourceAccounts.length && selectors.sourceChartContainer) {
-      selectors.sourceChartContainer.innerHTML = '<div class="empty-state">No source accounts configured.</div>';
+    if (!state.sourceAccounts.length) {
+      if (selectors.sourceChartContainer) {
+        selectors.sourceChartContainer.innerHTML = '<div class="empty-state">No source accounts configured.</div>';
+      }
+    } else {
+      await fetchSourcePerformance();
     }
   } catch (error) {
     console.error('Source accounts load failed', error);
@@ -512,7 +527,7 @@ async function fetchSourcePerformance() {
   const ids = state.sourceAccounts.map((account) => account.id).filter(Boolean);
   if (!ids.length) return;
   const params = new URLSearchParams({
-    period: state.period,
+    period: state.sourcePeriod,
     benchmark: state.benchmark,
     source_ids: ids.join(',')
   });
@@ -557,7 +572,8 @@ async function renderSourceComparisonChart() {
       showTooltip: true,
       centerZero: true,
       valueFormat: 'percentage',
-      colors: SOURCE_COLORS
+      colors: SOURCE_COLORS,
+      fillArea: false
     });
   }
 
@@ -575,7 +591,8 @@ async function renderSourceComparisonChart() {
     series.push({
       name: labelParts.join(' '),
       color: SOURCE_COLORS[index % SOURCE_COLORS.length],
-      values
+      values,
+      area: false
     });
   });
 
@@ -585,7 +602,8 @@ async function renderSourceComparisonChart() {
       series.push({
         name: `Benchmark (${getBenchmarkOption(state.benchmark).label})`,
         color: '#f97316',
-        values: benchmarkValues
+        values: benchmarkValues,
+        area: false
       });
     }
   }
@@ -910,6 +928,7 @@ async function init() {
   setFooterYear();
   setupPeriodButtons();
   setupBenchmarkButtons();
+  setupSourcePeriodButtons();
   await Promise.all([
     loadOverview(),
     loadStrategyDistribution(),
