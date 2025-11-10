@@ -24,6 +24,7 @@ const BENCHMARKS = [
   { value: 'BNBUSDT', label: 'BNB' },
   { value: 'XRPUSDT', label: 'XRP' }
 ];
+const SOURCE_COLORS = ['#ef4444', '#f97316', '#14b8a6', '#a855f7'];
 
 const state = {
   token: null,
@@ -39,7 +40,12 @@ const state = {
   rawSeries: null,
   accountSummaries: new Map(),
   tableData: null,
-  loadingChart: false
+  loadingChart: false,
+  sourceAccounts: [],
+  selectedSourceIds: [],
+  sourcePerformance: null,
+  sourceChart: null,
+  sourceLoading: false
 };
 
 const selectors = {
@@ -66,7 +72,10 @@ const selectors = {
   tableBody: document.getElementById('snapshot-table-body'),
   logoutBtn: document.getElementById('logout-btn'),
   themeToggle: document.getElementById('theme-toggle'),
-  footerYear: document.getElementById('footer-year')
+  footerYear: document.getElementById('footer-year'),
+  sourceFilters: document.getElementById('source-account-filters'),
+  sourceChartContainer: document.getElementById('source-comparison-chart'),
+  sourceChartStatus: document.getElementById('source-chart-status')
 };
 
 function requireAuth() {
@@ -384,7 +393,7 @@ function setupPeriodButtons() {
   buildButtonGroup(selectors.periodButtons, PERIODS, state.period, async (value) => {
     state.period = value;
     buildButtonGroup(selectors.periodButtons, PERIODS, state.period, () => {});
-    await Promise.all([fetchPerformance(), fetchSnapshotTable()]);
+    await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance()]);
   });
 }
 
@@ -393,7 +402,7 @@ function setupBenchmarkButtons() {
     state.benchmark = value;
     buildButtonGroup(selectors.benchmarkButtons, BENCHMARKS, state.benchmark, () => {});
     state.accountSummaries.clear();
-    await Promise.all([fetchPerformance(), fetchSnapshotTable()]);
+    await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance()]);
     if (state.selectedUserId !== 'ALL') {
       await fetchAccountSummaries();
     }
@@ -403,11 +412,13 @@ function setupBenchmarkButtons() {
 function handleTogglePlatform(event) {
   state.showPlatform = event.target.checked;
   renderChart();
+  renderSourceComparisonChart();
 }
 
 function handleToggleBenchmark(event) {
   state.showBenchmark = event.target.checked;
   renderChart();
+  renderSourceComparisonChart();
 }
 
 async function waitForLineChart() {
@@ -438,6 +449,152 @@ function buildCumulativeSeries(points, key) {
       label: formatPercent(cumulativePercent)
     };
   });
+}
+
+function renderSourceAccountFilters() {
+  if (!selectors.sourceFilters) return;
+  if (!state.sourceAccounts.length) {
+    selectors.sourceFilters.innerHTML = '<div class="placeholder-copy">No source accounts available.</div>';
+    return;
+  }
+  selectors.sourceFilters.innerHTML = state.sourceAccounts
+    .map((account) => {
+      const checked = state.selectedSourceIds.includes(account.id);
+      return `
+        <label class="source-toggle">
+          <input type="checkbox" data-source-id="${account.id}" ${checked ? 'checked' : ''} />
+          <span>${account.name || 'Source'}<small> ${account.strategy || ''}</small></span>
+        </label>
+      `;
+    })
+    .join('');
+
+  selectors.sourceFilters.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.addEventListener('change', (event) => {
+      const sourceId = event.target.dataset.sourceId;
+      if (!sourceId) return;
+      if (event.target.checked) {
+        if (!state.selectedSourceIds.includes(sourceId)) {
+          state.selectedSourceIds.push(sourceId);
+        }
+      } else {
+        state.selectedSourceIds = state.selectedSourceIds.filter((id) => id !== sourceId);
+      }
+      renderSourceComparisonChart();
+    });
+  });
+}
+
+async function loadSourceAccountsForComparison() {
+  if (!selectors.sourceFilters) return;
+  selectors.sourceFilters.innerHTML = '<div class="placeholder-copy">Loading source accounts…</div>';
+  try {
+    const response = await authorizedFetch(`${AUTH_API_BASE}/admin/analytics/source-accounts-list`);
+    if (!response?.success) throw new Error('Invalid response');
+    state.sourceAccounts = (response.accounts || []).slice(0, 4);
+    state.selectedSourceIds = state.sourceAccounts.map((account) => account.id);
+    renderSourceAccountFilters();
+    if (!state.sourceAccounts.length && selectors.sourceChartContainer) {
+      selectors.sourceChartContainer.innerHTML = '<div class="empty-state">No source accounts configured.</div>';
+    }
+  } catch (error) {
+    console.error('Source accounts load failed', error);
+    selectors.sourceFilters.innerHTML = '<div class="placeholder-copy">Failed to load source accounts.</div>';
+  }
+}
+
+async function fetchSourcePerformance() {
+  if (!state.sourceAccounts.length) return;
+  const ids = state.sourceAccounts.map((account) => account.id).filter(Boolean);
+  if (!ids.length) return;
+  const params = new URLSearchParams({
+    period: state.period,
+    benchmark: state.benchmark,
+    source_ids: ids.join(',')
+  });
+  try {
+    state.sourceLoading = true;
+    if (selectors.sourceChartStatus) {
+      selectors.sourceChartStatus.textContent = 'Fetching source account performance…';
+    }
+    const payload = await authorizedFetch(`${MARKET_API_BASE}/admin/benchmark/source/performance?${params.toString()}`);
+    state.sourcePerformance = payload?.data || payload;
+    await renderSourceComparisonChart();
+    if (selectors.sourceChartStatus) {
+      selectors.sourceChartStatus.textContent = 'Updated.';
+    }
+  } catch (error) {
+    console.error('Source performance fetch failed', error);
+    if (selectors.sourceChartStatus) {
+      selectors.sourceChartStatus.textContent = 'Unable to load source performance.';
+    }
+    if (state.sourceChart) {
+      state.sourceChart.showEmptyState();
+    }
+  } finally {
+    state.sourceLoading = false;
+  }
+}
+
+async function renderSourceComparisonChart() {
+  if (!selectors.sourceChartContainer) return;
+  if (!state.sourcePerformance || !Array.isArray(state.sourcePerformance.sources)) {
+    selectors.sourceChartContainer.innerHTML = '<div class="empty-state">Source performance unavailable.</div>';
+    return;
+  }
+
+  const LineChartClass = await waitForLineChart();
+  if (!state.sourceChart) {
+    state.sourceChart = new LineChartClass('source-comparison-chart', {
+      width: selectors.sourceChartContainer.clientWidth || 900,
+      height: 360,
+      animate: true,
+      showGrid: true,
+      showTooltip: true,
+      centerZero: true,
+      valueFormat: 'percentage',
+      colors: SOURCE_COLORS
+    });
+  }
+
+  const series = [];
+  state.sourcePerformance.sources.forEach((source, index) => {
+    if (!state.selectedSourceIds.includes(source.source_id)) {
+      return;
+    }
+    const values = buildCumulativeSeries(source.points || [], 'change_percent');
+    if (!values.length) return;
+    const labelParts = [source.name || 'Source'];
+    if (source.strategy) {
+      labelParts.push(`(${source.strategy})`);
+    }
+    series.push({
+      name: labelParts.join(' '),
+      color: SOURCE_COLORS[index % SOURCE_COLORS.length],
+      values
+    });
+  });
+
+  if (state.showBenchmark && state.sourcePerformance.benchmark?.points) {
+    const benchmarkValues = buildCumulativeSeries(state.sourcePerformance.benchmark.points, 'change_percent');
+    if (benchmarkValues.length) {
+      series.push({
+        name: `Benchmark (${getBenchmarkOption(state.benchmark).label})`,
+        color: '#f97316',
+        values: benchmarkValues
+      });
+    }
+  }
+
+  if (!series.length) {
+    state.sourceChart.showEmptyState();
+    if (selectors.sourceChartStatus) {
+      selectors.sourceChartStatus.textContent = 'Select at least one source account to display the chart.';
+    }
+    return;
+  }
+
+  state.sourceChart.setData(series);
 }
 
 function computeChartSeries(points) {
@@ -753,9 +910,10 @@ async function init() {
     loadOverview(),
     loadStrategyDistribution(),
     loadSourceDistribution(),
-    loadUsersList()
+    loadUsersList(),
+    loadSourceAccountsForComparison()
   ]);
-  await Promise.all([fetchPerformance(), fetchSnapshotTable()]);
+  await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance()]);
 }
 
 init().catch((error) => {
