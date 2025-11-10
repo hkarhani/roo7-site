@@ -148,11 +148,11 @@ function getAccountTotalValue(account) {
   }
 
   const summaryTotal = normalizeNumeric(getByPath(account, ['summary', 'total_value_usdt']));
-  const summaryUnrealized = normalizeNumeric(getByPath(account, ['summary', 'unrealized_pnl_usdt']));
-  if (summaryTotal !== null && summaryUnrealized !== null) {
+  if (summaryTotal !== null) {
     candidateEntries.push({
-      path: 'summary.total_value_usdt_plus_unrealized',
-      value: summaryTotal + summaryUnrealized
+      path: 'summary.total_value_usdt',
+      value: summaryTotal,
+      includesPnl: true
     });
   }
 
@@ -163,7 +163,6 @@ function getAccountTotalValue(account) {
   const preferredOrder = [
     'current_value_with_pnl',
     'current_total_value',
-    'summary.total_value_usdt_plus_unrealized',
     'current_value',
     'total_value_with_pnl',
     'analytics_total_value_usdt',
@@ -198,6 +197,7 @@ function getAccountTotalValue(account) {
 
   let baseValue = baseEntry.value;
   let baseSource = `path:${baseEntry.path}`;
+  const baseIncludesPnl = Boolean(baseEntry.includesPnl);
 
   const componentPaths = [
     ['summary', 'spot_value_usdt'],
@@ -267,9 +267,9 @@ function getAccountTotalValue(account) {
 
   const numericBase = normalizeNumeric(baseValue);
   const baseSourceLabel = baseSource || '';
-  const baseLikelyIncludesPnl = typeof baseSourceLabel === 'string'
+  const baseLikelyIncludesPnl = baseIncludesPnl || (typeof baseSourceLabel === 'string'
     ? /current_value|with_pnl|analytics|metrics/.test(baseSourceLabel)
-    : false;
+    : false);
   const combinedFromComponents = componentsFound
     ? normalizeNumeric(componentSum + (pnlFound ? pnlTotal : 0))
     : null;
