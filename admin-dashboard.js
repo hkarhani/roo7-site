@@ -3978,12 +3978,33 @@ document.addEventListener("DOMContentLoaded", () => {
       updateSourceAnalyticsStatusBadges(data.summary || {});
       
       // Prepare chart data
-      const chartData = (data.chart_data || []).map(point => ({
-        timestamp: point.timestamp,
-        value: point.value,
-        label: '$' + formatNumber(point.value),
-        breakdown: point.breakdown
-      }));
+      const chartData = (data.chart_data || [])
+        .map(point => {
+          const rawTimestamp = point?.timestamp || point?.date || point?.time;
+          const dateObj = rawTimestamp ? new Date(rawTimestamp) : null;
+          if (!dateObj || Number.isNaN(dateObj.getTime())) {
+            console.warn('Skipping source analytics point with invalid timestamp', point);
+            return null;
+          }
+
+          const numericValue = typeof point?.value === 'number'
+            ? point.value
+            : parseFloat(point?.value ?? point?.total_value ?? point?.value_usdt ?? 0);
+
+          if (!Number.isFinite(numericValue)) {
+            console.warn('Skipping source analytics point with invalid value', point);
+            return null;
+          }
+
+          return {
+            timestamp: dateObj.toISOString(),
+            date: dateObj,
+            value: numericValue,
+            label: '$' + formatNumber(numericValue),
+            breakdown: point.breakdown
+          };
+        })
+        .filter(Boolean);
 
       // Display chart
       if (sourceAnalyticsChart && chartData.length > 0) {
@@ -4162,11 +4183,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Prepare data for LineChart (same format as Source Accounts)
-    const chartDataFormatted = chartData.map(point => ({
-      date: new Date(point.timestamp),  // Use 'date' like Source Accounts
-      value: parseFloat(point.value || 0),
-      label: `$${parseFloat(point.value || 0).toLocaleString()}`
-    }));
+    const chartDataFormatted = (chartData || [])
+      .map(point => {
+        const rawTimestamp = point?.timestamp || point?.date || point?.time;
+        const dateObj = rawTimestamp ? new Date(rawTimestamp) : null;
+        if (!dateObj || Number.isNaN(dateObj.getTime())) {
+          console.warn('Skipping platform analytics point with invalid timestamp', point);
+          return null;
+        }
+
+        const numericValue = typeof point?.value === 'number'
+          ? point.value
+          : parseFloat(point?.value ?? point?.total_value ?? point?.value_usdt ?? 0);
+
+        if (!Number.isFinite(numericValue)) {
+          console.warn('Skipping platform analytics point with invalid value', point);
+          return null;
+        }
+
+        return {
+          timestamp: dateObj.toISOString(),
+          date: dateObj,
+          value: numericValue,
+          label: `$${numericValue.toLocaleString()}`
+        };
+      })
+      .filter(Boolean);
+
+    if (chartDataFormatted.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <p>📭 No platform analytics data available</p>
+          <small>Platform data will appear as users start trading</small>
+        </div>
+      `;
+      return;
+    }
 
     try {
       // Get container dimensions for responsive chart
