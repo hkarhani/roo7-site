@@ -3979,7 +3979,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Prepare chart data
       const chartData = (data.chart_data || []).map(point => ({
-        date: new Date(point.timestamp),  // Changed from timestamp to date to match LineChart expected format
+        timestamp: point.timestamp,
         value: point.value,
         label: '$' + formatNumber(point.value),
         breakdown: point.breakdown
