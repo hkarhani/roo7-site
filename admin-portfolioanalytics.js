@@ -677,7 +677,7 @@ function renderSourceTable() {
       const weightText = weightPct === null || weightPct === undefined
         ? 'N/A'
         : `${weightPct.toFixed(1)}%`;
-      return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}<small>${weightText} of platform</small></span></td>`;
+      return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}<small><em>(${weightText})</em></small></span></td>`;
     }).join('');
     return `
       <tr>

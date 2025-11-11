@@ -561,3 +561,7 @@ body.admin-portfolio-layout {
   color: var(--text-muted);
   margin-top: 2px;
 }
+
+.source-table .cell-pill small em {
+  font-style: italic;
+}
