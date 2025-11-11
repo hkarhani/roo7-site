@@ -404,32 +404,40 @@ function buildButtonGroup(container, items, activeValue, callback) {
 }
 
 function setupPeriodButtons() {
-  buildButtonGroup(selectors.periodButtons, PERIODS, state.period, async (value) => {
+  if (!selectors.periodButtons) return;
+  const handlePeriodChange = async (value) => {
+    if (value === state.period) return;
     state.period = value;
-    buildButtonGroup(selectors.periodButtons, PERIODS, state.period, () => {});
-    await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance()]);
-  });
+    buildButtonGroup(selectors.periodButtons, PERIODS, state.period, handlePeriodChange);
+    await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance(), fetchSourceTable()]);
+  };
+  buildButtonGroup(selectors.periodButtons, PERIODS, state.period, handlePeriodChange);
 }
 
 function setupSourcePeriodButtons() {
   if (!selectors.sourcePeriodButtons) return;
-  buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, async (value) => {
+  const handleSourcePeriodChange = async (value) => {
+    if (value === state.sourcePeriod) return;
     state.sourcePeriod = value;
-    buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, () => {});
+    buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, handleSourcePeriodChange);
     await Promise.all([fetchSourcePerformance(), fetchSourceTable()]);
-  });
+  };
+  buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, handleSourcePeriodChange);
 }
 
 function setupBenchmarkButtons() {
-  buildButtonGroup(selectors.benchmarkButtons, BENCHMARKS, state.benchmark, async (value) => {
+  if (!selectors.benchmarkButtons) return;
+  const handleBenchmarkChange = async (value) => {
+    if (value === state.benchmark) return;
     state.benchmark = value;
-    buildButtonGroup(selectors.benchmarkButtons, BENCHMARKS, state.benchmark, () => {});
+    buildButtonGroup(selectors.benchmarkButtons, BENCHMARKS, state.benchmark, handleBenchmarkChange);
     state.accountSummaries.clear();
-    await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance()]);
+    await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance(), fetchSourceTable()]);
     if (state.selectedUserId !== 'ALL') {
       await fetchAccountSummaries();
     }
-  });
+  };
+  buildButtonGroup(selectors.benchmarkButtons, BENCHMARKS, state.benchmark, handleBenchmarkChange);
 }
 
 function handleTogglePlatform(event) {
