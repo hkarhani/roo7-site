@@ -572,7 +572,7 @@ async function renderSourceComparisonChart() {
     state.sourceChart = new LineChartClass('source-comparison-chart', {
       width: selectors.sourceChartContainer.clientWidth || 900,
       height: 360,
-      animate: true,
+      animate: false,
       showGrid: true,
       showTooltip: true,
       centerZero: true,
@@ -677,7 +677,7 @@ function renderSourceTable() {
       const weightText = weightPct === null || weightPct === undefined
         ? 'N/A'
         : `${weightPct.toFixed(1)}%`;
-      return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}<small><em>(${weightText})</em></small></span></td>`;
+      return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}</span><div class="source-weight">(${weightText})</div></td>`;
     }).join('');
     return `
       <tr>

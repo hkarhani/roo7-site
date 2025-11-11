@@ -555,13 +555,9 @@ body.admin-portfolio-layout {
   display: none;
 }
 
-.source-table .cell-pill small {
-  display: block;
-  font-size: 0.7rem;
+.source-weight {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.source-table .cell-pill small em {
+  margin-top: 4px;
   font-style: italic;
 }
