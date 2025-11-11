@@ -891,10 +891,25 @@ async function fetchPortfolioMetrics(target) {
     }
     if (!endpoint) return;
     const response = await authorizedFetch(endpoint);
-    if (target.type === 'source' || target.type === 'source-platform') {
-      state.sourceMetrics = response?.data || response;
+    const payload = response?.data || response;
+    if (target.type === 'source') {
+      state.sourceMetrics = payload;
+      if (state.sourceMetrics && state.sourceMetrics.metrics) {
+        delete state.sourceMetrics.metrics;
+      }
+    } else if (target.type === 'source-platform') {
+      state.sourceMetrics = {
+        period: payload?.period,
+        metrics: payload?.metrics || null,
+        sources: []
+      };
+      if (!state.sourceMetrics.metrics && payload?.sources?.length) {
+        state.sourceMetrics.metrics = payload.sources[0]?.metrics || null;
+      }
     } else {
-      state.portfolioMetrics = response?.data || response;
+      state.portfolioMetrics = payload;
+    } else {
+      state.portfolioMetrics = payload;
     }
     renderMetricsDetail();
   } catch (error) {
@@ -963,19 +978,28 @@ function buildMetricsMarkup(payload) {
 
 function buildSourceMetricsMarkup(payload) {
   const dateLabel = payload?.period ? `<p class="hint">Period: ${payload.period}</p>` : '';
-  const cards = (payload.sources || []).map((source) => {
-    return `
+  const cards = [];
+  if (payload.metrics) {
+    cards.push(`
+      <div class="metrics-card">
+        <h4>Total Platform</h4>
+        ${buildMetricsMarkup({ metrics: payload.metrics })}
+      </div>
+    `);
+  }
+  (payload.sources || []).forEach((source) => {
+    cards.push(`
       <div class="metrics-card">
         <h4>${source.name || 'Source Account'} ${source.strategy ? `<span class="sub">${source.strategy}</span>` : ''}</h4>
         ${buildMetricsMarkup({ metrics: source.metrics })}
       </div>
-    `;
-  }).join('');
+    `);
+  });
   return `
     <h3>Source Metrics</h3>
     ${dateLabel}
     <div class="metrics-grid">
-      ${cards}
+      ${cards.join('')}
     </div>
   `;
 }
@@ -1214,3 +1238,14 @@ init().catch((error) => {
   console.error('Initialization error', error);
   setChartStatus('Failed to initialize page.');
 });
+    if (target.type === 'source-platform') {
+      if (state.sourceMetrics && state.sourceMetrics.metrics) {
+        state.sourceMetrics.metrics = response?.data?.metrics || response?.metrics || response;
+      } else {
+        state.sourceMetrics = {
+          period: state.sourcePeriod,
+          sources: [],
+          metrics: response?.data?.metrics || response?.metrics || response
+        };
+      }
+    }
