@@ -52,7 +52,11 @@ const state = {
   sourceChart: null,
   sourceLoading: false,
   sourcePeriod: '7d',
-  sourceTableData: null
+  sourceTableData: null,
+  selectedMetricsTarget: null,
+  portfolioMetrics: null,
+  sourceMetrics: null,
+  metricsLoading: false
 };
 
 const selectors = {
@@ -527,12 +531,12 @@ async function loadSourceAccountsForComparison() {
   }
 }
 
-async function fetchSourcePerformance() {
+async function fetchSourcePerformance(options = {}) {
   if (!state.sourceAccounts.length) return;
   const ids = state.sourceAccounts.map((account) => account.id).filter(Boolean);
   if (!ids.length) return;
   const params = new URLSearchParams({
-    period: state.sourcePeriod,
+    period: options.period || state.sourcePeriod,
     benchmark: state.benchmark,
     source_ids: ids.join(',')
   });
@@ -682,7 +686,7 @@ function renderSourceTable() {
       return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}</span><div class="source-weight">(${weightText})</div></td>`;
     }).join('');
     return `
-      <tr>
+      <tr class="source-row" data-target='${JSON.stringify({ type: 'source', id: source.source_id })}'>
         <td>
           <div class="benchmark-name">
             <span>${source.name || 'Source Account'}</span>
@@ -693,6 +697,38 @@ function renderSourceTable() {
       </tr>`;
   });
   selectors.sourceTableBody.innerHTML = rows.join('');
+  selectors.sourceTableBody.insertAdjacentHTML('beforeend', buildSourcePlatformRow(data));
+  selectors.sourceTableBody.querySelectorAll('tr.source-row').forEach((row) => {
+    const dataset = row.dataset.target;
+    if (!dataset) return;
+    row.addEventListener('click', () => {
+      const target = JSON.parse(dataset);
+      fetchPortfolioMetrics(target);
+    });
+  });
+}
+
+function buildSourcePlatformRow(data) {
+  const periods = data.platform?.periods || {};
+  const cells = PERIODS.map(({ value }) => {
+    const pct = periods[value];
+    if (pct === null || pct === undefined) {
+      return '<td><div class="placeholder-copy">N/A</div></td>';
+    }
+    const polarity = pct > 0 ? 'positive' : pct < 0 ? 'negative' : '';
+    return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}</span><div class="source-weight">(Platform)</div></td>`;
+  }).join('');
+  return `
+    <tr class="source-row" data-target='${JSON.stringify({ type: 'source-platform' })}'>
+      <td>
+        <div class="benchmark-name">
+          <span>Total Platform</span>
+          <span class="sub">Source aggregate</span>
+        </div>
+      </td>
+      ${cells}
+    </tr>
+  `;
 }
 
 function computeChartSeries(points) {
@@ -816,6 +852,148 @@ async function fetchSnapshotTable() {
   }
 }
 
+async function fetchPortfolioMetrics(target) {
+  try {
+    state.metricsLoading = true;
+    state.selectedMetricsTarget = target;
+    let endpoint;
+    let params = new URLSearchParams({ period: state.period, benchmark: state.benchmark });
+    if (target.type === 'portfolio') {
+      if (state.selectedUserId !== 'ALL') {
+        params.append('user_ids', state.selectedUserId);
+      }
+      if (state.selectedAccountIds.length) {
+        params.append('account_ids', state.selectedAccountIds.join(','));
+      }
+      endpoint = `${MARKET_API_BASE}/admin/analytics/portfolio/metrics?${params.toString()}`;
+    } else if (target.type === 'account') {
+      params = new URLSearchParams({
+        period: state.period,
+        benchmark: state.benchmark,
+        user_ids: state.selectedUserId,
+        account_ids: target.id
+      });
+      endpoint = `${MARKET_API_BASE}/admin/analytics/portfolio/metrics?${params.toString()}`;
+    } else if (target.type === 'source') {
+      params = new URLSearchParams({
+        period: state.sourcePeriod,
+        benchmark: state.benchmark,
+        source_ids: target.id
+      });
+      endpoint = `${MARKET_API_BASE}/admin/analytics/source/metrics?${params.toString()}`;
+    } else if (target.type === 'source-platform') {
+      params = new URLSearchParams({
+        period: state.sourcePeriod,
+        benchmark: state.benchmark,
+        source_ids: state.sourceAccounts.map((account) => account.id).join(',')
+      });
+      endpoint = `${MARKET_API_BASE}/admin/analytics/source/metrics?${params.toString()}`;
+    }
+    if (!endpoint) return;
+    const response = await authorizedFetch(endpoint);
+    if (target.type === 'source' || target.type === 'source-platform') {
+      state.sourceMetrics = response?.data || response;
+    } else {
+      state.portfolioMetrics = response?.data || response;
+    }
+    renderMetricsDetail();
+  } catch (error) {
+    console.error('Metrics fetch failed', error);
+    renderMetricsDetail(true);
+  } finally {
+    state.metricsLoading = false;
+  }
+}
+
+function renderMetricsDetail(isError = false) {
+  const portfolioContainer = document.getElementById('portfolio-metrics-detail');
+  const sourceContainer = document.getElementById('source-metrics-detail');
+  if (isError) {
+    if (portfolioContainer) {
+      portfolioContainer.classList.remove('hidden');
+      portfolioContainer.innerHTML = '<p class="error">Unable to load metrics. Please try again.</p>';
+    }
+    if (sourceContainer) {
+      sourceContainer.classList.remove('hidden');
+      sourceContainer.innerHTML = '<p class="error">Unable to load metrics. Please try again.</p>';
+    }
+    return;
+  }
+  if (portfolioContainer && state.portfolioMetrics) {
+    portfolioContainer.classList.remove('hidden');
+    portfolioContainer.innerHTML = buildMetricsMarkup(state.portfolioMetrics);
+  }
+  if (sourceContainer && state.sourceMetrics) {
+    sourceContainer.classList.remove('hidden');
+    sourceContainer.innerHTML = buildSourceMetricsMarkup(state.sourceMetrics);
+  }
+}
+
+function buildMetricsMarkup(payload) {
+  const metrics = payload?.metrics || {};
+  const dateRange = metrics.date_range || {};
+  const sections = [];
+  const addSection = (title, data) => {
+    const entries = Object.entries(data || {}).filter(([, value]) => value !== null && value !== undefined);
+    if (!entries.length) return;
+    sections.push(`
+      <div class="metrics-card">
+        <h4>${title}</h4>
+        <ul>
+          ${entries.map(([label, value]) => `<li><strong>${formatLabel(label)}:</strong> ${formatMetric(value)}</li>`).join('')}
+        </ul>
+      </div>
+    `);
+  };
+  addSection('Performance', metrics.performance);
+  addSection('Risk & Drawdowns', metrics.risk);
+  addSection('Distribution', metrics.distribution);
+  addSection('Relative', metrics.relative);
+  const dateLabel = dateRange.start && dateRange.end
+    ? `<p class="hint">Data coverage: ${new Date(dateRange.start).toLocaleString()} – ${new Date(dateRange.end).toLocaleString()} (${dateRange.points || 0} points)</p>`
+    : '';
+  return `
+    <h3>Detailed Metrics</h3>
+    ${dateLabel}
+    <div class="metrics-grid">
+      ${sections.join('')}
+    </div>
+  `;
+}
+
+function buildSourceMetricsMarkup(payload) {
+  const dateLabel = payload?.period ? `<p class="hint">Period: ${payload.period}</p>` : '';
+  const cards = (payload.sources || []).map((source) => {
+    return `
+      <div class="metrics-card">
+        <h4>${source.name || 'Source Account'} ${source.strategy ? `<span class="sub">${source.strategy}</span>` : ''}</h4>
+        ${buildMetricsMarkup({ metrics: source.metrics })}
+      </div>
+    `;
+  }).join('');
+  return `
+    <h3>Source Metrics</h3>
+    ${dateLabel}
+    <div class="metrics-grid">
+      ${cards}
+    </div>
+  `;
+}
+
+function formatLabel(key) {
+  return key
+    .replace(/_/g, ' ')
+    .replace('pct', '(%)')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatMetric(value) {
+  if (typeof value === 'number') {
+    return Math.abs(value) >= 1 ? value.toFixed(2) : value.toFixed(4);
+  }
+  return value;
+}
+
 async function fetchAccountSummaries() {
   if (!state.accounts.length || state.selectedUserId === 'ALL') return;
   const promises = state.accounts.slice(0, 12).map(async (account) => {
@@ -884,7 +1062,8 @@ function renderSnapshotTable() {
   rows.push(buildSnapshotRow({
     label: state.selectedUserId === 'ALL' ? 'Total Portfolio' : 'Selected Portfolio',
     periods: state.tableData.portfolio?.periods || {},
-    coverage
+    coverage,
+    target: { type: 'portfolio' }
   }));
 
   // Account rows (selected user only)
@@ -895,7 +1074,8 @@ function renderSnapshotTable() {
         label: account.name,
         subtitle: account.strategy,
         periods: summary?.periods || {},
-        coverage: summary?.coverage || {}
+        coverage: summary?.coverage || {},
+        target: { type: 'account', id: account.account_id }
       }));
     });
   }
@@ -912,11 +1092,20 @@ function renderSnapshotTable() {
       subtitle: 'Platform performance',
       periods: mapBenchmarkPeriods(entry, 'platform_change_percent'),
       coverage: mapBenchmarkCoverage(entry),
-      rowClass: 'platform-row'
+      rowClass: 'platform-row',
+      target: { type: 'platform' }
     }));
   });
 
   selectors.tableBody.innerHTML = rows.join('');
+  selectors.tableBody.querySelectorAll('tr.snapshot-row').forEach((row) => {
+    const dataset = row.dataset.target;
+    if (!dataset) return;
+    row.addEventListener('click', () => {
+      const target = JSON.parse(dataset);
+      fetchPortfolioMetrics(target);
+    });
+  });
 }
 
 function mapBenchmarkPeriods(entry, field) {
@@ -937,10 +1126,10 @@ function mapBenchmarkCoverage(entry) {
   return result;
 }
 
-function buildSnapshotRow({ label, subtitle = '', periods = {}, coverage = {}, rowClass = '' }) {
+function buildSnapshotRow({ label, subtitle = '', periods = {}, coverage = {}, rowClass = '', target }) {
   const cells = PERIOD_KEYS.map((periodKey) => buildValueCell(periods[periodKey], coverage[periodKey], periodKey)).join('');
   return `
-    <tr class="${rowClass}">
+    <tr class="snapshot-row ${rowClass}" data-target='${target ? JSON.stringify(target) : ''}'>
       <td>
         <div class="benchmark-name">
           <span>${label}</span>

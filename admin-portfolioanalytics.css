@@ -564,3 +564,36 @@ body.admin-portfolio-layout {
 .source-comparison-row + .table-row {
   margin-top: 24px;
 }
+.metrics-detail {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.metrics-detail.hidden {
+  display: none;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.metrics-card h4 {
+  margin: 0 0 8px;
+}
+
+.metrics-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.metrics-card li {
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
