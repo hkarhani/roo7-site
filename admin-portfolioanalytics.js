@@ -483,13 +483,13 @@ function buildCumulativeSeries(points, key) {
     const stepMultiplier = 1 + (delta / 100);
     const safeMultiplier = Number.isFinite(stepMultiplier) && stepMultiplier > 0 ? stepMultiplier : 0.0001;
     cumulativeFactor *= safeMultiplier;
-    const cumulativePercent = (cumulativeFactor - 1) * 100;
+    const cumulativeDecimal = cumulativeFactor - 1;
     const date = new Date(point.timestamp);
     series.push({
       timestamp: point.timestamp,
       date,
-      value: cumulativePercent,
-      label: formatPercent(cumulativePercent)
+      value: cumulativeDecimal,
+      label: formatPercent(cumulativeDecimal * 100)
     });
   });
   return series;
@@ -821,7 +821,7 @@ async function fetchPerformance() {
 
 async function renderChart() {
   if (!state.rawSeries || !Array.isArray(state.rawSeries.points)) return;
-  const series = computeChartSeries(state.rawSeries.points);
+  const series = computeChartSeries(state.rawSeries.points || []);
   if (!series.length) {
     if (state.chart) {
       state.chart.showEmptyState();
