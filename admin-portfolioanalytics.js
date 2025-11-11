@@ -40,6 +40,7 @@ const state = {
   period: '7d',
   showPlatform: true,
   showBenchmark: true,
+  showSourceBenchmark: true,
   chart: null,
   rawSeries: null,
   accountSummaries: new Map(),
@@ -50,7 +51,8 @@ const state = {
   sourcePerformance: null,
   sourceChart: null,
   sourceLoading: false,
-  sourcePeriod: '7d'
+  sourcePeriod: '7d',
+  sourceTableData: null
 };
 
 const selectors = {
@@ -81,7 +83,9 @@ const selectors = {
   sourceFilters: document.getElementById('source-account-filters'),
   sourceChartContainer: document.getElementById('source-comparison-chart'),
   sourceChartStatus: document.getElementById('source-chart-status'),
-  sourcePeriodButtons: document.getElementById('source-period-buttons')
+  sourcePeriodButtons: document.getElementById('source-period-buttons'),
+  sourceBenchmarkToggle: document.getElementById('toggle-source-benchmark'),
+  sourceTableBody: document.getElementById('source-table-body')
 };
 
 function requireAuth() {
@@ -513,8 +517,9 @@ async function loadSourceAccountsForComparison() {
       if (selectors.sourceChartContainer) {
         selectors.sourceChartContainer.innerHTML = '<div class="empty-state">No source accounts configured.</div>';
       }
+      selectors.sourceTableBody && (selectors.sourceTableBody.innerHTML = '<tr><td colspan="7"><div class="placeholder-copy">No source accounts configured.</div></td></tr>');
     } else {
-      await fetchSourcePerformance();
+      await Promise.all([fetchSourcePerformance(), fetchSourceTable()]);
     }
   } catch (error) {
     console.error('Source accounts load failed', error);
@@ -596,7 +601,7 @@ async function renderSourceComparisonChart() {
     });
   });
 
-  if (state.showBenchmark && state.sourcePerformance.benchmark?.points) {
+  if (state.showSourceBenchmark && state.sourcePerformance.benchmark?.points) {
     const benchmarkValues = buildCumulativeSeries(state.sourcePerformance.benchmark.points, 'change_percent');
     if (benchmarkValues.length) {
       series.push({
@@ -617,6 +622,74 @@ async function renderSourceComparisonChart() {
   }
 
   state.sourceChart.setData(series);
+  updateSourceLegend();
+}
+
+function updateSourceLegend() {
+  if (!selectors.sourceBenchmarkToggle) return;
+  const legendEl = document.querySelector('#source-chart-legend .legend-item.benchmark');
+  if (legendEl) {
+    legendEl.style.opacity = state.showSourceBenchmark ? '1' : '0.35';
+  }
+  selectors.sourceBenchmarkToggle.checked = state.showSourceBenchmark;
+}
+
+async function fetchSourceTable() {
+  if (!selectors.sourceTableBody) return;
+  if (!state.sourceAccounts.length) {
+    selectors.sourceTableBody.innerHTML = '<tr><td colspan="7"><div class="placeholder-copy">No source accounts available.</div></td></tr>';
+    return;
+  }
+  const ids = state.sourceAccounts.map((account) => account.id).filter(Boolean);
+  if (!ids.length) {
+    selectors.sourceTableBody.innerHTML = '<tr><td colspan="7"><div class="placeholder-copy">No source accounts available.</div></td></tr>';
+    return;
+  }
+  const params = new URLSearchParams({
+    periods: PERIOD_KEYS.join(','),
+    source_ids: ids.join(',')
+  });
+  try {
+    const payload = await authorizedFetch(`${MARKET_API_BASE}/admin/benchmark/source/table?${params.toString()}`);
+    state.sourceTableData = payload?.data || payload;
+    renderSourceTable();
+  } catch (error) {
+    console.error('Source table fetch failed', error);
+    selectors.sourceTableBody.innerHTML = '<tr><td colspan="7"><div class="placeholder-copy">Unable to load source snapshot.</div></td></tr>';
+  }
+}
+
+function renderSourceTable() {
+  if (!selectors.sourceTableBody) return;
+  const data = state.sourceTableData;
+  if (!data || !Array.isArray(data.sources) || !data.sources.length) {
+    selectors.sourceTableBody.innerHTML = '<tr><td colspan="7"><div class="placeholder-copy">Source performance unavailable.</div></td></tr>';
+    return;
+  }
+  const platformPeriods = (data.platform && data.platform.periods) || {};
+  const rows = data.sources.map((source) => {
+    const cells = PERIODS.map(({ value }) => {
+      const pct = source.periods ? source.periods[value] : null;
+      const platformPct = platformPeriods[value];
+      if (pct === null || pct === undefined) {
+        return '<td><div class="placeholder-copy">—</div></td>';
+      }
+      const polarity = pct > 0 ? 'positive' : pct < 0 ? 'negative' : '';
+      const platformText = platformPct === null || platformPct === undefined ? 'N/A' : formatPercent(platformPct);
+      return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}<small>Platform ${platformText}</small></span></td>`;
+    }).join('');
+    return `
+      <tr>
+        <td>
+          <div class="benchmark-name">
+            <span>${source.name || 'Source Account'}</span>
+            ${source.strategy ? `<span class="sub">${source.strategy}</span>` : ''}
+          </div>
+        </td>
+        ${cells}
+      </tr>`;
+  });
+  selectors.sourceTableBody.innerHTML = rows.join('');
 }
 
 function computeChartSeries(points) {
@@ -898,6 +971,12 @@ function setupEventListeners() {
   if (selectors.toggleBenchmark) {
     selectors.toggleBenchmark.addEventListener('change', handleToggleBenchmark);
   }
+  if (selectors.sourceBenchmarkToggle) {
+    selectors.sourceBenchmarkToggle.addEventListener('change', (event) => {
+      state.showSourceBenchmark = event.target.checked;
+      renderSourceComparisonChart();
+    });
+  }
   if (selectors.logoutBtn) {
     selectors.logoutBtn.addEventListener('click', () => {
       localStorage.removeItem('token');
@@ -936,7 +1015,7 @@ async function init() {
     loadUsersList(),
     loadSourceAccountsForComparison()
   ]);
-  await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance()]);
+  await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance(), fetchSourceTable()]);
 }
 
 init().catch((error) => {
