@@ -908,8 +908,6 @@ async function fetchPortfolioMetrics(target) {
       }
     } else {
       state.portfolioMetrics = payload;
-    } else {
-      state.portfolioMetrics = payload;
     }
     renderMetricsDetail();
   } catch (error) {
