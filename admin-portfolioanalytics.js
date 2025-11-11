@@ -416,7 +416,7 @@ function setupSourcePeriodButtons() {
   buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, async (value) => {
     state.sourcePeriod = value;
     buildButtonGroup(selectors.sourcePeriodButtons, PERIODS, state.sourcePeriod, () => {});
-    await fetchSourcePerformance();
+    await Promise.all([fetchSourcePerformance(), fetchSourceTable()]);
   });
 }
 
@@ -547,6 +547,12 @@ async function fetchSourcePerformance(options = {}) {
     }
     const payload = await authorizedFetch(`${MARKET_API_BASE}/admin/benchmark/source/performance?${params.toString()}`);
     state.sourcePerformance = payload?.data || payload;
+    if (state.sourcePerformance?.benchmark?.points && state.sourcePerformance.benchmark.points.length) {
+      const earliest = state.sourcePerformance.benchmark.points[0].timestamp;
+      state.sourcePerformance.sources.forEach((source) => {
+        source.points = (source.points || []).filter((point) => !earliest || point.timestamp >= earliest);
+      });
+    }
     await renderSourceComparisonChart();
     if (selectors.sourceChartStatus) {
       selectors.sourceChartStatus.textContent = 'Updated.';
