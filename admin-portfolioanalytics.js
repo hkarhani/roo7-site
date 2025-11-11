@@ -666,17 +666,18 @@ function renderSourceTable() {
     selectors.sourceTableBody.innerHTML = '<tr><td colspan="7"><div class="placeholder-copy">Source performance unavailable.</div></td></tr>';
     return;
   }
-  const platformPeriods = (data.platform && data.platform.periods) || {};
   const rows = data.sources.map((source) => {
     const cells = PERIODS.map(({ value }) => {
       const pct = source.periods ? source.periods[value] : null;
-      const platformPct = platformPeriods[value];
+      const weightPct = source.weights ? source.weights[value] : null;
       if (pct === null || pct === undefined) {
         return '<td><div class="placeholder-copy">—</div></td>';
       }
       const polarity = pct > 0 ? 'positive' : pct < 0 ? 'negative' : '';
-      const platformText = platformPct === null || platformPct === undefined ? 'N/A' : formatPercent(platformPct);
-      return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}<small>Platform ${platformText}</small></span></td>`;
+      const weightText = weightPct === null || weightPct === undefined
+        ? 'N/A'
+        : `${weightPct.toFixed(1)}%`;
+      return `<td><span class="cell-pill ${polarity}">${formatPercent(pct)}<small>${weightText} of platform</small></span></td>`;
     }).join('');
     return `
       <tr>
