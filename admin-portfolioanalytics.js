@@ -24,7 +24,7 @@ const BENCHMARKS = [
   { value: 'BNBUSDT', label: 'BNB' },
   { value: 'XRPUSDT', label: 'XRP' }
 ];
-const SOURCE_COLORS = ['#ef4444', '#f97316', '#14b8a6', '#a855f7'];
+const SOURCE_COLORS = ['#ef4444', '#0ea5e9', '#14b8a6', '#a855f7'];
 
 function getBenchmarkOption(value) {
   return BENCHMARKS.find((item) => item.value === value) || BENCHMARKS[0];
