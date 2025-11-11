@@ -89,7 +89,8 @@ const selectors = {
   sourceChartStatus: document.getElementById('source-chart-status'),
   sourcePeriodButtons: document.getElementById('source-period-buttons'),
   sourceBenchmarkToggle: document.getElementById('toggle-source-benchmark'),
-  sourceTableBody: document.getElementById('source-table-body')
+  sourceTableBody: document.getElementById('source-table-body'),
+  sourceLegendList: document.getElementById('source-strategy-legend')
 };
 
 function requireAuth() {
@@ -597,7 +598,6 @@ async function renderSourceComparisonChart() {
     selectors.sourceChartContainer.innerHTML = '<div class="empty-state">Source performance unavailable.</div>';
     return;
   }
-
   const LineChartClass = await waitForLineChart();
   if (!state.sourceChart) {
     state.sourceChart = new LineChartClass('source-comparison-chart', {
@@ -655,16 +655,27 @@ async function renderSourceComparisonChart() {
   }
 
   state.sourceChart.setData(series);
-  updateSourceLegend();
+  updateSourceLegend(series);
 }
 
-function updateSourceLegend() {
-  if (!selectors.sourceBenchmarkToggle) return;
-  const legendEl = document.querySelector('#source-chart-legend .legend-item.benchmark');
-  if (legendEl) {
-    legendEl.style.opacity = state.showSourceBenchmark ? '1' : '0.35';
+function updateSourceLegend(series = []) {
+  if (selectors.sourceBenchmarkToggle) {
+    const legendEl = document.querySelector('#source-chart-legend .legend-item.benchmark');
+    if (legendEl) {
+      legendEl.style.opacity = state.showSourceBenchmark ? '1' : '0.35';
+    }
+    selectors.sourceBenchmarkToggle.checked = state.showSourceBenchmark;
   }
-  selectors.sourceBenchmarkToggle.checked = state.showSourceBenchmark;
+  if (!selectors.sourceLegendList) return;
+  const items = series
+    .filter((item) => !item.name.toLowerCase().includes('benchmark'))
+    .map((item) => `
+      <span class="legend-item swatch">
+        <span class="legend-swatch" style="background:${item.color}"></span>
+        ${item.name}
+      </span>
+    `).join('');
+  selectors.sourceLegendList.innerHTML = items || '<span class="placeholder-copy">Select a source account</span>';
 }
 
 async function fetchSourceTable() {

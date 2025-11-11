@@ -426,6 +426,26 @@ body.admin-portfolio-layout {
   background: #f97316;
 }
 
+.legend-list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.legend-item.swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
 .table-card table {
   width: 100%;
   border-collapse: collapse;
