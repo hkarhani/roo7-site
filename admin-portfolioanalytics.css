@@ -561,3 +561,6 @@ body.admin-portfolio-layout {
   margin-top: 4px;
   font-style: italic;
 }
+.source-comparison-row + .table-row {
+  margin-top: 24px;
+}

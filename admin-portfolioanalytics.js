@@ -608,7 +608,9 @@ async function renderSourceComparisonChart() {
         name: `Benchmark (${getBenchmarkOption(state.benchmark).label})`,
         color: '#f97316',
         values: benchmarkValues,
-        area: false
+        area: true,
+        fillToZero: true,
+        areaColor: 'rgba(249, 115, 22, 0.15)'
       });
     }
   }
@@ -671,7 +673,7 @@ function renderSourceTable() {
       const pct = source.periods ? source.periods[value] : null;
       const weightPct = source.weights ? source.weights[value] : null;
       if (pct === null || pct === undefined) {
-        return '<td><div class="placeholder-copy">—</div></td>';
+        return '<td><div class="placeholder-copy">N/A</div></td>';
       }
       const polarity = pct > 0 ? 'positive' : pct < 0 ? 'negative' : '';
       const weightText = weightPct === null || weightPct === undefined
