@@ -273,6 +273,13 @@ body.admin-portfolio-layout {
   font-size: 0.9rem;
 }
 
+.source-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
 .source-toggle input {
   accent-color: var(--accent);
 }

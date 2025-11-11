@@ -56,7 +56,8 @@ const state = {
   selectedMetricsTarget: null,
   portfolioMetrics: null,
   sourceMetrics: null,
-  metricsLoading: false
+  metricsLoading: false,
+  sourceColorMap: {}
 };
 
 const selectors = {
@@ -505,8 +506,10 @@ function renderSourceAccountFilters() {
   selectors.sourceFilters.innerHTML = state.sourceAccounts
     .map((account) => {
       const checked = state.selectedSourceIds.includes(account.id);
+      const color = state.sourceColorMap[account.id] || '#9ca3af';
       return `
         <label class="source-toggle">
+          <span class="source-color" style="background:${color}"></span>
           <input type="checkbox" data-source-id="${account.id}" ${checked ? 'checked' : ''} />
           <span>${account.name || 'Source'}<small> ${account.strategy || ''}</small></span>
         </label>
@@ -538,6 +541,10 @@ async function loadSourceAccountsForComparison() {
     if (!response?.success) throw new Error('Invalid response');
     state.sourceAccounts = (response.accounts || []).slice(0, 4);
     state.selectedSourceIds = state.sourceAccounts.map((account) => account.id);
+    state.sourceColorMap = {};
+    state.sourceAccounts.forEach((account, index) => {
+      state.sourceColorMap[account.id] = SOURCE_COLORS[index % SOURCE_COLORS.length];
+    });
     renderSourceAccountFilters();
     if (!state.sourceAccounts.length) {
       if (selectors.sourceChartContainer) {
@@ -624,9 +631,10 @@ async function renderSourceComparisonChart() {
     if (source.strategy) {
       labelParts.push(`(${source.strategy})`);
     }
+    const color = state.sourceColorMap[source.source_id] || SOURCE_COLORS[index % SOURCE_COLORS.length];
     series.push({
       name: labelParts.join(' '),
-      color: SOURCE_COLORS[index % SOURCE_COLORS.length],
+      color,
       values,
       area: false
     });
