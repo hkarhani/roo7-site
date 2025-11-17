@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Admin · B2B Sync Control</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script type="module" src="frontend-config.js?v=2.4"></script>
+  <link rel="stylesheet" href="dashboard.css?v=2.4" />
+  <link rel="stylesheet" href="admin-b2b.css?v=20250219a" />
+</head>
+<body class="admin-b2b-page">
+  <div class="toast-container" id="toast-container"></div>
+  <header class="page-header">
+    <div>
+      <h1>🔗 B2B Sync Control Center</h1>
+      <p class="subtitle">Create and govern white-label partners, API credentials, and source access.</p>
+    </div>
+    <div class="header-actions">
+      <a href="admin-dashboard.html" class="secondary-button">← Admin Dashboard</a>
+      <button id="theme-toggle" class="secondary-button">Toggle Theme</button>
+      <button id="logout-btn" class="danger-button">Logout</button>
+    </div>
+  </header>
+
+  <main class="admin-b2b-grid">
+    <section class="admin-b2b-card">
+      <div class="card-header">
+        <h2 id="form-title">Create B2B Partner</h2>
+        <p class="card-subtitle">Generate API credentials and manage access per partner.</p>
+      </div>
+      <form id="partner-form" class="admin-b2b-form">
+        <div class="form-group">
+          <label for="partner-name">Partner Name</label>
+          <input type="text" id="partner-name" name="name" placeholder="Partner Alpha" required />
+        </div>
+        <div class="form-group">
+          <label for="partner-status">Status</label>
+          <select id="partner-status" name="status">
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Allowed Source Accounts</label>
+          <label class="form-note">
+            <input type="checkbox" id="allow-all-sources" checked />
+            Allow all source accounts
+          </label>
+          <div id="source-options" class="checkbox-grid disabled"></div>
+          <p class="form-note">Uncheck “Allow all” to pick specific source accounts.</p>
+        </div>
+        <div class="form-group">
+          <label for="allowed-hosts">Allowed IPs / Hostnames</label>
+          <textarea id="allowed-hosts" placeholder="217.165.158.203&#10;api.partner.com"></textarea>
+          <p class="form-note">One entry per line. Used to cross-reference before unbanning.</p>
+        </div>
+        <div class="form-group">
+          <label for="partner-notes">Notes</label>
+          <textarea id="partner-notes" placeholder="Context, relationship notes, compliance reminders..."></textarea>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="primary-button" id="save-partner-btn">Save Partner</button>
+          <button type="button" class="secondary-button" id="reset-form-btn">Reset</button>
+          <button type="button" class="danger-button" id="disable-partner-btn" disabled>Disable</button>
+        </div>
+      </form>
+      <div id="secret-banner" class="secret-banner">
+        <strong>Copy Now:</strong>
+        <p>This secret is only shown once. Keep it in a secure password manager.</p>
+        <code id="secret-value"></code>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;" />
+
+      <div>
+        <h2>Unban Partner IP</h2>
+        <p class="card-subtitle">Use this if a whitelisted partner was blocked by automatic rules.</p>
+        <form id="unban-form" class="admin-b2b-form">
+          <div class="form-group">
+            <label for="unban-ip">IP Address</label>
+            <input type="text" id="unban-ip" placeholder="217.165.158.203" required />
+          </div>
+          <button type="submit" class="secondary-button">Remove Ban</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="admin-b2b-card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h2>Registered Partners</h2>
+          <p class="card-subtitle">Click a row to view credentials, history, and available actions.</p>
+        </div>
+        <button id="refresh-partners" class="secondary-button">Refresh</button>
+      </div>
+      <div class="table-responsive">
+        <table class="b2b-table" id="partners-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>API Key</th>
+              <th>Sources</th>
+              <th>Hosts</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">Loading partners…</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="partner-detail-card" class="admin-b2b-card" style="margin-top:1.5rem; background:rgba(0,0,0,0.15);">
+        <h2>Partner Detail</h2>
+        <div id="partner-detail-body">
+          <p class="card-subtitle">Select a partner from the table to inspect API data.</p>
+        </div>
+        <div class="actions-row">
+          <button id="regenerate-secret-btn" class="primary-button" disabled>Regenerate Secret</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="admin-b2b.js?v=20250219a"></script>
+</body>
+</html>

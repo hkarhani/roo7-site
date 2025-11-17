@@ -80,6 +80,7 @@ export const DOMAIN_CONFIG = {
         auth: "443",        // auth-api
         market: "8002",     // market-data-service
         jobs: "8004",       // jobs-manager admin API
+        b2b: "8005",        // b2bsync-service
         frontend: "443"
     }
 };
@@ -95,6 +96,7 @@ export const API_CONFIG = {
     invoicingUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.api}`,
     marketUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.market}`,
     jobsUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.jobs}`,
+    b2bUrl: `${DOMAIN_CONFIG.protocol}://${DOMAIN_CONFIG.api}:${DOMAIN_CONFIG.ports.b2b}`,
     
     // Endpoints
     endpoints: {
