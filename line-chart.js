@@ -280,9 +280,9 @@ class LineChart {
         yDomainMax = yMax * 1.1;
       }
     } else {
-      const yPadding = Math.max((yMax - yMin) * 0.1, 0.001);
-      yDomainMin = Math.max(0, yMin - yPadding);
-      yDomainMax = yMax + yPadding;
+      const primaryPadding = Math.max((yMax - yMin) * 0.12, Math.abs(yMax) * 0.03, 1);
+      yDomainMin = Math.max(0, yMin - primaryPadding);
+      yDomainMax = yMax + primaryPadding;
     }
     
     if (yDomainMax === yDomainMin) {

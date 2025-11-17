@@ -4182,7 +4182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       platformAnalyticsChart = null;
     }
 
-    const rawPoints = (chartData || [])
+    const chartDataFormatted = (chartData || [])
       .map(point => {
         const rawTimestamp = point?.timestamp || point?.date || point?.time;
         const dateObj = rawTimestamp ? new Date(rawTimestamp) : null;
@@ -4203,12 +4203,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return {
           timestamp: dateObj.toISOString(),
           date: dateObj,
-          value: numericValue
+          value: numericValue,
+          label: `$${numericValue.toLocaleString()}`
         };
       })
       .filter(Boolean);
 
-    if (rawPoints.length === 0) {
+    if (chartDataFormatted.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
           <p>📭 No platform analytics data available</p>
@@ -4218,34 +4219,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const baseValue = rawPoints[0]?.value || 0;
-    const percentSeries = rawPoints.map(point => {
-      let percentChange = 0;
-      if (Math.abs(baseValue) > 0.0001) {
-        percentChange = ((point.value - baseValue) / baseValue) * 100;
-      }
-      return {
-        timestamp: point.timestamp,
-        date: point.date,
-        value: percentChange,
-        usdValue: point.value,
-        label: `${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`
-      };
-    });
-
     try {
       // Get container dimensions for responsive chart
       const containerRect = container.getBoundingClientRect();
-       const dynamicHeight = Math.max(320, containerRect.height || 0);
-      const percentFormatter = new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-      const currencyFormatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0
-      });
+      const dynamicHeight = Math.max(360, (containerRect.height || 0) + 80);
 
       // Create new LineChart instance with same config as Source Accounts
       platformAnalyticsChart = new LineChart('platform-analytics-chart', {
@@ -4257,11 +4234,10 @@ document.addEventListener("DOMContentLoaded", () => {
         margin: { top: 40, right: 30, bottom: 40, left: 60 },
         responsive: true,
         colors: ['#3b82f6'],
-        valueFormat: 'percentage',
-        centerZero: true,
-        fillArea: false,
+        valueFormat: 'currency',
+        fillArea: true,
         tooltipFormatter: function(data) {
-          const date = new Date(data.date);
+          const date = new Date(data.date);  // Use 'date' field
           const localTime = date.toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -4270,9 +4246,7 @@ document.addEventListener("DOMContentLoaded", () => {
             minute: '2-digit',
             timeZoneName: 'short'
           });
-          const percentText = `${data.value >= 0 ? '+' : ''}${percentFormatter.format(data.value)}%`;
-          const usdText = currencyFormatter.format(data.usdValue || 0);
-          return `${localTime}<br/>Change: ${percentText}<br/>Value: ${usdText}`;
+          return `${localTime}<br/>Total Platform Value: ${data.label || data.value}`;  // Use 'value' field
         },
         xAxisFormatter: function(value) {
           const date = new Date(value);
@@ -4284,14 +4258,20 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         },
         yAxisFormatter: function(value) {
-          return `${value >= 0 ? '' : '-'}${Math.abs(value).toFixed(1)}%`;
+          if (value >= 1000000) {
+            return '$' + (value / 1000000).toFixed(1) + 'M';
+          } else if (value >= 1000) {
+            return '$' + (value / 1000).toFixed(1) + 'K';
+          } else {
+            return '$' + value.toFixed(0);
+          }
         }
       });
 
       // Set data for the LineChart
       platformAnalyticsChart.setData([{
-        name: 'Platform % Change',
-        values: percentSeries,
+        name: 'Total Platform Value',
+        values: chartDataFormatted,  // Use 'values' like Source Accounts
         color: '#3b82f6'
       }]);
 
