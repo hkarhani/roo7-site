@@ -462,6 +462,15 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.regenerateBtn.addEventListener('click', regenerateSecret);
   elements.unbanForm.addEventListener('submit', handleUnban);
   elements.refreshBtn.addEventListener('click', loadPartners);
+  if (elements.themeToggle) {
+    elements.themeToggle.addEventListener('click', () => {
+      if (window.themeManager) {
+        window.themeManager.toggleTheme();
+      } else {
+        document.body.classList.toggle('dark-theme');
+      }
+    });
+  }
   elements.logoutBtn.addEventListener('click', logout);
 
   (async function init() {
