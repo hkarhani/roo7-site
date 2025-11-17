@@ -435,10 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function toggleTheme() {
-    document.body.classList.toggle('light');
-  }
-
   function logout() {
     localStorage.removeItem('token');
     window.location.href = '/auth.html';
@@ -461,7 +457,6 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.regenerateBtn.addEventListener('click', regenerateSecret);
   elements.unbanForm.addEventListener('submit', handleUnban);
   elements.refreshBtn.addEventListener('click', loadPartners);
-  elements.themeToggle.addEventListener('click', toggleTheme);
   elements.logoutBtn.addEventListener('click', logout);
 
   (async function init() {
