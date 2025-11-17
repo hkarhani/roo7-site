@@ -68,8 +68,8 @@ const selectors = {
   platformChange: document.getElementById('platform-change'),
   benchmarkChange: document.getElementById('benchmark-change'),
   portfolioUpdated: document.getElementById('portfolio-last-updated'),
-  portfolioPlatformSpread: document.getElementById('portfolio-platform-spread'),
-  portfolioPlatformHelper: document.getElementById('portfolio-platform-helper'),
+  portfolioBenchmarkSpread: document.getElementById('portfolio-benchmark-spread'),
+  portfolioBenchmarkHelper: document.getElementById('portfolio-benchmark-helper'),
   tableBody: document.getElementById('benchmark-table-body'),
   tableStatus: document.getElementById('benchmark-table-status'),
   logoutBtn: document.getElementById('logout-btn'),
@@ -388,14 +388,14 @@ function updateStats(portfolioSeries, platformSeries, benchmarkSeries) {
   const lastPortfolio = portfolioSeries.at(-1)?.value ?? 0;
   const lastPlatform = platformSeries.at(-1)?.value ?? 0;
   const lastBenchmark = benchmarkSeries.at(-1)?.value ?? 0;
-  const spread = (lastPortfolio - lastPlatform) * 100;
+  const spread = (lastPortfolio - lastBenchmark) * 100;
 
   selectors.portfolioChange.textContent = formatPercent(lastPortfolio * 100);
   selectors.platformChange.textContent = formatPercent(lastPlatform * 100);
   selectors.benchmarkChange.textContent = formatPercent(lastBenchmark * 100);
-  selectors.portfolioPlatformSpread.textContent = formatPercent(spread);
-  selectors.portfolioPlatformHelper.textContent =
-    spread >= 0 ? 'Portfolio outperforming platform' : 'Portfolio underperforming platform';
+  selectors.portfolioBenchmarkSpread.textContent = formatPercent(spread);
+  selectors.portfolioBenchmarkHelper.textContent =
+    spread >= 0 ? 'Portfolio outperforming benchmark' : 'Portfolio underperforming benchmark';
 
   const lastTimestamp =
     state.rawData?.points?.at(-1)?.timestamp || new Date().toISOString();
