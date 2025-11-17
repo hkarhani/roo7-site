@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const AUTH_API_BASE = CONFIG.API_CONFIG.authUrl;
   const B2B_API_BASE = CONFIG.API_CONFIG.b2bUrl;
 
+  if (window.themeManager) {
+    window.themeManager.applySavedTheme();
+    window.themeManager.setupToggleButton('#theme-toggle');
+  }
+
   const token = localStorage.getItem('token');
   if (!token) {
     window.location.href = '/auth.html';
