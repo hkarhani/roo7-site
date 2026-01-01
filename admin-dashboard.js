@@ -242,28 +242,11 @@ function getAccountTotalValue(account) {
     return null;
   }
 
-  const pnlCandidatePaths = [
-    ['unrealized_pnl'],
-    ['total_unrealized_pnl'],
-    ['total_unrealized_pnl_usdt'],
-    ['summary', 'unrealized_pnl_usdt'],
-    ['summary', 'total_unrealized_pnl_usdt'],
-    ['summary', 'spot_unrealized_pnl_usdt'],
-    ['summary', 'usdtm_unrealized_pnl_usdt'],
-    ['summary', 'coinm_unrealized_pnl_usdt'],
-    ['summary', 'futures_unrealized_pnl_usdt'],
-    ['portfolio_unrealized_pnl']
-  ];
-
-  let pnlTotal = 0;
-  let pnlFound = false;
-  for (const path of pnlCandidatePaths) {
-    const pnl = normalizeNumeric(getByPath(account, path));
-    if (pnl !== null) {
-      pnlTotal += pnl;
-      pnlFound = true;
-    }
-  }
+  // Use the same unrealized PnL derivation logic everywhere to avoid
+  // double-counting when both "total" and per-market PnL fields exist.
+  const pnlValue = getAccountUnrealizedPnl(account);
+  const pnlFound = pnlValue !== null && Number.isFinite(pnlValue);
+  const pnlTotal = pnlFound ? pnlValue : 0;
 
   const numericBase = normalizeNumeric(baseValue);
   const baseSourceLabel = baseSource || '';
