@@ -164,7 +164,41 @@ Welcome to ROO7, your professional cryptocurrency trading automation platform. T
 4. **Security Notes**:
    - API keys are encrypted and stored securely
    - Never share API keys with others
-   - Use IP restrictions on exchange side
+   - Use IP restrictions on exchange side (recommended)
+   - If you enable **"Restrict access to trusted IPs only"** on Binance, whitelist all ROO7 server IPs (one per line):
+
+     ```
+     78.47.64.158
+     88.99.85.159
+     138.201.91.240
+     195.201.102.123
+     159.69.116.100
+     195.201.117.98
+     159.69.119.125
+     159.69.147.196
+     157.90.159.122
+     159.69.178.199
+     159.69.220.226
+     157.90.243.247
+     157.90.248.73
+     78.47.252.20
+     78.47.255.96
+     195.201.24.201
+     195.201.25.199
+     88.99.33.5
+     162.55.39.70
+     162.55.39.88
+     159.69.39.114
+     162.55.39.167
+     116.203.42.15
+     162.55.44.67
+     162.55.45.204
+     162.55.46.154
+     168.119.52.213
+     168.119.54.44
+     168.119.54.56
+     168.119.54.64
+     ```
    - Disable withdrawal permissions
 
 ### Account Configuration
