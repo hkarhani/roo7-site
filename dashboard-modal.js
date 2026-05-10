@@ -91,11 +91,11 @@ class ModalManager {
       option.value = strategy.id;
       
       // Add note for coming soon strategies
-      if (strategy.coming_soon === true) {
-        option.textContent = `${strategy.name} ${strategy.note || '🔜 Coming Soon'}`;
+      if (strategy.coming_soon === true || strategy.is_active !== true) {
+        option.textContent = `${strategy.name} ${strategy.note || '(disabled - coming soon)'}`;
         option.style.color = '#ff8c00'; // Orange color for coming soon
         option.style.fontStyle = 'italic';
-        option.disabled = true; // Disable selection of coming soon strategies
+        option.disabled = true; // Disable selection of unavailable strategies
       } else {
         option.textContent = strategy.name;
       }
@@ -437,6 +437,10 @@ class ModalManager {
       if (!strategyConfig) {
         strategyConfig = this.availableStrategies.find(s => s.name === account.strategy);
       }
+
+      if (!strategyConfig) {
+        strategyConfig = this.availableStrategies.find(s => Array.isArray(s.aliases) && s.aliases.includes(account.strategy));
+      }
       
       if (strategyConfig) {
         this.strategySelect.value = strategyConfig.id; // Use the strategy ID for the dropdown
@@ -556,11 +560,11 @@ class ModalManager {
       option.value = strategy.id;
       
       // Add note for coming soon strategies
-      if (strategy.coming_soon === true) {
-        option.textContent = `${strategy.name} ${strategy.note || '🔜 Coming Soon'}`;
+      if (strategy.coming_soon === true || strategy.is_active !== true) {
+        option.textContent = `${strategy.name} ${strategy.note || '(disabled - coming soon)'}`;
         option.style.color = '#ff8c00'; // Orange color for coming soon
         option.style.fontStyle = 'italic';
-        option.disabled = true; // Disable selection of coming soon strategies
+        option.disabled = true; // Disable selection of unavailable strategies
       } else {
         option.textContent = strategy.name;
       }
@@ -1598,6 +1602,11 @@ class ModalManager {
       const selectedStrategy = this.availableStrategies.find(s => s.id === strategyId);
       if (!selectedStrategy) {
         window.showToast("Selected strategy not found.", 'error');
+        return;
+      }
+
+      if (selectedStrategy.coming_soon === true || selectedStrategy.is_active !== true) {
+        window.showToast("This strategy is currently disabled and coming soon.", 'warning');
         return;
       }
       

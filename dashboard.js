@@ -839,7 +839,9 @@ document.addEventListener("DOMContentLoaded", () => {
             strategyItem.className = 'strategy-item';
             
             // Add coming soon styling if applicable
-            if (strategy.coming_soon === true) {
+            const strategyDisabled = strategy.coming_soon === true || strategy.is_active !== true;
+
+            if (strategyDisabled) {
               strategyItem.classList.add('coming-soon');
             }
             
@@ -852,13 +854,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 description = 'Balanced growth with moderate risk';
                 break;
               case 'Low Risk / Low Returns Fixed Income':
-                description = strategy.coming_soon === true ? 
-                  `Conservative strategy for stable returns - ${strategy.note || '🔜 Coming Soon'}` :
+                description = strategyDisabled ?
+                  `Conservative strategy for stable returns - ${strategy.note || '(disabled - coming soon)'}` :
                   'Conservative strategy for stable returns';
                 break;
               case 'Market Neutral':
-                description = strategy.coming_soon === true ? 
-                  `Advanced market neutral strategy for FUTURES accounts - ${strategy.note || '🔜 Coming Soon'}` :
+                description = strategyDisabled ?
+                  `Advanced market neutral strategy for FUTURES accounts - ${strategy.note || '(disabled - coming soon)'}` :
                   'Advanced market neutral strategy for FUTURES accounts';
                 break;
               case 'Custom Portfolio Rebalance':
@@ -867,8 +869,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             // Display strategy name with coming soon indicator
-            const displayName = strategy.coming_soon === true ? 
-              `${strategy.name} ${strategy.note || '🔜 Coming Soon'}` : 
+            const displayName = strategyDisabled ?
+              `${strategy.name} ${strategy.note || '(disabled - coming soon)'}` :
               strategy.name;
             
             strategyItem.innerHTML = `

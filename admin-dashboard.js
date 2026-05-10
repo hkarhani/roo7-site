@@ -2666,6 +2666,148 @@ document.addEventListener("DOMContentLoaded", () => {
   
   let currentEditingSourceAccountId = null;
   let sourceStrategies = [];
+  let currentEditingStrategyId = null;
+  let adminStrategies = [];
+
+  function escapeAdminHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  async function loadAdminStrategies() {
+    try {
+      const response = await fetch(`${AUTH_API_BASE}/admin/strategies`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        adminStrategies = data.strategies || [];
+        displayAdminStrategies(adminStrategies);
+      } else {
+        console.error('❌ Failed to load strategies:', data.detail);
+        showNotification(`Failed to load strategies: ${data.detail}`, 'error');
+      }
+    } catch (error) {
+      console.error('❌ Error loading strategies:', error);
+      showNotification(`Error loading strategies: ${error.message}`, 'error');
+    }
+  }
+
+  function getStrategyStatusClass(strategy) {
+    if (strategy.is_custom) return 'custom';
+    if (strategy.has_active_source_account) return 'active';
+    return 'disabled';
+  }
+
+  function displayAdminStrategies(strategies) {
+    const tbody = document.querySelector('#strategies-table tbody');
+    if (!tbody) return;
+
+    if (!strategies || strategies.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="no-data">No strategies found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = strategies.map(strategy => {
+      const typeLabel = strategy.is_custom
+        ? 'Custom'
+        : (strategy.account_type ? strategy.account_type : 'Set by source account');
+      const sourceLabel = strategy.is_custom
+        ? 'Own logic'
+        : (strategy.source_account_name || 'Unassigned');
+      const statusClass = getStrategyStatusClass(strategy);
+      const editButton = strategy.is_custom
+        ? '<span class="muted-text">Locked</span>'
+        : `<button class="edit-strategy-btn action-btn" data-id="${escapeAdminHtml(strategy.id)}">✏️ Edit</button>`;
+
+      return `
+        <tr>
+          <td><span class="strategy-tag">${escapeAdminHtml(strategy.name)}</span></td>
+          <td>${escapeAdminHtml(typeLabel)}</td>
+          <td><span class="strategy-status ${statusClass}">${escapeAdminHtml(strategy.customer_status || 'Unknown')}</span></td>
+          <td>${escapeAdminHtml(sourceLabel)}</td>
+          <td>${editButton}</td>
+        </tr>
+      `;
+    }).join('');
+
+    document.querySelectorAll('.edit-strategy-btn').forEach(btn => {
+      btn.onclick = () => openEditStrategyModal(btn.dataset.id);
+    });
+  }
+
+  function openAddStrategyModal() {
+    currentEditingStrategyId = null;
+    document.getElementById('strategy-admin-modal-title').textContent = 'Add Strategy';
+    document.getElementById('strategy-admin-submit').textContent = 'Create Strategy';
+    document.getElementById('strategy-admin-form').reset();
+    document.getElementById('strategy-admin-id').value = '';
+    document.getElementById('strategy-admin-modal').style.display = 'block';
+  }
+
+  function openEditStrategyModal(strategyId) {
+    const strategy = adminStrategies.find(item => item.id === strategyId);
+    if (!strategy || strategy.is_custom) {
+      return;
+    }
+
+    currentEditingStrategyId = strategyId;
+    document.getElementById('strategy-admin-modal-title').textContent = 'Edit Strategy';
+    document.getElementById('strategy-admin-submit').textContent = 'Update Strategy';
+    document.getElementById('strategy-admin-id').value = strategy.id;
+    document.getElementById('strategy-admin-name').value = strategy.name;
+    document.getElementById('strategy-admin-modal').style.display = 'block';
+  }
+
+  async function handleStrategyAdminSubmit(event) {
+    event.preventDefault();
+
+    const strategyName = document.getElementById('strategy-admin-name').value.trim();
+    if (!strategyName) {
+      showNotification('Strategy name is required', 'warning');
+      return;
+    }
+
+    const url = currentEditingStrategyId
+      ? `${AUTH_API_BASE}/admin/strategies/${encodeURIComponent(currentEditingStrategyId)}`
+      : `${AUTH_API_BASE}/admin/strategies`;
+    const method = currentEditingStrategyId ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: strategyName })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        showNotification(`Strategy ${currentEditingStrategyId ? 'updated' : 'created'} successfully`, 'success');
+        document.getElementById('strategy-admin-modal').style.display = 'none';
+        currentEditingStrategyId = null;
+        await loadAdminStrategies();
+        await loadSourceStrategies(currentEditingSourceAccountId);
+        loadSourceAccounts();
+      } else {
+        console.error('❌ Failed to save strategy:', data.detail);
+        showNotification(data.detail || 'Failed to save strategy', 'error');
+      }
+    } catch (error) {
+      console.error('❌ Error saving strategy:', error);
+      showNotification('Error saving strategy', 'error');
+    }
+  }
 
   // Load source accounts
   async function loadSourceAccounts() {
@@ -3174,9 +3316,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Load strategies for dropdown
-  async function loadSourceStrategies() {
+  async function loadSourceStrategies(currentSourceAccountId = null) {
     try {
-      const response = await fetch(`${AUTH_API_BASE}/strategies`, {
+      const params = new URLSearchParams();
+      if (currentSourceAccountId) {
+        params.set('current_source_account_id', currentSourceAccountId);
+      }
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await fetch(`${AUTH_API_BASE}/admin/strategies/source-options${queryString}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -3186,22 +3333,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       
       if (response.ok && data.strategies) {
-        // Extract strategy names and filter out custom portfolio strategy for source accounts
-        sourceStrategies = data.strategies
-          .map(strategy => {
-            // Handle both string format and object format
-            if (typeof strategy === 'string') {
-              return strategy;
-            } else if (strategy && strategy.name) {
-              return strategy.name;
-            } else if (strategy && strategy.id) {
-              return strategy.id;
-            }
-            return null;
-          })
-          .filter(strategyName => 
-            strategyName && !['custom_portfolio', 'Custom Portfolio'].includes(strategyName)
-          );
+        sourceStrategies = data.strategies.filter(strategy => strategy && strategy.name);
         populateStrategyDropdown();
       } else {
         console.error('❌ Failed to load strategies:', data.detail);
@@ -3218,19 +3350,26 @@ document.addEventListener("DOMContentLoaded", () => {
     
     sourceStrategies.forEach(strategy => {
       const option = document.createElement('option');
-      option.value = strategy;
-      option.textContent = strategy;
+      option.value = strategy.name;
+      option.textContent = strategy.account_type
+        ? `${strategy.name} (${strategy.account_type})`
+        : strategy.name;
       select.appendChild(option);
     });
   }
 
   // Open add source account modal
-  function openAddSourceAccountModal() {
+  async function openAddSourceAccountModal() {
     currentEditingSourceAccountId = null;
     document.getElementById('source-account-modal-title').textContent = 'Add Source Account';
     document.getElementById('source-account-submit').textContent = 'Create Source Account';
     document.getElementById('source-account-status').style.display = 'none';
     document.getElementById('source-account-form').reset();
+    document.getElementById('source-api-key').placeholder = 'API Key';
+    document.getElementById('source-api-secret').placeholder = 'API Secret';
+    document.getElementById('source-api-key').required = true;
+    document.getElementById('source-api-secret').required = true;
+    await loadSourceStrategies();
     document.getElementById('source-account-modal').style.display = 'block';
   }
 
@@ -3257,6 +3396,13 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('source-account-name').value = account.account_name;
         document.getElementById('source-exchange-select').value = account.exchange;
         document.getElementById('source-account-type-select').value = account.account_type;
+        await loadSourceStrategies(accountId);
+        if (!Array.from(document.getElementById('source-strategy-select').options).some(option => option.value === account.strategy)) {
+          const option = document.createElement('option');
+          option.value = account.strategy;
+          option.textContent = account.strategy;
+          document.getElementById('source-strategy-select').appendChild(option);
+        }
         document.getElementById('source-strategy-select').value = account.strategy;
         document.getElementById('source-description').value = account.description || '';
         document.getElementById('source-is-active').checked = account.is_active;
@@ -3326,6 +3472,8 @@ document.addEventListener("DOMContentLoaded", () => {
         showNotification('Source account deleted successfully', 'success');
         document.getElementById('source-account-delete-modal').style.display = 'none';
         loadSourceAccounts(); // Reload the list
+        loadAdminStrategies();
+        loadSourceStrategies();
       } else {
         console.error('❌ Failed to delete source account:', data.detail);
         showNotification('Failed to delete source account', 'error');
@@ -3755,6 +3903,8 @@ document.addEventListener("DOMContentLoaded", () => {
         showNotification(`Source account ${action} successfully`, 'success');
         document.getElementById('source-account-modal').style.display = 'none';
         loadSourceAccounts(); // Reload the list
+        loadAdminStrategies();
+        loadSourceStrategies();
       } else {
         console.error(`❌ Failed to ${method.toLowerCase()} source account:`, data.detail);
         showNotification(`Failed to ${method.toLowerCase()} source account`, 'error');
@@ -3766,6 +3916,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Add event listeners for source account management
+  document.getElementById('add-strategy').onclick = openAddStrategyModal;
+  document.getElementById('strategy-admin-form').onsubmit = handleStrategyAdminSubmit;
+  document.getElementById('strategy-admin-modal-close').onclick = () => {
+    document.getElementById('strategy-admin-modal').style.display = 'none';
+  };
+  document.getElementById('strategy-admin-cancel').onclick = () => {
+    document.getElementById('strategy-admin-modal').style.display = 'none';
+  };
+
   document.getElementById('add-source-account').onclick = openAddSourceAccountModal;
   document.getElementById('source-account-form').onsubmit = handleSourceAccountSubmit;
   
@@ -4430,6 +4589,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadReferrals();
   loadJobsManagerOverview();
   loadActivity();
+  loadAdminStrategies();
   loadSourceStrategies();
   loadSourceAccounts();
   initializeSourceAnalytics();

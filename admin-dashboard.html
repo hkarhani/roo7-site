@@ -128,6 +128,32 @@
       </div>
     </section>
 
+    <!-- Strategy Management -->
+    <section id="section-strategies" class="dashboard-card">
+      <div class="section-header">
+        <h2>🎯 Strategies</h2>
+        <button id="add-strategy" class="primary-button admin">+ Add Strategy</button>
+      </div>
+      <div class="table-container">
+        <table id="strategies-table">
+          <thead>
+            <tr>
+              <th>Strategy Name</th>
+              <th>Type</th>
+              <th>Customer Status</th>
+              <th>Assigned Source</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" class="loading-message">Loading strategies...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Source Accounts Management -->
     <section id="section-source-accounts" class="dashboard-card">
       <div class="section-header">
@@ -438,6 +464,22 @@
         <button id="approve-invoice-btn" class="success-btn">✅ Approve</button>
         <button id="cancel-invoice-btn" class="danger-btn">❌ Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Strategy Modal -->
+  <div id="strategy-admin-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="strategy-admin-modal-close">&times;</span>
+      <h3 id="strategy-admin-modal-title">Add Strategy</h3>
+      <form id="strategy-admin-form" autocomplete="off">
+        <input type="hidden" id="strategy-admin-id" />
+        <input type="text" id="strategy-admin-name" name="name" placeholder="Strategy Name" autocomplete="off" required />
+        <div class="modal-actions">
+          <button type="submit" id="strategy-admin-submit">Create Strategy</button>
+          <button type="button" id="strategy-admin-cancel" class="secondary-button">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
 
