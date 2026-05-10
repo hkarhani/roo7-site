@@ -1362,8 +1362,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!accounts || accounts.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <p>📭 No accounts without strategies found</p>
-          <small>All paying users have strategies assigned to their accounts</small>
+          <p>📭 No user accounts found</p>
+          <small>No customer accounts are available.</small>
         </div>
       `;
       return;
@@ -1377,10 +1377,12 @@ document.addEventListener("DOMContentLoaded", () => {
       acc[exchange] = (acc[exchange] || 0) + 1;
       return acc;
     }, {});
+    const assignedStrategies = accounts.filter(account => account.strategy && account.strategy.trim() !== '').length;
 
     container.innerHTML = `
       <div class="users-accounts-summary">
-        <span>${totalAccounts}</span> accounts without strategies from <span>${uniqueUsers}</span> paying users
+        <span>${totalAccounts}</span> user accounts from <span>${uniqueUsers}</span> paying users
+        <span>${assignedStrategies}</span> with strategies
         <div class="exchanges-breakdown">
           ${Object.entries(exchangeCounts).map(([exchange, count]) => `<span class="exchange-tag">${exchange}: ${count}</span>`).join(' ')}
         </div>
@@ -1392,6 +1394,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <th>User</th>
               <th>Account Name</th>
               <th>Exchange</th>
+              <th>Strategy</th>
               <th>Last Value</th>
               <th>Status</th>
               <th>Actions</th>
@@ -1418,6 +1421,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     ${account.account_name || 'Unnamed Account'}
                   </td>
                   <td class="account-exchange">${account.exchange || 'Binance'}</td>
+                  <td class="account-strategy">
+                    ${account.strategy && account.strategy.trim() !== ''
+                      ? `<span class="strategy-tag">${account.strategy}</span>`
+                      : '<span class="account-status no-strategy">No Strategy</span>'}
+                  </td>
                   <td class="account-value center-align" title="${tooltipText}">
                     ${formatAccountValue(numericValue)}
                   </td>

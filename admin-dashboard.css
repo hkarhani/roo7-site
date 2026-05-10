@@ -1332,6 +1332,19 @@
   white-space: nowrap;
 }
 
+.users-accounts-table .account-strategy {
+  max-width: 220px;
+}
+
+.users-accounts-table .account-strategy .strategy-tag {
+  display: inline-block;
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 .users-accounts-table .account-exchange {
   color: #666;
   font-size: 12px;
