@@ -2678,6 +2678,17 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/'/g, '&#039;');
   }
 
+  function isCustomStrategyName(strategyName) {
+    const normalized = String(strategyName || '').trim().toLowerCase();
+    return [
+      'custom_portfolio',
+      'custom_portfolio_rebalance',
+      'custom portfolio',
+      'custom portfolio rebalance',
+      'custom portfolio rebalancing'
+    ].includes(normalized);
+  }
+
   async function loadAdminStrategies() {
     try {
       const response = await fetch(`${AUTH_API_BASE}/admin/strategies`, {
@@ -2691,6 +2702,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.ok) {
         adminStrategies = data.strategies || [];
         displayAdminStrategies(adminStrategies);
+      } else if (response.status === 404) {
+        adminStrategies = [];
+        const tbody = document.querySelector('#strategies-table tbody');
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="5" class="no-data">Strategy admin backend endpoint is not available on this API yet.</td></tr>';
+        }
+        console.warn('Strategy admin endpoint is not available on the running API.');
       } else {
         console.error('❌ Failed to load strategies:', data.detail);
         showNotification(`Failed to load strategies: ${data.detail}`, 'error');
@@ -3335,6 +3353,25 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.ok && data.strategies) {
         sourceStrategies = data.strategies.filter(strategy => strategy && strategy.name);
         populateStrategyDropdown();
+      } else if (response.status === 404) {
+        const fallbackResponse = await fetch(`${AUTH_API_BASE}/strategies`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const fallbackData = await fallbackResponse.json();
+        if (fallbackResponse.ok && fallbackData.strategies) {
+          sourceStrategies = fallbackData.strategies
+            .map(strategy => ({
+              name: strategy.name || strategy.id || strategy,
+              account_type: strategy.account_type || ''
+            }))
+            .filter(strategy => strategy.name && !isCustomStrategyName(strategy.name));
+          populateStrategyDropdown();
+        } else {
+          console.error('❌ Failed to load fallback strategies:', fallbackData.detail);
+        }
       } else {
         console.error('❌ Failed to load strategies:', data.detail);
       }
