@@ -822,19 +822,29 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.ok) {
         const strategiesResponse = await response.json();
         const strategies = strategiesResponse.strategies || [];
+        const uniqueStrategies = strategies.reduce((items, strategy) => {
+          const strategyKey = strategy.id || strategy.name;
+          const existingIndex = items.findIndex(item => (item.id || item.name) === strategyKey);
+          if (existingIndex === -1) {
+            items.push(strategy);
+          } else if (items[existingIndex].coming_soon === true && strategy.coming_soon !== true) {
+            items[existingIndex] = strategy;
+          }
+          return items;
+        }, []);
         
         // Update summary
-        totalStrategiesEl.textContent = strategies.length;
+        totalStrategiesEl.textContent = uniqueStrategies.length;
         const assignedCount = accounts.filter(acc => acc.strategy && acc.strategy.trim() !== '').length;
         assignedAccountsEl.textContent = assignedCount;
         
         // Update strategy list
         strategyListEl.innerHTML = '';
         
-        if (strategies.length === 0) {
+        if (uniqueStrategies.length === 0) {
           strategyListEl.innerHTML = '<div class="loading-state"><p>No strategies available</p></div>';
         } else {
-          strategies.forEach(strategy => {
+          uniqueStrategies.forEach(strategy => {
             const strategyItem = document.createElement('div');
             strategyItem.className = 'strategy-item';
             
