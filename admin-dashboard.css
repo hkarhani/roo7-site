@@ -2365,13 +2365,20 @@
   gap: 15px;
 }
 
-#strategy-admin-form input {
+#strategy-admin-form input,
+#strategy-admin-form select,
+#strategy-admin-form textarea {
   padding: 12px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
   background-color: var(--input-bg);
   color: var(--text-color);
+}
+
+#strategy-admin-form textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 /* Source account table styling */

@@ -2776,6 +2776,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('strategy-admin-submit').textContent = 'Create Strategy';
     document.getElementById('strategy-admin-form').reset();
     document.getElementById('strategy-admin-id').value = '';
+    document.getElementById('strategy-admin-account-type').value = '';
+    document.getElementById('strategy-admin-description').value = '';
     document.getElementById('strategy-admin-modal').style.display = 'block';
   }
 
@@ -2790,6 +2792,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('strategy-admin-submit').textContent = 'Update Strategy';
     document.getElementById('strategy-admin-id').value = strategy.id;
     document.getElementById('strategy-admin-name').value = strategy.name;
+    document.getElementById('strategy-admin-account-type').value = strategy.account_type || '';
+    document.getElementById('strategy-admin-description').value = strategy.description || '';
     document.getElementById('strategy-admin-modal').style.display = 'block';
   }
 
@@ -2797,8 +2801,15 @@ document.addEventListener("DOMContentLoaded", () => {
     event.preventDefault();
 
     const strategyName = document.getElementById('strategy-admin-name').value.trim();
+    const strategyAccountType = document.getElementById('strategy-admin-account-type').value;
+    const strategyDescription = document.getElementById('strategy-admin-description').value.trim();
     if (!strategyName) {
       showNotification('Strategy name is required', 'warning');
+      return;
+    }
+
+    if (!['SPOT', 'FUTURES'].includes(strategyAccountType)) {
+      showNotification('Please confirm whether this strategy is for SPOT or FUTURES accounts.', 'warning');
       return;
     }
 
@@ -2814,7 +2825,11 @@ document.addEventListener("DOMContentLoaded", () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name: strategyName })
+        body: JSON.stringify({
+          name: strategyName,
+          account_type: strategyAccountType,
+          description: strategyDescription
+        })
       });
 
       const data = await response.json();

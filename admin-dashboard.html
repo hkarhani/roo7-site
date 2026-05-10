@@ -475,6 +475,12 @@
       <form id="strategy-admin-form" autocomplete="off">
         <input type="hidden" id="strategy-admin-id" />
         <input type="text" id="strategy-admin-name" name="name" placeholder="Strategy Name" autocomplete="off" required />
+        <select id="strategy-admin-account-type" name="account_type" autocomplete="off" required>
+          <option value="">Confirm Account Type</option>
+          <option value="SPOT">SPOT</option>
+          <option value="FUTURES">FUTURES</option>
+        </select>
+        <textarea id="strategy-admin-description" name="description" placeholder="Description (optional)" rows="3"></textarea>
         <div class="modal-actions">
           <button type="submit" id="strategy-admin-submit">Create Strategy</button>
           <button type="button" id="strategy-admin-cancel" class="secondary-button">Cancel</button>
