@@ -87,6 +87,15 @@ function formatDuration(seconds) {
   return `${seconds.toFixed(1)}s`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '—')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function hasKeys(value) {
   return value && typeof value === 'object' && Object.keys(value).length > 0;
 }
@@ -116,17 +125,18 @@ function renderJobsTable(items) {
   const tbody = document.getElementById('jobs-table-body');
   if (!tbody) return;
   if (!items.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">No job executions found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No job executions found</td></tr>';
     return;
   }
   tbody.innerHTML = items.map(item => {
     const statusClass = item.status === 'FAILED' ? 'status-failed' : 'status-success';
     return `
-      <tr data-id="${item._id}" class="job-row">
-        <td>${item.job_type || '—'}</td>
-        <td>${item.account_name || item.account_id || '—'}</td>
-        <td>${item.strategy || '—'}</td>
-        <td><span class="status-badge ${statusClass}">${item.status || '—'}</span></td>
+      <tr data-id="${escapeHtml(item._id)}" class="job-row">
+        <td>${escapeHtml(item.job_type)}</td>
+        <td>${escapeHtml(item.owner_username)}</td>
+        <td>${escapeHtml(item.account_name || item.account_id)}</td>
+        <td>${escapeHtml(item.strategy)}</td>
+        <td><span class="status-badge ${statusClass}">${escapeHtml(item.status)}</span></td>
         <td>${formatDate(item.completed_at)}</td>
         <td>${formatDuration(item.duration_seconds)}</td>
       </tr>
@@ -137,12 +147,14 @@ function renderJobsTable(items) {
 async function loadJobs() {
   const status = document.getElementById('filter-status').value;
   const jobType = document.getElementById('filter-job-type').value;
-  const accountSearch = document.getElementById('filter-account').value.trim();
+  const ownerUsername = document.getElementById('filter-history-owner').value.trim();
+  const accountName = document.getElementById('filter-history-account-name').value.trim();
 
   const params = new URLSearchParams();
   if (status) params.append('status', status);
   if (jobType) params.append('job_type', jobType);
-  if (accountSearch) params.append('account_id', accountSearch);
+  if (ownerUsername) params.append('owner_username', ownerUsername);
+  if (accountName) params.append('account_name', accountName);
   params.append('limit', String(currentPageSize));
   params.append('offset', String(Math.max(0, (currentPage - 1) * currentPageSize)));
 
@@ -192,15 +204,16 @@ function renderActiveJobs(items) {
         <td>
           <div class="status-dot">
             <span class="status-indicator ${statusClass}" title="${status}"></span>
-            <span>${item.account_name || item.account_id || 'Unknown Account'}</span>
+            <span>${escapeHtml(item.account_name || item.account_id || 'Unknown Account')}</span>
           </div>
         </td>
-        <td>${item.job_type || '—'}</td>
-        <td>${item.run_status || '—'}</td>
+        <td>${escapeHtml(item.owner_username)}</td>
+        <td>${escapeHtml(item.job_type)}</td>
+        <td>${escapeHtml(item.run_status)}</td>
         <td>${formatDate(item.next_run_at)}</td>
         <td>${formatDate(item.last_run_at)}</td>
-        <td>${item.consecutive_failures || 0}</td>
-        <td><button class="btn-force-run" data-id="${item._id}">Run Now</button></td>
+        <td>${escapeHtml(item.consecutive_failures || 0)}</td>
+        <td><button class="btn-force-run" data-id="${escapeHtml(item._id)}">Run Now</button></td>
       </tr>
     `;
   }).join('');
@@ -210,6 +223,7 @@ function renderActiveJobs(items) {
       <thead>
         <tr>
           <th>Account</th>
+          <th>Owner</th>
           <th>Type</th>
           <th>Run Status</th>
           <th>Next Run</th>
@@ -249,8 +263,16 @@ function renderActiveJobs(items) {
 }
 
 async function loadActiveJobs() {
+  const jobType = document.getElementById('filter-active-job-type')?.value || '';
+  const ownerUsername = document.getElementById('filter-active-owner')?.value.trim() || '';
+  const accountName = document.getElementById('filter-active-account-name')?.value.trim() || '';
+  const params = new URLSearchParams({ limit: '100' });
+  if (jobType) params.append('job_type', jobType);
+  if (ownerUsername) params.append('owner_username', ownerUsername);
+  if (accountName) params.append('account_name', accountName);
+
   try {
-    const data = await fetchJson(`${JOBS_API_BASE}/admin/active-jobs?limit=100`);
+    const data = await fetchJson(`${JOBS_API_BASE}/admin/active-jobs?${params.toString()}`);
     renderActiveJobs(data.items || []);
   } catch (error) {
     console.error('Failed to load active jobs', error);
@@ -274,6 +296,7 @@ function renderJobDetails(job) {
     <h3>Execution Details</h3>
     <div class="detail-grid">
       <div><strong>Account:</strong> ${job.account_name || job.account_id || '—'}</div>
+      <div><strong>Owner:</strong> ${job.owner_username || '—'}</div>
       <div><strong>Status:</strong> ${job.status || '—'}</div>
       <div><strong>Job Type:</strong> ${job.job_type || '—'}</div>
       <div><strong>Strategy:</strong> ${job.strategy || '—'}</div>
@@ -407,6 +430,31 @@ function setupFilters() {
   document.getElementById('apply-filters').addEventListener('click', () => {
     currentPage = 1;
     loadJobs();
+  });
+
+  document.getElementById('apply-active-filters').addEventListener('click', () => {
+    loadActiveJobs();
+  });
+
+  [
+    'filter-history-owner',
+    'filter-history-account-name',
+    'filter-active-owner',
+    'filter-active-account-name',
+  ].forEach((id) => {
+    document.getElementById(id)?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      if (id.startsWith('filter-history')) {
+        currentPage = 1;
+        loadJobs();
+      } else {
+        loadActiveJobs();
+      }
+    });
+  });
+
+  document.getElementById('filter-active-job-type')?.addEventListener('change', () => {
+    loadActiveJobs();
   });
 
   document.getElementById('refresh-summary').addEventListener('click', () => {

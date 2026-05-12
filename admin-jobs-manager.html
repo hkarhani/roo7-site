@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Jobs Manager Admin</title>
   <script type="module" src="frontend-config.js?v=3.5"></script>
-  <script type="module" src="admin-jobs-manager.js?v=3.7"></script>
+  <script type="module" src="admin-jobs-manager.js?v=3.8"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.5" />
   <link rel="stylesheet" href="admin-dashboard.css?v=2.5" />
   <style>
@@ -637,7 +637,8 @@
           <option value="DATA_COLLECTION">Data Collection</option>
           <option value="LIQUIDATION">Liquidation</option>
         </select>
-        <input id="filter-account" placeholder="Account ID" />
+        <input id="filter-history-owner" placeholder="Owner username" />
+        <input id="filter-history-account-name" placeholder="Account name" />
         <button type="button" class="secondary-button small" id="apply-filters">Apply</button>
       </div>
       <div class="pagination-bar">
@@ -660,6 +661,7 @@
           <thead>
             <tr>
               <th>Type</th>
+              <th>Owner</th>
               <th>Account</th>
               <th>Strategy</th>
               <th>Status</th>
@@ -668,7 +670,7 @@
             </tr>
           </thead>
           <tbody id="jobs-table-body">
-            <tr><td colspan="6" class="empty">Loading...</td></tr>
+            <tr><td colspan="7" class="empty">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -676,6 +678,17 @@
 
     <section class="dashboard-card jobs-card active-jobs-card">
       <h2>Active Jobs</h2>
+      <div class="jobs-filters">
+        <select id="filter-active-job-type">
+          <option value="">All Job Types</option>
+          <option value="TRADING">Trading</option>
+          <option value="FUTURES_TRADING">Futures</option>
+          <option value="DATA_COLLECTION">Data Collection</option>
+        </select>
+        <input id="filter-active-owner" placeholder="Owner username" />
+        <input id="filter-active-account-name" placeholder="Account name" />
+        <button type="button" class="secondary-button small" id="apply-active-filters">Apply</button>
+      </div>
       <div id="active-jobs-list" class="active-jobs-container">
         <div class="empty">Loading...</div>
       </div>
