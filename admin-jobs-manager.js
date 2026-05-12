@@ -295,17 +295,17 @@ function renderJobDetails(job) {
   detailsContainer.innerHTML = `
     <h3>Execution Details</h3>
     <div class="detail-grid">
-      <div><strong>Account:</strong> ${job.account_name || job.account_id || '—'}</div>
-      <div><strong>Owner:</strong> ${job.owner_username || '—'}</div>
-      <div><strong>Status:</strong> ${job.status || '—'}</div>
-      <div><strong>Job Type:</strong> ${job.job_type || '—'}</div>
-      <div><strong>Strategy:</strong> ${job.strategy || '—'}</div>
+      <div><strong>Account:</strong> ${escapeHtml(job.account_name || job.account_id)}</div>
+      <div><strong>Owner:</strong> ${escapeHtml(job.owner_username)}</div>
+      <div><strong>Status:</strong> ${escapeHtml(job.status)}</div>
+      <div><strong>Job Type:</strong> ${escapeHtml(job.job_type)}</div>
+      <div><strong>Strategy:</strong> ${escapeHtml(job.strategy)}</div>
       <div><strong>Started:</strong> ${formatDate(job.started_at)}</div>
       <div><strong>Completed:</strong> ${formatDate(job.completed_at)}</div>
       <div><strong>Duration:</strong> ${formatDuration(job.duration_seconds)}</div>
-      <div><strong>Worker:</strong> ${job.worker_id || 'observer'}</div>
-      <div><strong>Error Info:</strong> ${job.error_info?.message || job.error_info || '—'}</div>
-      <div><strong>Active Job ID:</strong> ${job.active_job_id || '—'}</div>
+      <div><strong>Worker:</strong> ${escapeHtml(job.worker_id || 'observer')}</div>
+      <div><strong>Error Info:</strong> ${escapeHtml(job.error_info?.message || job.error_info)}</div>
+      <div><strong>Active Job ID:</strong> ${escapeHtml(job.active_job_id)}</div>
     </div>
     <details class="raw-json" ${hasResultDetails ? '' : 'open'}>
       <summary>Raw result JSON</summary>
