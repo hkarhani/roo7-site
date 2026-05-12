@@ -13,6 +13,7 @@ class ModalManager {
     this.exchangeSelect = document.getElementById("exchange-select");
     this.accountTypeSelect = document.getElementById("account-type-select");
     this.strategySelect = document.getElementById("strategy-select");
+    this.apiPassphraseField = document.getElementById("exchange-api-passphrase");
     this.strategyParametersForm = document.getElementById("strategy-parameters-form");
     this.portfolioInstruments = document.getElementById("portfolio-instruments");
     this.addPortfolioInstrumentBtn = document.getElementById("add-portfolio-instrument");
@@ -234,6 +235,11 @@ class ModalManager {
     
     // Strategy management events
     this.strategySelect.onchange = () => this.handleStrategySelectionChange();
+    this.exchangeSelect.onchange = () => {
+      this.updateCredentialFieldsForExchange();
+      this.updateStrategyOptions();
+    };
+    this.accountTypeSelect.onchange = () => this.updateStrategyOptions();
     this.addPortfolioInstrumentBtn.onclick = () => this.addPortfolioInstrument();
     document.getElementById("remove-strategy").onclick = () => this.removeStrategyAssignment();
     document.getElementById("refresh-strategies").onclick = () => this.loadStrategies();
@@ -277,6 +283,7 @@ class ModalManager {
     document.getElementById("trading-account-name").value = "";
     document.getElementById("exchange-api-key").value = "";
     document.getElementById("exchange-api-secret").value = "";
+    if (this.apiPassphraseField) this.apiPassphraseField.value = "";
     this.exchangeSelect.value = "Binance";
     this.accountTypeSelect.value = "SPOT";
     
@@ -300,6 +307,7 @@ class ModalManager {
       apiKeyField.required = true;
       apiSecretField.required = true;
     }
+    this.updateCredentialFieldsForExchange();
     
     // Show modal
     this.modal.style.display = "block";
@@ -330,12 +338,15 @@ class ModalManager {
       const nameField = document.getElementById("trading-account-name");
       const apiKeyField = document.getElementById("exchange-api-key");
       const apiSecretField = document.getElementById("exchange-api-secret");
+      const apiPassphraseField = document.getElementById("exchange-api-passphrase");
       
       if (nameField) nameField.value = account.account_name || "";
       if (apiKeyField) apiKeyField.value = account.api_key || "";
       if (apiSecretField) apiSecretField.value = account.api_secret || "";
+      if (apiPassphraseField) apiPassphraseField.value = account.api_passphrase || "";
       if (this.exchangeSelect) this.exchangeSelect.value = account.exchange || "Binance";
       if (this.accountTypeSelect) this.accountTypeSelect.value = account.account_type || "SPOT";
+      this.updateCredentialFieldsForExchange();
       
       // FORCE SHOW the Use Same Credentials button for Edit mode
       const useSameCredButton = document.getElementById("use-same-credentials");
@@ -374,12 +385,19 @@ class ModalManager {
     // Reset field states
     const apiKeyField = document.getElementById("exchange-api-key");
     const apiSecretField = document.getElementById("exchange-api-secret");
+    const apiPassphraseField = document.getElementById("exchange-api-passphrase");
     if (apiKeyField && apiSecretField) {
       apiKeyField.disabled = false;
       apiSecretField.disabled = false;
       apiKeyField.style.opacity = "1";
       apiSecretField.style.opacity = "1";
     }
+    if (apiPassphraseField) {
+      apiPassphraseField.disabled = false;
+      apiPassphraseField.style.opacity = "1";
+      apiPassphraseField.value = "";
+    }
+    this.updateCredentialFieldsForExchange();
     
     // Reset Use Same Credentials button
     const useSameCredButton = document.getElementById("use-same-credentials");
@@ -515,6 +533,7 @@ class ModalManager {
     
     const apiKeyField = document.getElementById("exchange-api-key");
     const apiSecretField = document.getElementById("exchange-api-secret");
+    const apiPassphraseField = document.getElementById("exchange-api-passphrase");
     const button = e.target;
     
     this.useSameCredentials = !this.useSameCredentials;
@@ -522,17 +541,38 @@ class ModalManager {
     if (this.useSameCredentials) {
       apiKeyField.disabled = true;
       apiSecretField.disabled = true;
+      if (apiPassphraseField) apiPassphraseField.disabled = true;
       apiKeyField.style.opacity = "0.5";
       apiSecretField.style.opacity = "0.5";
+      if (apiPassphraseField) apiPassphraseField.style.opacity = "0.5";
       button.textContent = "🔓 Change API Credentials";
       button.classList.add("active");
     } else {
       apiKeyField.disabled = false;
       apiSecretField.disabled = false;
+      if (apiPassphraseField) apiPassphraseField.disabled = false;
       apiKeyField.style.opacity = "1";
       apiSecretField.style.opacity = "1";
+      if (apiPassphraseField) apiPassphraseField.style.opacity = "1";
       button.textContent = "🔒 Use Same API Credentials";
       button.classList.remove("active");
+    }
+    this.updateCredentialFieldsForExchange();
+  }
+
+  updateCredentialFieldsForExchange() {
+    const selectedExchange = this.exchangeSelect ? this.exchangeSelect.value : "Binance";
+    const isOKX = selectedExchange === "OKX";
+    const apiPassphraseField = this.apiPassphraseField || document.getElementById("exchange-api-passphrase");
+    if (!apiPassphraseField) return;
+
+    apiPassphraseField.style.display = isOKX ? "block" : "none";
+    apiPassphraseField.required = isOKX && !this.useSameCredentials;
+    apiPassphraseField.disabled = this.useSameCredentials;
+    apiPassphraseField.style.opacity = this.useSameCredentials ? "0.5" : "1";
+
+    if (!isOKX) {
+      apiPassphraseField.value = "";
     }
   }
 
@@ -1418,14 +1458,23 @@ class ModalManager {
       if (!this.useSameCredentials) {
         const apiKey = document.getElementById("exchange-api-key").value.trim();
         const apiSecret = document.getElementById("exchange-api-secret").value.trim();
+        const apiPassphrase = document.getElementById("exchange-api-passphrase").value.trim();
         
         if (!apiKey || !apiSecret) {
           window.showToast("API Key and Secret are required.", 'warning');
           return;
         }
+
+        if (this.exchangeSelect.value === "OKX" && !apiPassphrase) {
+          window.showToast("OKX API passphrase is required.", 'warning');
+          return;
+        }
         
         data.api_key = apiKey;
         data.api_secret = apiSecret;
+        if (this.exchangeSelect.value === "OKX") {
+          data.api_passphrase = apiPassphrase;
+        }
       }
 
 

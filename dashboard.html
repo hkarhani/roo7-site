@@ -168,7 +168,7 @@
         <div class="exchange-account-section">
           <select id="exchange-select" name="exchange" autocomplete="off" required>
             <option value="Binance">Binance</option>
-            <!-- Future exchanges can be added here -->
+            <option value="OKX">OKX</option>
           </select>
           
           <select id="account-type-select" name="account_type" autocomplete="off" required>
@@ -186,6 +186,7 @@
           
           <input type="text" id="exchange-api-key" name="exchange_api_key" placeholder="Exchange API Key" autocomplete="new-password" data-lpignore="true" data-form-type="" required />
           <input type="password" id="exchange-api-secret" name="exchange_api_secret" placeholder="Exchange API Secret" autocomplete="new-password" data-lpignore="true" data-form-type="" required />
+          <input type="password" id="exchange-api-passphrase" name="exchange_api_passphrase" placeholder="OKX API Passphrase" autocomplete="new-password" data-lpignore="true" data-form-type="" style="display:none;" />
         </div>
         
         <!-- Account Description -->
@@ -291,7 +292,7 @@
  <!-- Load scripts in correct order -->
  <script src="theme-manager.js?v=1"></script>
   <script src="line-chart.js?v=20240410"></script>
- <script src="dashboard-modal.js?v=1755439780"></script>
+ <script src="dashboard-modal.js?v=20260511-okx"></script>
   <script type="module" src="dashboard.js?v=9.4-navcleanup"></script>
 
 </body>
