@@ -102,6 +102,17 @@ function getAccountTotalValue(account) {
     const parsed = parseFloat(value);
     return Number.isFinite(parsed) ? parsed : null;
   };
+  const exchangeValue = String(
+    account.exchange ||
+    account.account_exchange ||
+    account.exchange_name ||
+    account.platform ||
+    account.account_summary?.exchange ||
+    account.detailed_breakdown?.exchange ||
+    account.summary?.exchange ||
+    ''
+  ).toUpperCase();
+  const isOkxAccount = exchangeValue.includes('OKX');
 
   const candidatePaths = [
     ['current_value_with_pnl'],
@@ -111,6 +122,7 @@ function getAccountTotalValue(account) {
     ['total_value'],
     ['total_value_usd'],
     ['total_value_usdt'],
+    ['total_usdt_value'],
     ['current_value_usdt'],
     ['analytics_total_value_usdt'],
     ['portfolio_value'],
@@ -169,6 +181,7 @@ function getAccountTotalValue(account) {
     'analytics.value_usdt',
     'metrics.total_value',
     'total_value_usdt',
+    'total_usdt_value',
     'total_value',
     'total_value_usd',
     'summary.total_value_usdt',
@@ -183,7 +196,27 @@ function getAccountTotalValue(account) {
   ];
 
   let baseEntry = null;
+  if (isOkxAccount) {
+    const okxPreferredOrder = [
+      'total_usdt_value',
+      'summary.total_value_usdt',
+      'detailed_breakdown.summary.total_value_usdt',
+      'total_value_usdt',
+      'current_value',
+      'current_total_value'
+    ];
+    for (const key of okxPreferredOrder) {
+      const match = candidateEntries.find(entry => entry.path === key);
+      if (match) {
+        baseEntry = match;
+        break;
+      }
+    }
+  }
   for (const key of preferredOrder) {
+    if (baseEntry) {
+      break;
+    }
     const match = candidateEntries.find(entry => entry.path === key);
     if (match) {
       baseEntry = match;
@@ -249,6 +282,9 @@ function getAccountTotalValue(account) {
   const pnlTotal = pnlFound ? pnlValue : 0;
 
   const numericBase = normalizeNumeric(baseValue);
+  if (isOkxAccount && numericBase !== null && Number.isFinite(numericBase)) {
+    return numericBase;
+  }
   const baseSourceLabel = baseSource || '';
   const baseLikelyIncludesPnl = baseIncludesPnl || (typeof baseSourceLabel === 'string'
     ? /current_value|with_pnl|analytics|metrics/.test(baseSourceLabel)
