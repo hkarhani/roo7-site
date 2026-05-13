@@ -1164,6 +1164,22 @@ document.addEventListener("DOMContentLoaded", () => {
       : [];
     const messages = [];
 
+    const restrictedWarnings = warnings.filter(warning => /account-restricted OKX futures token|restricted OKX futures|local compliance|can't trade this pair|cannot trade this pair/i.test(warning));
+    const restrictedDetected = Array.isArray(result.restricted_instruments_detected) ? result.restricted_instruments_detected : [];
+    const restrictedApplied = Array.isArray(result.restricted_instruments_applied) && result.restricted_instruments_applied.length > 0
+      ? result.restricted_instruments_applied
+      : (Array.isArray(account?.okx_restricted_futures_inst_ids) ? account.okx_restricted_futures_inst_ids : []);
+    if (restrictedWarnings.length > 0 || restrictedDetected.length > 0 || restrictedApplied.length > 0 || Number(result.restricted_source_position_count || 0) > 0) {
+      const appliedLabels = restrictedApplied.map(instId => `Previously restricted: ${instId}`);
+      const detectedLabels = restrictedDetected.map(record => `${record.instId || 'Unknown instrument'}: ${record.error || record.reason || 'Restricted for this account'}`);
+      messages.push({
+        type: 'restricted',
+        title: 'Account-restricted OKX futures instruments skipped',
+        summary: 'These instruments are restricted for this destination account and will be skipped in future OKX futures runs.',
+        items: [...restrictedWarnings, ...detectedLabels, ...appliedLabels]
+      });
+    }
+
     const unsupportedWarnings = warnings.filter(warning => /unsupported OKX futures token|unsupported OKX futures instrument|unmappable|mapped market mismatch/i.test(warning));
     if (unsupportedWarnings.length > 0 || Number(result.skipped_source_position_count || 0) > 0) {
       const skippedCount = Number(result.skipped_source_position_count || unsupportedWarnings.length);
@@ -1208,15 +1224,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const strategyText = `${account?.strategy || ''} ${account?.account_name || ''}`.toLowerCase();
+    const persistedModeWarning = account?.okx_futures_position_mode_warning;
     const positionMode = String(result.position_mode || account?.okx_position_mode || '').toLowerCase();
     const hedgingStrategy = /hedg|market neutral|long.short|long-short/.test(strategyText);
-    if ((positionMode === 'net_mode' && hedgingStrategy) || (!positionMode && hedgingStrategy)) {
+    if (persistedModeWarning?.message || (positionMode === 'net_mode' && hedgingStrategy) || (!positionMode && hedgingStrategy)) {
       messages.push({
         type: 'mode',
         title: 'OKX futures account mode needs admin review',
-        summary: positionMode === 'net_mode'
+        summary: persistedModeWarning?.message || (positionMode === 'net_mode'
           ? 'Latest OKX job reported net mode while the strategy name suggests hedged replication.'
-          : 'Latest OKX job did not report position mode; verify mode before relying on hedged replication.',
+          : 'Latest OKX job did not report position mode; verify mode before relying on hedged replication.'),
         items: positionMode ? [`Latest reported position mode: ${positionMode}`] : []
       });
     }

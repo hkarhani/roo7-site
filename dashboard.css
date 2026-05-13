@@ -1000,6 +1000,10 @@ button.delete-account:hover {
   color: #dc3545 !important;
 }
 
+.status-warning {
+  color: #d97706 !important;
+}
+
 .dark-theme .status-disabled {
   color: #ffc107 !important;
 }

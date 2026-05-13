@@ -38,6 +38,8 @@ Implemented behavior:
 - Supports detailed troubleshoot for user destination accounts.
 - Active trading accounts show an admin-only OKX futures alert icon when latest job warnings include unsupported-token removal, renormalization, soft-skipped order/instrument rejections, or an OKX account-mode advisory.
 - Clicking an active trading account opens account details; OKX futures accounts include latest futures job status and source-vs-destination futures weightage when snapshots are available.
+- OKX futures instruments rejected for local compliance restrictions are persisted as account-restricted instruments and shown in admin details.
+- Futures replication attempts to match destination position mode to the source account before trading; failed exchange mode switches are recorded as account warnings for user review.
 - Troubleshoot must not modify the user-controlled `exchange` field.
 - Disabled/revoked account troubleshoot is diagnostic-only on the backend.
 

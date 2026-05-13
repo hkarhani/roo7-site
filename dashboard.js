@@ -148,6 +148,27 @@ document.addEventListener("DOMContentLoaded", () => {
       if (acc.is_revoked) {
         statusBadges += '<span class="status-badge status-revoked" title="Access Revoked">🚫</span>';
       }
+      const accountWarnings = Array.isArray(acc.account_warnings)
+        ? acc.account_warnings.filter(warning => {
+            const type = String(warning?.type || '');
+            const message = String(warning?.message || '');
+            return type.includes('futures_position_mode')
+              && (
+                warning?.user_visible === true
+                || warning?.reason === 'mode_switch_failed'
+                || (/Automatic .*position mode switch/i.test(message) && /(failed|did not take effect)/i.test(message))
+              );
+          })
+        : [];
+      if (accountWarnings.length > 0) {
+        const warningsTitle = accountWarnings
+          .map(warning => warning.message || 'Account needs attention')
+          .join('\n')
+          .replace(/'/g, "&#39;")
+          .replace(/"/g, "&quot;")
+          .replace(/\r?\n/g, '&#10;');
+        statusBadges += `<span class="status-badge status-warning" title="${warningsTitle}">⚠️</span>`;
+      }
 
       // Test status formatting - mobile optimized
       let testStatusHtml = '';
