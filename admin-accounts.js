@@ -670,6 +670,34 @@ function positionSideColor(side) {
   return '#6c757d';
 }
 
+function firstTroubleshootValue(...values) {
+  return values.find(value => value !== undefined && value !== null && value !== '');
+}
+
+function parseTroubleshootNumber(...values) {
+  const value = firstTroubleshootValue(...values);
+  const number = Number.parseFloat(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function normalizeTroubleshootOrder(order = {}) {
+  const price = parseTroubleshootNumber(order.price, order.px, order.avgPx);
+  const quantity = parseTroubleshootNumber(order.origQty, order.original_qty, order.quantity, order.sz);
+  const side = String(firstTroubleshootValue(order.side, order.orderSide) || 'UNKNOWN').toUpperCase();
+  const reduceOnlyValue = firstTroubleshootValue(order.reduceOnly, order.reduce_only, false);
+  return {
+    symbol: firstTroubleshootValue(order.symbol, order.instId, order.instrument) || 'N/A',
+    side,
+    type: firstTroubleshootValue(order.type, order.ordType, order.order_type) || 'UNKNOWN',
+    price,
+    quantity,
+    reduceOnly: typeof reduceOnlyValue === 'string'
+      ? ['1', 'true', 'yes'].includes(reduceOnlyValue.toLowerCase())
+      : Boolean(reduceOnlyValue),
+    usdtValue: parseTroubleshootNumber(order.usdt_value, order.notionalUsd, Math.abs(price * quantity)),
+  };
+}
+
 function showTroubleshootResults(result) {
   const modal = document.getElementById('troubleshoot-modal');
   const resultsContainer = document.getElementById('troubleshoot-results');
@@ -846,16 +874,19 @@ function showTroubleshootResults(result) {
                     </tr>
                   </thead>
                   <tbody>
-                    ${result.detailed_breakdown['USDT-M'].open_orders.map(order => `
-                      <tr>
-                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${order.side === 'BUY' ? '#28a745' : '#dc3545'};">${order.side}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.type}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(order.price || 0)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(order.origQty || 0)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(order.usdt_value || 0)}</strong></td>
-                      </tr>
-                    `).join('')}
+                    ${result.detailed_breakdown['USDT-M'].open_orders.map(order => {
+                      const normalized = normalizeTroubleshootOrder(order);
+                      return `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${normalized.symbol}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${normalized.side === 'BUY' ? '#28a745' : '#dc3545'};">${normalized.side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${normalized.type}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(normalized.price)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(normalized.quantity)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(normalized.usdtValue)}</strong></td>
+                        </tr>
+                      `;
+                    }).join('')}
                   </tbody>
                 </table>
               </div>
@@ -950,17 +981,20 @@ function showTroubleshootResults(result) {
                     </tr>
                   </thead>
                   <tbody>
-                    ${result.detailed_breakdown['COIN-M'].open_orders.map(order => `
-                      <tr>
-                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>${order.symbol}</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${order.side === 'BUY' ? '#28a745' : '#dc3545'};">${order.side}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.type}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(order.price || 0)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(order.origQty || 0, 0)}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${order.reduceOnly ? '✅' : '❌'}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(order.usdt_value || 0)}</strong></td>
-                      </tr>
-                    `).join('')}
+                    ${result.detailed_breakdown['COIN-M'].open_orders.map(order => {
+                      const normalized = normalizeTroubleshootOrder(order);
+                      return `
+                        <tr>
+                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${normalized.symbol}</strong></td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${normalized.side === 'BUY' ? '#28a745' : '#dc3545'};">${normalized.side}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${normalized.type}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(normalized.price)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(normalized.quantity, 0)}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${normalized.reduceOnly ? '✅' : '❌'}</td>
+                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(normalized.usdtValue)}</strong></td>
+                        </tr>
+                      `;
+                    }).join('')}
                   </tbody>
                 </table>
               </div>

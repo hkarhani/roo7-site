@@ -40,6 +40,7 @@ Implemented behavior:
 - Clicking an active trading account opens account details; OKX futures accounts include latest futures job status and source-vs-destination futures weightage when snapshots are available.
 - OKX futures instruments rejected for local compliance restrictions are persisted as account-restricted instruments and shown in admin details.
 - Futures replication attempts to match destination position mode to the source account before trading; failed exchange mode switches are recorded as account warnings for user review.
+- Admin troubleshoot tables normalize Binance and OKX position/order fields for both source-account verification and user destination-account troubleshoot.
 - Troubleshoot must not modify the user-controlled `exchange` field.
 - Disabled/revoked account troubleshoot is diagnostic-only on the backend.
 

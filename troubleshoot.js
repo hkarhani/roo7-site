@@ -109,6 +109,78 @@ function initializeTroubleshootPage() {
     }
   }
 
+  function firstDefined(...values) {
+    return values.find(value => value !== undefined && value !== null && value !== '');
+  }
+
+  function parseTroubleshootNumber(...values) {
+    const value = firstDefined(...values);
+    const number = Number.parseFloat(value);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function normalizeTroubleshootPosition(position = {}) {
+    const amount = parseTroubleshootNumber(
+      position.positionAmt,
+      position.position_amt,
+      position.position_amount,
+      position.size,
+      position.pos
+    );
+    const rawSide = String(firstDefined(
+      position.side,
+      position.positionSide,
+      position.position_side,
+      position.posSide
+    ) || '').trim();
+    const upperSide = rawSide.toUpperCase();
+    let side = rawSide;
+
+    if (!side || upperSide === 'BOTH' || upperSide === 'NET') {
+      side = amount < 0 ? 'Short' : amount > 0 ? 'Long' : 'Net';
+    } else if (upperSide === 'LONG') {
+      side = 'Long';
+    } else if (upperSide === 'SHORT') {
+      side = 'Short';
+    }
+
+    return {
+      symbol: firstDefined(position.symbol, position.instId, position.instrument) || 'N/A',
+      side,
+      sideLabel: side.toUpperCase(),
+      directionClass: side === 'Long' ? 'long' : side === 'Short' ? 'short' : 'neutral',
+      amount,
+      entryPrice: parseTroubleshootNumber(position.entryPrice, position.entry_price, position.avgPx),
+      markPrice: parseTroubleshootNumber(position.markPrice, position.mark_price, position.markPx),
+      pnl: parseTroubleshootNumber(position.unRealizedPnL, position.unrealized_pnl, position.unrealizedPnL, position.pnl),
+      usdtValue: parseTroubleshootNumber(position.usdt_value, position.notionalUsd, position.notional, position.notionalValue, position.value),
+      percentage: parseTroubleshootNumber(position.percentage_of_total),
+    };
+  }
+
+  function normalizeTroubleshootOrder(order = {}) {
+    const price = parseTroubleshootNumber(order.price, order.px, order.avgPx);
+    const originalQty = parseTroubleshootNumber(order.origQty, order.original_qty, order.quantity, order.sz);
+    const executedQty = parseTroubleshootNumber(order.executed_qty, order.executedQty, order.accFillSz, order.executed);
+    const side = String(firstDefined(order.side, order.orderSide) || 'UNKNOWN').toUpperCase();
+    const reduceOnlyValue = firstDefined(order.reduceOnly, order.reduce_only, false);
+
+    return {
+      symbol: firstDefined(order.symbol, order.instId, order.instrument) || 'N/A',
+      side,
+      sideClass: side.toLowerCase(),
+      type: firstDefined(order.type, order.ordType, order.order_type) || 'UNKNOWN',
+      originalQty,
+      executedQty,
+      price,
+      status: firstDefined(order.status, order.state) || 'UNKNOWN',
+      reduceOnly: typeof reduceOnlyValue === 'string'
+        ? ['1', 'true', 'yes'].includes(reduceOnlyValue.toLowerCase())
+        : Boolean(reduceOnlyValue),
+      usdtValue: parseTroubleshootNumber(order.usdt_value, order.notionalUsd, Math.abs(price * originalQty)),
+    };
+  }
+
   function displayTestSummary(results, container) {
     let summaryHtml = '<div class="test-summary">';
     
@@ -557,7 +629,7 @@ function initializeTroubleshootPage() {
     });
   }
 
-  function displayFuturesPositions(positions, futuresType) {
+  function displaySelectedFuturesPositions(positions, futuresType) {
     const section = document.getElementById('futures-positions-section');
     const tableBody = document.querySelector('#futures-positions-table tbody');
     const titleElement = document.getElementById('futures-positions-title');
@@ -594,32 +666,19 @@ function initializeTroubleshootPage() {
         console.log('🔍 Available position fields:', Object.keys(position));
       }
       
-      // Use exact field names from your Python structure
-      const positionAmt = parseFloat(position.positionAmt || 0);
-      const isLong = positionAmt > 0;
-      const direction = isLong ? 'long' : 'short';
-      const directionText = position.side || (isLong ? 'Long' : 'Short'); // Use "side" from Python
-      
-      const entryPrice = parseFloat(position.entryPrice || 0).toFixed(4);
-      const markPrice = parseFloat(position.markPrice || 0).toFixed(4);
-      const unrealizedPnl = parseFloat(position.unRealizedPnL || 0);
-      const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-      
-      // Use exact field from Python structure
-      const usdtValue = parseFloat(position.usdt_value || 0).toFixed(2);
-      
-      const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
+      const normalized = normalizeTroubleshootPosition(position);
+      const pnlClass = normalized.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
       
       const row = tableBody.insertRow();
       row.innerHTML = `
-        <td><strong>${position.symbol}</strong></td>
-        <td><span class="position-direction ${direction}">${directionText}</span></td>
-        <td>${Math.abs(positionAmt).toFixed(6)}</td>
-        <td>${entryPrice}</td>
-        <td>${markPrice}</td>
-        <td class="${pnlClass}">${unrealizedPnl.toFixed(4)}</td>
-        <td>${usdtValue}</td>
-        <td><span class="percentage-badge">${percentage}%</span></td>
+        <td><strong>${normalized.symbol}</strong></td>
+        <td><span class="position-direction ${normalized.directionClass}">${normalized.side}</span></td>
+        <td>${Math.abs(normalized.amount).toFixed(6)}</td>
+        <td>${normalized.entryPrice.toFixed(4)}</td>
+        <td>${normalized.markPrice.toFixed(4)}</td>
+        <td class="${pnlClass}">${normalized.pnl.toFixed(4)}</td>
+        <td>${normalized.usdtValue.toFixed(2)}</td>
+        <td><span class="percentage-badge">${normalized.percentage.toFixed(2)}%</span></td>
       `;
     });
   }
@@ -649,19 +708,16 @@ function initializeTroubleshootPage() {
         console.log('🔍 Available order fields:', Object.keys(order));
       }
       
-      // Use exact field names from your Python structure
-      const side = order.side || 'UNKNOWN';
-      const originalQty = parseFloat(order.origQty || 0).toFixed(3);
-      const price = parseFloat(order.price || 0).toFixed(4);
+      const normalized = normalizeTroubleshootOrder(order);
       
       const row = tableBody.insertRow();
       row.innerHTML = `
-        <td><strong>${order.symbol}</strong></td>
-        <td><span class="order-side ${side}">${order.side}</span></td>
-        <td>${order.type}</td>
-        <td>${originalQty}</td>
-        <td>${price}</td>
-        <td>${order.status}</td>
+        <td><strong>${normalized.symbol}</strong></td>
+        <td><span class="order-side ${normalized.sideClass}">${normalized.side}</span></td>
+        <td>${normalized.type}</td>
+        <td>${normalized.originalQty.toFixed(3)}</td>
+        <td>${normalized.price.toFixed(4)}</td>
+        <td>${normalized.status}</td>
       `;
     });
   }
@@ -697,14 +753,14 @@ function initializeTroubleshootPage() {
         symbol: p.symbol,
         position_amt: p.position_amt,
         positionAmt: p.positionAmt,
-        size: parseFloat(p.position_amt || p.positionAmt || 0),
+        size: normalizeTroubleshootPosition(p).amount,
         fields: Object.keys(p)
       })),
       'Coin-M BTC positions': coinmBTC.map(p => ({
         symbol: p.symbol,
         position_amt: p.position_amt,
         positionAmt: p.positionAmt, 
-        size: parseFloat(p.position_amt || p.positionAmt || 0),
+        size: normalizeTroubleshootPosition(p).amount,
         fields: Object.keys(p)
       }))
     });
@@ -779,7 +835,7 @@ function initializeTroubleshootPage() {
     
     if (futuresType) {
       displayFuturesAssets(assets, futuresType);
-      displayFuturesPositions(positions, futuresType);
+      displaySelectedFuturesPositions(positions, futuresType);
       displayFuturesOrders(orders, futuresType);
     } else {
       console.log('❌ No FUTURES data to display');
@@ -806,8 +862,8 @@ function initializeTroubleshootPage() {
     // Analyze available data
     const usdtmAssets = snapshot.futures_usdtm_assets?.filter(asset => parseFloat(asset.total || asset.wallet_balance || 0) > 0) || [];
     const coinmAssets = snapshot.futures_coinm_assets?.filter(asset => parseFloat(asset.total || asset.wallet_balance || 0) > 0) || [];
-    const usdtmPositions = snapshot.futures_usdtm_positions?.filter(pos => parseFloat(pos.position_amt) !== 0) || [];
-    const coinmPositions = snapshot.futures_coinm_positions?.filter(pos => parseFloat(pos.position_amt) !== 0) || [];
+    const usdtmPositions = snapshot.futures_usdtm_positions?.filter(pos => normalizeTroubleshootPosition(pos).amount !== 0) || [];
+    const coinmPositions = snapshot.futures_coinm_positions?.filter(pos => normalizeTroubleshootPosition(pos).amount !== 0) || [];
     const spotOrders = snapshot.open_orders_spot || [];
     const usdtmOrders = snapshot.open_orders_futures_usdtm || [];
     const coinmOrders = snapshot.open_orders_futures_coinm || [];
@@ -1160,28 +1216,20 @@ function initializeTroubleshootPage() {
     }
     
     positions.forEach(position => {
-      const positionAmt = parseFloat(position.position_amt);
-      const isLong = positionAmt > 0;
-      const direction = isLong ? 'long' : 'short';
-      const directionText = isLong ? 'LONG' : 'SHORT';
-      
-      const entryPrice = parseFloat(position.entry_price).toFixed(4);
-      const markPrice = parseFloat(position.mark_price).toFixed(4);
-      const unrealizedPnl = parseFloat(position.unrealized_pnl);
-      const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-      const usdtValue = position.usdt_value ? parseFloat(position.usdt_value).toFixed(2) : 'N/A';
-      const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
+      const normalized = normalizeTroubleshootPosition(position);
+      const pnlClass = normalized.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+      const usdtValue = normalized.usdtValue ? normalized.usdtValue.toFixed(2) : 'N/A';
       
       const row = tableBody.insertRow();
       row.innerHTML = `
-        <td><strong>${position.symbol}</strong></td>
-        <td><span class="position-direction ${direction}">${directionText}</span></td>
-        <td>${Math.abs(positionAmt).toFixed(6)}</td>
-        <td>${entryPrice}</td>
-        <td>${markPrice}</td>
-        <td class="${pnlClass}">${unrealizedPnl.toFixed(4)}</td>
+        <td><strong>${normalized.symbol}</strong></td>
+        <td><span class="position-direction ${normalized.directionClass}">${normalized.sideLabel}</span></td>
+        <td>${Math.abs(normalized.amount).toFixed(6)}</td>
+        <td>${normalized.entryPrice.toFixed(4)}</td>
+        <td>${normalized.markPrice.toFixed(4)}</td>
+        <td class="${pnlClass}">${normalized.pnl.toFixed(4)}</td>
         <td>${usdtValue}</td>
-        <td><span class="percentage-badge">${percentage}%</span></td>
+        <td><span class="percentage-badge">${normalized.percentage.toFixed(2)}%</span></td>
       `;
     });
   }
@@ -1217,21 +1265,18 @@ function initializeTroubleshootPage() {
     }
     
     orders.forEach(order => {
-      const side = order.side.toLowerCase();
-      const originalQty = parseFloat(order.original_qty).toFixed(6);
-      const executedQty = parseFloat(order.executed_qty).toFixed(6);
-      const price = parseFloat(order.price).toFixed(6);
-      const usdtValue = order.usdt_value ? parseFloat(order.usdt_value).toFixed(2) : 'N/A';
+      const normalized = normalizeTroubleshootOrder(order);
+      const usdtValue = normalized.usdtValue ? normalized.usdtValue.toFixed(2) : 'N/A';
       
       const row = tableBody.insertRow();
       row.innerHTML = `
-        <td><strong>${order.symbol}</strong></td>
-        <td><span class="order-side ${side}">${order.side}</span></td>
-        <td>${order.type}</td>
-        <td>${originalQty}</td>
-        <td>${executedQty}</td>
-        <td>${price}</td>
-        <td>${order.status}</td>
+        <td><strong>${normalized.symbol}</strong></td>
+        <td><span class="order-side ${normalized.sideClass}">${normalized.side}</span></td>
+        <td>${normalized.type}</td>
+        <td>${normalized.originalQty.toFixed(6)}</td>
+        <td>${normalized.executedQty.toFixed(6)}</td>
+        <td>${normalized.price.toFixed(6)}</td>
+        <td>${normalized.status}</td>
         <td>${usdtValue}</td>
       `;
     });
@@ -1411,7 +1456,7 @@ function initializeTroubleshootPage() {
     if (results.detailed_snapshot) {
       const spotCount = results.detailed_snapshot.spot_assets?.length || 0;
       const coinmCount = results.detailed_snapshot.futures_coinm_assets?.length || 0;
-      const positionCount = results.detailed_snapshot.futures_coinm_positions?.filter(p => parseFloat(p.position_amt) !== 0).length || 0;
+      const positionCount = results.detailed_snapshot.futures_coinm_positions?.filter(p => normalizeTroubleshootPosition(p).amount !== 0).length || 0;
       
       if (spotCount > 0 || coinmCount > 0) {
         diagnosticHtml += `<li>`;
@@ -1869,41 +1914,23 @@ function initializeTroubleshootPage() {
         console.log('🔍 First position structure:', position);
         console.log('🔍 Available position fields:', Object.keys(position));
       }
-      const positionAmt = parseFloat(position.position_amt);
-      const isLong = positionAmt > 0;
-      const direction = isLong ? 'long' : 'short';
-      const directionText = isLong ? 'LONG' : 'SHORT';
-      
-      const entryPrice = parseFloat(position.entry_price).toFixed(4);
-      const markPrice = parseFloat(position.mark_price).toFixed(4);
-      const unrealizedPnl = parseFloat(position.unrealized_pnl);
-      const pnlClass = unrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-      
-      // Check multiple possible field names for position value
-      const usdtValue = position.usdt_value !== undefined && position.usdt_value !== null ? 
-        parseFloat(position.usdt_value).toFixed(2) : 
-        position.notional !== undefined && position.notional !== null ?
-        parseFloat(position.notional).toFixed(2) :
-        position.notionalValue !== undefined && position.notionalValue !== null ?
-        parseFloat(position.notionalValue).toFixed(2) :
-        position.value !== undefined && position.value !== null ?
-        parseFloat(position.value).toFixed(2) :
-        // For Coin-M, calculate notional value: position_amt * mark_price
-        Math.abs(positionAmt) * parseFloat(position.mark_price) ? 
-        (Math.abs(positionAmt) * parseFloat(position.mark_price)).toFixed(2) : 'N/A';
-      
-      const percentage = position.percentage_of_total ? parseFloat(position.percentage_of_total).toFixed(2) : '0';
+      const normalized = normalizeTroubleshootPosition(position);
+      const pnlClass = normalized.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+      const fallbackValue = Math.abs(normalized.amount) * normalized.markPrice;
+      const usdtValue = normalized.usdtValue
+        ? normalized.usdtValue.toFixed(2)
+        : (fallbackValue ? fallbackValue.toFixed(2) : 'N/A');
       
       const row = tableBody.insertRow();
       row.innerHTML = `
-        <td><strong>${position.symbol}</strong></td>
-        <td><span class="position-direction ${direction}">${directionText}</span></td>
-        <td>${Math.abs(positionAmt).toFixed(6)}</td>
-        <td>${entryPrice}</td>
-        <td>${markPrice}</td>
-        <td class="${pnlClass}">${unrealizedPnl.toFixed(4)}</td>
+        <td><strong>${normalized.symbol}</strong></td>
+        <td><span class="position-direction ${normalized.directionClass}">${normalized.sideLabel}</span></td>
+        <td>${Math.abs(normalized.amount).toFixed(6)}</td>
+        <td>${normalized.entryPrice.toFixed(4)}</td>
+        <td>${normalized.markPrice.toFixed(4)}</td>
+        <td class="${pnlClass}">${normalized.pnl.toFixed(4)}</td>
         <td>${usdtValue}</td>
-        <td><span class="percentage-badge">${percentage}%</span></td>
+        <td><span class="percentage-badge">${normalized.percentage.toFixed(2)}%</span></td>
       `;
     });
   }
@@ -1915,21 +1942,18 @@ function initializeTroubleshootPage() {
     tableBody.innerHTML = '';
     
     orders.forEach(order => {
-      const side = order.side.toLowerCase();
-      const originalQty = parseFloat(order.original_qty).toFixed(6);
-      const executedQty = parseFloat(order.executed_qty).toFixed(6);
-      const price = parseFloat(order.price).toFixed(6);
-      const usdtValue = order.usdt_value ? parseFloat(order.usdt_value).toFixed(2) : 'N/A';
+      const normalized = normalizeTroubleshootOrder(order);
+      const usdtValue = normalized.usdtValue ? normalized.usdtValue.toFixed(2) : 'N/A';
       
       const row = tableBody.insertRow();
       row.innerHTML = `
-        <td><strong>${order.symbol}</strong></td>
-        <td><span class="order-side ${side}">${order.side}</span></td>
-        <td>${order.type}</td>
-        <td>${originalQty}</td>
-        <td>${executedQty}</td>
-        <td>${price}</td>
-        <td>${order.status}</td>
+        <td><strong>${normalized.symbol}</strong></td>
+        <td><span class="order-side ${normalized.sideClass}">${normalized.side}</span></td>
+        <td>${normalized.type}</td>
+        <td>${normalized.originalQty.toFixed(6)}</td>
+        <td>${normalized.executedQty.toFixed(6)}</td>
+        <td>${normalized.price.toFixed(6)}</td>
+        <td>${normalized.status}</td>
         <td>${usdtValue}</td>
       `;
     });
