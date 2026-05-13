@@ -3538,6 +3538,38 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function normalizeTroubleshootPosition(position) {
+    const amount = Number.parseFloat(
+      position.positionAmt ?? position.position_amt ?? position.position_amount ?? position.size ?? 0
+    ) || 0;
+    const rawSide = String(position.side ?? position.positionSide ?? position.position_side ?? position.posSide ?? '').trim();
+    let side = rawSide;
+    const upperSide = rawSide.toUpperCase();
+    if (!side || upperSide === 'BOTH' || upperSide === 'NET') {
+      side = amount < 0 ? 'Short' : amount > 0 ? 'Long' : 'Net';
+    } else if (upperSide === 'LONG') {
+      side = 'Long';
+    } else if (upperSide === 'SHORT') {
+      side = 'Short';
+    }
+    const pnl = Number.parseFloat(position.unRealizedPnL ?? position.unrealized_pnl ?? position.pnl ?? 0) || 0;
+    return {
+      symbol: position.symbol || position.instId || 'N/A',
+      side,
+      amount,
+      entryPrice: Number.parseFloat(position.entryPrice ?? position.entry_price ?? position.avgPx ?? 0) || 0,
+      markPrice: Number.parseFloat(position.markPrice ?? position.mark_price ?? position.markPx ?? 0) || 0,
+      pnl,
+      usdtValue: Number.parseFloat(position.usdt_value ?? position.notionalUsd ?? position.notional ?? 0) || 0,
+    };
+  }
+
+  function positionSideColor(side) {
+    if (side === 'Long') return '#28a745';
+    if (side === 'Short') return '#dc3545';
+    return '#6c757d';
+  }
+
   // Show troubleshoot results (COMPLETE version from admin-accounts.js)
   function showTroubleshootResults(result) {
     const modal = document.getElementById('troubleshoot-modal');
@@ -3685,17 +3717,20 @@ document.addEventListener("DOMContentLoaded", () => {
                       </tr>
                     </thead>
                     <tbody>
-                      ${result.detailed_breakdown['USDT-M'].positions.map(position => `
-                        <tr>
-                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(position.positionAmt || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
-                        </tr>
-                      `).join('')}
+                      ${result.detailed_breakdown['USDT-M'].positions.map(position => {
+                        const normalized = normalizeTroubleshootPosition(position);
+                        return `
+                          <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>${escapeAdminHtml(normalized.symbol)}</strong></td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${positionSideColor(normalized.side)};">${escapeAdminHtml(normalized.side)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(Math.abs(normalized.amount))}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(normalized.entryPrice)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(normalized.markPrice)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${normalized.pnl >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(normalized.pnl)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(normalized.usdtValue)}</strong></td>
+                          </tr>
+                        `;
+                      }).join('')}
                     </tbody>
                   </table>
                 </div>
@@ -3785,17 +3820,20 @@ document.addEventListener("DOMContentLoaded", () => {
                       </tr>
                     </thead>
                     <tbody>
-                      ${result.detailed_breakdown['COIN-M'].positions.map(position => `
-                        <tr>
-                          <td style="padding: 10px; border: 1px solid #ddd;"><strong>${position.symbol}</strong></td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${position.side === 'Long' ? '#28a745' : '#dc3545'};">${position.side}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${parseFloat(position.positionAmt || 0).toFixed(0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.entryPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(position.markPrice || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${parseFloat(position.unRealizedPnL || 0) >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(position.unRealizedPnL || 0)}</td>
-                          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(position.usdt_value || 0)}</strong></td>
-                        </tr>
-                      `).join('')}
+                      ${result.detailed_breakdown['COIN-M'].positions.map(position => {
+                        const normalized = normalizeTroubleshootPosition(position);
+                        return `
+                          <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>${escapeAdminHtml(normalized.symbol)}</strong></td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${positionSideColor(normalized.side)};">${escapeAdminHtml(normalized.side)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${formatCrypto(Math.abs(normalized.amount))}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(normalized.entryPrice)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${formatPrice(normalized.markPrice)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right; color: ${normalized.pnl >= 0 ? '#28a745' : '#dc3545'};">$${formatNumber(normalized.pnl)}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>$${formatNumber(normalized.usdtValue)}</strong></td>
+                          </tr>
+                        `;
+                      }).join('')}
                     </tbody>
                   </table>
                 </div>
