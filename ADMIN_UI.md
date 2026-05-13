@@ -36,6 +36,8 @@ Implemented behavior:
 
 - Lists user trading accounts with owner username, account name, exchange, type, strategy, and status.
 - Supports detailed troubleshoot for user destination accounts.
+- Active trading accounts show an admin-only OKX futures alert icon when latest job warnings include unsupported-token removal, renormalization, soft-skipped order/instrument rejections, or an OKX account-mode advisory.
+- Clicking an active trading account opens account details; OKX futures accounts include latest futures job status and source-vs-destination futures weightage when snapshots are available.
 - Troubleshoot must not modify the user-controlled `exchange` field.
 - Disabled/revoked account troubleshoot is diagnostic-only on the backend.
 

@@ -918,6 +918,505 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
+  function getAdminAccountId(account) {
+    return String(account?._id || account?.id || account?.account_id || account?.active_job_id || '');
+  }
+
+  function getAdminAccountExchange(account) {
+    return String(account?.exchange || 'Binance').trim();
+  }
+
+  function getAdminAccountType(account) {
+    const accountType = String(account?.account_type || '').trim().toUpperCase();
+    if (accountType) {
+      return accountType;
+    }
+    const jobType = String(account?.active_job_job_type || '').trim().toUpperCase();
+    return jobType === 'FUTURES_TRADING' ? 'FUTURES' : 'SPOT';
+  }
+
+  function renderAccountTypeBadge(account) {
+    const exchange = getAdminAccountExchange(account);
+    const accountType = getAdminAccountType(account);
+    const badgeClass = accountType.includes('FUTURE') ? 'futures' : 'spot';
+    return `<span class="account-type-badge ${badgeClass}">${escapeAdminHtml(exchange)} ${escapeAdminHtml(accountType)}</span>`;
+  }
+
+  function getLatestFuturesResult(account) {
+    const latestJob = account?.latest_futures_job;
+    if (latestJob?.result_details && typeof latestJob.result_details === 'object') {
+      return latestJob.result_details;
+    }
+    if (account?.latest_futures_result && typeof account.latest_futures_result === 'object') {
+      return account.latest_futures_result;
+    }
+    return {};
+  }
+
+  function isOkxFuturesAccount(account) {
+    const exchange = getAdminAccountExchange(account).toUpperCase();
+    const accountType = getAdminAccountType(account);
+    const jobType = String(account?.active_job_job_type || '').toUpperCase();
+    const result = getLatestFuturesResult(account);
+    const targetMarkets = Array.isArray(result.target_markets) ? result.target_markets : [];
+    return exchange === 'OKX'
+      && (
+        accountType.includes('FUTURE')
+        || jobType === 'FUTURES_TRADING'
+        || targetMarkets.some(market => String(market).toUpperCase().includes('USDTM') || String(market).toUpperCase().includes('COINM'))
+      );
+  }
+
+  function parseFiniteNumber(value) {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function firstFiniteNumber(...values) {
+    for (const value of values) {
+      const parsed = parseFiniteNumber(value);
+      if (parsed !== null) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
+  function normalizeFuturesSymbol(symbol) {
+    return String(symbol || '')
+      .trim()
+      .toUpperCase()
+      .replace(/-USDT-SWAP$/, 'USDT')
+      .replace(/-USD-SWAP$/, 'USD')
+      .replace(/_PERP$/, '')
+      .replace(/[-_/]/g, '');
+  }
+
+  function collectPortfolioPositions(portfolio) {
+    if (Array.isArray(portfolio)) {
+      return portfolio.filter(item => item && typeof item === 'object');
+    }
+
+    if (!portfolio || typeof portfolio !== 'object') {
+      return [];
+    }
+
+    const positions = [];
+    const pushPositions = (candidate) => {
+      if (Array.isArray(candidate)) {
+        positions.push(...candidate.filter(item => item && typeof item === 'object'));
+      }
+    };
+
+    pushPositions(portfolio.positions);
+    pushPositions(portfolio.usdtm_positions);
+    pushPositions(portfolio.coinm_positions);
+    pushPositions(portfolio.futures_positions);
+    pushPositions(portfolio.futures_usdtm_positions);
+    pushPositions(portfolio.futures_coinm_positions);
+    pushPositions(portfolio.current_positions);
+    pushPositions(portfolio.desired_positions);
+    pushPositions(portfolio.detailed_breakdown?.['USDT-M']?.positions);
+    pushPositions(portfolio.detailed_breakdown?.['COIN-M']?.positions);
+    pushPositions(portfolio['USDT-M']?.positions);
+    pushPositions(portfolio['COIN-M']?.positions);
+
+    return positions;
+  }
+
+  function getPositionSymbol(position) {
+    return position.symbol
+      || position.instId
+      || position.inst_id
+      || position.instrument_id
+      || position.pair
+      || position.asset
+      || '';
+  }
+
+  function getSignedPositionNotional(position) {
+    const explicitSigned = firstFiniteNumber(
+      position.desired_notional_usd,
+      position.current_notional_usd,
+      position.signed_notional_usd
+    );
+    if (explicitSigned !== null) {
+      return explicitSigned;
+    }
+
+    const notional = firstFiniteNumber(
+      position.usdt_value,
+      position.value_usd,
+      position.notional_usd,
+      position.notionalUsd,
+      position.notional,
+      position.notionalValue,
+      position.position_value_usd,
+      position.market_value_usd
+    );
+    if (notional === null || Math.abs(notional) === 0) {
+      return 0;
+    }
+
+    const amount = firstFiniteNumber(
+      position.positionAmt,
+      position.position_amount,
+      position.pos,
+      position.size,
+      position.contracts,
+      position.current_contracts,
+      position.desired_contracts,
+      position.quantity,
+      position.qty
+    );
+    const side = String(position.position_side || position.positionSide || position.posSide || position.side || '').toUpperCase();
+
+    if (notional < 0) {
+      return notional;
+    }
+    if (side.includes('SHORT') || side === 'SELL') {
+      return -Math.abs(notional);
+    }
+    if (amount !== null && amount < 0) {
+      return -Math.abs(notional);
+    }
+    return Math.abs(notional);
+  }
+
+  function extractFuturesWeightRows(portfolio, fallbackPositions = []) {
+    const positions = collectPortfolioPositions(portfolio);
+    if (positions.length === 0 && Array.isArray(fallbackPositions)) {
+      positions.push(...fallbackPositions.filter(item => item && typeof item === 'object'));
+    }
+
+    const bySymbol = new Map();
+    positions.forEach(position => {
+      const rawSymbol = getPositionSymbol(position);
+      const normalizedSymbol = normalizeFuturesSymbol(rawSymbol);
+      const signedNotional = getSignedPositionNotional(position);
+      if (!normalizedSymbol || !Number.isFinite(signedNotional) || Math.abs(signedNotional) === 0) {
+        return;
+      }
+
+      const existing = bySymbol.get(normalizedSymbol) || {
+        symbol: rawSymbol || normalizedSymbol,
+        normalizedSymbol,
+        signedNotional: 0,
+        absNotional: 0
+      };
+      existing.signedNotional += signedNotional;
+      existing.absNotional += Math.abs(signedNotional);
+      bySymbol.set(normalizedSymbol, existing);
+    });
+
+    const totalAbsNotional = Array.from(bySymbol.values()).reduce((sum, row) => sum + row.absNotional, 0);
+    if (totalAbsNotional <= 0) {
+      return [];
+    }
+
+    return Array.from(bySymbol.values())
+      .map(row => ({
+        ...row,
+        percentage: (row.absNotional / totalAbsNotional) * 100,
+        direction: row.signedNotional < 0 ? 'Short' : 'Long'
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+  }
+
+  function mergeFuturesWeightRows(sourceRows, destinationRows) {
+    const merged = new Map();
+    const addRows = (rows, side) => {
+      rows.forEach(row => {
+        const existing = merged.get(row.normalizedSymbol) || {
+          symbol: row.symbol,
+          normalizedSymbol: row.normalizedSymbol,
+          source: null,
+          destination: null
+        };
+        existing[side] = row;
+        existing.symbol = existing.symbol || row.symbol;
+        merged.set(row.normalizedSymbol, existing);
+      });
+    };
+
+    addRows(sourceRows, 'source');
+    addRows(destinationRows, 'destination');
+
+    return Array.from(merged.values())
+      .map(row => ({
+        ...row,
+        maxPercentage: Math.max(row.source?.percentage || 0, row.destination?.percentage || 0)
+      }))
+      .sort((a, b) => b.maxPercentage - a.maxPercentage);
+  }
+
+  function getOkxFuturesWarningInfo(account) {
+    if (!isOkxFuturesAccount(account)) {
+      return { messages: [], total: 0 };
+    }
+
+    const result = getLatestFuturesResult(account);
+    const warnings = Array.isArray(result.warnings)
+      ? result.warnings.filter(Boolean).map(String)
+      : [];
+    const messages = [];
+
+    const unsupportedWarnings = warnings.filter(warning => /unsupported OKX futures token|unsupported OKX futures instrument|unmappable|mapped market mismatch/i.test(warning));
+    if (unsupportedWarnings.length > 0 || Number(result.skipped_source_position_count || 0) > 0) {
+      const skippedCount = Number(result.skipped_source_position_count || unsupportedWarnings.length);
+      const skippedNotional = parseFiniteNumber(result.skipped_source_position_notional_usd);
+      messages.push({
+        type: 'unsupported',
+        title: 'Unsupported OKX futures tokens removed',
+        summary: skippedNotional !== null
+          ? `${skippedCount} source position(s) skipped, ${formatCurrency(skippedNotional, 2, false)} absolute notional removed.`
+          : `${skippedCount} source position(s) skipped during OKX futures mapping.`,
+        items: unsupportedWarnings
+      });
+    }
+
+    const renormalizationWarnings = warnings.filter(warning => /renormalized OKX futures targets/i.test(warning));
+    if (renormalizationWarnings.length > 0 || parseFiniteNumber(result.valid_position_renormalization_multiplier) !== null) {
+      const multiplier = parseFiniteNumber(result.valid_position_renormalization_multiplier);
+      messages.push({
+        type: 'renormalization',
+        title: 'Supported OKX futures weights renormalized',
+        summary: multiplier !== null
+          ? `Valid OKX futures targets were scaled by ${multiplier.toFixed(6)}x after removals.`
+          : 'Valid OKX futures targets were rescaled after unsupported tokens were removed.',
+        items: renormalizationWarnings
+      });
+    }
+
+    const softSkipWarnings = warnings.filter(warning => /after order rejection|soft[- ]skipped|compliance restrictions|cannot trade|can't trade/i.test(warning));
+    const softSkippedOrders = Array.isArray(result.orders)
+      ? result.orders.filter(order => order && (order.soft_error || order.warning || order.error))
+      : [];
+    if (softSkipWarnings.length > 0 || softSkippedOrders.length > 0) {
+      messages.push({
+        type: 'soft-skip',
+        title: 'Order or instrument rejection was soft-skipped',
+        summary: `${Math.max(softSkipWarnings.length, softSkippedOrders.length)} rejection notice(s) recorded without failing the whole job.`,
+        items: [
+          ...softSkipWarnings,
+          ...softSkippedOrders.map(order => `${order.instId || 'Unknown instrument'}: ${order.warning || order.error || 'Soft skipped'}`)
+        ]
+      });
+    }
+
+    const strategyText = `${account?.strategy || ''} ${account?.account_name || ''}`.toLowerCase();
+    const positionMode = String(result.position_mode || account?.okx_position_mode || '').toLowerCase();
+    const hedgingStrategy = /hedg|market neutral|long.short|long-short/.test(strategyText);
+    if ((positionMode === 'net_mode' && hedgingStrategy) || (!positionMode && hedgingStrategy)) {
+      messages.push({
+        type: 'mode',
+        title: 'OKX futures account mode needs admin review',
+        summary: positionMode === 'net_mode'
+          ? 'Latest OKX job reported net mode while the strategy name suggests hedged replication.'
+          : 'Latest OKX job did not report position mode; verify mode before relying on hedged replication.',
+        items: positionMode ? [`Latest reported position mode: ${positionMode}`] : []
+      });
+    }
+
+    return {
+      messages,
+      total: messages.length
+    };
+  }
+
+  function renderOkxFuturesWarningIcon(account) {
+    const warningInfo = getOkxFuturesWarningInfo(account);
+    if (warningInfo.total === 0) {
+      return '';
+    }
+    const accountId = escapeAdminHtml(getAdminAccountId(account));
+    const title = escapeAdminHtml(warningInfo.messages.map(message => message.title).join('; '));
+    return `
+      <button type="button" class="okx-futures-warning-btn" data-account-id="${accountId}" title="${title}" aria-label="Open OKX futures warning details">
+        <span aria-hidden="true">!</span>
+      </button>
+    `;
+  }
+
+  function renderOkxFuturesAlerts(account) {
+    const warningInfo = getOkxFuturesWarningInfo(account);
+    if (warningInfo.total === 0) {
+      return '<div class="okx-alert-empty">No OKX futures admin warnings are currently available for this account.</div>';
+    }
+
+    return `
+      <div class="okx-alert-grid">
+        ${warningInfo.messages.map(message => `
+          <div class="okx-alert-card ${escapeAdminHtml(message.type)}">
+            <h5>${escapeAdminHtml(message.title)}</h5>
+            <p>${escapeAdminHtml(message.summary)}</p>
+            ${message.items && message.items.length > 0 ? `
+              <ul>
+                ${message.items.slice(0, 12).map(item => `<li>${escapeAdminHtml(item)}</li>`).join('')}
+                ${message.items.length > 12 ? `<li>${message.items.length - 12} more warning(s) hidden in this summary.</li>` : ''}
+              </ul>
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderFuturesWeightageTable(account) {
+    const result = getLatestFuturesResult(account);
+    const sourceRows = extractFuturesWeightRows(
+      account?.replication_source_portfolio || account?.active_job_source_portfolio || {},
+      result.desired_positions
+    );
+    const destinationRows = extractFuturesWeightRows(
+      account?.destination_portfolio || account?.source_portfolio || {},
+      result.current_positions
+    );
+    const rows = mergeFuturesWeightRows(sourceRows, destinationRows);
+
+    if (rows.length === 0) {
+      return '<div class="okx-alert-empty">No futures source or destination position snapshot is available yet.</div>';
+    }
+
+    return `
+      <div class="okx-weightage-table-wrap">
+        <table class="okx-weightage-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Source %</th>
+              <th>Destination %</th>
+              <th>Diff</th>
+              <th>Source</th>
+              <th>Destination</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.slice(0, 80).map(row => {
+              const sourcePct = row.source?.percentage || 0;
+              const destinationPct = row.destination?.percentage || 0;
+              const diff = destinationPct - sourcePct;
+              return `
+                <tr>
+                  <td><strong>${escapeAdminHtml(row.symbol || row.normalizedSymbol)}</strong></td>
+                  <td>${sourcePct.toFixed(2)}%</td>
+                  <td>${destinationPct.toFixed(2)}%</td>
+                  <td class="${Math.abs(diff) >= 2 ? 'weight-diff-large' : 'weight-diff'}">${formatPercentage(diff, 2)}</td>
+                  <td>${row.source ? `${escapeAdminHtml(row.source.direction)} ${formatCurrency(row.source.signedNotional, 2, true)}` : '--'}</td>
+                  <td>${row.destination ? `${escapeAdminHtml(row.destination.direction)} ${formatCurrency(row.destination.signedNotional, 2, true)}` : '--'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function renderLatestFuturesJobSummary(account) {
+    const latestJob = account?.latest_futures_job || {};
+    const result = getLatestFuturesResult(account);
+    if (!latestJob.result_details && Object.keys(result).length === 0) {
+      return '<p class="muted-text">No completed futures job detail is available yet.</p>';
+    }
+
+    const completedAt = latestJob.completed_at ? formatDate(latestJob.completed_at) : 'N/A';
+    const successRate = result.success_rate !== undefined && result.success_rate !== null
+      ? `${(Number(result.success_rate) * 100).toFixed(1)}%`
+      : 'N/A';
+
+    return `
+      <div class="okx-job-summary">
+        <div><strong>Latest Status:</strong> ${escapeAdminHtml(result.status || latestJob.status || 'N/A')}</div>
+        <div><strong>Completed:</strong> ${escapeAdminHtml(completedAt)}</div>
+        <div><strong>Actions:</strong> ${escapeAdminHtml(`${result.actions_executed ?? 'N/A'} / ${result.total_actions ?? 'N/A'}`)}</div>
+        <div><strong>Success Rate:</strong> ${escapeAdminHtml(successRate)}</div>
+        <div><strong>Position Mode:</strong> ${escapeAdminHtml(result.position_mode || 'Not reported')}</div>
+        <div><strong>Margin Mode:</strong> ${escapeAdminHtml(result.td_mode || 'Not reported')}</div>
+      </div>
+    `;
+  }
+
+  function showAdminAccountDetails(accountId) {
+    const lookupId = String(accountId || '');
+    const account = [...currentActiveAccounts, ...currentUsersAccounts]
+      .find(candidate => getAdminAccountId(candidate) === lookupId);
+
+    if (!account) {
+      showNotification('Unable to find account details in the current dashboard data.', 'error');
+      return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'modal verification-modal admin-account-detail-modal';
+    modal.style.display = 'block';
+    const exchange = getAdminAccountExchange(account);
+    const accountType = getAdminAccountType(account);
+    const latestResultJson = JSON.stringify(getLatestFuturesResult(account), null, 2);
+
+    modal.innerHTML = `
+      <div class="modal-content verification-content admin-account-detail-content">
+        <span class="close" aria-label="Close account details">&times;</span>
+        <h3>Account Details</h3>
+
+        <div class="result-section">
+          <h4>Account</h4>
+          <div class="okx-job-summary">
+            <div><strong>Name:</strong> ${escapeAdminHtml(account.account_name || 'Unnamed Account')}</div>
+            <div><strong>User:</strong> ${escapeAdminHtml(account.username || account.user_email || 'Unknown')}</div>
+            <div><strong>Exchange:</strong> ${escapeAdminHtml(exchange)}</div>
+            <div><strong>Account Type:</strong> ${escapeAdminHtml(accountType)}</div>
+            <div><strong>Strategy:</strong> ${escapeAdminHtml(account.strategy || 'None')}</div>
+            <div><strong>Total Value:</strong> ${formatCurrency(getAccountTotalValue(account) ?? account.current_value ?? 0, 2, false)}</div>
+          </div>
+        </div>
+
+        ${isOkxFuturesAccount(account) ? `
+          <div class="result-section">
+            <h4>OKX Futures Admin Warnings</h4>
+            ${renderOkxFuturesAlerts(account)}
+          </div>
+
+          <div class="result-section">
+            <h4>Latest Futures Job</h4>
+            ${renderLatestFuturesJobSummary(account)}
+          </div>
+
+          <div class="result-section">
+            <h4>Source vs Destination Weightage</h4>
+            ${renderFuturesWeightageTable(account)}
+          </div>
+
+          <details class="okx-raw-details">
+            <summary>Raw latest futures result</summary>
+            <pre>${escapeAdminHtml(latestResultJson)}</pre>
+          </details>
+        ` : `
+          <div class="result-section">
+            <h4>Trading Account Summary</h4>
+            <p class="muted-text">OKX futures-specific warnings apply only to OKX futures destination accounts.</p>
+          </div>
+        `}
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => modal.remove();
+    const closeButton = modal.querySelector('.close');
+    if (closeButton) {
+      closeButton.onclick = closeModal;
+    }
+    modal.onclick = (event) => {
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
+  }
+
   // === ACTIVE ACCOUNTS FUNCTIONS ===
   async function loadActiveAccounts(
     targetPage = activeAccountsPagination.page,
@@ -1029,6 +1528,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       displayActiveAccounts(accounts, activeAccountsSummary, activeAccountsPagination);
       attachUserAccountVerifyListeners();
+      attachAdminAccountDetailListeners();
       attachActiveAccountsPaginationListeners();
       attachActiveAccountsFilterListeners();
 
@@ -1093,6 +1593,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </thead>
             <tbody>
               ${accounts.map(account => {
+                const accountId = getAdminAccountId(account);
                 const totalValue = getAccountTotalValue(account);
                 const fallbackValue = totalValue !== null ? totalValue : account.current_value;
                 const parsedTooltip = Number(fallbackValue);
@@ -1104,29 +1605,37 @@ document.addEventListener("DOMContentLoaded", () => {
                   tooltipParts.push(`Unrealized PnL: $${formatNumber(unrealizedPnl, 2)}`);
                 }
                 const tooltipText = tooltipParts.join('\n');
+                const safeAccountName = escapeAdminHtml(account.account_name || 'Unnamed Account');
+                const safeUsername = escapeAdminHtml(account.username || account._id || 'Unknown User');
+                const safeStrategy = escapeAdminHtml(account.strategy || 'None');
 
                 return `
                 <tr>
-                  <td class="user-name" title="${account.username || account._id}">
-                    ${account.username || account._id || 'Unknown User'}
+                  <td class="user-name" title="${safeUsername}">
+                    ${safeUsername}
                   </td>
-                  <td class="account-name" title="${account.account_name || 'Unnamed Account'}">
-                    ${account.account_name || 'Unnamed Account'}
+                  <td class="account-name" title="${safeAccountName}">
+                    <div class="account-name-with-alert">
+                      <button type="button" class="account-details-btn" data-account-id="${escapeAdminHtml(accountId)}" title="Open account details">
+                        ${safeAccountName}
+                      </button>
+                      ${renderOkxFuturesWarningIcon(account)}
+                    </div>
                   </td>
                   <td class="account-type">
-                    <span class="account-type-badge spot">TRADING</span>
+                    ${renderAccountTypeBadge(account)}
                   </td>
                   <td class="account-strategy">
-                    <span class="strategy-tag">${account.strategy || 'None'}</span>
+                    <span class="strategy-tag">${safeStrategy}</span>
                   </td>
-                  <td class="account-value center-align" title="${tooltipText}">
+                  <td class="account-value center-align" title="${escapeAdminHtml(tooltipText)}">
                     ${formattedValue}
                   </td>
                   <td>${formatStatusBadge(account.test_status || account.overall_status, account.last_status)}</td>
                   <td>${renderStatePair(account.is_revoked, account.active_job_is_revoked)}</td>
                   <td>${renderStatePair(account.is_disabled, account.active_job_is_disabled)}</td>
                   <td>
-                    <button class="verify-user-account-btn action-btn success" data-account-id="${account._id}">🔍 Verify</button>
+                    <button class="verify-user-account-btn action-btn success" data-account-id="${escapeAdminHtml(accountId)}">🔍 Verify</button>
                   </td>
                 </tr>
                 `;
@@ -1344,6 +1853,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentUsersAccounts = result.accounts || [];
       displayUsersAccounts(result.accounts || []);
       attachUserAccountVerifyListeners();
+      attachAdminAccountDetailListeners();
       
     } catch (error) {
       console.error('❌ Error loading users accounts:', error);
@@ -2929,6 +3439,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function attachUserAccountVerifyListeners() {
     document.querySelectorAll('.verify-user-account-btn').forEach(btn => {
       btn.onclick = () => verifyUserAccount(btn.dataset.accountId);
+    });
+  }
+
+  function attachAdminAccountDetailListeners() {
+    document.querySelectorAll('.account-details-btn, .okx-futures-warning-btn').forEach(btn => {
+      btn.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        showAdminAccountDetails(btn.dataset.accountId);
+      };
     });
   }
 

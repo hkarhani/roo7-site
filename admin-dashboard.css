@@ -922,6 +922,105 @@
   white-space: nowrap;
 }
 
+.account-name-with-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.account-details-btn {
+  min-width: 0;
+  max-width: 140px;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-details-btn:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.okx-futures-warning-btn {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d97706;
+  border-radius: 50%;
+  background: #f59e0b;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.okx-futures-warning-btn:hover {
+  background: #fbbf24;
+  border-color: #b45309;
+}
+
+.dark-theme .account-details-btn {
+  color: #e5e7eb;
+}
+
+.dark-theme .okx-futures-warning-btn {
+  background: #fbbf24;
+  border-color: #f59e0b;
+  color: #111827;
+}
+
+.account-type-badge.futures {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  border: 1px solid rgba(7, 89, 133, 0.2);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.account-type-badge.spot {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(4, 120, 87, 0.2);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dark-theme .account-type-badge.futures {
+  background: rgba(14, 165, 233, 0.18);
+  color: #bae6fd;
+  border-color: rgba(125, 211, 252, 0.3);
+}
+
+.dark-theme .account-type-badge.spot {
+  background: rgba(16, 185, 129, 0.18);
+  color: #a7f3d0;
+  border-color: rgba(110, 231, 183, 0.3);
+}
+
 .active-accounts-table .account-strategy {
   color: #666;
   font-size: 12px;
@@ -2542,6 +2641,199 @@
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
+}
+
+.verification-modal .modal-content.admin-account-detail-content {
+  max-width: min(1120px, 94vw);
+}
+
+.admin-account-detail-content .result-section {
+  margin-bottom: 18px;
+}
+
+.okx-alert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.okx-alert-card {
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  background: #fffbeb;
+  padding: 12px;
+}
+
+.okx-alert-card h5 {
+  margin: 0 0 6px 0;
+  color: #92400e;
+  font-size: 13px;
+}
+
+.okx-alert-card p {
+  margin: 0 0 8px 0;
+  color: #78350f;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.okx-alert-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #78350f;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.okx-alert-card.mode {
+  border-color: #bfdbfe;
+  border-left-color: #2563eb;
+  background: #eff6ff;
+}
+
+.okx-alert-card.mode h5,
+.okx-alert-card.mode p,
+.okx-alert-card.mode ul {
+  color: #1e3a8a;
+}
+
+.okx-alert-empty,
+.muted-text {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.okx-job-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 16px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.okx-weightage-table-wrap {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.okx-weightage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 720px;
+}
+
+.okx-weightage-table th {
+  position: sticky;
+  top: 0;
+  background: #f3f4f6;
+  color: #374151;
+  text-align: left;
+  padding: 9px 10px;
+  border-bottom: 1px solid #d1d5db;
+  z-index: 1;
+}
+
+.okx-weightage-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eef2f7;
+  white-space: nowrap;
+}
+
+.okx-weightage-table td:nth-child(2),
+.okx-weightage-table td:nth-child(3),
+.okx-weightage-table td:nth-child(4),
+.okx-weightage-table td:nth-child(5),
+.okx-weightage-table td:nth-child(6) {
+  text-align: right;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.weight-diff-large {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.weight-diff {
+  color: #4b5563;
+}
+
+.okx-raw-details {
+  margin-top: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.okx-raw-details summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #374151;
+}
+
+.okx-raw-details pre {
+  max-height: 320px;
+  overflow: auto;
+  margin: 10px 0 0;
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+.dark-theme .okx-alert-card {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.dark-theme .okx-alert-card h5,
+.dark-theme .okx-alert-card p,
+.dark-theme .okx-alert-card ul {
+  color: #fde68a;
+}
+
+.dark-theme .okx-alert-card.mode {
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.dark-theme .okx-alert-card.mode h5,
+.dark-theme .okx-alert-card.mode p,
+.dark-theme .okx-alert-card.mode ul {
+  color: #bfdbfe;
+}
+
+.dark-theme .okx-job-summary,
+.dark-theme .okx-raw-details {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.dark-theme .okx-weightage-table-wrap {
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.dark-theme .okx-weightage-table th {
+  background: #1f2937;
+  color: #e5e7eb;
+  border-bottom-color: rgba(148, 163, 184, 0.25);
+}
+
+.dark-theme .okx-weightage-table td {
+  border-bottom-color: rgba(148, 163, 184, 0.16);
+}
+
+.dark-theme .weight-diff {
+  color: #cbd5e1;
+}
+
+.dark-theme .weight-diff-large {
+  color: #fca5a5;
 }
 
 .verification-content h3 {

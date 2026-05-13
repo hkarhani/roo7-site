@@ -352,8 +352,8 @@ function initializeTroubleshootPage() {
     });
   }
 
-  // Enhanced Binance connection test with reorganized display
-  async function testBinanceConnection() {
+  // Enhanced exchange connection test with reorganized display
+  async function testExchangeConnection() {
     const testBtn = document.getElementById('test-connection');
     const diagnosticInfo = document.getElementById('diagnostic-info');
 
@@ -385,7 +385,7 @@ function initializeTroubleshootPage() {
     }
     
     // Show loading toast
-    showToast('Testing Binance connection...', 'info', 3000);
+    showToast('Testing exchange connection...', 'info', 3000);
 
     try {
       const controller = new AbortController();
@@ -461,7 +461,7 @@ function initializeTroubleshootPage() {
       }
     } finally {
       testBtn.disabled = false;
-      testBtn.textContent = 'Test Binance Connection';
+      testBtn.textContent = 'Test Exchange Connection';
     }
   }
 
@@ -1469,7 +1469,7 @@ function initializeTroubleshootPage() {
         <div>The test took too long to complete, which may indicate:</div>
         <ul>
           <li>Network connectivity issues</li>
-          <li>Binance API is responding slowly</li>
+          <li>The exchange API is responding slowly</li>
           <li>Firewall blocking the connection</li>
           <li>DNS resolution problems</li>
         </ul>
@@ -1479,7 +1479,7 @@ function initializeTroubleshootPage() {
         <ul>
           <li>Check your internet connection</li>
           <li>Try again in a few minutes</li>
-          <li>Verify that api.binance.com is accessible</li>
+          <li>Verify that the exchange API is accessible from your network</li>
           <li>Contact your network administrator if issues persist</li>
         </ul>
       </div>
@@ -1497,7 +1497,7 @@ function initializeTroubleshootPage() {
         <ul>
           <li>Verify your API credentials are correct</li>
           <li>Check if your account has the required permissions</li>
-          <li>Ensure your IP is whitelisted in Binance API settings</li>
+          <li>Ensure your IP is whitelisted in the exchange API settings</li>
           <li>Try refreshing the page and testing again</li>
           <li>Contact support if the error persists</li>
         </ul>
@@ -1719,7 +1719,7 @@ function initializeTroubleshootPage() {
       // Update button state
       analyzeBtn.disabled = true;
       analyzeBtn.textContent = '🔄 Analyzing...';
-      testProgress.textContent = 'Connecting to Binance API...';
+      testProgress.textContent = 'Connecting to exchange API...';
 
       // Get account ID - try different possible field names
       const accountId = window.currentAccount._id || window.currentAccount.id || window.currentAccount.account_id;

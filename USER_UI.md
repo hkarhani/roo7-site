@@ -56,10 +56,7 @@ The frontend calls backend troubleshoot endpoints. Backend dispatches the exchan
 
 - Binance accounts use Binance readers/troubleshoot.
 - OKX accounts use OKX snapshot/troubleshoot.
-
-Known remaining UI polish:
-
-- Some troubleshoot labels still say Binance in generic connection-test copy. Track this only in `../../dbsetup/REMAINING_WORK.md`.
+- Generic troubleshoot connection-test labels are exchange-neutral; exchange-specific diagnostics remain owned by the backend response.
 
 ## Cache Busting
 
