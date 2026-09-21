@@ -467,34 +467,7 @@ async function waitForLineChart() {
 }
 
 function buildCumulativeSeries(points, key) {
-  if (!Array.isArray(points) || points.length === 0) return [];
-  let cumulativeFactor = 1;
-  const series = [];
-  const firstTimestamp = points[0].timestamp;
-  series.push({
-    timestamp: firstTimestamp,
-    date: new Date(firstTimestamp),
-    value: 0,
-    label: formatPercent(0)
-  });
-  points.forEach((point, index) => {
-    if (index === 0) {
-      return;
-    }
-    const delta = Number(point?.[key] ?? 0);
-    const stepMultiplier = 1 + (delta / 100);
-    const safeMultiplier = Number.isFinite(stepMultiplier) && stepMultiplier > 0 ? stepMultiplier : 0.0001;
-    cumulativeFactor *= safeMultiplier;
-    const cumulativeDecimal = cumulativeFactor - 1;
-    const date = new Date(point.timestamp);
-    series.push({
-      timestamp: point.timestamp,
-      date,
-      value: cumulativeDecimal,
-      label: formatPercent(cumulativeDecimal * 100)
-    });
-  });
-  return series;
+  return window.ReportingValues.cumulativeSeries(points, key);
 }
 
 function renderSourceAccountFilters() {

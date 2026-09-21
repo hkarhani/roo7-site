@@ -310,8 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let totalValue;
     if (overrideTotal !== null && Number.isFinite(overrideTotal)) {
       totalValue = overrideTotal;
-    } else if (latestAggregatedCurrentTotal !== null) {
-      totalValue = latestAggregatedCurrentTotal;
+
     } else {
       totalValue = list.reduce((sum, account) => sum + resolveAccountTotalValue(account), 0);
     }
@@ -324,8 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
       timestamp = overrideTimestamp;
     } else if (typeof overrideTimestamp === 'number' && Number.isFinite(overrideTimestamp)) {
       timestamp = new Date(overrideTimestamp);
-    } else if (latestAggregatedTimestamp instanceof Date) {
-      timestamp = latestAggregatedTimestamp;
+
     } else if (list.length) {
       timestamp = list.reduce((latest, account) => {
         const accountTimestamp = resolveAccountTimestamp(account);
@@ -335,72 +333,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }, null);
     }
 
-    if (!timestamp) {
-      timestamp = new Date();
-    }
 
     if (lastCheckEl) {
-      lastCheckEl.textContent = formatLastCheckMessage(timestamp);
+      lastCheckEl.textContent = timestamp ? formatLastCheckMessage(timestamp) : 'Observation time unavailable';
     }
   }
 
   function resolveAccountTotalValue(account) {
-    if (!account) return 0;
-
-    const directCandidates = [
-      account?.portfolio_total_value,
-      account?.total_portfolio_value,
-      account?.portfolio_value_usd,
-      account?.analytics_summary?.portfolio_total_value,
-      account?.analytics_summary?.portfolio_total_value_usd,
-      account?.analytics_summary?.portfolio_total,
-    ];
-
-    for (const candidate of directCandidates) {
-      const numeric = toFiniteNumber(candidate);
-      if (numeric !== null) {
-        return numeric;
-      }
-    }
-
-    const baseCandidates = [
-      account?.current_value,
-      account?.total_value,
-      account?.total_value_usd,
-      account?.account_value,
-      account?.balance_usd,
-    ];
-
-    let baseValue = null;
-    for (const candidate of baseCandidates) {
-      const numeric = toFiniteNumber(candidate);
-      if (numeric !== null) {
-        baseValue = numeric;
-        break;
-      }
-    }
-
-    if (baseValue === null) {
-      return 0;
-    }
-
-    const pnlCandidates = [
-      account?.analytics_summary?.unrealized_pnl_total,
-      account?.analytics_summary?.unrealized_pnl,
-      account?.unrealized_pnl,
-    ];
-
-    for (const candidate of pnlCandidates) {
-      const numeric = toFiniteNumber(candidate);
-      if (numeric !== null) {
-        return baseValue + numeric;
-      }
-    }
-
-    return baseValue;
+    return window.ReportingValues.accountValue(account) ?? 0;
   }
 
   function toFiniteNumber(value) {
+    if (value === null || value === undefined || value === '') return null;
     const num = Number(value);
     return Number.isFinite(num) ? num : null;
   }
@@ -1168,44 +1112,28 @@ document.addEventListener("DOMContentLoaded", () => {
         dataPoints = data.data_points || 0;
       }
       
-      // Calculate summary metrics
-      let currentTotal = 0;
-      let periodChange = 0;
-      let changePercentage = 0;
-      
-      let latestTimestampCandidate = extractTimestampFromData(data);
-
-      if (values.length > 0) {
-        const latestValue = values[values.length - 1];
-        const earliestValue = values[0];
-
-        currentTotal = selectedAccount === 'ALL' ? 
-          latestValue.total_value : 
-          latestValue.value_usdt || latestValue.value;
-
-        const earliestAmount = selectedAccount === 'ALL' ? 
-          earliestValue.total_value : 
-          earliestValue.value_usdt || earliestValue.value;
-
-        periodChange = currentTotal - earliestAmount;
-        changePercentage = earliestAmount > 0 ? (periodChange / earliestAmount) * 100 : 0;
-
-        latestTimestampCandidate = extractTimestampFromAnalyticsPoint(latestValue) || latestTimestampCandidate;
-      }
-      
-      // Update UI - ONLY change text content, let CSS handle all styling
-      currentTotalEl.textContent = formatCurrency(currentTotal);
-      periodChangeEl.textContent = formatCurrency(periodChange);  
-      changePercentageEl.textContent = formatPercentage(changePercentage);
+      const summary = data.summary || {};
+      const currentTotal = window.ReportingValues.finite(summary.current_value);
+      const periodChange = window.ReportingValues.finite(summary.period_change);
+      const changePercentage = window.ReportingValues.finite(summary.percentage_change);
+      let latestTimestampCandidate = summary.as_of ? new Date(summary.as_of) : null;
+      currentTotalEl.textContent = currentTotal === null ? '—' : formatCurrency(currentTotal);
+      periodChangeEl.textContent = periodChange === null ? '—' : formatCurrency(periodChange);
+      changePercentageEl.textContent = changePercentage === null ? '—' : formatPercentage(changePercentage);
+      const coverage = document.getElementById('analytics-coverage');
+      if (coverage) coverage.textContent = window.ReportingValues.coverageText(summary);
+      [periodChangeEl, changePercentageEl].forEach(el => {
+        el.title = 'Observed equity change, including deposits and withdrawals. Not trading profit.';
+      });
 
       // Add data attributes for CSS to style based on positive/negative values
-      periodChangeEl.setAttribute('data-value-type', periodChange >= 0 ? 'positive' : 'negative');
-      changePercentageEl.setAttribute('data-value-type', changePercentage >= 0 ? 'positive' : 'negative');
+      periodChangeEl.setAttribute('data-value-type', periodChange === null ? 'unknown' : periodChange >= 0 ? 'positive' : 'negative');
+      changePercentageEl.setAttribute('data-value-type', changePercentage === null ? 'unknown' : changePercentage >= 0 ? 'positive' : 'negative');
 
       if (selectedAccount === 'ALL') {
         latestAggregatedCurrentTotal = currentTotal;
         latestAggregatedTimestamp = latestTimestampCandidate;
-        updateLiveAccountsSummary(window.lastLoadedAccounts || [], currentTotal, latestTimestampCandidate);
+        updateLiveAccountsSummary(window.lastLoadedAccounts || []);
       }
 
     } catch (error) {
@@ -1278,6 +1206,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function resolveAccountTimestamp(account) {
     if (!account) return null;
+    const canonical = parseTimestamp(account.valuation_timestamp || account.valuation?.as_of);
+    if (canonical) return canonical;
     const candidates = [
       account?.analytics_summary?.last_updated,
       account?.analytics_summary?.updated_at,
@@ -1288,7 +1218,6 @@ document.addEventListener("DOMContentLoaded", () => {
       account?.last_value_update,
       account?.last_synced_at,
       account?.last_run_at,
-      account?.next_run_at,
       account?.updated_at,
       account?.created_at,
     ];

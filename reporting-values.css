@@ -1,0 +1,29 @@
+/* Shared reporting notices and readable summary cards. */
+.reporting-notice {
+  color: #475569;
+  font-size: .88rem;
+  line-height: 1.55;
+  padding: .75rem 1rem;
+  background: #f1f5f9;
+  border-left: 3px solid #94a3b8;
+  border-radius: 4px;
+  margin: .75rem 0;
+  overflow-wrap: anywhere;
+}
+
+/* Admin's base badge style is white; unknown values and counts must remain visible. */
+.analytics-status-badges .status-badge:not(.primary):not(.success):not(.danger):not([data-value-type="positive"]):not([data-value-type="negative"]) {
+  color: #475569 !important;
+  background: #f1f5f9 !important;
+}
+.dark-theme .reporting-notice { color: #cbd5e1; background: #1e293b; }
+.analytics-title-row { flex-wrap: wrap; }
+.analytics-status-badges { flex: 1 1 380px; align-items: stretch; }
+.analytics-status-badges .status-item { flex: 1 1 110px; min-width: 0; max-width: none; }
+.analytics-status-badges .status-label { white-space: normal; line-height: 1.35; min-height: 2.7em; }
+.status-badge[data-value-type="unknown"] { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
+@media (max-width: 768px) {
+  .analytics-chart { max-height: none; }
+  .analytics-status-badges { flex-basis: auto; }
+  .analytics-status-badges .status-item { flex: 1 1 80px; max-width: none; }
+}

@@ -6,6 +6,7 @@
   <title>Account Troubleshoot</title>
   <link rel="stylesheet" href="dashboard.css" />
   <link rel="stylesheet" href="troubleshoot.css?v=6.0" />
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -37,7 +38,7 @@
           <span id="strategy"></span>
         </div>
         <div class="info-row">
-          <label>Current Value:</label>
+          <label>Recorded net equity:</label>
           <span id="current-value"></span>
         </div>
         <div class="info-row">
@@ -67,7 +68,7 @@
         </div>
         <div id="summary-metrics" class="summary-metrics" style="display: none;">
           <div class="metric-card total-value">
-            <span class="metric-label">Total Value</span>
+            <span class="metric-label">Net Equity</span>
             <span id="total-value-display" class="metric-value">$0.00</span>
           </div>
           <div class="metric-card unrealized-pnl">
@@ -98,6 +99,7 @@
   <!-- Load theme manager first, then pie chart, then troubleshoot logic -->
   <script src="theme-manager.js?v=1"></script>
   <script src="pie-chart.js?v=1"></script>
-  <script type="module" src="troubleshoot.js?v=7.4-okx-binance-normalized"></script>
+  <script src="reporting-values.js?v=20260921-equity-1"></script>
+  <script type="module" src="troubleshoot.js?v=20260921-equity-1"></script>
 </body>
 </html>

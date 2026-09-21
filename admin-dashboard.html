@@ -11,6 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-dashboard.css?cb=okx-futures-alerts-20260513a" />
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -190,15 +191,15 @@
           <h2 class="analytics-title">📊 Source Accounts Trading Analytics</h2>
           <div class="analytics-status-badges" id="source-analytics-status-badges">
             <div class="status-item">
-              <span class="status-label">Current Value</span>
-              <span class="status-badge primary" id="source-current-total-badge">$0.00</span>
+              <span class="status-label">Latest recorded equity</span>
+              <span class="status-badge primary" id="source-current-total-badge" title="Net equity at the latest complete observation">$0.00</span>
             </div>
             <div class="status-item">
-              <span class="status-label">Period Change</span>
+              <span class="status-label">Observed balance change</span>
               <span class="status-badge" id="source-period-change-badge">$0.00</span>
             </div>
             <div class="status-item">
-              <span class="status-label">% Change</span>
+              <span class="status-label">Balance change %</span>
               <span class="status-badge" id="source-change-percentage-badge">0.00%</span>
             </div>
           </div>
@@ -229,6 +230,7 @@
       
       <!-- Chart Container -->
       <div class="analytics-chart-container">
+        <p id="source-analytics-coverage" class="reporting-notice" role="status"></p>
         <div id="source-analytics-chart" class="analytics-chart"></div>
       </div>
       
@@ -245,15 +247,15 @@
           <h2 class="analytics-title">📊 Platform Analytics</h2>
           <div class="analytics-status-badges" id="platform-analytics-status-badges">
             <div class="status-item">
-              <span class="status-label">Current Total</span>
+              <span class="status-label">Latest recorded equity</span>
               <span class="status-badge primary" id="platform-current-total-badge">$0</span>
             </div>
             <div class="status-item">
-              <span class="status-label">24h Change</span>
+              <span class="status-label">Period balance change</span>
               <span class="status-badge" id="platform-24h-change-badge">$0</span>
             </div>
             <div class="status-item">
-              <span class="status-label">Active Users</span>
+              <span class="status-label">Contributing users</span>
               <span class="status-badge" id="platform-users-count-badge">0</span>
             </div>
           </div>
@@ -278,6 +280,7 @@
 
       <!-- Chart Container -->
       <div class="analytics-chart-container">
+        <p id="platform-analytics-coverage" class="reporting-notice" role="status"></p>
         <div id="platform-analytics-chart" class="analytics-chart"></div>
       </div>
 
@@ -288,7 +291,7 @@
 
       <!-- KPI Snapshot -->
       <div class="analytics-kpi-section" id="platform-analytics-kpis">
-        <h3 class="kpi-title">Performance Snapshot</h3>
+        <h3 class="kpi-title">Balance-change snapshot</h3>
         <div class="analytics-kpi-grid">
           <article class="kpi-card" data-period="1">
             <header>
@@ -571,8 +574,9 @@
   </div>
 
   <!-- Scripts -->
-  <script src="line-chart.js?v=20240410b"></script>
+  <script src="reporting-values.js?v=20260921-equity-1"></script>
+  <script src="line-chart.js?v=20260921-equity-1"></script>
   <script src="theme-manager.js?v=1"></script>
-  <script type="module" src="admin-dashboard.js?cb=okx-binance-troubleshoot-normalized-20260513"></script>
+  <script type="module" src="admin-dashboard.js?v=20260921-equity-1"></script>
 </body>
 </html>

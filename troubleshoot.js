@@ -600,17 +600,11 @@ function initializeTroubleshootPage() {
         0
       ).toFixed(6);
       
-      const marginBalance = parseFloat(
-        asset.available ||         // USDT-M: "available"
-        asset.walletBalance ||     // Coin-M fallback
-        0
-      ).toFixed(6);
+      const margin = window.ReportingValues.finite(asset.margin_balance ?? asset.marginBalance);
+      const marginBalance = margin === null ? '—' : margin.toFixed(6);
       
-      const availableBalance = parseFloat(
-        asset.available ||         // USDT-M: "available"
-        asset.walletBalance ||     // Coin-M fallback
-        0
-      ).toFixed(6);
+      const available = window.ReportingValues.finite(asset.available ?? asset.available_balance);
+      const availableBalance = available === null ? '—' : available.toFixed(6);
       
       const usdtValue = parseFloat(
         asset.usdt_value || 0      // Both use "usdt_value"
@@ -1030,7 +1024,8 @@ function initializeTroubleshootPage() {
       const locked = parseFloat(asset.locked || 0).toFixed(6);
       const total = parseFloat(asset.total || 0);
       const displayTotal = total < 0.001 ? total.toExponential(3) : total.toFixed(6);
-      const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
+      const value = window.ReportingValues.finite(asset.usdt_value);
+      const usdtValue = value === null ? '—' : value.toFixed(2);
       const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
       
       const row = tableBody.insertRow();
@@ -1147,13 +1142,11 @@ function initializeTroubleshootPage() {
       const unrealizedPnl = asset.unrealized_pnl !== undefined ? 
         parseFloat(asset.unrealized_pnl).toFixed(4) : 'N/A';
       
-      const marginBalance = asset.margin_balance !== undefined ? 
-        parseFloat(asset.margin_balance).toFixed(6) : 
-        parseFloat(asset.total || 0).toFixed(6);
+      const margin = window.ReportingValues.finite(asset.margin_balance);
+      const marginBalance = margin === null ? '—' : margin.toFixed(6);
       
-      const availableBalance = asset.available_balance !== undefined ? 
-        parseFloat(asset.available_balance).toFixed(6) : 
-        parseFloat(asset.free || 0).toFixed(6);
+      const available = window.ReportingValues.finite(asset.available_balance ?? asset.available ?? asset.free);
+      const availableBalance = available === null ? '—' : available.toFixed(6);
       
       const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
       const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';
@@ -1552,7 +1545,7 @@ function initializeTroubleshootPage() {
 
   // Format currency values
   function formatCurrency(value) {
-    if (value === null || value === undefined || isNaN(value)) return '$0.00';
+    if (value === null || value === undefined || isNaN(value)) return '—';
     return `$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
@@ -1579,7 +1572,9 @@ function initializeTroubleshootPage() {
 
     // Get summary data from auth-api response
     const summary = troubleshootData.detailed_breakdown?.summary || {};
-    const totalValue = troubleshootData.total_usdt_value || 0;
+    const totalValue = window.ReportingValues.finite(summary.total_equity_usdt ?? troubleshootData.total_usdt_value);
+    const currentValueEl = document.getElementById("current-value");
+    if (currentValueEl && totalValue !== null) currentValueEl.textContent = formatCurrency(totalValue);
     const spotValue = summary.spot_value_usdt || 0;
     const usdtmValue = summary.usdtm_value_usdt || 0;
     const coinmValue = summary.coinm_value_usdt || 0;
@@ -1613,6 +1608,13 @@ function initializeTroubleshootPage() {
       </div>
     `;
     
+    const liabilities = window.ReportingValues.finite(summary.liabilities_usdt);
+    if (liabilities !== null) {
+      const item = document.createElement('div');
+      item.className = 'allocation-item';
+      item.textContent = 'Wallet liabilities included: ' + formatCurrency(liabilities) + ' · Total is net equity, including unrealized P&L.';
+      allocationBreakdown.appendChild(item);
+    }
     // Display test results if available
     if (troubleshootData.test_results && troubleshootData.test_results.length > 0) {
       displayTestResults(troubleshootData.test_results);
@@ -1879,13 +1881,11 @@ function initializeTroubleshootPage() {
         parseFloat(asset.wallet_balance).toFixed(6) : 
         parseFloat(asset.total || asset.free || 0).toFixed(6);
       
-      const marginBalance = asset.margin_balance !== undefined ? 
-        parseFloat(asset.margin_balance).toFixed(6) : 
-        parseFloat(asset.total || 0).toFixed(6);
+      const margin = window.ReportingValues.finite(asset.margin_balance);
+      const marginBalance = margin === null ? '—' : margin.toFixed(6);
       
-      const availableBalance = asset.available_balance !== undefined ? 
-        parseFloat(asset.available_balance).toFixed(6) : 
-        parseFloat(asset.free || 0).toFixed(6);
+      const available = window.ReportingValues.finite(asset.available_balance ?? asset.available ?? asset.free);
+      const availableBalance = available === null ? '—' : available.toFixed(6);
       
       const usdtValue = asset.usdt_value ? parseFloat(asset.usdt_value).toFixed(2) : 'N/A';
       const percentage = asset.percentage_of_total ? parseFloat(asset.percentage_of_total).toFixed(2) : '0';

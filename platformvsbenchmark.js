@@ -174,41 +174,7 @@ function setLoading(isLoading, { silent = false } = {}) {
 }
 
 function cumulativeSeries(points, key) {
-  if (!points || points.length === 0) {
-    return [];
-  }
-  const sorted = [...points].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-
-  const series = [];
-  const firstTime = new Date(sorted[0].timestamp);
-  let baselineDate = new Date(firstTime);
-  if (sorted.length > 1) {
-    const nextTime = new Date(sorted[1].timestamp);
-    const delta = Math.max(1, nextTime.getTime() - firstTime.getTime());
-    baselineDate = new Date(firstTime.getTime() - delta);
-  } else {
-    baselineDate = new Date(firstTime.getTime() - 3600000); // default to 1 hour before
-  }
-  series.push({
-    timestamp: baselineDate.toISOString(),
-    date: baselineDate,
-    value: 0,
-  });
-
-  let cumulative = 0;
-  sorted.forEach((point) => {
-    const change = parseFloat(point[key] || 0);
-    cumulative += change;
-    series.push({
-      timestamp: point.timestamp,
-      date: new Date(point.timestamp),
-      value: cumulative / 100, // chart expects decimal for percentage
-    });
-  });
-
-  return series;
+  return window.ReportingValues.cumulativeSeries(points, key);
 }
 
 function formatPercent(value) {
@@ -229,19 +195,17 @@ function deriveCoverage(summary) {
 }
 
 function updateStats(platformSeries, benchmarkSeries) {
-  const lastPlatform = platformSeries.at(-1)?.value ?? 0;
-  const lastBenchmark = benchmarkSeries.at(-1)?.value ?? 0;
-  const spread = (lastPlatform - lastBenchmark) * 100;
+  const lastPlatform = window.ReportingValues.finite(platformSeries.at(-1)?.value);
+  const lastBenchmark = window.ReportingValues.finite(benchmarkSeries.at(-1)?.value);
+  const spread = lastPlatform === null || lastBenchmark === null ? null : (lastPlatform - lastBenchmark) * 100;
   const benchmarkLabel = resolveBenchmarkLabel();
 
-  selectors.platformChange.textContent = formatPercent(lastPlatform * 100);
-  selectors.benchmarkChange.textContent = formatPercent(lastBenchmark * 100);
+  selectors.platformChange.textContent = formatPercent(lastPlatform === null ? null : lastPlatform * 100);
+  selectors.benchmarkChange.textContent = formatPercent(lastBenchmark === null ? null : lastBenchmark * 100);
   selectors.spreadChange.textContent = formatPercent(spread);
   selectors.spreadChange.style.color = spread >= 0 ? '#10b981' : '#ef4444';
   selectors.spreadHelper.textContent =
-    spread >= 0
-      ? `Platform outperforming ${benchmarkLabel}`
-      : `Platform underperforming ${benchmarkLabel}`;
+    spread === null ? 'Comparison unavailable: incomplete aligned history' : 'Balance-change spread includes deposits/withdrawals; not investment outperformance';
 
   if (selectors.benchmarkLegend) {
     selectors.benchmarkLegend.textContent = `Benchmark cumulative % (${benchmarkLabel})`;
@@ -279,7 +243,7 @@ function updateChart() {
     const benchmarkLabel = resolveBenchmarkLabel();
     chart.setData([
       {
-        name: 'Platform cumulative %',
+        name: 'Platform equity change %',
         color: '#1d4ed8',
         values: platformSeries.map((point) => ({
           timestamp: point.timestamp,

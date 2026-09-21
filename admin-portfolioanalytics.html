@@ -11,11 +11,13 @@
   <script type="module" src="frontend-config.js?v=2.4"></script>
   <link rel="stylesheet" href="dashboard.css?v=2.4" />
   <link rel="stylesheet" href="admin-portfolioanalytics.css?v=20250215a" />
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
 </head>
 <body class="admin-portfolio-layout">
   <header class="page-header">
     <div>
       <h1>🧠 Advanced Portfolio Analytics</h1>
+      <p class="reporting-notice">Account/platform curves show recorded net equity, including deposits and withdrawals—not verified investment returns. Change summaries are unavailable for unverified legacy valuations, which may include reporting corrections. Missing observations remain gaps. Benchmarks show price returns.</p>
       <p class="subtitle">Platform-wide exposure vs benchmarks with user-level drill downs</p>
     </div>
     <div class="header-actions">
@@ -221,7 +223,8 @@
     <span>Internal admin workspace · Do not share</span>
   </footer>
 
-  <script src="line-chart.js?v=20240410"></script>
-  <script type="module" src="admin-portfolioanalytics.js?v=20250216k"></script>
+  <script src="reporting-values.js?v=20260921-equity-1"></script>
+  <script src="line-chart.js?v=20260921-equity-1"></script>
+  <script type="module" src="admin-portfolioanalytics.js?v=20260921-equity-1"></script>
 </body>
 </html>

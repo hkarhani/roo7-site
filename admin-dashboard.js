@@ -82,253 +82,7 @@ function pickSummaryValue(summary, keys) {
 }
 
 function getAccountTotalValue(account) {
-  if (!account || typeof account !== 'object') {
-    return null;
-  }
-
-  const getByPath = (obj, path) => {
-    return path.reduce((acc, key) => {
-      if (acc === null || acc === undefined) {
-        return null;
-      }
-      return acc[key];
-    }, obj);
-  };
-
-  const normalizeNumeric = (value) => {
-    if (value === null || value === undefined || value === '') {
-      return null;
-    }
-    const parsed = parseFloat(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  };
-  const exchangeValue = String(
-    account.exchange ||
-    account.account_exchange ||
-    account.exchange_name ||
-    account.platform ||
-    account.account_summary?.exchange ||
-    account.detailed_breakdown?.exchange ||
-    account.summary?.exchange ||
-    ''
-  ).toUpperCase();
-  const isOkxAccount = exchangeValue.includes('OKX');
-
-  const candidatePaths = [
-    ['current_value_with_pnl'],
-    ['current_total_value'],
-    ['current_value'],
-    ['portfolio_total_value'],
-    ['total_value'],
-    ['total_value_usd'],
-    ['total_value_usdt'],
-    ['total_usdt_value'],
-    ['current_value_usdt'],
-    ['analytics_total_value_usdt'],
-    ['portfolio_value'],
-    ['account_value'],
-    ['value_usdt'],
-    ['summary', 'total_value_usdt'],
-    ['summary', 'total_value'],
-    ['summary', 'account_value'],
-    ['detailed_breakdown', 'summary', 'total_value_usdt'],
-    ['metrics', 'total_value'],
-    ['analytics', 'value_usdt'],
-    ['portfolio', 'total_value_usdt']
-  ];
-
-  const candidateEntries = [];
-  for (const path of candidatePaths) {
-    const candidate = normalizeNumeric(getByPath(account, path));
-    if (candidate !== null) {
-      candidateEntries.push({ path: path.join('.'), value: candidate });
-    }
-  }
-
-  if (normalizeNumeric(account.analytics_total_value_usdt) !== null && !candidateEntries.some(entry => entry.path === 'analytics_total_value_usdt')) {
-    candidateEntries.push({
-      path: 'analytics_total_value_usdt',
-      value: normalizeNumeric(account.analytics_total_value_usdt)
-    });
-  }
-
-  if (normalizeNumeric(account.current_value) !== null && !candidateEntries.some(entry => entry.path === 'current_value')) {
-    candidateEntries.push({
-      path: 'current_value',
-      value: normalizeNumeric(account.current_value)
-    });
-  }
-
-  const summaryTotal = normalizeNumeric(getByPath(account, ['summary', 'total_value_usdt']));
-  if (summaryTotal !== null) {
-    candidateEntries.push({
-      path: 'summary.total_value_usdt',
-      value: summaryTotal,
-      includesPnl: true
-    });
-  }
-
-  if (candidateEntries.length === 0) {
-    return null;
-  }
-
-  const preferredOrder = [
-    'current_value_with_pnl',
-    'current_total_value',
-    'current_value',
-    'total_value_with_pnl',
-    'analytics_total_value_usdt',
-    'analytics.value_usdt',
-    'metrics.total_value',
-    'total_value_usdt',
-    'total_usdt_value',
-    'total_value',
-    'total_value_usd',
-    'summary.total_value_usdt',
-    'summary.total_value',
-    'summary.account_value',
-    'portfolio_total_value',
-    'portfolio.total_value_usdt',
-    'detailed_breakdown.summary.total_value_usdt',
-    'portfolio_value',
-    'account_value',
-    'value_usdt'
-  ];
-
-  let baseEntry = null;
-  if (isOkxAccount) {
-    const okxPreferredOrder = [
-      'total_usdt_value',
-      'summary.total_value_usdt',
-      'detailed_breakdown.summary.total_value_usdt',
-      'total_value_usdt',
-      'current_value',
-      'current_total_value'
-    ];
-    for (const key of okxPreferredOrder) {
-      const match = candidateEntries.find(entry => entry.path === key);
-      if (match) {
-        baseEntry = match;
-        break;
-      }
-    }
-  }
-  for (const key of preferredOrder) {
-    if (baseEntry) {
-      break;
-    }
-    const match = candidateEntries.find(entry => entry.path === key);
-    if (match) {
-      baseEntry = match;
-      break;
-    }
-  }
-
-  if (!baseEntry) {
-    baseEntry = candidateEntries[0];
-  }
-
-  let baseValue = baseEntry.value;
-  let baseSource = `path:${baseEntry.path}`;
-  const baseIncludesPnl = Boolean(baseEntry.includesPnl);
-
-  const componentPaths = [
-    ['summary', 'spot_value_usdt'],
-    ['summary', 'usdtm_value_usdt'],
-    ['summary', 'coinm_value_usdt'],
-    ['summary', 'futures_value_usdt'],
-    ['summary', 'margin_value_usdt'],
-    ['detailed_breakdown', 'summary', 'spot_value_usdt'],
-    ['detailed_breakdown', 'summary', 'usdtm_value_usdt'],
-    ['detailed_breakdown', 'summary', 'coinm_value_usdt'],
-    ['portfolio', 'total_value_usdt']
-  ];
-
-  let componentSum = 0;
-  let componentsFound = false;
-  for (const path of componentPaths) {
-    const value = normalizeNumeric(getByPath(account, path));
-    if (value !== null) {
-      componentSum += value;
-      componentsFound = true;
-    }
-  }
-
-  if ((baseValue === null || baseValue <= 0) && componentsFound && componentSum > 0) {
-    baseValue = componentSum;
-    baseSource = 'componentSum';
-  }
-
-  if (baseValue === null) {
-    baseValue = normalizeNumeric(account.current_value);
-    if (baseValue !== null) {
-      baseSource = 'current_value';
-    }
-  }
-
-  if (baseValue === null && componentsFound && componentSum !== 0) {
-    baseValue = componentSum;
-    baseSource = 'componentSum';
-  }
-
-  if (baseValue === null) {
-    return null;
-  }
-
-  // Use the same unrealized PnL derivation logic everywhere to avoid
-  // double-counting when both "total" and per-market PnL fields exist.
-  const pnlValue = getAccountUnrealizedPnl(account);
-  const pnlFound = pnlValue !== null && Number.isFinite(pnlValue);
-  const pnlTotal = pnlFound ? pnlValue : 0;
-
-  const numericBase = normalizeNumeric(baseValue);
-  if (isOkxAccount && numericBase !== null && Number.isFinite(numericBase)) {
-    return numericBase;
-  }
-  const baseSourceLabel = baseSource || '';
-  const baseLikelyIncludesPnl = baseIncludesPnl || (typeof baseSourceLabel === 'string'
-    ? /current_value|with_pnl|analytics|metrics/.test(baseSourceLabel)
-    : false);
-  const combinedFromComponents = componentsFound
-    ? normalizeNumeric(componentSum + (pnlFound ? pnlTotal : 0))
-    : null;
-
-  if (combinedFromComponents !== null) {
-    if (numericBase === null || !Number.isFinite(numericBase)) {
-      return combinedFromComponents;
-    }
-
-    const tolerance = Math.max(0.5, Math.abs(combinedFromComponents) * 0.005);
-    const diff = Math.abs(numericBase - combinedFromComponents);
-
-    if (baseLikelyIncludesPnl) {
-      if (diff <= tolerance) {
-        return numericBase;
-      }
-      if (numericBase >= combinedFromComponents - tolerance) {
-        return numericBase;
-      }
-    }
-
-    if (diff <= tolerance) {
-      return Math.max(numericBase, combinedFromComponents);
-    }
-
-    if (numericBase < combinedFromComponents - tolerance) {
-      return combinedFromComponents;
-    }
-
-    return numericBase;
-  }
-
-  if (pnlFound && numericBase !== null && Number.isFinite(numericBase)) {
-    if (!baseLikelyIncludesPnl) {
-      return numericBase + pnlTotal;
-    }
-    return numericBase;
-  }
-
-  return numericBase;
+  return window.ReportingValues.accountValue(account);
 }
 
 function getAccountUnrealizedPnl(account) {
@@ -880,8 +634,15 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn('Jobs summary request failed:', jobsError);
       }
 
-      // Use the stored platform analytics value (updated by loadPlatformAnalytics)
-      summary.total_portfolio_value = latestPlatformValue;
+      // Current holdings are independent of the selected historical chart period.
+      summary.total_portfolio_value = null;
+      const equityResponse = await fetch(`${AUTH_API_BASE}/admin/analytics/platform-total-value`, {
+        headers: getAuthHeaders(token)
+      });
+      if (equityResponse.ok) {
+        const equity = await equityResponse.json();
+        summary.total_portfolio_value = window.ReportingValues.finite(equity.total_value);
+      }
       displaySystemOverview(summary);
     } catch (error) {
       console.error('Error loading system overview:', error);
@@ -935,7 +696,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="stat-card admin clickable" onclick="window.location.href='/admin-accounts.html'">
           <div class="stat-icon">📈</div>
           <div class="stat-label">Total Portfolio Value</div>
-          <div class="stat-value">$${(summary.total_portfolio_value || 0).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</div>
+          <div class="stat-value">${summary.total_portfolio_value === null ? "—" : formatCurrency(summary.total_portfolio_value)}</div>
           <div class="stat-action">All account values combined →</div>
         </div>
         <div class="stat-card admin clickable" onclick="window.location.href='/admin-jobs-manager.html'">
@@ -4301,7 +4062,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             percentage: percentage
                           };
                         })
-                        .filter(asset => asset.usdt_value > 0.01)
+                        .filter(asset => Math.abs(asset.usdt_value) > 0.01)
                         .sort((a, b) => b.percentage - a.percentage)
                         .map(asset => {
                           return `
@@ -4842,20 +4603,13 @@ document.addEventListener("DOMContentLoaded", () => {
             return null;
           }
 
-          const numericValue = typeof point?.value === 'number'
-            ? point.value
-            : parseFloat(point?.value ?? point?.total_value ?? point?.value_usdt ?? 0);
-
-          if (!Number.isFinite(numericValue)) {
-            console.warn('Skipping source analytics point with invalid value', point);
-            return null;
-          }
+          const numericValue = window.ReportingValues.finite(Object.prototype.hasOwnProperty.call(point, 'value') ? point.value : point.total_value ?? point.value_usdt);
 
           return {
             timestamp: dateObj.toISOString(),
             date: dateObj,
             value: numericValue,
-            label: '$' + formatNumber(numericValue),
+            label: numericValue === null ? 'Missing observation' : formatCurrency(numericValue),
             breakdown: point.breakdown
           };
         })
@@ -4880,25 +4634,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   function updateSourceAnalyticsStatusBadges(summary) {
-    const currentTotalBadge = document.getElementById('source-current-total-badge');
-    const periodChangeBadge = document.getElementById('source-period-change-badge');
-    const changePercentageBadge = document.getElementById('source-change-percentage-badge');
-
-    if (currentTotalBadge) {
-      currentTotalBadge.textContent = '$' + formatNumber(summary.current_value || 0);
-    }
-
-    if (periodChangeBadge) {
-      const periodChange = summary.period_change || 0;
-      periodChangeBadge.textContent = '$' + formatNumber(periodChange);
-      periodChangeBadge.className = `status-badge ${periodChange >= 0 ? 'success' : 'danger'}`;
-    }
-
-    if (changePercentageBadge) {
-      const percentageChange = summary.percentage_change || 0;
-      changePercentageBadge.textContent = `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(2)}%`;
-      changePercentageBadge.className = `status-badge ${percentageChange >= 0 ? 'success' : 'danger'}`;
-    }
+    const R = window.ReportingValues;
+    const values = [['source-current-total-badge', summary.current_value, false],
+      ['source-period-change-badge', summary.period_change, false],
+      ['source-change-percentage-badge', summary.percentage_change, true]];
+    values.forEach(([id, raw, percent]) => {
+      const el = document.getElementById(id), value = R.finite(raw);
+      if (!el) return;
+      el.textContent = value === null ? '—' : percent ? value.toFixed(2) + '%' : formatCurrency(value);
+      el.title = R.coverageText(summary);
+      el.className = 'status-badge ' + (value === null ? '' : value >= 0 ? 'success' : 'danger');
+    });
+    const note = document.getElementById('source-analytics-coverage');
+    if (note) note.textContent = R.coverageText(summary);
   }
 
   function showSourceAnalyticsError(message) {
@@ -4952,20 +4700,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json();
       if (data.success) {
-        // Update global variable with latest platform value for System Overview
-        if (data.summary && data.summary.current_value) {
-          latestPlatformValue = data.summary.current_value;
-          } else if (data.chart_data && data.chart_data.length > 0) {
-          // Fallback: use last chart data entry
-          const lastEntry = data.chart_data[data.chart_data.length - 1];
-          latestPlatformValue = lastEntry.value || 0;
-          }
-
-        // Refresh System Overview to show updated portfolio value (fix race condition)
-        if (latestPlatformValue > 0) {
-          loadSystemOverview();
-        }
-
         platformAnalyticsSnapshot = {
           chart: Array.isArray(data.chart_data) ? data.chart_data : [],
           summary: data.summary || {}
@@ -5046,20 +4780,13 @@ document.addEventListener("DOMContentLoaded", () => {
           return null;
         }
 
-        const numericValue = typeof point?.value === 'number'
-          ? point.value
-          : parseFloat(point?.value ?? point?.total_value ?? point?.value_usdt ?? 0);
-
-        if (!Number.isFinite(numericValue)) {
-          console.warn('Skipping platform analytics point with invalid value', point);
-          return null;
-        }
+        const numericValue = window.ReportingValues.finite(Object.prototype.hasOwnProperty.call(point, 'value') ? point.value : point.total_value ?? point.value_usdt);
 
         return {
           timestamp: dateObj.toISOString(),
           date: dateObj,
           value: numericValue,
-          label: `$${numericValue.toLocaleString()}`
+          label: numericValue === null ? 'Missing observation' : formatCurrency(numericValue)
         };
       })
       .filter(Boolean);
@@ -5142,25 +4869,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updatePlatformSummaryStats(summary) {
-    if (summary && Object.keys(summary).length > 0) {
-      // Update the new badge elements
-      const currentTotalBadge = document.getElementById('platform-current-total-badge');
-      if (currentTotalBadge) {
-        currentTotalBadge.textContent = `$${Math.round(summary.current_value || 0).toLocaleString()}`;
+    const R = window.ReportingValues;
+    [['platform-current-total-badge', summary?.current_value],
+     ['platform-24h-change-badge', summary?.period_change]].forEach(([id, raw]) => {
+      const el = document.getElementById(id), value = R.finite(raw);
+      if (el) {
+        el.textContent = value === null ? '—' : formatCurrency(value);
+        el.title = R.coverageText(summary);
+        el.className = 'status-badge ' + (value === null ? '' : value >= 0 ? 'success' : 'danger');
       }
-
-      const change24h = summary.change_24h || 0;
-      const changeBadge = document.getElementById('platform-24h-change-badge');
-      if (changeBadge) {
-        changeBadge.textContent = `${change24h >= 0 ? '+' : ''}$${Math.round(change24h).toLocaleString()}`;
-        changeBadge.className = `status-badge ${change24h >= 0 ? 'success' : 'danger'}`;
-      }
-
-      const usersBadge = document.getElementById('platform-users-count-badge');
-      if (usersBadge) {
-        usersBadge.textContent = summary.users_with_value || 0;
-      }
-    }
+    });
+    const users = document.getElementById('platform-users-count-badge');
+    if (users) users.textContent = summary?.users_count ?? '—';
+    const note = document.getElementById('platform-analytics-coverage');
+    if (note) note.textContent = R.coverageText(summary);
   }
 
   function resetPlatformKpis() {
@@ -5204,6 +4926,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const changeEl = document.getElementById(`platform-kpi-${id}-change`);
       if (changeEl) {
         changeEl.textContent = changeValue !== null ? formatCurrency(changeValue, 2, true) : '--';
+        changeEl.title = window.ReportingValues.coverageText(summary);
       }
 
       const pctEl = document.getElementById(`platform-kpi-${id}-pct`);

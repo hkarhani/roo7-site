@@ -9,6 +9,7 @@
   <title id="page-title">Dashboard</title>
   <script type="module" src="frontend-config.js?v=20241006"></script>
   <link rel="stylesheet" href="dashboard.css?v=20260513-okx-mode-warning" />
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
 </head>
 <body>
   <div class="dashboard-header">
@@ -97,15 +98,15 @@
           <h2 class="analytics-title">📊 Trading Analytics</h2>
           <div class="analytics-status-badges" id="analytics-status-badges">
             <div class="status-item">
-              <span class="status-label">Current Value</span>
+              <span class="status-label">Latest recorded equity</span>
               <span class="status-badge primary" id="current-total-badge">$0.00</span>
             </div>
             <div class="status-item">
-              <span class="status-label">Period Change</span>
+              <span class="status-label">Observed balance change</span>
               <span class="status-badge" id="period-change-badge">$0.00</span>
             </div>
             <div class="status-item">
-              <span class="status-label">% Change</span>
+              <span class="status-label">Balance change %</span>
               <span class="status-badge" id="change-percentage-badge">0.00%</span>
             </div>
           </div>
@@ -139,6 +140,7 @@
         </div>
       </div>
       
+      <p id="analytics-coverage" class="reporting-notice" role="status">Loading observation coverage…</p>
       <!-- Chart Container -->
       <div class="analytics-chart-container">
         <div id="analytics-chart" class="analytics-chart"></div>
@@ -291,9 +293,10 @@
 
  <!-- Load scripts in correct order -->
  <script src="theme-manager.js?v=1"></script>
-  <script src="line-chart.js?v=20240410"></script>
+  <script src="reporting-values.js?v=20260921-equity-1"></script>
+  <script src="line-chart.js?v=20260921-equity-1"></script>
  <script src="dashboard-modal.js?v=20260511-okx"></script>
-  <script type="module" src="dashboard.js?v=9.5-okx-mode-warning"></script>
+  <script type="module" src="dashboard.js?v=20260921-equity-1"></script>
 
 </body>
 </html>

@@ -213,41 +213,7 @@ function formatPercent(value) {
 }
 
 function cumulativeSeries(points, key) {
-  if (!points || points.length === 0) {
-    return [];
-  }
-  const sorted = [...points].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-
-  const series = [];
-  const firstTime = new Date(sorted[0].timestamp);
-  let baselineDate = new Date(firstTime);
-  if (sorted.length > 1) {
-    const nextTime = new Date(sorted[1].timestamp);
-    const delta = Math.max(1, nextTime.getTime() - firstTime.getTime());
-    baselineDate = new Date(firstTime.getTime() - delta);
-  } else {
-    baselineDate = new Date(firstTime.getTime() - 3600000);
-  }
-  series.push({
-    timestamp: baselineDate.toISOString(),
-    date: baselineDate,
-    value: 0,
-  });
-
-  let cumulative = 0;
-  sorted.forEach((point) => {
-    const change = parseFloat(point[key] || 0);
-    cumulative += change;
-    series.push({
-      timestamp: point.timestamp,
-      date: new Date(point.timestamp),
-      value: cumulative / 100,
-    });
-  });
-
-  return series;
+  return window.ReportingValues.cumulativeSeries(points, key);
 }
 
 function getAuthHeaders() {
@@ -385,17 +351,17 @@ function highlightAccountRow(activeAccount) {
 }
 
 function updateStats(portfolioSeries, platformSeries, benchmarkSeries) {
-  const lastPortfolio = portfolioSeries.at(-1)?.value ?? 0;
-  const lastPlatform = platformSeries.at(-1)?.value ?? 0;
-  const lastBenchmark = benchmarkSeries.at(-1)?.value ?? 0;
-  const spread = (lastPortfolio - lastBenchmark) * 100;
+  const lastPortfolio = window.ReportingValues.finite(portfolioSeries.at(-1)?.value);
+  const lastPlatform = window.ReportingValues.finite(platformSeries.at(-1)?.value);
+  const lastBenchmark = window.ReportingValues.finite(benchmarkSeries.at(-1)?.value);
+  const spread = lastPortfolio === null || lastBenchmark === null ? null : (lastPortfolio - lastBenchmark) * 100;
 
-  selectors.portfolioChange.textContent = formatPercent(lastPortfolio * 100);
-  selectors.platformChange.textContent = formatPercent(lastPlatform * 100);
-  selectors.benchmarkChange.textContent = formatPercent(lastBenchmark * 100);
+  selectors.portfolioChange.textContent = formatPercent(lastPortfolio === null ? null : lastPortfolio * 100);
+  selectors.platformChange.textContent = formatPercent(lastPlatform === null ? null : lastPlatform * 100);
+  selectors.benchmarkChange.textContent = formatPercent(lastBenchmark === null ? null : lastBenchmark * 100);
   selectors.portfolioBenchmarkSpread.textContent = formatPercent(spread);
   selectors.portfolioBenchmarkHelper.textContent =
-    spread >= 0 ? 'Portfolio outperforming benchmark' : 'Portfolio underperforming benchmark';
+    spread === null ? 'Comparison unavailable: incomplete aligned history' : 'Balance-change spread includes deposits/withdrawals; not investment outperformance';
 
   const lastTimestamp =
     state.rawData?.points?.at(-1)?.timestamp || new Date().toISOString();
@@ -432,7 +398,7 @@ function updateChart() {
     const benchmarkLabel = getBenchmarkOption(state.benchmark).label;
     const dataset = [
       {
-        name: state.accountId === 'ALL' ? 'Portfolio cumulative %' : 'Account cumulative %',
+        name: state.accountId === 'ALL' ? 'Portfolio equity change %' : 'Account equity change %',
         color: '#10b981',
         values: portfolioSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
         area: true,
@@ -442,7 +408,7 @@ function updateChart() {
     ];
     if (state.showPlatform) {
       dataset.push({
-        name: 'Platform cumulative %',
+        name: 'Platform equity change %',
         color: '#1d4ed8',
         values: platformSeries.map((point) => ({ timestamp: point.timestamp, value: point.value })),
         area: false

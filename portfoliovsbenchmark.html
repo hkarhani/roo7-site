@@ -9,8 +9,10 @@
   <title>ROO7 | Portfolio vs Benchmark</title>
   <link rel="stylesheet" href="portfoliovsbenchmark.css?v=20240413" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
-  <script src="line-chart.js?v=20240410" defer></script>
-  <script type="module" src="portfoliovsbenchmark.js?v=20240413a" defer></script>
+  <script src="reporting-values.js?v=20260921-equity-1"></script>
+  <script src="line-chart.js?v=20260921-equity-1" defer></script>
+  <script type="module" src="portfoliovsbenchmark.js?v=20260921-equity-1" defer></script>
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
 </head>
 <body>
   <header class="pvb-header">
@@ -30,12 +32,13 @@
   </header>
 
   <main class="pvb-main">
+    <p class="reporting-notice">Account/platform curves show recorded net equity, including deposits and withdrawals—not verified investment returns. Change summaries are unavailable for unverified legacy valuations, which may include reporting corrections. Missing observations remain gaps. Benchmarks show price returns.</p>
     <section class="pvb-card">
       <div class="section-header">
         <div>
           <h2>Portfolio Comparison</h2>
           <p class="section-description">
-            Choose a portfolio or specific account, select a benchmark basket or individual coin, and compare performance over standard timeframes.
+            Choose a portfolio or specific account, select a benchmark basket or individual coin, and compare recorded equity changes over standard timeframes.
           </p>
         </div>
         <div class="controls-panel">

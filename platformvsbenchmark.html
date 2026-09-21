@@ -9,8 +9,10 @@
   <title>ROO7 | Platform vs Benchmark Performance</title>
   <link rel="stylesheet" href="platformvsbenchmark.css?v=20240411" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
-  <script src="line-chart.js?v=20240410" defer></script>
-  <script type="module" src="platformvsbenchmark.js?v=20240412"></script>
+  <script src="reporting-values.js?v=20260921-equity-1"></script>
+  <script src="line-chart.js?v=20260921-equity-1" defer></script>
+  <script type="module" src="platformvsbenchmark.js?v=20260921-equity-1"></script>
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
 </head>
 <body>
   <header class="pvb-header">
@@ -20,7 +22,7 @@
       </a>
       <div class="tagline">
         <p class="title">Platform vs Benchmark</p>
-        <p class="subtitle">Hourly cumulative performance of ROO7 trading algos vs major market basket</p>
+        <p class="subtitle">Recorded platform equity changes vs market price benchmarks</p>
       </div>
     </div>
     <div class="pvb-actions">
@@ -30,12 +32,13 @@
   </header>
 
   <main class="pvb-main">
+    <p class="reporting-notice">Account/platform curves show recorded net equity, including deposits and withdrawals—not verified investment returns. Change summaries are unavailable for unverified legacy valuations, which may include reporting corrections. Missing observations remain gaps. Benchmarks show price returns.</p>
     <section class="pvb-card">
       <div class="section-header">
         <div>
           <h2>Benchmark Comparison</h2>
           <p class="section-description">
-            Compare ROO7 cumulative returns against the composite benchmark or any individual asset below. Values represent cumulative percentage change from the beginning of the selected window using hourly data.
+            Compare observed net equity changes against market benchmarks. Deposits, withdrawals, and account-coverage changes are not investment performance.
           </p>
         </div>
         <div class="controls-panel">

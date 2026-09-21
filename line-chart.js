@@ -68,6 +68,15 @@ class LineChart {
     this.latestDataLayer = null;
     
     this.initializeChart();
+    if (options.responsive !== false && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        const width = Math.floor(this.container.clientWidth);
+        if (width > this.options.margin.left + this.options.margin.right + 20 && width !== this.options.width) {
+          this.resize(width);
+        }
+      });
+      this.resizeObserver.observe(this.container);
+    }
   }
 
   initializeChart() {
@@ -180,6 +189,7 @@ class LineChart {
     // Process data and create scales
     this.processData();
     this.createScales(chartWidth, chartHeight);
+    if (!this.scales.x || !this.scales.y) { this.showEmptyState(); return; }
     
     // Create chart group
     const chartGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -216,7 +226,10 @@ class LineChart {
           } else if (point.timestamp instanceof Date) {
             point.date = point.timestamp;
           }
-          point.value = parseFloat(point.value_usdt || point.total_value || point.value || 0);
+          const raw = Object.prototype.hasOwnProperty.call(point, 'value_usdt') ? point.value_usdt
+            : Object.prototype.hasOwnProperty.call(point, 'total_value') ? point.total_value : point.value;
+          point.value = raw === null || raw === undefined || raw === '' ? null : Number(raw);
+          if (!Number.isFinite(point.value)) point.value = null;
         });
         
         // Sort by date
@@ -276,12 +289,13 @@ class LineChart {
         yDomainMin = 0;
         yDomainMax = 100; // Default range for zero values
       } else {
-        yDomainMin = Math.max(0, yMax * 0.9);
-        yDomainMax = yMax * 1.1;
+        const padding = Math.max(Math.abs(yMax) * 0.1, 1);
+        yDomainMin = yMax - padding;
+        yDomainMax = yMax + padding;
       }
     } else {
       const primaryPadding = Math.max((yMax - yMin) * 0.12, Math.abs(yMax) * 0.03, 1);
-      yDomainMin = Math.max(0, yMin - primaryPadding);
+      yDomainMin = yMin - primaryPadding;
       yDomainMax = yMax + primaryPadding;
     }
     
@@ -490,6 +504,7 @@ class LineChart {
       const color = series.color || this.options.colors[index % this.options.colors.length];
       
       series.values.forEach((point, pointIndex) => {
+        if (point.value === null || !Number.isFinite(point.value)) return;
         const cx = this.scales.x.scale(point.date);
         const cy = this.scales.y.scale(point.value);
         
@@ -605,15 +620,21 @@ class LineChart {
     
     let path = '';
     
-    values.forEach((point, index) => {
+    let connected = false;
+    let previous = null;
+    values.forEach((point) => {
+      if (point.value === null || !Number.isFinite(point.value)) { connected = false; return; }
+      if (previous && point.date - previous > 7200000) connected = false;
       const x = this.scales.x.scale(point.date);
       const y = this.scales.y.scale(point.value);
       
-      if (index === 0) {
+      if (!connected) {
         path += `M ${x} ${y}`;
       } else {
         path += ` L ${x} ${y}`;
       }
+      connected = true;
+      previous = point.date;
     });
     
     return path;
@@ -621,6 +642,20 @@ class LineChart {
 
   createAreaPath(values, fillToZero = false) {
     if (!values || values.length === 0) return '';
+    const segments = [];
+    let segment = [];
+    for (const point of values) {
+      const valid = point.value !== null && Number.isFinite(point.value);
+      if (!valid || (segment.length && point.date - segment[segment.length - 1].date > 7200000)) {
+        if (segment.length) segments.push(segment);
+        segment = [];
+      }
+      if (valid) segment.push(point);
+    }
+    if (segment.length) segments.push(segment);
+    if (segments.length !== 1 || segments[0].length !== values.length) {
+      return segments.filter(part => part.length > 1).map(part => this.createAreaPath(part, fillToZero)).join(' ');
+    }
     
     const chartHeight = this.options.height - this.options.margin.top - this.options.margin.bottom;
     let baselineY = chartHeight;
@@ -680,7 +715,8 @@ class LineChart {
     if (!this.scales.x) return [];
     
     const [min, max] = this.scales.x.domain;
-    const tickCount = 6;
+    const width = this.options.width - this.options.margin.left - this.options.margin.right;
+    const tickCount = Math.max(2, Math.min(6, Math.floor(width / 95) + 1));
     
     // min and max are already timestamps (numbers), not Date objects
     const step = (max - min) / (tickCount - 1);
@@ -702,6 +738,7 @@ class LineChart {
       if (!series.values) return;
       
       series.values.forEach((point, pointIndex) => {
+        if (point.value === null || !Number.isFinite(point.value)) return;
         const px = this.scales.x.scale(point.date);
         const py = this.scales.y.scale(point.value);
         const distance = Math.sqrt(Math.pow(x - px, 2) + Math.pow(y - py, 2));
@@ -886,7 +923,8 @@ class LineChart {
       series.values.forEach(point => {
         const date = point.date ? new Date(point.date) : new Date(point.timestamp || point.time);
         const time = date.getTime();
-        const value = parseFloat(point.value_usdt || point.total_value || point.value || 0);
+        const raw = Object.prototype.hasOwnProperty.call(point, 'value_usdt') ? point.value_usdt : Object.prototype.hasOwnProperty.call(point, 'total_value') ? point.total_value : point.value;
+        const value = raw === null || raw === undefined ? null : Number(raw);
         map.set(time, value);
       });
       return map;
@@ -929,7 +967,15 @@ class LineChart {
       lowerCoords = [];
     };
 
+    let previousTime = null;
     timestamps.forEach((ts) => {
+      const missing = !Number.isFinite(mapA.get(ts)) || !Number.isFinite(mapB.get(ts));
+      if (missing || (previousTime !== null && ts - previousTime > 7200000)) {
+        flushSegment();
+        currentSign = null;
+      }
+      previousTime = ts;
+      if (missing) return;
       const diff = mapA.get(ts) - mapB.get(ts);
       const segmentSign = diff >= 0 ? 1 : -1;
       const x = this.scales.x.scale(ts);
@@ -993,6 +1039,12 @@ class LineChart {
     if (this.data.length > 0) {
       this.renderChart();
     }
+  }
+
+  destroy() {
+    this.resizeObserver?.disconnect();
+    this.clear();
+    this.container.innerHTML = '';
   }
 
   // Utility method to clear chart
