@@ -18,6 +18,11 @@ const periodRows = Object.fromEntries(['24h','7d','30d','90d','180d','1y'].map(p
 }]));
 const summary = {portfolio:{periods:{},observed:Object.fromEntries(Object.keys(periodRows).map(p=>[p,observed]))},
   benchmarks:[{benchmark:'composite',label:'Composite',periods:periodRows}]};
+const history = (multiplier = 1, onlyLegacy = false) => ({points: benchmark.map((p,i)=>({
+  timestamp:p.timestamp, value:[2800,2780,1180,1190][i]*multiplier,
+  complete:true, valuation_verified:!onlyLegacy && i>=2,
+})), summary:{as_of:benchmark[3].timestamp, observed_hours:3, legacy_observations:onlyLegacy?4:2, partial_period:true}});
+const current = value => ({equity_usdt:value,as_of:benchmark[3].timestamp,complete:true,stale_accounts:0,accounts_count:1});
 const server = http.createServer((req,res)=>{
   const url = new URL(req.url,'http://127.0.0.1');
   const file = path.basename(url.pathname);
@@ -27,7 +32,14 @@ const server = http.createServer((req,res)=>{
     requests.set(req.url,(requests.get(req.url)||0)+1);
     console.log('fixture API',req.url,'count',requests.get(req.url));
     if(url.pathname.endsWith('/accounts')) return send([{id:'fixture-a',account_name:'Fixture A'},{id:'fixture-b',account_name:'Fixture B'}]);
-    if(url.pathname.endsWith('/performance')) return send({success:true,data:{points:portfolio,series:{portfolio,platform:portfolio,benchmark},metadata:{}}});
+    if(url.pathname.endsWith('/performance')) {
+      const individual = url.searchParams.has('account_id');
+      const legacyOnly = url.searchParams.get('account_id') === 'fixture-b';
+      const changes = legacyOnly ? portfolio.map(p=>({...p,change_percent:null})) : portfolio;
+      return send({success:true,data:{points:changes,series:{portfolio:changes,platform:portfolio,benchmark},
+        equity_history:{portfolio:history(individual?1:3,legacyOnly),platform:history(5)},
+        current_equity:{portfolio:current(individual?1190:3570),platform:current(5950)},metadata:{}}});
+    }
     if(url.pathname.endsWith('/table')) return setTimeout(()=>send({success:true,data:summary}),8000);
     return send({success:true,data:{}});
   }

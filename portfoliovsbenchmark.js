@@ -77,6 +77,7 @@ const selectors = {
 };
 
 let chart = null;
+let equityChart = null;
 const seriesCache = new Map();
 const cachedRequest = window.ReportingValues.requestCache();
 let accountSummariesPending = null;
@@ -96,7 +97,10 @@ async function analyticsRequest(endpoint) {
     } finally { clearTimeout(timer); }
   });
 }
-const resizeHandler = () => resizeChart(state.rawData?.points?.length || 0);
+const resizeHandler = () => {
+  resizeChart(state.rawData?.points?.length || 0);
+  if (equityChart) equityChart.resize(computeChartDimensions().width, 340);
+};
 
 function loadingMarkup(text) {
   return `
@@ -381,13 +385,54 @@ function updateStats(portfolioSeries, platformSeries, benchmarkSeries) {
   selectors.benchmarkLegend.textContent = `${option.label} benchmark`;
 }
 
+function updateEquityChart(payload) {
+  const R = window.ReportingValues;
+  const selected = state.accountId === 'ALL' ? 'Portfolio' :
+    state.accounts.find(account => account.id === state.accountId)?.label || 'Account';
+  document.getElementById('equity-account-label').textContent = selected + ' · current equity';
+  document.getElementById('equity-title').textContent = 'Recorded equity · ' + selected + ' · USDT';
+  for (const [name, valueId, dateId] of [
+    ['portfolio', 'equity-current', 'equity-current-date'],
+    ['platform', 'platform-equity-current', 'platform-equity-current-date'],
+  ]) {
+    const current = payload?.current_equity?.[name];
+    const value = R.finite(current?.equity_usdt);
+    document.getElementById(valueId).textContent = value === null ? '–' :
+      value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USDT';
+    document.getElementById(dateId).textContent = R.currentText({current});
+  }
+  const dataset = [];
+  for (const [name, label, color, legacyColor] of [
+    ['portfolio', selected, '#10b981', '#94a3b8'],
+    ['platform', 'Platform', '#1d4ed8', '#a5b4fc'],
+  ]) {
+    if (name === 'platform' && !state.showPlatform) continue;
+    dataset.push({name: label + ' · legacy / unverified (USDT)', color: legacyColor,
+      values: R.recordedEquitySeries(payload, name, false), area: false});
+    dataset.push({name: label + ' · canonical equity (USDT)', color,
+      values: R.recordedEquitySeries(payload, name, true), area: false});
+  }
+  if (equityChart) {
+    equityChart.options.periodDays = PERIODS.find(p => p.value === state.period)?.days || 7;
+    if (dataset.some(series => series.values.some(p => p.value !== null))) equityChart.setData(dataset);
+    else equityChart.showEmptyState();
+  }
+  const history = payload?.equity_history?.portfolio;
+  document.getElementById('equity-status').textContent = history?.points?.length ?
+    'Recorded balances, not investment returns. Pale lines are unverified legacy values and may contain reporting corrections. ' +
+      'Canonical and legacy paths are not joined. Missing/stale observations remain gaps. ' +
+      R.coverageText(history.summary) :
+    'Recorded equity history is unavailable for this selection. Current captures are shown separately; missing history is not zero.';
+}
+
 function updateChart() {
+  updateEquityChart(state.rawData);
   updateStats([], [], []);
   if (!state.rawData || !state.rawData.points?.length) {
     if (chart) {
       chart.showEmptyState();
     }
-    selectors.status.textContent = 'No overlapping data available for this selection.';
+    selectors.status.textContent = 'No percentage intervals available. Recorded balances, if available, are shown above.';
     return;
   }
 
@@ -449,7 +494,7 @@ function updateChart() {
   }
 
   updateStats(portfolioSeries, platformSeries, benchmarkSeries);
-  selectors.status.textContent = 'Verified observed segments only; each restarts at 0% after a gap. Missing history is not filled. Not cash-flow-adjusted returns.';
+  selectors.status.textContent = 'Canonical valuation segments only; each restarts at 0% after a gap. Short recent segments do not cover the selected period. Recorded balances are shown above. Not cash-flow-adjusted returns.';
   highlightAccountRow(state.accountId);
 }
 
@@ -467,8 +512,11 @@ async function fetchPerformance(options = {}) {
     return;
   }
 
+  state.rawData = null; // Do not relabel a previous account's data during a new request.
   setLoading(true, { silent });
   updateStats([], [], []);
+  updateEquityChart(null);
+  if (equityChart) equityChart.showLoadingState();
   const params = new URLSearchParams({
     period: targetPeriod,
     benchmark: targetBenchmark,
@@ -489,6 +537,8 @@ async function fetchPerformance(options = {}) {
     if (requestId !== performanceRequest) return;
     console.error('Portfolio fetch error:', error);
     seriesCache.delete(cacheKey);
+    state.rawData = null;
+    updateEquityChart(null);
     selectors.status.textContent = 'Unable to load portfolio analytics.';
     if (chart) {
       chart.showEmptyState();
@@ -539,7 +589,7 @@ function renderSummaryTable() {
     rows.push(
       buildRow({
         label: account.label || 'Account',
-        subtitle: 'Account performance',
+        subtitle: 'Observed equity change',
         periods,
         coverage: summary?.coverage || {},
         observed: summary?.observed || {},
@@ -729,6 +779,10 @@ async function init() {
     fillArea: false,
   });
 
+  equityChart = new window.LineChart('equity-chart', {
+    width: initialDimensions.width, height: 340, dateFormat: 'adaptive',
+    valueFormat: 'currency', periodDays: 7, centerZero: false, fillArea: false,
+  });
   window.addEventListener('resize', resizeHandler);
 
   setActivePeriodButton(state.period);

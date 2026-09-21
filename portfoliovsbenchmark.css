@@ -558,3 +558,8 @@ body {
     font-size: 1.4rem;
   }
 }
+/* Absolute equity and percentage comparisons deliberately use separate axes. */
+.recorded-equity-panel { margin: 1.5rem 0 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+.equity-current-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#equity-chart { width: 100%; min-height: 300px; }
+@media (max-width: 600px) { .equity-current-grid { grid-template-columns: 1fr; } }

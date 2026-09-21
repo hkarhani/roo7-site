@@ -40,6 +40,14 @@
     const direct = payload?.series?.[name];
     return cumulativeSeries(direct || payload?.points || [], direct ? 'change_percent' : name + '_change_percent');
   }
+  function recordedEquitySeries(payload, name, verified) {
+    // Absolute balances are evidence even when no percentage interval is valid.
+    // Separate paths prevent a line crossing a valuation-method correction.
+    return (payload?.equity_history?.[name]?.points || []).map(point => ({
+      timestamp: point.timestamp,
+      value: Boolean(point.valuation_verified) === verified && point.complete !== false ? finite(point.value) : null,
+    }));
+  }
   function observedCell(observed, format) {
     if (finite(observed?.change_percent) === null) return null;
     const label = 'Observed segment only: ' + new Date(observed.start).toUTCString() +
@@ -86,7 +94,7 @@
     const cohort = summary.cohort_changed ? ' · Account coverage changed; period comparison unavailable' : '';
     return `As of ${new Date(summary.as_of).toLocaleString()}${coverage}${gaps}${cohort}.${legacy} Balance changes include deposits/withdrawals; investment return is not verified.`;
   }
-  const api = { finite, accountValue, cumulativeSeries, comparisonSeries, observedCell, segmentSummary, currentValue, currentText, requestCache, coverageText };
+  const api = { finite, accountValue, cumulativeSeries, comparisonSeries, recordedEquitySeries, observedCell, segmentSummary, currentValue, currentText, requestCache, coverageText };
   root.ReportingValues = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

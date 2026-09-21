@@ -7,12 +7,12 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>ROO7 | Portfolio vs Benchmark</title>
-  <link rel="stylesheet" href="portfoliovsbenchmark.css?v=20240413" />
+  <link rel="stylesheet" href="portfoliovsbenchmark.css?v=20260921-equity-3" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
-  <script src="reporting-values.js?v=20260921-repair-2"></script>
-  <script src="line-chart.js?v=20260921-repair-2" defer></script>
-  <script type="module" src="portfoliovsbenchmark.js?v=20260921-repair-2" defer></script>
-  <link rel="stylesheet" href="reporting-values.css?v=20260921-repair-2" />
+  <script src="reporting-values.js?v=20260921-equity-3"></script>
+  <script src="line-chart.js?v=20260921-equity-3" defer></script>
+  <script type="module" src="portfoliovsbenchmark.js?v=20260921-equity-3" defer></script>
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-3" />
 </head>
 <body>
   <header class="pvb-header">
@@ -32,7 +32,7 @@
   </header>
 
   <main class="pvb-main">
-    <p class="reporting-notice">Account/platform curves show recorded net equity, including deposits and withdrawals—not verified investment returns. Change summaries are unavailable for unverified legacy valuations, which may include reporting corrections. Missing observations remain gaps. Benchmarks show price returns.</p>
+    <p class="reporting-notice">Recorded balances include deposits and withdrawals—not verified investment returns. Legacy balances remain visible but may include reporting corrections; they are excluded from percentage comparisons. Missing observations remain gaps. Benchmarks show price returns.</p>
     <section class="pvb-card">
       <div class="section-header">
         <div>
@@ -84,6 +84,32 @@
         </div>
       </div>
 
+      <section class="recorded-equity-panel" aria-labelledby="equity-title">
+        <h3 id="equity-title">Recorded portfolio / account equity · USDT</h3>
+        <p class="section-description">Your saved balances remain visible even when percentage history is unavailable. Select an account above to see its own history.</p>
+        <div class="stats-grid equity-current-grid">
+          <div class="stat-card primary">
+            <p class="label" id="equity-account-label">Portfolio · current equity</p>
+            <p class="value" id="equity-current">–</p>
+            <span class="detail" id="equity-current-date">Awaiting current capture...</span>
+          </div>
+          <div class="stat-card secondary">
+            <p class="label">Platform · current equity</p>
+            <p class="value" id="platform-equity-current">–</p>
+            <span class="detail" id="platform-equity-current-date">Awaiting current capture...</span>
+          </div>
+        </div>
+        <div id="equity-chart"></div>
+        <div class="legend">
+          <span class="legend-item"><span class="dot portfolio"></span>Portfolio / account · canonical</span>
+          <span class="legend-item"><span class="dot platform"></span>Platform · canonical</span>
+          <span class="legend-item"><span class="dot" style="background:#94a3b8"></span>Pale lines · unverified legacy balances</span>
+        </div>
+        <p id="equity-status" class="reporting-notice">Loading recorded balances...</p>
+      </section>
+
+      <h3>Observed equity change vs benchmark · %</h3>
+      <p class="section-description">Only canonical valuation intervals appear below. The recorded-equity chart above also includes legacy balances; these are not verified investment returns.</p>
       <div class="stats-grid">
         <div class="stat-card primary">
           <p class="label">Portfolio · latest observed segment</p>
@@ -166,10 +192,10 @@
         <li>Metrics use observed net account equity. Deposits and withdrawals remain included until a verified cash-flow ledger is available.</li>
         <li>Benchmark options match the public view (composite basket or individual majors) but the data here is private to your account.</li>
         <li>Data updates after fresh observations; summary dates use your browser time zone.</li>
-        <li>Missing or unverified observations remain gaps; market movements are never used to guess cash flows.</li>
+        <li>Missing observations remain gaps. Unverified balances appear only in the recorded-equity graph; market movements are never used to guess cash flows.</li>
       </ul>
     </section>
-  <p class="reporting-notice">* Latest valid observed segment only; hover for its dates. A blank full-period result means coverage is incomplete. Each chart segment restarts at 0% after a gap.</p>
+  <p class="reporting-notice">* Latest valid observed segment only; hover for its dates. A blank full-period result means coverage is incomplete. Each percentage-chart segment restarts at 0% after a gap.</p>
   </main>
 
   <footer class="pvb-footer">

@@ -22,6 +22,20 @@ test('current equity never falls back to stale chart history', () => {
   assert.equal(R.currentValue({current_value: 50625, current: {equity_usdt: 52425}}), 52425);
   assert.equal(R.currentValue({current: {equity_usdt: 0}}), 0);
 });
+test('recorded equity remains visible when all percentage intervals are unavailable', () => {
+  const payload = {series: {portfolio: [{timestamp: '2026-01-01T01:00:00Z', change_percent: null}]},
+    equity_history: {portfolio: {points: [
+      {timestamp:'2026-01-01T01:00:00Z', value:900, valuation_verified:false},
+      {timestamp:'2026-01-01T02:00:00Z', value:100, valuation_verified:true},
+      {timestamp:'2026-01-01T03:00:00Z', value:0, valuation_verified:true},
+      {timestamp:'2026-01-01T04:00:00Z', value:-5, valuation_verified:true},
+      {timestamp:'2026-01-01T05:00:00Z', value:99, valuation_verified:true, complete:false},
+    ]}}};
+  assert.deepEqual(R.recordedEquitySeries(payload,'portfolio',false).map(p=>p.value),[900,null,null,null,null]);
+  assert.deepEqual(R.recordedEquitySeries(payload,'portfolio',true).map(p=>p.value),[null,100,0,-5,null]);
+  assert.ok(R.comparisonSeries(payload,'portfolio').every(p=>p.value===null));
+  assert.deepEqual(R.recordedEquitySeries(payload,'platform',true),[]);
+});
 test('separate observation boundaries do not restart an intact benchmark', () => {
   const payload = {points: [{timestamp:'2026-01-01T01:30:00Z', benchmark_change_percent:null}],
     series: {benchmark: points.map(p => ({...p, change_percent:p.change})), portfolio:[]}};
