@@ -1113,15 +1113,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       const summary = data.summary || {};
-      const currentTotal = window.ReportingValues.finite(summary.current_value);
+      const currentTotal = window.ReportingValues.currentValue(summary);
       const periodChange = window.ReportingValues.finite(summary.period_change);
       const changePercentage = window.ReportingValues.finite(summary.percentage_change);
-      let latestTimestampCandidate = summary.as_of ? new Date(summary.as_of) : null;
+      let latestTimestampCandidate = summary.current?.as_of ? new Date(summary.current.as_of) : null;
       currentTotalEl.textContent = currentTotal === null ? '—' : formatCurrency(currentTotal);
       periodChangeEl.textContent = periodChange === null ? '—' : formatCurrency(periodChange);
       changePercentageEl.textContent = changePercentage === null ? '—' : formatPercentage(changePercentage);
       const coverage = document.getElementById('analytics-coverage');
-      if (coverage) coverage.textContent = window.ReportingValues.coverageText(summary);
+      if (coverage) coverage.textContent = window.ReportingValues.currentText(summary) + ' Historical coverage: ' + window.ReportingValues.coverageText(summary);
       [periodChangeEl, changePercentageEl].forEach(el => {
         el.title = 'Observed equity change, including deposits and withdrawals. Not trading profit.';
       });

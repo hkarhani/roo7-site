@@ -9,10 +9,10 @@
   <title>ROO7 | Portfolio vs Benchmark</title>
   <link rel="stylesheet" href="portfoliovsbenchmark.css?v=20240413" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
-  <script src="reporting-values.js?v=20260921-equity-1"></script>
-  <script src="line-chart.js?v=20260921-equity-1" defer></script>
-  <script type="module" src="portfoliovsbenchmark.js?v=20260921-equity-1" defer></script>
-  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
+  <script src="reporting-values.js?v=20260921-repair-2"></script>
+  <script src="line-chart.js?v=20260921-repair-2" defer></script>
+  <script type="module" src="portfoliovsbenchmark.js?v=20260921-repair-2" defer></script>
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-repair-2" />
 </head>
 <body>
   <header class="pvb-header">
@@ -86,17 +86,17 @@
 
       <div class="stats-grid">
         <div class="stat-card primary">
-          <p class="label">Portfolio cumulative change</p>
+          <p class="label">Portfolio · latest observed segment</p>
           <p class="value" id="portfolio-change">– %</p>
           <span class="detail" id="portfolio-last-updated">Awaiting data...</span>
         </div>
         <div class="stat-card secondary">
-          <p class="label">Platform cumulative change</p>
+          <p class="label">Platform · latest observed segment</p>
           <p class="value" id="platform-change">– %</p>
           <span class="detail">ROO7 aggregate strategies</span>
         </div>
         <div class="stat-card contrast">
-          <p class="label">Benchmark cumulative change</p>
+          <p class="label">Benchmark · latest observed segment</p>
           <p class="value" id="benchmark-change">– %</p>
           <span class="detail" id="benchmark-detail">Composite weighted basket (BTC 60% · ETH 25% · SOL 5% · BNB 5% · XRP 5%)</span>
         </div>
@@ -163,12 +163,13 @@
     <section class="pvb-card slim">
       <h3>About this analytics view</h3>
       <ul class="info-list">
-        <li>Metrics are derived from your authenticated account analytics, normalized to ignore deposits/withdrawals when performance deviates sharply from the platform baseline.</li>
+        <li>Metrics use observed net account equity. Deposits and withdrawals remain included until a verified cash-flow ledger is available.</li>
         <li>Benchmark options match the public view (composite basket or individual majors) but the data here is private to your account.</li>
-        <li>Data updates shortly after each hour; times shown in UTC.</li>
-        <li>Green stars mark detected deposits; red stars mark withdrawals that were normalized in the chart.</li>
+        <li>Data updates after fresh observations; summary dates use your browser time zone.</li>
+        <li>Missing or unverified observations remain gaps; market movements are never used to guess cash flows.</li>
       </ul>
     </section>
+  <p class="reporting-notice">* Latest valid observed segment only; hover for its dates. A blank full-period result means coverage is incomplete. Each chart segment restarts at 0% after a gap.</p>
   </main>
 
   <footer class="pvb-footer">

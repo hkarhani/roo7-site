@@ -78,7 +78,24 @@ const selectors = {
 
 let chart = null;
 const seriesCache = new Map();
-const accountSummaryCache = new Map();
+const cachedRequest = window.ReportingValues.requestCache();
+let accountSummariesPending = null;
+let performanceRequest = 0;
+
+async function analyticsRequest(endpoint) {
+  return cachedRequest(getAuthHeaders().Authorization + ':' + endpoint, async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch(endpoint, {headers: getAuthHeaders(), signal: controller.signal});
+      if (handleAuthError(response.status)) throw new Error('Authentication required');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      if (!payload.success) throw new Error('Analytics unavailable');
+      return payload;
+    } finally { clearTimeout(timer); }
+  });
+}
 const resizeHandler = () => resizeChart(state.rawData?.points?.length || 0);
 
 function loadingMarkup(text) {
@@ -138,15 +155,13 @@ function deriveCoverage(summary) {
   return result;
 }
 
-function buildValueCell(value, coverage, periodKey) {
+function buildValueCell(value, coverage, periodKey, observed) {
+  if ((value === null || value === undefined) && observed?.change_percent !== null && observed?.change_percent !== undefined) {
+    const title = `Observed segment only: ${new Date(observed.start).toUTCString()} to ${new Date(observed.end).toUTCString()}; not the full selected period`;
+    return `<td><span class="cell-pill" title="${title}">${formatPercent(observed.change_percent)}*</span></td>`;
+  }
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
-  }
-  if (LONG_PERIODS.has(periodKey)) {
-    const expected = PERIOD_INFO[periodKey] || 0;
-    if (!coverage || (expected && coverage < expected * COVERAGE_RATIO)) {
-      return '<td><div class="placeholder-copy">N/A</div></td>';
-    }
   }
   const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : '';
   const classes = ['cell-pill'];
@@ -154,8 +169,8 @@ function buildValueCell(value, coverage, periodKey) {
   return `<td><span class="${classes.join(' ')}">${formatPercent(value)}</span></td>`;
 }
 
-function buildRow({ label, subtitle = '', periods = {}, coverage = {}, rowClass = '', dataset = null, accountId = null }) {
-  const cells = PERIODS.map(({ value }) => buildValueCell(periods[value], coverage[value], value)).join('');
+function buildRow({ label, subtitle = '', periods = {}, coverage = {}, rowClass = '', dataset = null, accountId = null, observed = {} }) {
+  const cells = PERIODS.map(({ value }) => buildValueCell(periods[value], coverage[value], value, observed[value])).join('');
   const attributes = [];
   if (dataset) attributes.push(`data-benchmark="${dataset}"`);
   if (accountId) attributes.push(`data-account-id="${accountId}"`);
@@ -247,7 +262,6 @@ async function loadAccounts() {
       id: acc.id || acc._id,
       label: acc.account_name || acc.name || acc.id,
     }));
-    accountSummaryCache.clear();
     renderAccountSelector();
   } catch (error) {
     console.error('Account fetch error:', error);
@@ -290,42 +304,33 @@ async function fetchSingleAccountSummary(accountId) {
       account_id: accountId,
     });
     const endpoint = `${MARKET_API_BASE}/benchmark/portfolio/table?${params.toString()}`;
-    const response = await fetch(endpoint, { headers: getAuthHeaders() });
-    if (handleAuthError(response.status)) return null;
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const payload = await response.json();
-    if (!payload.success) {
-      throw new Error(payload.detail || 'Unexpected API response');
-    }
+    const payload = await analyticsRequest(endpoint);
     const periods = payload.data.portfolio?.periods || {};
     const coverage = deriveCoverage(payload.data);
-    return { periods, coverage };
+    return { periods, coverage, observed: payload.data.portfolio?.observed || {} };
   } catch (error) {
     console.error(`Account summary fetch failed for ${accountId}:`, error);
     return { periods: {}, coverage: {} };
   }
 }
 
-async function fetchAccountSummaries(force = false) {
-  if (!state.accounts.length) {
-    state.accountSummaries = new Map();
-    return;
-  }
-
-  const entries = [];
-  for (const account of state.accounts) {
-    if (!account.id) continue;
-    if (!force && accountSummaryCache.has(account.id)) {
-      entries.push([account.id, accountSummaryCache.get(account.id)]);
-      continue;
+async function fetchAccountSummaries() {
+  if (accountSummariesPending) return accountSummariesPending;
+  const accounts = [...state.accounts];
+  accountSummariesPending = (async () => {
+    let next = 0;
+    async function worker() {
+      while (next < accounts.length) {
+        const account = accounts[next++];
+        if (!account.id) continue;
+        const summary = await fetchSingleAccountSummary(account.id);
+        state.accountSummaries.set(account.id, summary);
+        renderSummaryTable();
+      }
     }
-    const summary = await fetchSingleAccountSummary(account.id);
-    accountSummaryCache.set(account.id, summary);
-    entries.push([account.id, summary]);
-  }
-  state.accountSummaries = new Map(entries);
+    await Promise.all([worker(), worker()]);
+  })().finally(() => { accountSummariesPending = null; });
+  return accountSummariesPending;
 }
 
 function setActivePeriodButton(activePeriod) {
@@ -351,11 +356,15 @@ function highlightAccountRow(activeAccount) {
 }
 
 function updateStats(portfolioSeries, platformSeries, benchmarkSeries) {
-  const lastPortfolio = window.ReportingValues.finite(portfolioSeries.at(-1)?.value);
-  const lastPlatform = window.ReportingValues.finite(platformSeries.at(-1)?.value);
-  const lastBenchmark = window.ReportingValues.finite(benchmarkSeries.at(-1)?.value);
-  const spread = lastPortfolio === null || lastBenchmark === null ? null : (lastPortfolio - lastBenchmark) * 100;
+  const ps = window.ReportingValues.segmentSummary(portfolioSeries), bs = window.ReportingValues.segmentSummary(benchmarkSeries), ls = window.ReportingValues.segmentSummary(platformSeries);
+  const lastPortfolio = ps.value;
+  const lastPlatform = ls.value;
+  const lastBenchmark = bs.value;
+  const spread = lastPortfolio === null || lastBenchmark === null || !ps.start || ps.start !== bs.start || ps.end !== bs.end ? null : (lastPortfolio - lastBenchmark) * 100;
 
+  selectors.portfolioChange.title = ps.label;
+  selectors.platformChange.title = ls.label;
+  selectors.benchmarkChange.title = bs.label;
   selectors.portfolioChange.textContent = formatPercent(lastPortfolio === null ? null : lastPortfolio * 100);
   selectors.platformChange.textContent = formatPercent(lastPlatform === null ? null : lastPlatform * 100);
   selectors.benchmarkChange.textContent = formatPercent(lastBenchmark === null ? null : lastBenchmark * 100);
@@ -365,7 +374,7 @@ function updateStats(portfolioSeries, platformSeries, benchmarkSeries) {
 
   const lastTimestamp =
     state.rawData?.points?.at(-1)?.timestamp || new Date().toISOString();
-  selectors.portfolioUpdated.textContent = `Updated ${new Date(lastTimestamp).toUTCString()}`;
+  selectors.portfolioUpdated.textContent = ps.label;
 
   const option = getBenchmarkOption(state.benchmark);
   selectors.benchmarkDetail.textContent = option.detail;
@@ -373,6 +382,7 @@ function updateStats(portfolioSeries, platformSeries, benchmarkSeries) {
 }
 
 function updateChart() {
+  updateStats([], [], []);
   if (!state.rawData || !state.rawData.points?.length) {
     if (chart) {
       chart.showEmptyState();
@@ -381,12 +391,12 @@ function updateChart() {
     return;
   }
 
-  const portfolioSeries = cumulativeSeries(state.rawData.points, 'portfolio_change_percent');
-  const platformSeries = cumulativeSeries(state.rawData.points, 'platform_change_percent');
-  const benchmarkSeries = cumulativeSeries(state.rawData.points, 'benchmark_change_percent');
+  const portfolioSeries = window.ReportingValues.comparisonSeries(state.rawData, 'portfolio');
+  const platformSeries = window.ReportingValues.comparisonSeries(state.rawData, 'platform');
+  const benchmarkSeries = window.ReportingValues.comparisonSeries(state.rawData, 'benchmark');
   const portfolioValueMap = new Map(portfolioSeries.map((point) => [point.timestamp, point.value]));
 
-  if (!portfolioSeries.length || !platformSeries.length || !benchmarkSeries.length) {
+  if (![portfolioSeries, platformSeries, benchmarkSeries].some(series => series.some(p => !p.baseline && p.value !== null))) {
     chart.showEmptyState();
     selectors.status.textContent = 'Insufficient data to display chart.';
     return;
@@ -439,23 +449,26 @@ function updateChart() {
   }
 
   updateStats(portfolioSeries, platformSeries, benchmarkSeries);
-  selectors.status.textContent = `Shared data points: ${state.rawData.metadata?.timestamps_shared ?? '–'}`;
+  selectors.status.textContent = 'Verified observed segments only; each restarts at 0% after a gap. Missing history is not filled. Not cash-flow-adjusted returns.';
   highlightAccountRow(state.accountId);
 }
 
 async function fetchPerformance(options = {}) {
   const { silent = false, useCache = true } = options;
+  const requestId = ++performanceRequest;
   const targetBenchmark = state.benchmark;
   const targetPeriod = state.period;
   const targetAccount = state.accountId === 'ALL' ? null : state.accountId;
   const cacheKey = `${targetBenchmark}|${targetPeriod}|${targetAccount || 'ALL'}`;
-  if (useCache && seriesCache.has(cacheKey)) {
-    state.rawData = seriesCache.get(cacheKey);
+  if (useCache && seriesCache.has(cacheKey) && Date.now() - seriesCache.get(cacheKey).time < 60000) {
+    state.rawData = seriesCache.get(cacheKey).data;
+    state.loading = false;
     updateChart();
     return;
   }
 
   setLoading(true, { silent });
+  updateStats([], [], []);
   const params = new URLSearchParams({
     period: targetPeriod,
     benchmark: targetBenchmark,
@@ -467,21 +480,13 @@ async function fetchPerformance(options = {}) {
   const endpoint = `${MARKET_API_BASE}/benchmark/portfolio/performance?${params.toString()}`;
 
   try {
-    const response = await fetch(endpoint, {
-      headers: getAuthHeaders(),
-    });
-    if (handleAuthError(response.status)) return;
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const payload = await response.json();
-    if (!payload.success) {
-      throw new Error(payload.detail || 'Unexpected API response');
-    }
+    const payload = await analyticsRequest(endpoint);
+    if (requestId !== performanceRequest) return;
     state.rawData = payload.data;
-    seriesCache.set(cacheKey, payload.data);
+    seriesCache.set(cacheKey, {data: payload.data, time: Date.now()});
     updateChart();
   } catch (error) {
+    if (requestId !== performanceRequest) return;
     console.error('Portfolio fetch error:', error);
     seriesCache.delete(cacheKey);
     selectors.status.textContent = 'Unable to load portfolio analytics.';
@@ -489,7 +494,7 @@ async function fetchPerformance(options = {}) {
       chart.showEmptyState();
     }
   } finally {
-    state.loading = false;
+    if (requestId === performanceRequest) state.loading = false;
   }
 }
 
@@ -521,6 +526,7 @@ function renderSummaryTable() {
       label: 'Portfolio',
       subtitle: 'Aggregated across selected accounts',
       periods: state.portfolioPeriods,
+      observed: state.summary.portfolio?.observed || {},
       coverage: state.portfolioCoverage,
       rowClass: 'portfolio-row',
       accountId: 'ALL',
@@ -536,6 +542,7 @@ function renderSummaryTable() {
         subtitle: 'Account performance',
         periods,
         coverage: summary?.coverage || {},
+        observed: summary?.observed || {},
         rowClass: 'account-row',
         accountId: account.id,
       })
@@ -551,7 +558,8 @@ function renderSummaryTable() {
         label: 'Composite Benchmark',
         subtitle: 'Weighted basket reference',
         periods: extractBenchmarkPeriods(composite),
-        coverage: deriveCoverage({ benchmarks: [composite] }),
+        coverage: Object.fromEntries(Object.entries(composite.periods || {}).map(([p, v]) => [p, v.benchmark_observed?.points || 0])),
+        observed: Object.fromEntries(Object.entries(composite.periods || {}).map(([p, v]) => [p, v.benchmark_observed])),
         rowClass: 'benchmark-row',
         dataset: composite.benchmark,
       })
@@ -564,6 +572,7 @@ function renderSummaryTable() {
       subtitle: 'ROO7 aggregate strategies',
       periods: state.platformPeriods,
       coverage: state.platformCoverage,
+      observed: Object.fromEntries(Object.entries(state.summary.benchmarks?.[0]?.periods || {}).map(([p, v]) => [p, v.observed?.platform])),
       rowClass: 'platform-row',
     })
   );
@@ -593,7 +602,7 @@ function renderSummaryTable() {
   setActivePeriodButton(state.period);
 
   if (selectors.tableStatus) {
-    selectors.tableStatus.textContent = 'Click a portfolio or account row (or timeframe) to update the chart.';
+    selectors.tableStatus.textContent = ' * Latest verified observed segment only (hover for dates), not the full period. Blank cells have no verified interval.';
   }
 
   highlightAccountRow(state.accountId);
@@ -616,27 +625,17 @@ async function fetchSummary() {
     selectors.tableStatus.innerHTML = loadingMarkup('Loading summary…');
     const params = new URLSearchParams({
       periods: PERIOD_KEYS.join(','),
-      benchmarks: BENCHMARK_VALUES.join(','),
+      benchmarks: 'composite',
     });
     const endpoint = `${MARKET_API_BASE}/benchmark/portfolio/table?${params.toString()}`;
-    const response = await fetch(endpoint, {
-      headers: getAuthHeaders(),
-    });
-    if (handleAuthError(response.status)) return;
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const payload = await response.json();
-    if (!payload.success) {
-      throw new Error(payload.detail || 'Unexpected API response');
-    }
+    const payload = await analyticsRequest(endpoint);
     state.summary = payload.data;
     state.platformPeriods = derivePlatformPeriods(payload.data);
     state.platformCoverage = deriveCoverage(payload.data);
     state.portfolioPeriods = payload.data.portfolio?.periods || {};
     state.portfolioCoverage = deriveCoverage(payload.data);
-    await fetchAccountSummaries(true);
     renderSummaryTable();
+    void fetchAccountSummaries();
   } catch (error) {
     console.error('Summary fetch error:', error);
     selectors.tableStatus.textContent = 'Unable to load summary table.';
@@ -732,11 +731,10 @@ async function init() {
 
   window.addEventListener('resize', resizeHandler);
 
-  await loadAccounts();
-  await fetchAccountSummaries(true);
   setActivePeriodButton(state.period);
-  await fetchPerformance({ silent: false, useCache: false });
-  await fetchSummary();
+  // The chart is independent of account-list and long-period summary loading.
+  void fetchPerformance({ silent: false, useCache: false });
+  void loadAccounts().then(() => fetchSummary());
 }
 
 window.addEventListener('DOMContentLoaded', init);

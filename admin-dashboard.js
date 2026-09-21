@@ -4635,7 +4635,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateSourceAnalyticsStatusBadges(summary) {
     const R = window.ReportingValues;
-    const values = [['source-current-total-badge', summary.current_value, false],
+    const values = [['source-current-total-badge', R.currentValue(summary), false],
       ['source-period-change-badge', summary.period_change, false],
       ['source-change-percentage-badge', summary.percentage_change, true]];
     values.forEach(([id, raw, percent]) => {
@@ -4646,7 +4646,7 @@ document.addEventListener("DOMContentLoaded", () => {
       el.className = 'status-badge ' + (value === null ? '' : value >= 0 ? 'success' : 'danger');
     });
     const note = document.getElementById('source-analytics-coverage');
-    if (note) note.textContent = R.coverageText(summary);
+    if (note) note.textContent = R.currentText(summary) + ' Historical coverage: ' + R.coverageText(summary);
   }
 
   function showSourceAnalyticsError(message) {
@@ -4870,7 +4870,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updatePlatformSummaryStats(summary) {
     const R = window.ReportingValues;
-    [['platform-current-total-badge', summary?.current_value],
+    [['platform-current-total-badge', R.currentValue(summary)],
      ['platform-24h-change-badge', summary?.period_change]].forEach(([id, raw]) => {
       const el = document.getElementById(id), value = R.finite(raw);
       if (el) {
@@ -4880,9 +4880,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     const users = document.getElementById('platform-users-count-badge');
-    if (users) users.textContent = summary?.users_count ?? '—';
+    if (users) users.textContent = summary?.current?.users_count ?? '—';
     const note = document.getElementById('platform-analytics-coverage');
-    if (note) note.textContent = R.coverageText(summary);
+    if (note) note.textContent = R.currentText(summary) + ' Historical coverage: ' + R.coverageText(summary);
   }
 
   function resetPlatformKpis() {

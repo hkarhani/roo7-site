@@ -9,10 +9,10 @@
   <title>ROO7 | Platform vs Benchmark Performance</title>
   <link rel="stylesheet" href="platformvsbenchmark.css?v=20240411" />
   <script type="module" src="frontend-config.js?v=20240317"></script>
-  <script src="reporting-values.js?v=20260921-equity-1"></script>
-  <script src="line-chart.js?v=20260921-equity-1" defer></script>
-  <script type="module" src="platformvsbenchmark.js?v=20260921-equity-1"></script>
-  <link rel="stylesheet" href="reporting-values.css?v=20260921-equity-1" />
+  <script src="reporting-values.js?v=20260921-repair-2"></script>
+  <script src="line-chart.js?v=20260921-repair-2" defer></script>
+  <script type="module" src="platformvsbenchmark.js?v=20260921-repair-2"></script>
+  <link rel="stylesheet" href="reporting-values.css?v=20260921-repair-2" />
 </head>
 <body>
   <header class="pvb-header">
@@ -69,12 +69,12 @@
 
       <div class="stats-grid">
         <div class="stat-card primary">
-          <p class="label">Platform cumulative change</p>
+          <p class="label">Platform · latest observed segment</p>
           <p class="value" id="platform-change">– %</p>
           <span class="detail" id="platform-last-updated">Awaiting data...</span>
         </div>
         <div class="stat-card secondary">
-          <p class="label">Benchmark cumulative change</p>
+          <p class="label">Benchmark · latest observed segment</p>
           <p class="value" id="benchmark-change">– %</p>
           <span class="detail" id="benchmark-detail">
             Composite weighted basket (BTC 60% · ETH 25% · SOL 5% · BNB 5% · XRP 5%)
@@ -140,13 +140,14 @@
     <section class="pvb-card slim">
       <h3>About this chart</h3>
       <ul class="info-list">
-        <li>Platform performance aggregates ROO7 managed trading accounts and strategies, normalized each hour.</li>
+        <li>Platform equity aggregates currently enabled ROO7 trading accounts using recorded observations.</li>
         <li>Benchmark selector toggles between the composite basket or individual BTC/ETH/SOL/BNB/XRP spot references.</li>
         <li>Benchmark prices are sourced from Binance spot klines (1-hour intervals) and stored internally.</li>
-        <li>Each point shows cumulative change from the start of the selected window; the first value is always 0% by design.</li>
+        <li>Each continuous observed segment has its own 0% baseline. Missing intervals are not counted as zero returns.</li>
         <li>Data updates shortly after each hour. Times shown in UTC.</li>
       </ul>
     </section>
+  <p class="reporting-notice">* Latest valid observed segment only; hover for its dates. A blank full-period result means coverage is incomplete. Each chart segment restarts at 0% after a gap.</p>
   </main>
 
   <footer class="pvb-footer">

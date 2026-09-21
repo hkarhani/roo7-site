@@ -195,11 +195,14 @@ function deriveCoverage(summary) {
 }
 
 function updateStats(platformSeries, benchmarkSeries) {
-  const lastPlatform = window.ReportingValues.finite(platformSeries.at(-1)?.value);
-  const lastBenchmark = window.ReportingValues.finite(benchmarkSeries.at(-1)?.value);
-  const spread = lastPlatform === null || lastBenchmark === null ? null : (lastPlatform - lastBenchmark) * 100;
+  const ps = window.ReportingValues.segmentSummary(platformSeries), bs = window.ReportingValues.segmentSummary(benchmarkSeries);
+  const lastPlatform = ps.value;
+  const lastBenchmark = bs.value;
+  const spread = lastPlatform === null || lastBenchmark === null || !ps.start || ps.start !== bs.start || ps.end !== bs.end ? null : (lastPlatform - lastBenchmark) * 100;
   const benchmarkLabel = resolveBenchmarkLabel();
 
+  selectors.platformChange.title = ps.label;
+  selectors.benchmarkChange.title = bs.label;
   selectors.platformChange.textContent = formatPercent(lastPlatform === null ? null : lastPlatform * 100);
   selectors.benchmarkChange.textContent = formatPercent(lastBenchmark === null ? null : lastBenchmark * 100);
   selectors.spreadChange.textContent = formatPercent(spread);
@@ -216,10 +219,11 @@ function updateStats(platformSeries, benchmarkSeries) {
 
   const lastTimestamp =
     state.rawData?.points?.at(-1)?.timestamp || new Date().toISOString();
-  selectors.platformUpdated.textContent = `Updated ${new Date(lastTimestamp).toUTCString()}`;
+  selectors.platformUpdated.textContent = ps.label;
 }
 
 function updateChart() {
+  updateStats([], []);
   if (!state.rawData || !state.rawData.points?.length) {
     if (chart) {
       chart.showEmptyState();
@@ -228,10 +232,10 @@ function updateChart() {
     return;
   }
 
-  const platformSeries = cumulativeSeries(state.rawData.points, 'platform_change_percent');
-  const benchmarkSeries = cumulativeSeries(state.rawData.points, 'benchmark_change_percent');
+  const platformSeries = window.ReportingValues.comparisonSeries(state.rawData, 'platform');
+  const benchmarkSeries = window.ReportingValues.comparisonSeries(state.rawData, 'benchmark');
 
-  if (!platformSeries.length || !benchmarkSeries.length) {
+  if (![platformSeries, benchmarkSeries].some(series => series.some(p => !p.baseline && p.value !== null))) {
     chart.showEmptyState();
     selectors.status.textContent = `Insufficient data to display chart for ${resolveBenchmarkLabel()}.`;
     return;
@@ -263,7 +267,7 @@ function updateChart() {
   }
 
   updateStats(platformSeries, benchmarkSeries);
-  selectors.status.textContent = `Shared data points vs ${resolveBenchmarkLabel()}: ${state.rawData.metadata?.timestamps_shared ?? '–'}`;
+  selectors.status.textContent = 'Observed segments restart at 0% after gaps. They are not complete-period or cash-flow-adjusted returns.';
   highlightTableRow(state.benchmark);
 }
 
@@ -281,6 +285,7 @@ async function fetchPerformance(options = {}) {
   }
 
   setLoading(true, { silent });
+  updateStats([], []);
   const params = new URLSearchParams({
     period: targetPeriod,
     benchmark: targetBenchmark,
@@ -391,26 +396,28 @@ function hasSufficientCoverage(sharedPoints, periodKey) {
 }
 
 function buildBenchmarkCell(metric, periodKey) {
+  if (metric?.benchmark_change_percent == null) {
+    const observed = window.ReportingValues.observedCell(metric?.benchmark_observed, formatPercent);
+    if (observed) return observed;
+  }
   const value = metric?.benchmark_change_percent;
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
   }
-  const shared = metric.timestamps_shared ?? metric.shared_points ?? 0;
-  if (!hasSufficientCoverage(shared, periodKey)) {
-    return '<td><div class="placeholder-copy">N/A</div></td>';
-  }
+  const shared = metric.benchmark_observed?.points ?? metric.timestamps_shared ?? metric.shared_points ?? 0;
   const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
   return `<td><span class="cell-pill ${polarity}">${formatPercent(value)}</span></td>`;
 }
 
 function buildPlatformCell(value, periodKey) {
+  if (value == null) {
+    const observed = window.ReportingValues.observedCell(state.summary?.benchmarks?.[0]?.periods?.[periodKey]?.observed?.platform, formatPercent);
+    if (observed) return observed;
+  }
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
   }
   const shared = state.coverage?.[periodKey] ?? 0;
-  if (!hasSufficientCoverage(shared, periodKey)) {
-    return '<td><div class="placeholder-copy">N/A</div></td>';
-  }
   const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
   return `<td><span class="cell-pill ${polarity} platform-pill">${formatPercent(value)}</span></td>`;
 }

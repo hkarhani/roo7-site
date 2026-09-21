@@ -36,7 +36,7 @@ function extract(file, name, next) {
     const updateLiveAccountsSummary = () => {};
     let latestAggregatedCurrentTotal = null, latestAggregatedTimestamp = null;
     ${extract('dashboard.js','updateAnalyticsSummary','showAnalyticsError')}
-    updateAnalyticsSummary({summary:{current_value:32732.51, period_change:null, percentage_change:null,
+    updateAnalyticsSummary({summary:{current:{equity_usdt:32732.51,complete:true,as_of:"2026-09-21T13:40:00Z"},current_value:32732.51, period_change:null, percentage_change:null,
       as_of:'2026-09-21T13:40:00Z',observed_hours:3.7,partial_period:true,legacy_observations:4}},'ALL');
     document.getElementById('analytics-account-select').innerHTML='<option>All Accounts</option>';
     document.getElementById('analytics-period-select').value='1';
@@ -60,7 +60,7 @@ function extract(file, name, next) {
   await page.addScriptTag({content: `
     const formatCurrency = value => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
     ${extract('admin-dashboard.js','updatePlatformSummaryStats','resetPlatformKpis')}
-    updatePlatformSummaryStats({current_value:52399.91,period_change:null,users_count:4,
+    updatePlatformSummaryStats({current:{equity_usdt:52425.66,complete:true,as_of:"2026-09-21T13:40:00Z",users_count:4},current_value:52399.91,period_change:null,users_count:4,
       as_of:'2026-09-21T13:40:00Z',observed_hours:23.7,legacy_observations:24,cohort_changed:true});
   `});
   assert.equal(await page.locator('#platform-24h-change-badge').textContent(), '—');

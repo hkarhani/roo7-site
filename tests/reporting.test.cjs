@@ -17,6 +17,43 @@ test('account value is signed equity, not highest candidate or equity plus PnL',
   for (const value of [null, undefined, '', true, Infinity, NaN]) assert.equal(R.finite(value), null);
 });
 
+test('current equity never falls back to stale chart history', () => {
+  assert.equal(R.currentValue({current_value: 50625}), null);
+  assert.equal(R.currentValue({current_value: 50625, current: {equity_usdt: 52425}}), 52425);
+  assert.equal(R.currentValue({current: {equity_usdt: 0}}), 0);
+});
+test('separate observation boundaries do not restart an intact benchmark', () => {
+  const payload = {points: [{timestamp:'2026-01-01T01:30:00Z', benchmark_change_percent:null}],
+    series: {benchmark: points.map(p => ({...p, change_percent:p.change})), portfolio:[]}};
+  const series = R.comparisonSeries(payload, 'benchmark');
+  assert.ok(Math.abs(series.at(-1).value + .01) < 1e-10);
+  assert.equal(R.comparisonSeries(payload, 'portfolio').length, 0);
+});
+test('request cache coalesces concurrent loads, scopes keys, and retries errors', async () => {
+  const cache = R.requestCache();
+  let calls = 0;
+  const loader = async () => {calls++; return 42;};
+  assert.deepEqual(await Promise.all([cache('owner1:url',loader),cache('owner1:url',loader)]),[42,42]);
+  assert.equal(calls,1);
+  await cache('owner2:url',loader); assert.equal(calls,2);
+  await assert.rejects(cache('error',async()=>{throw Error('offline');}));
+  assert.equal(await cache('error',loader),42);
+});
+test('valid observed segments carry explicit date bounds and no invented full-period return', () => {
+  const series = R.cumulativeSeries([...points,{timestamp:'2026-01-01T03:00:00Z',change:null},
+    {timestamp:'2026-01-01T04:00:00Z',change:2}], 'change');
+  const last = R.segmentSummary(series);
+  assert.ok(Math.abs(last.value - .02) < 1e-10);
+  assert.equal(last.start,'2026-01-01T03:00:00.000Z');
+  assert.match(R.observedCell({change_percent:2,start:last.start,end:last.end},v=>v+'%'),/not the full selected period/);
+});
+test('analytics starts chart before waiting for account summaries', () => {
+  const js = fs.readFileSync(path.join(root,'portfoliovsbenchmark.js'),'utf8');
+  const init = js.slice(js.indexOf('async function init()'));
+  assert.ok(init.indexOf('void fetchPerformance') < init.indexOf('void loadAccounts'));
+  assert.ok(!js.includes('await fetchAccountSummaries()'));
+});
+
 const points = [
   {timestamp: '2026-01-01T01:00:00Z', interval_start: '2026-01-01T00:00:00Z', change: 10},
   {timestamp: '2026-01-01T02:00:00Z', change: -10},
@@ -28,9 +65,11 @@ test('compounds every interval including the first, with a starting baseline', (
   assert.ok(Math.abs(series[1].value - .1) < 1e-10);
   assert.ok(Math.abs(series[2].value + .01) < 1e-10);
 });
-test('missing return does not become zero or resume an invented cumulative path', () => {
+test('missing return splits separately rebased observed segments', () => {
   const series = R.cumulativeSeries([...points, {timestamp: '2026-01-01T03:00:00Z', change: null}, {timestamp: '2026-01-01T04:00:00Z', change: 10}], 'change');
-  assert.equal(series.at(-1).value, null);
+  assert.ok(Math.abs(series.at(-1).value - .1) < 1e-10);
+  assert.ok(series.some(p => p.value === null));
+  assert.equal(series.at(-1).segment_start, '2026-01-01T03:00:00.000Z');
   assert.equal(R.cumulativeSeries([{timestamp: 'invalid', change: 10}], 'change').length, 0);
 });
 test('coverage notice discloses partial history, stale gaps and cash flow limitations', () => {

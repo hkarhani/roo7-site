@@ -111,24 +111,24 @@ function authHeaders() {
   };
 }
 
+const cachedAdminRequest = window.ReportingValues.requestCache();
 async function authorizedFetch(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      ...authHeaders()
-    }
-  });
-  if (response.status === 401) {
-    localStorage.removeItem('token');
-    window.location.href = '/auth.html';
-    return null;
-  }
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `HTTP ${response.status}`);
-  }
-  return response.json();
+  const loader = async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch(url, {...options, signal: controller.signal,
+        headers: {...(options.headers || {}), ...authHeaders()}});
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/auth.html';
+        throw new Error('Authentication required');
+      }
+      if (!response.ok) throw new Error(await response.text() || 'HTTP ' + response.status);
+      return await response.json();
+    } finally { clearTimeout(timeout); }
+  };
+  return !options.method || options.method === 'GET' ? cachedAdminRequest(state.token + ':' + url, loader) : loader();
 }
 
 function formatCurrency(value) {
@@ -156,11 +156,11 @@ async function loadOverview() {
     const data = await authorizedFetch(`${AUTH_API_BASE}/admin/portfolio-analytics/overview`);
     if (!data || !data.success) return;
     const totals = data.totals || {};
-    selectors.totalValue.textContent = formatCurrency(totals.total_value || 0);
+    selectors.totalValue.textContent = data.current?.equity_usdt == null ? '—' : formatCurrency(data.current.equity_usdt);
     selectors.totalUsers.textContent = totals.user_count || 0;
     selectors.totalAccounts.textContent = totals.account_count || 0;
-    selectors.lastUpdated.textContent = totals.last_updated
-      ? new Date(totals.last_updated).toLocaleString()
+    selectors.lastUpdated.textContent = data.current?.as_of
+      ? new Date(data.current.as_of).toLocaleString()
       : '--';
     renderTopUsers(data.top_users || [], data.remainder || null);
   } catch (error) {
@@ -329,7 +329,7 @@ async function loadAccountsForUser(userId) {
     state.accounts = data.accounts || [];
     state.selectedAccountIds = state.accounts.map((acc) => acc.account_id);
     renderAccountsList();
-    await fetchAccountSummaries();
+    void fetchAccountSummaries();
   } catch (error) {
     console.error('User accounts failed', error);
     selectors.accountsList.innerHTML = '<div class="placeholder-copy">Unable to load accounts.</div>';
@@ -436,7 +436,7 @@ function setupBenchmarkButtons() {
     state.accountSummaries.clear();
     await Promise.all([fetchPerformance(), fetchSnapshotTable(), fetchSourcePerformance(), fetchSourceTable()]);
     if (state.selectedUserId !== 'ALL') {
-      await fetchAccountSummaries();
+      void fetchAccountSummaries();
     }
   };
   buildButtonGroup(selectors.benchmarkButtons, BENCHMARKS, state.benchmark, handleBenchmarkChange);
@@ -627,7 +627,7 @@ async function renderSourceComparisonChart() {
     }
   }
 
-  if (!series.length) {
+  if (!series.some(s => s.values.some(p => p.value !== null && !p.baseline))) {
     state.sourceChart.showEmptyState();
     if (selectors.sourceChartStatus) {
       selectors.sourceChartStatus.textContent = 'Select at least one source account to display the chart.';
@@ -696,7 +696,7 @@ function renderSourceTable() {
       const pct = source.periods ? source.periods[value] : null;
       const weightPct = source.weights ? source.weights[value] : null;
       if (pct === null || pct === undefined) {
-        return '<td><div class="placeholder-copy">N/A</div></td>';
+        return window.ReportingValues.observedCell(source.observed?.[value], formatPercent) || '<td><div class="placeholder-copy">N/A</div></td>';
       }
       const polarity = pct > 0 ? 'positive' : pct < 0 ? 'negative' : '';
       const weightText = weightPct === null || weightPct === undefined
@@ -753,9 +753,9 @@ function buildSourcePlatformRow(data) {
 function computeChartSeries(points) {
   if (!Array.isArray(points) || points.length === 0) return [];
   const series = [];
-  const portfolioValues = buildCumulativeSeries(points, 'portfolio_change_percent');
-  const platformValues = buildCumulativeSeries(points, 'platform_change_percent');
-  const benchmarkValues = buildCumulativeSeries(points, 'benchmark_change_percent');
+  const portfolioValues = window.ReportingValues.comparisonSeries(state.rawSeries, 'portfolio');
+  const platformValues = window.ReportingValues.comparisonSeries(state.rawSeries, 'platform');
+  const benchmarkValues = window.ReportingValues.comparisonSeries(state.rawSeries, 'benchmark');
 
   series.push({
     name: state.selectedUserId === 'ALL' ? 'Total Portfolio' : 'Selection Portfolio',
@@ -837,7 +837,7 @@ async function renderChart() {
     });
   }
   state.chart.setData(series);
-  setChartStatus('Updated.');
+  setChartStatus('Observed segments restart at 0% after gaps. Equity changes include deposits/withdrawals; they are not verified investment returns.');
   updateLegend();
 }
 
@@ -1037,13 +1037,15 @@ function formatMetric(value) {
 
 async function fetchAccountSummaries() {
   if (!state.accounts.length || state.selectedUserId === 'ALL') return;
-  const promises = state.accounts.slice(0, 12).map(async (account) => {
+  const owner = state.selectedUserId, benchmark = state.benchmark;
+  const accounts = [...state.accounts];
+  const fetchOne = async (account) => {
     if (state.accountSummaries.has(account.account_id)) return;
     try {
       const params = new URLSearchParams({
         periods: PERIOD_KEYS.join(','),
-        benchmarks: state.benchmark,
-        user_ids: state.selectedUserId,
+        benchmarks: benchmark,
+        user_ids: owner,
         account_ids: account.account_id
       });
       const payload = await authorizedFetch(`${MARKET_API_BASE}/admin/benchmark/portfolio/table?${params.toString()}`);
@@ -1056,27 +1058,29 @@ async function fetchAccountSummaries() {
           coverage[period] = details?.shared_points || 0;
         });
       }
+      if (state.selectedUserId !== owner || state.benchmark !== benchmark) return;
       state.accountSummaries.set(account.account_id, {
         periods: portfolioPeriods,
+        observed: response?.portfolio?.observed || {},
         coverage
       });
     } catch (error) {
       console.warn(`Account summary failed for ${account.account_id}`, error);
     }
-  });
-  await Promise.all(promises);
+  };
+  let next = 0;
+  async function worker() { while (next < accounts.length) await fetchOne(accounts[next++]); }
+  await Promise.all([worker(), worker()]);
   renderSnapshotTable();
 }
 
-function buildValueCell(value, coverage, periodKey) {
+function buildValueCell(value, coverage, periodKey, observed) {
+  if (value == null) {
+    const cell = window.ReportingValues.observedCell(observed, formatPercent);
+    if (cell) return cell;
+  }
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '<td><div class="placeholder-copy">–</div></td>';
-  }
-  if (LONG_PERIODS.has(periodKey)) {
-    const required = PERIOD_INFO[periodKey] || 0;
-    if (!coverage || coverage < required * COVERAGE_RATIO) {
-      return '<td><div class="placeholder-copy">N/A</div></td>';
-    }
   }
   const polarity = value > 0 ? 'positive' : value < 0 ? 'negative' : '';
   return `<td><span class="cell-pill ${polarity}">${formatPercent(value)}</span></td>`;
@@ -1103,6 +1107,7 @@ function renderSnapshotTable() {
   rows.push(buildSnapshotRow({
     label: state.selectedUserId === 'ALL' ? 'Total Portfolio' : 'Selected Portfolio',
     periods: state.tableData.portfolio?.periods || {},
+    observed: state.tableData.portfolio?.observed || {},
     coverage,
     target: { type: 'portfolio' }
   }));
@@ -1115,6 +1120,7 @@ function renderSnapshotTable() {
         label: account.name,
         subtitle: account.strategy,
         periods: summary?.periods || {},
+        observed: summary?.observed || {},
         coverage: summary?.coverage || {},
         target: { type: 'account', id: account.account_id }
       }));
@@ -1126,12 +1132,14 @@ function renderSnapshotTable() {
     rows.push(buildSnapshotRow({
       label: `${entry.label || entry.benchmark} Benchmark`,
       periods: mapBenchmarkPeriods(entry, 'benchmark_change_percent'),
+      observed: Object.fromEntries(Object.entries(entry.periods || {}).map(([p,v]) => [p,v.benchmark_observed])),
       coverage: mapBenchmarkCoverage(entry)
     }));
     rows.push(buildSnapshotRow({
       label: `${entry.label || entry.benchmark} Platform`,
       subtitle: 'Platform performance',
       periods: mapBenchmarkPeriods(entry, 'platform_change_percent'),
+      observed: Object.fromEntries(Object.entries(entry.periods || {}).map(([p,v]) => [p,v.observed?.platform])),
       coverage: mapBenchmarkCoverage(entry),
       rowClass: 'platform-row',
       target: { type: 'platform' }
@@ -1167,8 +1175,8 @@ function mapBenchmarkCoverage(entry) {
   return result;
 }
 
-function buildSnapshotRow({ label, subtitle = '', periods = {}, coverage = {}, rowClass = '', target }) {
-  const cells = PERIOD_KEYS.map((periodKey) => buildValueCell(periods[periodKey], coverage[periodKey], periodKey)).join('');
+function buildSnapshotRow({ label, subtitle = '', periods = {}, coverage = {}, rowClass = '', target, observed = {} }) {
+  const cells = PERIOD_KEYS.map((periodKey) => buildValueCell(periods[periodKey], coverage[periodKey], periodKey, observed[periodKey])).join('');
   return `
     <tr class="snapshot-row ${rowClass}" data-target='${target ? JSON.stringify(target) : ''}'>
       <td>
